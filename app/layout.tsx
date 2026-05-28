@@ -33,6 +33,9 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://batteriq.com'),
+  verification: {
+    google: 'MGguyZgmNkfN_Ike_yZbWDRBIkhL-6GsU1yvHltKXQQ',
+  },
   title: {
     default: 'Batteriq Kenya — Official EcoFlow & BLUETTI Dealer | Power Stations & Solar',
     template: '%s | Batteriq',
