@@ -1,0 +1,698 @@
+'use client'
+import { useState, useEffect } from 'react'
+import { useCartStore, formatKES } from '@/store/cartStore'
+import { useRouter } from 'next/navigation'
+import Image from 'next/image'
+import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Shield, Truck, Lock, Smartphone,
+  CheckCircle, ChevronRight, Package, CreditCard,
+  AlertCircle, MessageSquare, Phone, Mail
+} from 'lucide-react'
+import { Header } from '@/components/layout/Header'
+import { Footer } from '@/components/layout/Footer'
+
+type PaymentMethod = 'mpesa_now' | 'cod_mpesa'
+
+function normalizePhone(raw: string): string {
+  const p = raw.replace(/[\s\-\(\)]/g, '').trim()
+  if (p.startsWith('+254')) return '254' + p.slice(4)
+  if (p.startsWith('07') || p.startsWith('01')) return '254' + p.slice(1)
+  if (p.startsWith('254')) return p
+  if (p.length === 9 && (p.startsWith('7') || p.startsWith('1'))) return '254' + p
+  return p
+}
+
+export default function CheckoutPage() {
+  const { items, clearCart } = useCartStore()
+  const router = useRouter()
+  const [mounted, setMounted] = useState(false)
+  const [form, setForm] = useState({
+    fullName: '', email: '', phone: '',
+    address: '', city: 'Nairobi', county: 'Nairobi', notes: '',
+  })
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mpesa_now')
+  const [step, setStep] = useState<'form' | 'processing' | 'transitioning' | 'waiting_mpesa' | 'error'>('form')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [orderId, setOrderId] = useState('')
+  const [mpesaTimer, setMpesaTimer] = useState(120)
+
+  useEffect(() => { setMounted(true) }, [])
+
+  useEffect(() => {
+    if (mounted && items.length === 0 && step === 'form') {
+      router.replace('/cart')
+    }
+  }, [mounted, items.length, step, router])
+
+  useEffect(() => {
+    if (step !== 'waiting_mpesa') return
+    if (mpesaTimer <= 0) { setStep('error'); setErrorMsg('Payment timed out. Please try again.'); return }
+    const t = setTimeout(() => setMpesaTimer(s => s - 1), 1000)
+    return () => clearTimeout(t)
+  }, [step, mpesaTimer])
+
+  const subtotal = mounted ? items.reduce((s, i) => s + (Number(i.price_kes) || 0) * i.quantity, 0) : 0
+  const totalQuantity = mounted ? items.reduce((sum, item) => sum + item.quantity, 0) : 0
+  const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
+
+  const loading = step === 'processing'
+  const isFormValid = Boolean(
+    form.fullName.trim().length >= 2 &&
+    form.email.includes('@') &&
+    form.phone.replace(/\D/g, '').length >= 9 &&
+    form.address.trim().length >= 2 &&
+    paymentMethod
+  )
+
+  async function handleSubmit() {
+    if (!mounted || items.length === 0) return
+    setStep('processing')
+    try {
+      const orderRes = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          guestName: form.fullName,
+          guestEmail: form.email,
+          guestPhone: normalizePhone(form.phone),
+          items: items.map(i => ({
+            id: i.productId,
+            name: i.name,
+            brand: i.brand,
+            price_kes: i.price_kes,
+            quantity: i.quantity,
+            image: i.image || null,
+          })),
+          subtotalKes: subtotal,
+          totalKes: subtotal,
+          paymentMethod,
+          deliveryAddress: {
+            street: form.address,
+            city: form.city,
+            county: form.county,
+            instructions: form.notes || '',
+          },
+        }),
+      })
+      const orderData = await orderRes.json()
+      if (!orderRes.ok) throw new Error(orderData.error ?? 'Order creation failed')
+      setOrderId(orderData.orderId)
+
+      if (paymentMethod === 'mpesa_now') {
+        const mpesaRes = await fetch('/api/mpesa/stkpush', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber: normalizePhone(form.phone), orderId: orderData.orderId, amount: subtotal }),
+        })
+        if (!mpesaRes.ok) throw new Error('M-Pesa push failed')
+        setStep('transitioning')
+        await new Promise(resolve => setTimeout(resolve, 1200))
+        setStep('waiting_mpesa')
+        const pollInterval = setInterval(async () => {
+          try {
+            const statusRes = await fetch(`/api/orders/${orderData.orderId}/status`)
+            const statusData = await statusRes.json()
+
+            if (statusData.paymentStatus === 'paid') {
+              clearInterval(pollInterval)
+              clearCart()
+              router.push(`/order-confirmation/${orderData.orderId}?email=${encodeURIComponent(form.email)}`)
+            }
+
+            if (statusData.paymentStatus === 'failed') {
+              clearInterval(pollInterval)
+              const reason = statusData.failureReason || 'Payment was cancelled or PIN was incorrect.'
+              setStep('error')
+              setErrorMsg(reason + ' You can try again or choose a different payment method.')
+            }
+          } catch {}
+        }, 3000)
+        setTimeout(() => clearInterval(pollInterval), 120000)
+      } else {
+        clearCart()
+        router.push(`/order-confirmation/${orderData.orderId}?email=${encodeURIComponent(form.email)}`)
+      }
+    } catch (err: unknown) {
+      setStep('error')
+      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.')
+    }
+  }
+
+  if (!mounted || (items.length === 0 && step === 'form')) return null
+
+  // ── TRANSITIONING SCREEN ──
+  if (step === 'transitioning') {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 checkout-bg">
+        <div className="flex flex-col items-center gap-10 text-center max-w-sm">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-[#00A651]/10 animate-ping" style={{ transform: 'scale(1.8)' }} />
+            <div className="relative w-28 h-28 rounded-[32px] flex items-center justify-center bg-gradient-to-br from-[#00A651] to-[#007a3d] shadow-2xl shadow-[#00A651]/30 transform -rotate-6">
+              <Smartphone className="text-white w-12 h-12 rotate-6" />
+            </div>
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-[#00004d] mb-3 tracking-tight">M-Pesa Express</h2>
+            <p className="text-gray-500 font-bold leading-relaxed px-4">We are sending a secure payment request to your phone...</p>
+          </div>
+          <div className="flex gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#00A651] animate-bounce" style={{ animationDelay: '0s' }} />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#00A651] animate-bounce" style={{ animationDelay: '0.2s' }} />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#00A651] animate-bounce" style={{ animationDelay: '0.4s' }} />
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── MPESA WAITING SCREEN ──
+  if (step === 'waiting_mpesa') {
+    const mins = Math.floor(mpesaTimer / 60)
+    const secs = String(mpesaTimer % 60).padStart(2, '0')
+    const progress = ((120 - mpesaTimer) / 120) * 100
+
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 checkout-bg py-12">
+        <div className="bg-white rounded-[40px] w-full max-w-md overflow-hidden shadow-2xl border border-[#f0f0f0] animate-in fade-in zoom-in duration-500">
+          <div className="bg-[#00A651] p-12 text-center relative overflow-hidden">
+            <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+            <div className="bg-white rounded-2xl px-8 py-4 inline-flex items-center gap-3 mb-8 shadow-2xl relative z-10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/payment-mpesa.svg" alt="M-Pesa" className="h-7 w-auto" />
+            </div>
+            <h2 className="text-3xl font-black text-white mb-3 relative z-10 tracking-tight">Authorize Payment</h2>
+            <p className="text-green-50 font-bold text-[15px] relative z-10 opacity-90">Enter your M-Pesa PIN on your phone</p>
+          </div>
+
+          <div className="p-10 space-y-10">
+            <div className="flex items-center gap-5 bg-[#fafafa] p-6 rounded-[24px] border border-[#e5e7eb]">
+              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm border border-[#e5e7eb]">
+                <Smartphone className="text-[#00A651] w-7 h-7" />
+              </div>
+              <div>
+                <p className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">STK Push Sent To</p>
+                <p className="font-black text-[18px] text-gray-900">{form.phone}</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              {[
+                { num: '1', text: 'Unlock your smartphone', done: true },
+                { num: '2', text: 'Enter your M-Pesa PIN', done: false },
+                { num: '3', text: 'Confirm the transaction', done: false },
+              ].map((s, i) => (
+                <div key={i} className="flex items-center gap-5 group">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black border-2 transition-all duration-500 ${
+                    s.done ? 'bg-[#00A651] border-[#00A651] text-white shadow-lg shadow-green-100' : 'bg-white border-[#e5e7eb] text-gray-300'
+                  }`}>
+                    {s.done ? <CheckCircle size={20} /> : s.num}
+                  </div>
+                  <p className={`font-black text-[15px] transition-colors duration-500 ${s.done ? 'text-gray-900' : 'text-gray-300'}`}>{s.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-4 pt-6">
+              <div className="h-3 bg-gray-50 rounded-full overflow-hidden border border-gray-100 p-0.5">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  className="h-full bg-gradient-to-r from-[#00A651] to-[#00c864] rounded-full"
+                />
+              </div>
+              <div className="flex justify-between text-[11px] font-black uppercase tracking-[0.15em]">
+                <span className="text-gray-400 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#00A651] animate-pulse" />
+                  Securing Transaction
+                </span>
+                <span className={mpesaTimer < 30 ? 'text-red-500 animate-pulse' : 'text-[#00A651]'}>{mins}:{secs}</span>
+              </div>
+            </div>
+
+            <div className="pt-4">
+              <button
+                onClick={() => setStep('form')}
+                className="w-full h-14 rounded-2xl font-black text-[14px] text-gray-400 bg-gray-50 hover:bg-red-50 hover:text-red-500 transition-all duration-300 border border-transparent hover:border-red-100"
+              >
+                Cancel and use different method
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── ERROR SCREEN ──
+  if (step === 'error') {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 checkout-bg">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }} 
+          animate={{ opacity: 1, scale: 1 }} 
+          className="bg-white rounded-[40px] p-12 max-w-md w-full text-center shadow-2xl border border-[#f0f0f0]"
+        >
+          <div className="w-24 h-24 rounded-[32px] bg-red-50 flex items-center justify-center mx-auto mb-10 border border-red-100 transform rotate-12">
+            <AlertCircle className="text-red-500 w-12 h-12 -rotate-12" />
+          </div>
+          <h2 className="text-3xl font-black text-[#00004d] mb-4 tracking-tight">Payment Failed</h2>
+          <p className="text-gray-500 font-bold mb-12 leading-relaxed px-4">{errorMsg}</p>
+          <div className="space-y-4">
+            <button 
+              onClick={() => { setStep('form'); setErrorMsg('') }} 
+              className="w-full h-[64px] rounded-[24px] bg-[#00004d] text-white font-black text-[17px] transition-all hover:translate-y-[-2px] active:scale-95 shadow-xl shadow-[#00004d]/20"
+            >
+              Return to Checkout
+            </button>
+            <Link 
+              href="/contact" 
+              className="w-full h-[64px] rounded-[24px] bg-white border-2 border-[#e5e7eb] text-gray-700 font-black text-[17px] flex items-center justify-center transition-all hover:border-[#0000ff] hover:text-[#0000ff]"
+            >
+              Get Priority Support
+            </Link>
+          </div>
+        </motion.div>
+      </div>
+    )
+  }
+
+  // ── MAIN CHECKOUT ──
+  return (
+    <div className="checkout-bg min-h-screen pb-20 font-medium">
+      <Header />
+      
+      {/* eTIMS Banner */}
+      <div className="w-full py-4 px-4 text-center bg-white/50 backdrop-blur-sm border-b border-purple-100 mt-16 lg:mt-20">
+        <p className="text-[11px] font-black text-purple-600 uppercase tracking-[0.2em] flex items-center justify-center gap-2">
+          <span>🧾</span> eTIMS KRA Invoice issued automatically after purchase
+        </p>
+      </div>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Step Indicator */}
+        <div className="py-12 lg:py-16 max-w-4xl mx-auto">
+          <div className="flex items-center justify-between relative px-2">
+            {/* Background Line */}
+            <div className="absolute top-1/2 left-0 w-full h-[2px] bg-gray-100 -translate-y-1/2 z-0" />
+            {/* Progress Line */}
+            <div 
+              className="absolute top-1/2 left-0 h-[2px] bg-[#0000ff] -translate-y-1/2 z-0 transition-all duration-1000 ease-in-out" 
+              style={{ width: '50%' }} 
+            />
+            
+            {/* Step 1: Cart */}
+            <div className="relative z-10 flex flex-col items-center gap-3 bg-[#f8f9ff] px-4">
+              <div className="w-10 h-10 rounded-full bg-[#00A651] text-white flex items-center justify-center shadow-lg shadow-green-100 border-4 border-white">
+                <CheckCircle size={20} strokeWidth={3} />
+              </div>
+              <span className="text-[12px] font-black text-gray-500 uppercase tracking-widest">1. Cart</span>
+            </div>
+
+            {/* Step 2: Checkout */}
+            <div className="relative z-10 flex flex-col items-center gap-3 bg-[#f8f9ff] px-4">
+              <div className="w-12 h-12 rounded-full bg-[#0000ff] text-white flex items-center justify-center shadow-xl shadow-blue-200 border-4 border-white font-black text-lg">
+                2
+              </div>
+              <span className="text-[12px] font-black text-[#00004d] uppercase tracking-widest">2. Checkout</span>
+            </div>
+
+            {/* Step 3: Confirmation */}
+            <div className="relative z-10 flex flex-col items-center gap-3 bg-[#f8f9ff] px-4">
+              <div className="w-10 h-10 rounded-full bg-white text-gray-300 flex items-center justify-center border-2 border-gray-100 font-black text-sm">
+                3
+              </div>
+              <span className="text-[12px] font-black text-gray-400 uppercase tracking-widest opacity-50">3. Confirmation</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* LEFT COLUMN: FORMS (60%) */}
+          <div className="lg:col-span-7 space-y-10 order-2 lg:order-1">
+            
+            {/* 1. Contact Info */}
+            <motion.section 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-[32px] p-8 lg:p-10 shadow-premium border border-[#f0f0f0]"
+            >
+              <div className="flex items-center gap-5 mb-10">
+                <div className="w-10 h-10 rounded-full bg-[#0000ff] text-white flex items-center justify-center text-sm font-black shadow-lg shadow-blue-100 flex-shrink-0">1</div>
+                <h2 className="text-[20px] font-black text-gray-900 tracking-tight">Contact Information</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="md:col-span-2 space-y-3">
+                  <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Full Name</label>
+                  <div className="relative group">
+                    <input 
+                      required value={form.fullName} onChange={e => set('fullName', e.target.value)}
+                      placeholder="e.g. Samuel Okoth"
+                      className={`w-full h-[60px] px-6 rounded-[20px] text-[16px] font-medium transition-all duration-300 outline-none border-[1.5px] ${
+                        form.fullName.length >= 2 
+                          ? 'bg-[#f0fdf4] border-[#00A651] text-gray-900' 
+                          : 'bg-[#fafafa] border-[#e5e7eb] focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08]'
+                      }`}
+                    />
+                    {form.fullName.length >= 2 && <CheckCircle className="absolute right-5 top-1/2 -translate-y-1/2 text-[#00A651]" size={22} />}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Email Address</label>
+                  <div className="relative group">
+                    <input 
+                      required type="email" value={form.email} onChange={e => set('email', e.target.value)}
+                      placeholder="samuel@email.com"
+                      className={`w-full h-[60px] px-6 rounded-[20px] text-[16px] font-medium transition-all duration-300 outline-none border-[1.5px] ${
+                        form.email.includes('@') 
+                          ? 'bg-[#f0fdf4] border-[#00A651] text-gray-900' 
+                          : 'bg-[#fafafa] border-[#e5e7eb] focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08]'
+                      }`}
+                    />
+                    {form.email.includes('@') && <CheckCircle className="absolute right-5 top-1/2 -translate-y-1/2 text-[#00A651]" size={22} />}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">M-Pesa Phone</label>
+                  <div className="relative group">
+                    <input 
+                      required value={form.phone} onChange={e => set('phone', e.target.value)}
+                      placeholder="0712 345 678"
+                      className={`w-full h-[60px] px-6 rounded-[20px] text-[16px] font-medium transition-all duration-300 outline-none border-[1.5px] ${
+                        form.phone.length >= 10 
+                          ? 'bg-[#f0fdf4] border-[#00A651] text-gray-900' 
+                          : 'bg-[#fafafa] border-[#e5e7eb] focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08]'
+                      }`}
+                    />
+                    {form.phone.length >= 10 && <CheckCircle className="absolute right-5 top-1/2 -translate-y-1/2 text-[#00A651]" size={22} />}
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+
+            {/* 2. Delivery Info */}
+            <motion.section 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="bg-white rounded-[32px] p-8 lg:p-10 shadow-premium border border-[#f0f0f0]"
+            >
+              <div className="flex items-center gap-5 mb-10">
+                <div className="w-10 h-10 rounded-full bg-[#0000ff] text-white flex items-center justify-center text-sm font-black shadow-lg shadow-blue-100 flex-shrink-0">2</div>
+                <h2 className="text-[20px] font-black text-gray-900 tracking-tight">Delivery Details</h2>
+              </div>
+
+              <div className="space-y-8">
+                <div className="space-y-3">
+                  <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Street Address</label>
+                  <div className="relative group">
+                    <input 
+                      required value={form.address} onChange={e => set('address', e.target.value)}
+                      placeholder="e.g. 123 Ngong Road, Karen Heights, Apt 4B"
+                      className={`w-full h-[60px] px-6 rounded-[20px] text-[16px] font-medium transition-all duration-300 outline-none border-[1.5px] ${
+                        form.address.length >= 5 
+                          ? 'bg-[#f0fdf4] border-[#00A651] text-gray-900' 
+                          : 'bg-[#fafafa] border-[#e5e7eb] focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08]'
+                      }`}
+                    />
+                    {form.address.length >= 5 && <CheckCircle className="absolute right-5 top-1/2 -translate-y-1/2 text-[#00A651]" size={22} />}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">City</label>
+                    <input 
+                      required value={form.city} onChange={e => set('city', e.target.value)}
+                      className="w-full h-[60px] px-6 rounded-[20px] bg-[#fafafa] border-[1.5px] border-[#e5e7eb] text-[16px] font-medium focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08] outline-none transition-all duration-300"
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">County</label>
+                    <input 
+                      required value={form.county} onChange={e => set('county', e.target.value)}
+                      className="w-full h-[60px] px-6 rounded-[20px] bg-[#fafafa] border-[1.5px] border-[#e5e7eb] text-[16px] font-medium focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08] outline-none transition-all duration-300"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Order Notes (Optional)</label>
+                  <textarea 
+                    value={form.notes} onChange={e => set('notes', e.target.value)}
+                    placeholder="Gate codes or specific delivery instructions..."
+                    className="w-full min-h-[120px] p-6 rounded-[20px] bg-[#fafafa] border-[1.5px] border-[#e5e7eb] text-[16px] font-medium focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08] outline-none transition-all duration-300 resize-none"
+                  />
+                </div>
+              </div>
+            </motion.section>
+
+            {/* "Not sure?" box */}
+            <div className="bg-[#fffbeb] border-[1.5px] border-[#fde68a] rounded-[24px] p-8 flex flex-col md:flex-row items-start md:items-center gap-8 shadow-sm">
+              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-amber-500 shadow-sm flex-shrink-0">
+                <Shield size={28} />
+              </div>
+              <div className="flex-1">
+                <p className="font-black text-gray-900 text-[17px] mb-1">Need help before paying?</p>
+                <p className="text-sm text-amber-800/80 font-medium mb-6 leading-relaxed max-w-lg">Our team can confirm stock, warranty, and delivery timing before you complete your purchase.</p>
+                <div className="flex flex-wrap gap-3">
+                  <a href="https://wa.me/254716822014" target="_blank" className="h-[42px] px-6 rounded-xl bg-[#00A651] text-white text-[13px] font-black flex items-center gap-2 transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-green-100">
+                    <MessageSquare size={16} /> WhatsApp
+                  </a>
+                  <a href="tel:+254716822014" className="h-[42px] px-6 rounded-xl bg-white border border-[#e5e7eb] text-[#0000ff] text-[13px] font-black flex items-center gap-2 transition-all hover:border-[#0000ff] active:scale-95">
+                    <Phone size={16} /> Call
+                  </a>
+                  <a href="mailto:batteriq@gmail.com" className="h-[42px] px-6 rounded-xl bg-white border border-[#e5e7eb] text-gray-500 text-[13px] font-black flex items-center gap-2 transition-all hover:border-gray-400 active:scale-95">
+                    <Mail size={16} /> Email
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* 3. Payment Method */}
+            <motion.section 
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+              className="bg-white rounded-[32px] p-8 lg:p-10 shadow-premium border border-[#f0f0f0]"
+            >
+              <div className="flex items-center gap-5 mb-10">
+                <div className="w-10 h-10 rounded-full bg-[#0000ff] text-white flex items-center justify-center text-sm font-black shadow-lg shadow-blue-100 flex-shrink-0">3</div>
+                <h2 className="text-[20px] font-black text-gray-900 tracking-tight">Payment Method</h2>
+              </div>
+
+              <div className="space-y-5">
+                {/* M-Pesa Now */}
+                <div 
+                  onClick={() => setPaymentMethod('mpesa_now')}
+                  className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 group ${
+                    paymentMethod === 'mpesa_now' 
+                      ? 'border-[#00A651] bg-[#f0fdf4] shadow-[0_0_24px_rgba(0,166,81,0.1)]' 
+                      : 'border-[#f0f0f0] bg-white hover:border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-6">
+                    <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/payment-mpesa.svg" alt="M-Pesa" className="h-6 w-auto" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src="/products/payment-mpesa.svg"
+                          alt="M-Pesa"
+                          className="h-8 w-auto object-contain flex-shrink-0"
+                          onError={(e) => { e.currentTarget.style.display = 'none' }}
+                        />
+                        <div>
+                          <p className="font-black text-gray-900 text-sm">M-Pesa Express</p>
+                          <p className="text-xs text-gray-500">Safe, instant STK Push payment</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                      paymentMethod === 'mpesa_now' ? 'border-[#00A651] bg-[#00A651]' : 'border-gray-200 bg-white'
+                    }`}>
+                      {paymentMethod === 'mpesa_now' && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                  </div>
+                </div>
+
+                {/* COD M-Pesa */}
+                <div 
+                  onClick={() => setPaymentMethod('cod_mpesa')}
+                  className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 group ${
+                    paymentMethod === 'cod_mpesa' 
+                      ? 'border-[#0000ff] bg-[#f8f9ff] shadow-[0_0_24px_rgba(0,0,255,0.06)]' 
+                      : 'border-[#f0f0f0] bg-white hover:border-gray-200'
+                  }`}
+                >
+                  <div className="flex items-center gap-6">
+                    <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0">
+                      <Truck className={paymentMethod === 'cod_mpesa' ? 'text-[#0000ff]' : 'text-gray-400'} size={28} />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src="/products/payment-mpesa.svg"
+                          alt="M-Pesa"
+                          className="h-8 w-auto object-contain flex-shrink-0"
+                          onError={(e) => { e.currentTarget.style.display = 'none' }}
+                        />
+                        <div>
+                          <p className="font-black text-gray-900 text-sm">M-Pesa on Delivery</p>
+                          <p className="text-xs text-gray-500">STK prompt sent upon delivery</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+                      paymentMethod === 'cod_mpesa' ? 'border-[#0000ff] bg-[#0000ff]' : 'border-gray-200 bg-white'
+                    }`}>
+                      {paymentMethod === 'cod_mpesa' && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+          </div>
+
+          {/* RIGHT COLUMN: SUMMARY (40%) */}
+          <div className="lg:col-span-5 lg:sticky lg:top-32 space-y-6 order-1 lg:order-2">
+            
+            {/* Mobile Summary Accordion (Visible only on mobile) */}
+            <details className="lg:hidden group bg-white rounded-[28px] border border-[#f0f0f0] shadow-premium overflow-hidden">
+              <summary className="flex items-center justify-between p-6 cursor-pointer list-none">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center">
+                    <Package className="text-[#0000ff]" size={20} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-gray-900">Show Order Summary</p>
+                    <p className="text-xs text-gray-500 font-bold">{totalQuantity} items • {formatKES(subtotal)}</p>
+                  </div>
+                </div>
+                <ChevronRight className="text-gray-400 transition-transform group-open:rotate-90" size={20} />
+              </summary>
+              <div className="p-6 pt-0 border-t border-gray-50">
+                <div className="space-y-6 py-4">
+                  {items.map(item => (
+                    <div key={item.productId} className="flex gap-4">
+                      <div className="w-14 h-14 bg-gray-50 rounded-xl flex items-center justify-center p-2 flex-shrink-0">
+                        <Image src={item.image || '/placeholder-product.jpg'} alt={item.name} width={48} height={48} className="object-contain" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-900 truncate">{item.name}</p>
+                        <p className="text-[12px] text-gray-400 font-bold uppercase tracking-wider">{item.quantity} × {formatKES(Number(item.price_kes))}</p>
+                      </div>
+                      <p className="text-sm font-black text-gray-900 font-mono">{formatKES(Number(item.price_kes) * item.quantity)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </details>
+
+            {/* Desktop Order Summary */}
+            <div className="hidden lg:block bg-white rounded-[32px] p-10 shadow-premium-lg border border-[#f0f0f0]">
+              <h2 className="text-[22px] font-black text-gray-900 mb-10 flex items-center justify-between tracking-tight">
+                Order Summary
+                <span className="text-[11px] font-black text-[#0000ff] bg-blue-50 px-4 py-1.5 rounded-full uppercase tracking-[0.15em]">{totalQuantity} Items</span>
+              </h2>
+
+              <div className="space-y-6 max-h-[45vh] overflow-y-auto pr-2 scrollbar-hide">
+                {items.map(item => (
+                  <div key={item.productId} className="flex gap-5">
+                    <div className="w-14 h-14 bg-[#fafafa] rounded-2xl flex items-center justify-center p-3 flex-shrink-0 border border-gray-50">
+                      <Image src={item.image || '/placeholder-product.jpg'} alt={item.name} width={48} height={48} className="object-contain" />
+                    </div>
+                    <div className="flex-1 min-w-0 py-1">
+                      <p className="text-[15px] font-bold text-gray-900 truncate tracking-tight">{item.name}</p>
+                      <p className="text-[12px] text-gray-400 font-black uppercase tracking-wider">{item.quantity} × {formatKES(Number(item.price_kes))}</p>
+                    </div>
+                    <div className="text-right py-1">
+                      <p className="text-[15px] font-black text-gray-900 font-mono tracking-tighter">{formatKES(Number(item.price_kes) * item.quantity)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="my-10 h-[1.5px] bg-gray-50" />
+
+              <div className="space-y-5">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Subtotal</span>
+                  <span className="text-[16px] font-black text-gray-900 font-mono tracking-tighter">{formatKES(subtotal)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Delivery</span>
+                  <span className="text-[11px] font-black text-green-600 bg-green-50 px-4 py-1.5 rounded-xl uppercase tracking-widest">Confirmed at checkout</span>
+                </div>
+                <div className="pt-8 border-t border-gray-50 flex justify-between items-end">
+                  <span className="text-[20px] font-black text-gray-900 tracking-tight uppercase">Total Amount</span>
+                  <div className="text-right">
+                    <span className="block text-[10px] font-black text-[#0000ff] uppercase tracking-[0.2em] mb-2">KES (Inc. VAT)</span>
+                    <span className="text-[32px] font-black text-[#00004d] font-mono leading-none tracking-tighter">{formatKES(subtotal)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-10 space-y-6">
+                <p className="text-[11px] font-black text-purple-600 text-center flex items-center justify-center gap-2 uppercase tracking-widest">
+                  🧾 eTIMS KRA Invoice Included
+                </p>
+                <button
+                  onClick={isFormValid ? handleSubmit : undefined}
+                  disabled={!isFormValid || loading}
+                  className={`w-full h-[64px] rounded-[24px] font-black text-white text-[17px] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl active:scale-[0.98] disabled:bg-gray-100 disabled:text-gray-400 disabled:shadow-none disabled:cursor-not-allowed group relative overflow-hidden`}
+                  style={{
+                    background: isFormValid ? 'linear-gradient(135deg, #0000ff 0%, #00004d 100%)' : '#f3f4f6',
+                    boxShadow: isFormValid ? '0 12px 32px rgba(0, 0, 255, 0.25)' : 'none'
+                  }}
+                >
+                  {loading ? (
+                    <div className="w-7 h-7 border-[3px] border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <Lock size={20} className="transition-transform group-hover:scale-110" />
+                      {paymentMethod === 'mpesa_now' ? 'Complete M-Pesa Payment' : 'Confirm Order'}
+                    </>
+                  )}
+                </button>
+                
+                <div className="flex items-center justify-center gap-6 pt-4 opacity-40">
+                  <div className="flex items-center gap-2">
+                    <Shield size={14} className="text-gray-900" />
+                    <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Secure SSL</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle size={14} className="text-gray-900" />
+                    <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Official Warranty</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sticky Order Button for Mobile */}
+            <div className="lg:hidden fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-xl border-t border-gray-100 z-50">
+              <button
+                onClick={isFormValid ? handleSubmit : undefined}
+                disabled={!isFormValid || loading}
+                className="w-full h-[60px] rounded-[20px] font-black text-white text-[16px] flex items-center justify-center gap-3 transition-all shadow-xl active:scale-95 disabled:bg-gray-100 disabled:text-gray-400"
+                style={{
+                  background: isFormValid ? 'linear-gradient(135deg, #0000ff 0%, #00004d 100%)' : '#f3f4f6',
+                }}
+              >
+                {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Complete Purchase'}
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </main>
+      
+      <Footer />
+    </div>
+  )
+}

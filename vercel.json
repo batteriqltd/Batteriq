@@ -1,0 +1,29 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "functions": {
+    "app/api/mpesa/callback/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/ai/chat/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/mpesa/stkpush/route.ts": {
+      "maxDuration": 30
+    }
+  },
+  "headers": [
+    {
+      "source": "/api/mpesa/callback",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    }
+  ],
+  "regions": ["fra1", "iad1"]
+}

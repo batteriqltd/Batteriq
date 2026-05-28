@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60" width="120" height="60">
+  <rect width="120" height="60" rx="6" fill="#ffffff"/>
+  <!-- Left red circle -->
+  <circle cx="44" cy="30" r="20" fill="#EB001B"/>
+  <!-- Right orange/yellow circle -->
+  <circle cx="76" cy="30" r="20" fill="#F79E1B"/>
+  <!-- Overlap in amber -->
+  <path d="M60,13.5 a20,20 0 0,1 0,33 a20,20 0 0,1 0,-33z" fill="#FF5F00"/>
+</svg>
