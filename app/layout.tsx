@@ -97,9 +97,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://batteriq.com',
   },
-  verification: {
-    google: 'ADD-YOUR-GOOGLE-SEARCH-CONSOLE-CODE-HERE',
-  },
 }
 
 export const viewport: Viewport = {
