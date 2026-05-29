@@ -138,7 +138,7 @@ export default function CheckoutPage() {
         const mpesaRes = await fetch('/api/mpesa/stkpush', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phoneNumber: normalizePhone(form.phone), orderId: orderData.orderId, amount: 1 }), // SANDBOX TEST: 1 shilling
+          body: JSON.stringify({ phoneNumber: normalizePhone(form.phone), orderId: orderData.orderId, amount: 1 }), // SANDBOX TEST: force 1 KES
         })
         if (!mpesaRes.ok) throw new Error('M-Pesa push failed')
         const mpesaData = await mpesaRes.json()
