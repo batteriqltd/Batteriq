@@ -69,6 +69,14 @@ const nextConfig = {
         destination: 'https://batteriq.com/:path*',
         permanent: true,
       },
+      { source: '/shop', destination: '/power-stations', permanent: true },
+      { source: '/shop/:path*', destination: '/', permanent: true },
+      { source: '/product/:path*', destination: '/', permanent: true },
+      { source: '/product-category/:path*', destination: '/', permanent: true },
+      { source: '/explore', destination: '/', permanent: true },
+      { source: '/explore/:path*', destination: '/', permanent: true },
+      { source: '/home-solar-backup', destination: '/', permanent: true },
+      { source: '/about-us', destination: '/about', permanent: true },
     ]
   },
 }
