@@ -39,7 +39,7 @@ export default function CheckoutPage() {
   const [mpesaTimer, setMpesaTimer] = useState(120)
   const [checkoutRequestId, setCheckoutRequestId] = useState('')
   const [retryCount, setRetryCount] = useState(0)
-  const PAYBILL_NUMBER = '522533'
+  const PAYBILL_NUMBER = '5286334'
   const PAYBILL_ACCOUNT = 'BATTERIQ'
 
   useEffect(() => { setMounted(true) }, [])
