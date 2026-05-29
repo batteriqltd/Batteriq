@@ -94,13 +94,15 @@ export async function POST(req: Request) {
       environment:    process.env.MPESA_ENVIRONMENT?.trim() ?? 'sandbox',
     }
 
+    const maskKey = (k: string) => k.length > 8 ? `${k.slice(0, 4)}...${k.slice(-4)}` : '(too short)'
     console.log('[MPESA] ENV vars loaded:')
-    console.log('  consumerKey present:', !!env.consumerKey, '| length:', env.consumerKey.length)
-    console.log('  consumerSecret present:', !!env.consumerSecret, '| length:', env.consumerSecret.length)
+    console.log('  consumerKey present:', !!env.consumerKey, '| length:', env.consumerKey.length, '| preview:', maskKey(env.consumerKey))
+    console.log('  consumerSecret present:', !!env.consumerSecret, '| length:', env.consumerSecret.length, '| preview:', maskKey(env.consumerSecret))
     console.log('  shortcode:', env.shortcode)
-    console.log('  passkey length:', env.passkey.length)
+    console.log('  passkey length:', env.passkey.length, '| passkey preview:', maskKey(env.passkey))
     console.log('  callbackUrl:', env.callbackUrl)
     console.log('  environment:', env.environment)
+    console.log('  ⚠️  callbackUrl must be a PUBLIC HTTPS URL (not localhost) for Safaricom to reach it')
 
     const missing = Object.entries(env)
       .filter(([, v]) => !v)
