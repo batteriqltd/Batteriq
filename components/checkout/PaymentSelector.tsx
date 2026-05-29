@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import { DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type PaymentMethod = 'mpesa_now' | 'cod_cash' | 'cod_mpesa'
@@ -18,13 +17,6 @@ const METHODS = [
     label: 'M-Pesa Express',
     description: 'Safe, instant STK Push payment',
     badge: 'Recommended',
-  },
-  {
-    id: 'cod_cash' as PaymentMethod,
-    image: null,
-    label: 'Cash on Delivery',
-    description: 'Pay cash when your order arrives at your door.',
-    badge: null,
   },
   {
     id: 'cod_mpesa' as PaymentMethod,
@@ -66,20 +58,13 @@ export function PaymentSelector({ value, onChange }: PaymentSelectorProps) {
                 'min-w-[48px] h-9 rounded-lg bg-white border flex items-center justify-center transition-all duration-200 overflow-hidden',
                 isSelected ? 'border-blue-100' : 'border-slate-100'
               )}>
-                {image ? (
-                  <Image
-                    src={image}
-                    alt={label}
-                    width={40}
-                    height={32}
-                    className="object-contain w-full h-full"
-                  />
-                ) : (
-                  <DollarSign
-                    size={18}
-                    className={isSelected ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}
-                  />
-                )}
+                <Image
+                  src={image}
+                  alt={label}
+                  width={40}
+                  height={32}
+                  className="object-contain w-full h-full"
+                />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
