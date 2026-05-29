@@ -1,6 +1,7 @@
 'use client'
 
-import { Smartphone, DollarSign, Truck } from 'lucide-react'
+import Image from 'next/image'
+import { DollarSign } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type PaymentMethod = 'mpesa_now' | 'cod_cash' | 'cod_mpesa'
@@ -13,23 +14,23 @@ type PaymentSelectorProps = {
 const METHODS = [
   {
     id: 'mpesa_now' as PaymentMethod,
-    icon: Smartphone,
-    label: 'Pay Now via M-Pesa',
-    description: 'Instant STK Push to your phone. Confirm with M-Pesa PIN.',
+    image: '/logos/mpesa-express.png',
+    label: 'M-Pesa Express',
+    description: 'Safe, instant STK Push payment',
     badge: 'Recommended',
   },
   {
     id: 'cod_cash' as PaymentMethod,
-    icon: DollarSign,
+    image: null,
     label: 'Cash on Delivery',
     description: 'Pay cash when your order arrives at your door.',
     badge: null,
   },
   {
     id: 'cod_mpesa' as PaymentMethod,
-    icon: Truck,
+    image: '/logos/delivery-truck.png',
     label: 'M-Pesa on Delivery',
-    description: 'Pay via M-Pesa when the delivery arrives.',
+    description: 'STK prompt sent upon delivery',
     badge: null,
   },
 ]
@@ -41,7 +42,7 @@ export function PaymentSelector({ value, onChange }: PaymentSelectorProps) {
         Payment Method
       </legend>
       <div className="space-y-3">
-        {METHODS.map(({ id, icon: Icon, label, description, badge }) => {
+        {METHODS.map(({ id, image, label, description, badge }) => {
           const isSelected = value === id
           return (
             <label
@@ -62,10 +63,23 @@ export function PaymentSelector({ value, onChange }: PaymentSelectorProps) {
                 className="sr-only"
               />
               <div className={cn(
-                'min-w-[48px] h-9 rounded-lg bg-white border flex items-center justify-center transition-all duration-200',
-                isSelected ? 'border-blue-100 text-blue-600' : 'border-slate-100 text-slate-400 group-hover:text-slate-600'
+                'min-w-[48px] h-9 rounded-lg bg-white border flex items-center justify-center transition-all duration-200 overflow-hidden',
+                isSelected ? 'border-blue-100' : 'border-slate-100'
               )}>
-                <Icon size={18} />
+                {image ? (
+                  <Image
+                    src={image}
+                    alt={label}
+                    width={40}
+                    height={32}
+                    className="object-contain w-full h-full"
+                  />
+                ) : (
+                  <DollarSign
+                    size={18}
+                    className={isSelected ? 'text-blue-600' : 'text-slate-400 group-hover:text-slate-600'}
+                  />
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 flex-wrap">
