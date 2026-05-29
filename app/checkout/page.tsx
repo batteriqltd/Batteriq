@@ -39,8 +39,9 @@ export default function CheckoutPage() {
   const [mpesaTimer, setMpesaTimer] = useState(120)
   const [checkoutRequestId, setCheckoutRequestId] = useState('')
   const [retryCount, setRetryCount] = useState(0)
-  const PAYBILL_NUMBER = '5286334'
-  const PAYBILL_ACCOUNT = 'BATTERIQ'
+  const PAYBILL_NUMBER = '303030'
+  const PAYBILL_ACCOUNT = '3753#'
+  const PAYBILL_NAME = 'BATTERIQ SOLUTIONS'
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -147,25 +148,46 @@ export default function CheckoutPage() {
         setStep('transitioning')
         await new Promise(resolve => setTimeout(resolve, 1200))
         setStep('waiting_mpesa')
+        const savedOrderId = orderData.orderId
+        const savedEmail = form.email
         const pollInterval = setInterval(async () => {
           try {
-            const statusRes = await fetch(`/api/orders/${orderData.orderId}/status`)
+            // 1. Check if callback already updated the order
+            const statusRes = await fetch(`/api/orders/${savedOrderId}/status`)
             const statusData = await statusRes.json()
 
             if (statusData.paymentStatus === 'paid') {
               clearInterval(pollInterval)
               clearCart()
-              router.push(`/order-confirmation/${orderData.orderId}?email=${encodeURIComponent(form.email)}`)
+              router.push(`/order-confirmation/${savedOrderId}?email=${encodeURIComponent(savedEmail)}`)
+              return
             }
 
             if (statusData.paymentStatus === 'failed') {
               clearInterval(pollInterval)
               const reason = statusData.failureReason || 'Payment was cancelled or PIN was incorrect.'
               setStep('error')
-              setErrorMsg(reason + ' You can try again or choose a different payment method.')
+              setErrorMsg(reason + ' You can retry or pay via Paybill below.')
+              return
+            }
+
+            // 2. If still pending, ask Safaricom directly (STK Query)
+            if (checkoutRequestId) {
+              const queryRes = await fetch('/api/mpesa/stkquery', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ checkoutRequestId }),
+              })
+              const queryData = await queryRes.json()
+              // ResultCode 0 = paid — redirect even if callback was slow
+              if (queryData.resultCode === 0) {
+                clearInterval(pollInterval)
+                clearCart()
+                router.push(`/order-confirmation/${savedOrderId}?email=${encodeURIComponent(savedEmail)}`)
+              }
             }
           } catch {}
-        }, 3000)
+        }, 4000)
         setTimeout(() => clearInterval(pollInterval), 120000)
       } else {
         clearCart()
@@ -333,10 +355,14 @@ export default function CheckoutPage() {
                 <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Account No.</span>
                 <span className="font-black text-[18px] text-[#00A651] font-mono">{PAYBILL_ACCOUNT}</span>
               </div>
+              <div className="flex justify-between items-center bg-white rounded-xl px-5 py-3 border border-green-100">
+                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Name</span>
+                <span className="font-black text-[15px] text-gray-700">{PAYBILL_NAME}</span>
+              </div>
             </div>
             <p className="text-[11px] text-gray-400 font-bold mt-4 leading-relaxed text-center">
-              After paying, WhatsApp us your transaction code on{' '}
-              <a href="https://wa.me/254716822014" className="text-green-600 underline">0716 822 014</a>
+              After paying, send your M-Pesa confirmation SMS screenshot to us on{' '}
+              <a href="https://wa.me/254716822014" className="text-green-600 underline">WhatsApp 0716 822 014</a>
             </p>
           </div>
         </motion.div>
