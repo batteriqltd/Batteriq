@@ -36,12 +36,12 @@ function LiveClock() {
   return (
     <div className="flex flex-col items-end">
       <span
-        className="font-black text-gray-900 tabular-nums"
-        style={{ fontSize: '22px', letterSpacing: '-0.02em' }}
+        className="font-black tabular-nums text-white"
+        style={{ fontSize: '22px', letterSpacing: '-0.02em', textShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
       >
         {time}
       </span>
-      <span className="text-xs text-gray-400 font-medium mt-0.5">
+      <span className="text-xs font-medium mt-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>
         {date}
       </span>
     </div>
@@ -216,31 +216,48 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
 export function AdminTopBar() {
   return (
     <div
-      className="flex items-center justify-between px-8 py-4 bg-white border-b border-gray-100"
-      style={{ boxShadow: '0 1px 12px rgba(0,0,64,0.05)' }}
+      className="flex items-center justify-between px-8 py-4 sticky top-0 z-50"
+      style={{
+        background: 'linear-gradient(135deg, #1a237e 0%, #283593 50%, #1e2f8f 100%)',
+        boxShadow: '0 2px 20px rgba(26,35,126,0.45), 0 1px 0 rgba(255,255,255,0.08) inset',
+        borderBottom: '1px solid rgba(255,255,255,0.12)',
+      }}
     >
-      <div>
-        <p className="text-xs font-black uppercase tracking-[0.15em] text-blue-600 mb-0.5">
+      {/* Shine overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 100%)',
+        }}
+      />
+
+      <div className="relative">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
           Operations Console
         </p>
-        <h2 className="text-xl font-black text-gray-900" style={{ letterSpacing: '-0.02em' }}>
+        <h2 className="text-xl font-black text-white" style={{ letterSpacing: '-0.02em', textShadow: '0 1px 6px rgba(0,0,0,0.25)' }}>
           Welcome back, Admin 👋
         </h2>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="relative flex items-center gap-6">
         <LiveClock />
-        <div className="w-px h-10 bg-gray-100" />
+        <div className="w-px h-10" style={{ background: 'rgba(255,255,255,0.2)' }} />
         <div className="flex items-center gap-2.5">
           <div
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm"
-            style={{ background: 'linear-gradient(135deg, #0000ff, #00004d)' }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0"
+            style={{
+              background: 'rgba(255,255,255,0.18)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              color: '#ffffff',
+              backdropFilter: 'blur(4px)',
+            }}
           >
             B
           </div>
           <div>
-            <p className="text-xs font-black text-gray-900">Batteriq Admin</p>
-            <p className="text-[10px] text-gray-400">info@batteriq.com</p>
+            <p className="text-xs font-black text-white">Batteriq Admin</p>
+            <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.55)' }}>info@batteriq.com</p>
           </div>
         </div>
       </div>
