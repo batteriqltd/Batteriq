@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingBag, Tag,
-  MessageSquare, Mail, LogOut, ChevronRight, CreditCard,
+  MessageSquare, Mail, LogOut, ChevronRight, CreditCard, Send,
   Users, BarChart3, Download, Star, ImageIcon,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -58,6 +58,7 @@ const NAV = [
   { href: '/admin/stock', label: 'Stock', icon: BarChart3 },
   { href: '/admin/pricing', label: 'Pricing Engine', icon: Tag },
   { href: '/admin/ai-chat', label: 'Chat Monitor', icon: MessageSquare },
+  { href: '/admin/broadcast', label: 'Broadcast', icon: Send },
   { href: '/admin/messages', label: 'Messages', icon: Mail },
   { href: '/admin/reviews', label: 'Reviews', icon: Star },
 ]
