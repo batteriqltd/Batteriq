@@ -177,7 +177,7 @@ export async function POST(req: Request) {
       BusinessShortCode: env.shortcode,
       Password:          password,
       Timestamp:         timestamp,
-      TransactionType:   'CustomerPayBillOnline',
+      TransactionType:   'CustomerBuyGoodsOnline',
       Amount:            mpesaAmount,
       PartyA:            phone,
       PartyB:            env.shortcode,
