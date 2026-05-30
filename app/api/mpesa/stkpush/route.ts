@@ -183,7 +183,7 @@ export async function POST(req: Request) {
       PartyB:            env.shortcode,
       PhoneNumber:       phone,
       CallBackURL:       env.callbackUrl,
-      AccountReference:  '3753#',
+      AccountReference:  accountRef,
       TransactionDesc:   'Batteriq Order Payment',
     }
 
