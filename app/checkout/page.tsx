@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useCartStore, formatKES } from '@/store/cartStore'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -38,6 +38,7 @@ export default function CheckoutPage() {
   const [orderId, setOrderId] = useState('')
   const [mpesaTimer, setMpesaTimer] = useState(120)
   const [checkoutRequestId, setCheckoutRequestId] = useState('')
+  const checkoutRequestIdRef = useRef('')
   const [retryCount, setRetryCount] = useState(0)
   const PAYBILL_NUMBER = '303030'
   const PAYBILL_ACCOUNT = '3753#'
@@ -143,13 +144,17 @@ export default function CheckoutPage() {
         })
         if (!mpesaRes.ok) throw new Error('M-Pesa push failed')
         const mpesaData = await mpesaRes.json()
-        if (mpesaData.checkoutRequestId) setCheckoutRequestId(mpesaData.checkoutRequestId)
+        if (mpesaData.checkoutRequestId) {
+          setCheckoutRequestId(mpesaData.checkoutRequestId)
+          checkoutRequestIdRef.current = mpesaData.checkoutRequestId
+        }
         setMpesaTimer(120)
         setStep('transitioning')
         await new Promise(resolve => setTimeout(resolve, 1200))
         setStep('waiting_mpesa')
         const savedOrderId = orderData.orderId
         const savedEmail = form.email
+        const pollStart = Date.now()
         const pollInterval = setInterval(async () => {
           try {
             // 1. Check if callback already updated the order
@@ -163,7 +168,8 @@ export default function CheckoutPage() {
               return
             }
 
-            if (statusData.paymentStatus === 'failed') {
+            // Only act on failed after 30s — give user time to enter PIN
+            if (statusData.paymentStatus === 'failed' && Date.now() - pollStart > 30000) {
               clearInterval(pollInterval)
               const reason = statusData.failureReason || 'Payment was cancelled or PIN was incorrect.'
               setStep('error')
@@ -172,11 +178,12 @@ export default function CheckoutPage() {
             }
 
             // 2. If still pending, ask Safaricom directly (STK Query)
-            if (checkoutRequestId) {
+            const reqId = checkoutRequestIdRef.current
+            if (reqId) {
               const queryRes = await fetch('/api/mpesa/stkquery', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ checkoutRequestId }),
+                body: JSON.stringify({ checkoutRequestId: reqId }),
               })
               const queryData = await queryRes.json()
               // ResultCode 0 = paid — redirect even if callback was slow
