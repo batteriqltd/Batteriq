@@ -165,7 +165,7 @@ export async function POST(req: Request) {
     // ── 6. Build STK push payload ──
     const timestamp = getTimestamp()
     const password = Buffer.from(
-      `${env.shortcode}${env.passkey}${timestamp}`,
+      `303030${env.passkey}${timestamp}`,
       'utf8'
     ).toString('base64')
 
@@ -174,16 +174,16 @@ export async function POST(req: Request) {
       : 'BATTERIQ'
 
     const payload = {
-      BusinessShortCode: env.shortcode,
+      BusinessShortCode: '303030',
       Password:          password,
       Timestamp:         timestamp,
-      TransactionType:   'CustomerBuyGoodsOnline',
+      TransactionType:   'CustomerPayBillOnline',
       Amount:            mpesaAmount,
       PartyA:            phone,
-      PartyB:            env.shortcode,
+      PartyB:            '303030',
       PhoneNumber:       phone,
       CallBackURL:       env.callbackUrl,
-      AccountReference:  accountRef,
+      AccountReference:  '3753#',
       TransactionDesc:   'Batteriq Order Payment',
     }
 
