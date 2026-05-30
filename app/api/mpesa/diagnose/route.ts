@@ -49,7 +49,7 @@ export async function GET() {
   if (token) {
     try {
       const timestamp = getTimestamp()
-      const password = Buffer.from(`303030${passkey}${timestamp}`).toString('base64')
+      const password = Buffer.from(`${shortcode}${passkey}${timestamp}`).toString('base64')
       const res = await fetch(`${baseUrl}/mpesa/stkpush/v1/processrequest`, {
         method: 'POST',
         headers: {
@@ -57,13 +57,13 @@ export async function GET() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          BusinessShortCode: '303030',
+          BusinessShortCode: shortcode,
           Password: password,
           Timestamp: timestamp,
           TransactionType: 'CustomerPayBillOnline',
           Amount: 1,
           PartyA: '254708374149',
-          PartyB: '303030',
+          PartyB: shortcode,
           PhoneNumber: '254708374149',
           CallBackURL: 'https://batteriq.com/api/mpesa/callback',
           AccountReference: '3753#',
