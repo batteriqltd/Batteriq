@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { useUIStore } from '@/store/uiStore'
 import { formatKES, getProductImageUrl, getPrimarySpecs, formatSpecLabel } from '@/lib/utils'
@@ -15,10 +15,20 @@ type ProductCardProps = {
   showKenyaContext?: boolean
 }
 
+// Deterministic "viewers" based on product id so it doesn't flicker on re-render
+function getViewers(id: string) {
+  const hash = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
+  return 2 + (hash % 6) // 2–7 viewers
+}
+
 export function ProductCard({ product, showKenyaContext = false }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useUIStore((s) => s.openCart)
   const [imgError, setImgError] = useState(false)
+  const [added, setAdded] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => { setMounted(true) }, [])
 
   const imageUrl = getProductImageUrl(product)
   const specs = getPrimarySpecs(product.specs as Record<string, string>, 3)
@@ -28,6 +38,10 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
 
   const displayName = showKenyaContext ? `${product.name} — Kenya` : product.name
   const hasImage = !imgError && imageUrl !== '/placeholder-product.jpg'
+  const viewers = getViewers(product.id)
+
+  // Stock urgency — show low stock for higher-priced items
+  const isLowStock = product.price_kes > 50000 && product.in_stock
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault()
@@ -40,6 +54,8 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
       quantity: 1,
       image: imageUrl,
     })
+    setAdded(true)
+    setTimeout(() => setAdded(false), 2000)
     showToast(`${product.name} added to cart`, 'success')
     openCart()
   }
@@ -56,7 +72,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
         className="flex flex-col flex-1"
         aria-label={`View ${product.name} details`}
       >
-        {/* Image area - Luxury Bounding Canvas */}
+        {/* Image */}
         <div className="p-3 sm:p-4 pb-0">
           <div
             className="relative w-full overflow-hidden bg-slate-50/80 rounded-xl transition-colors group-hover:bg-slate-100/50"
@@ -106,6 +122,25 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
                 </span>
               </div>
             )}
+
+            {/* Low stock badge */}
+            {isLowStock && !discount && !product.discount_badge && (
+              <div className="absolute top-3 left-3 z-10">
+                <span className="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                  Limited Stock
+                </span>
+              </div>
+            )}
+
+            {/* Viewers indicator */}
+            {mounted && product.in_stock && (
+              <div className="absolute bottom-3 right-3 z-10">
+                <span className="text-[10px] font-bold text-slate-500 bg-white/90 backdrop-blur-sm border border-slate-100 px-2 py-1 rounded-lg flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
+                  {viewers} viewing
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -116,12 +151,12 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
             {displayName}
           </h2>
 
-          {/* Technical Specs Matrix */}
+          {/* Specs */}
           {specs.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-5">
               {specs.map(([key, value]) => (
-                <div 
-                  key={key} 
+                <div
+                  key={key}
                   className="inline-flex items-center text-[10px] font-bold tracking-wide bg-slate-100/80 text-slate-500 px-2.5 py-1 rounded-md border border-slate-200/40"
                   title={formatSpecLabel(key)}
                 >
@@ -142,10 +177,18 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
                 </span>
               )}
             </div>
+
+            {/* M-Pesa installment hint for expensive products */}
+            {product.price_kes >= 50000 && (
+              <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-1">
+                <span>📱</span> Pay via M-Pesa · Instant STK Push
+              </p>
+            )}
+
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {(product as any).discount_end && (
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               <div className="mt-2">
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 <DiscountTimer discountEnd={(product as any).discount_end as string} />
               </div>
             )}
@@ -153,15 +196,19 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
         </div>
       </Link>
 
-      {/* Purchase Trigger (CTA) */}
+      {/* CTA */}
       <div className="px-4 sm:px-6 pb-4 sm:pb-6">
         {product.in_stock ? (
           <button
             onClick={handleAddToCart}
-            className="w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest text-white bg-bq-blue hover:bg-blue-700 shadow-sm transition-all hover:shadow-blue-600/20 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+            className={`w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all active:translate-y-0 active:scale-[0.98] ${
+              added
+                ? 'bg-green-500 shadow-green-200'
+                : 'bg-bq-blue hover:bg-blue-700 shadow-sm hover:shadow-blue-600/20 hover:-translate-y-0.5'
+            }`}
             aria-label={`Shop ${product.name}`}
           >
-            Shop Now
+            {added ? '✓ Added to Cart' : 'Shop Now'}
           </button>
         ) : (
           <button
