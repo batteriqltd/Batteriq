@@ -55,7 +55,8 @@ function useCountUp(target: number, duration: number, started: boolean) {
   useEffect(() => {
     if (!started || target === 0) return
 
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    // If reduced motion, jump straight to target
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setCount(target)
       return
     }
@@ -100,7 +101,6 @@ function StatCard({ stat, started }: { stat: StatItem; started: boolean }) {
 
   return (
     <div className="flex flex-col items-center text-center lg:px-8 group">
-      {/* Number / Text */}
       <div
         className="font-black text-white mb-1 tabular-nums"
         style={{
@@ -126,20 +126,16 @@ function StatCard({ stat, started }: { stat: StatItem; started: boolean }) {
           </span>
         ) : (
           <span>
-            {stat.prefix}{count}{stat.suffix}
+            {stat.prefix}{started ? count : 0}{stat.suffix}
           </span>
         )}
       </div>
 
-      {/* Label */}
       <p className="font-black text-blue-200 text-sm uppercase tracking-wider mb-1">
         {stat.label}
       </p>
-
-      {/* Sub */}
       <p className="text-blue-300/60 text-xs font-medium">{stat.sub}</p>
 
-      {/* Bottom accent line */}
       <div
         className="mt-4 h-0.5 w-0 group-hover:w-12 transition-all duration-500 rounded-full"
         style={{ background: 'linear-gradient(90deg, #0000ff, #4f46e5)' }}
@@ -156,6 +152,13 @@ export function StatsSection() {
     const section = sectionRef.current
     if (!section) return
 
+    // Start immediately if already in view
+    const rect = section.getBoundingClientRect()
+    if (rect.top < window.innerHeight) {
+      setStarted(true)
+      return
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach(entry => {
@@ -165,22 +168,21 @@ export function StatsSection() {
           }
         })
       },
-      { threshold: 0.3, rootMargin: '0px 0px -50px 0px' }
+      { threshold: 0.1, rootMargin: '0px 0px -20px 0px' }
     )
 
     observer.observe(section)
     return () => observer.disconnect()
-  }, [started])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <>
-      {/* STATS SECTION */}
       <section
         ref={sectionRef}
         className="relative overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #00004d 0%, #000080 50%, #00004d 100%)' }}
       >
-        {/* Background grid */}
         <div
           className="absolute inset-0 opacity-10"
           style={{
@@ -188,7 +190,6 @@ export function StatsSection() {
             backgroundSize: '60px 60px',
           }}
         />
-        {/* Glowing orbs */}
         <div
           className="absolute top-0 left-1/4 w-64 h-64 rounded-full opacity-10"
           style={{ background: 'radial-gradient(circle, #0000ff, transparent)', filter: 'blur(60px)' }}
@@ -206,14 +207,12 @@ export function StatsSection() {
           </div>
         </div>
 
-        {/* Bottom divider */}
         <div
           className="absolute bottom-0 left-0 right-0 h-px"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent)' }}
         />
       </section>
 
-      {/* MARQUEE TRUST STRIP */}
       <div
         className="relative overflow-hidden py-4"
         style={{ background: 'linear-gradient(135deg, #0000ff 0%, #0000cc 100%)' }}
