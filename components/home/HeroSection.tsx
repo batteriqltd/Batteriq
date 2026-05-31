@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ChevronLeft, ChevronRight, Star, Shield, Zap } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight, Shield, Zap } from 'lucide-react'
 
 type Slide = {
   id: number
@@ -61,11 +61,6 @@ const slides: Slide[] = [
   },
 ]
 
-const TRUST_PILLS = [
-  { icon: Shield, text: '24-Month Warranty' },
-  { icon: Zap, text: 'Same-Day Nairobi Delivery' },
-  { icon: Star, text: '500+ Units Sold' },
-]
 
 export function HeroSection() {
   const [current, setCurrent] = useState(0)
@@ -140,14 +135,6 @@ export function HeroSection() {
                 <span className="text-bq-blue">{slide.headlineAccent}</span>
               </h1>
 
-              {/* Social proof line */}
-              <div className="flex items-center justify-center gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={14} className="text-yellow-400 fill-yellow-400" />
-                ))}
-                <span className="text-white/70 text-sm font-medium ml-2">Trusted by 500+ Kenyan homes & businesses</span>
-              </div>
-
               <p data-hero-sub className="text-gray-300 mx-auto mb-8"
                 style={{ fontSize: 'clamp(0.85rem, 2vw, 1.15rem)', maxWidth: '520px', lineHeight: 1.6 }}>
                 {slide.subline}
@@ -164,18 +151,6 @@ export function HeroSection() {
                   {slide.ctaSecondary.label}
                 </Link>
               </div>
-
-              {/* Trust pills */}
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                {TRUST_PILLS.map(({ icon: Icon, text }) => (
-                  <div key={text} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 text-white/80 text-xs font-semibold">
-                    <Icon size={12} className="text-blue-300" />
-                    {text}
-                  </div>
-                ))}
-                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-500/20 border border-green-500/30 text-green-300 text-xs font-bold">
-                  📱 M-Pesa Accepted
-                </div>
               </div>
             </motion.div>
           </AnimatePresence>
