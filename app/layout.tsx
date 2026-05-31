@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from 'next'
-import { Space_Grotesk, DM_Sans, JetBrains_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { ChatWidget } from '@/components/chat/ChatWidget'
@@ -7,35 +6,10 @@ import { GSAPProvider } from '@/components/animations/GSAPProvider'
 import { AOSProvider } from '@/components/animations/AOSProvider'
 import './globals.css'
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-display',
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-  preload: false,
-  fallback: ['system-ui', 'sans-serif'],
-  adjustFontFallback: false,
-})
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  variable: '--font-body',
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-  preload: false,
-  fallback: ['system-ui', 'sans-serif'],
-  adjustFontFallback: false,
-})
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ['latin'],
-  variable: '--font-mono',
-  weight: ['400', '500', '700'],
-  display: 'swap',
-  preload: false,
-  fallback: ['monospace'],
-  adjustFontFallback: false,
-})
+// Font variables — loaded via CSS globals to avoid build-time Google Fonts failures
+const spaceGrotesk = { variable: '--font-display' }
+const dmSans = { variable: '--font-body' }
+const jetbrainsMono = { variable: '--font-mono' }
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://batteriq.com'),
