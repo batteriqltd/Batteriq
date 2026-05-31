@@ -151,7 +151,6 @@ export function HeroSection() {
                   {slide.ctaSecondary.label}
                 </Link>
               </div>
-              </div>
             </motion.div>
           </AnimatePresence>
 
