@@ -11,6 +11,7 @@ import { ToastContainer } from '@/components/ui/Toast'
 import { HomepageNewsletter } from '@/components/home/HomepageNewsletter'
 import { ReviewsSection } from '@/components/home/ReviewsSection'
 import { StatsSection } from '@/components/home/StatsSection'
+import { WhyBatteriq } from '@/components/home/WhyBatteriq'
 import { PageWrapper } from '@/components/animations/PageWrapper'
 import { HomeAnimations } from '@/components/animations/HomeAnimations'
 import { SectionTransition } from '@/components/animations/SectionTransition'
@@ -219,6 +220,7 @@ export default async function HomePage() {
 
       {/* REVIEWS SECTION — after solar panels */}
       <ReviewsSection />
+      <WhyBatteriq />
 
       <div className="max-w-8xl mx-auto px-4 lg:px-8">
 
