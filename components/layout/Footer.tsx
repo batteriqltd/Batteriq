@@ -55,7 +55,7 @@ export function Footer() {
             <div className="flex flex-col gap-2.5">
               <a
                 href="tel:+254716822014"
-                className="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-blue-600 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-blue-600 transition-colors min-h-[44px]"
               >
                 <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
                   <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -69,7 +69,7 @@ export function Footer() {
                 href="https://wa.me/254716822014"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-green-600 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-green-600 transition-colors min-h-[44px]"
               >
                 <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
                   <svg width="13" height="13" fill="#00A651" viewBox="0 0 24 24">
@@ -82,7 +82,7 @@ export function Footer() {
 
               <a
                 href="mailto:info@batteriq.com"
-                className="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-blue-600 transition-colors"
+                className="inline-flex items-center gap-2 text-sm font-bold text-gray-700 hover:text-blue-600 transition-colors min-h-[44px]"
               >
                 <div className="w-7 h-7 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center flex-shrink-0">
                   <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">

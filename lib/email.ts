@@ -1,7 +1,7 @@
 import { Resend } from 'resend'
 import { generateReceiptPDF, type ReceiptData } from './pdf-receipt'
 
-const resend = new Resend(process.env.RESEND_API_KEY!)
+const resend = new Resend(process.env.RESEND_API_KEY ?? 're_placeholder')
 
 function resolveEmail(email: string): string {
   return email

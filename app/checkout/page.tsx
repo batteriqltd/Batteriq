@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useCartStore, formatKES } from '@/store/cartStore'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
@@ -37,6 +37,12 @@ export default function CheckoutPage() {
   const [errorMsg, setErrorMsg] = useState('')
   const [orderId, setOrderId] = useState('')
   const [mpesaTimer, setMpesaTimer] = useState(120)
+  const [checkoutRequestId, setCheckoutRequestId] = useState('')
+  const checkoutRequestIdRef = useRef('')
+  const [retryCount, setRetryCount] = useState(0)
+  const PAYBILL_NUMBER = '303030'
+  const PAYBILL_ACCOUNT = '3753#'
+  const PAYBILL_NAME = 'BATTERIQ SOLUTIONS'
 
   useEffect(() => { setMounted(true) }, [])
 
@@ -48,10 +54,40 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     if (step !== 'waiting_mpesa') return
-    if (mpesaTimer <= 0) { setStep('error'); setErrorMsg('Payment timed out. Please try again.'); return }
+    if (mpesaTimer <= 0) {
+      // Query Safaricom directly before giving up
+      if (checkoutRequestId) {
+        fetch('/api/mpesa/stkquery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ checkoutRequestId }),
+        })
+          .then(r => r.json())
+          .then(data => {
+            if (data.resultCode === 0) {
+              // Actually paid — don't show error
+              return
+            }
+            setStep('error')
+            setErrorMsg(
+              data.resultCode === 1032
+                ? 'You cancelled the payment. You can retry or pay via Paybill below.'
+                : 'Payment timed out — you did not enter your PIN in time. You can retry or pay via Paybill.'
+            )
+          })
+          .catch(() => {
+            setStep('error')
+            setErrorMsg('Payment timed out. Please try again.')
+          })
+      } else {
+        setStep('error')
+        setErrorMsg('Payment timed out. Please try again.')
+      }
+      return
+    }
     const t = setTimeout(() => setMpesaTimer(s => s - 1), 1000)
     return () => clearTimeout(t)
-  }, [step, mpesaTimer])
+  }, [step, mpesaTimer, checkoutRequestId])
 
   const subtotal = mounted ? items.reduce((s, i) => s + (Number(i.price_kes) || 0) * i.quantity, 0) : 0
   const totalQuantity = mounted ? items.reduce((sum, item) => sum + item.quantity, 0) : 0
@@ -107,28 +143,58 @@ export default function CheckoutPage() {
           body: JSON.stringify({ phoneNumber: normalizePhone(form.phone), orderId: orderData.orderId, amount: subtotal }),
         })
         if (!mpesaRes.ok) throw new Error('M-Pesa push failed')
+        const mpesaData = await mpesaRes.json()
+        if (mpesaData.checkoutRequestId) {
+          setCheckoutRequestId(mpesaData.checkoutRequestId)
+          checkoutRequestIdRef.current = mpesaData.checkoutRequestId
+        }
+        setMpesaTimer(120)
         setStep('transitioning')
         await new Promise(resolve => setTimeout(resolve, 1200))
         setStep('waiting_mpesa')
+        const savedOrderId = orderData.orderId
+        const savedEmail = form.email
+        const pollStart = Date.now()
         const pollInterval = setInterval(async () => {
           try {
-            const statusRes = await fetch(`/api/orders/${orderData.orderId}/status`)
+            // 1. Check if callback already updated the order
+            const statusRes = await fetch(`/api/orders/${savedOrderId}/status`)
             const statusData = await statusRes.json()
 
             if (statusData.paymentStatus === 'paid') {
               clearInterval(pollInterval)
               clearCart()
-              router.push(`/order-confirmation/${orderData.orderId}?email=${encodeURIComponent(form.email)}`)
+              router.push(`/order-confirmation/${savedOrderId}?email=${encodeURIComponent(savedEmail)}`)
+              return
             }
 
-            if (statusData.paymentStatus === 'failed') {
+            // Only act on failed after 30s — give user time to enter PIN
+            if (statusData.paymentStatus === 'failed' && Date.now() - pollStart > 30000) {
               clearInterval(pollInterval)
               const reason = statusData.failureReason || 'Payment was cancelled or PIN was incorrect.'
               setStep('error')
-              setErrorMsg(reason + ' You can try again or choose a different payment method.')
+              setErrorMsg(reason + ' You can retry or pay via Paybill below.')
+              return
+            }
+
+            // 2. If still pending, ask Safaricom directly (STK Query)
+            const reqId = checkoutRequestIdRef.current
+            if (reqId) {
+              const queryRes = await fetch('/api/mpesa/stkquery', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ checkoutRequestId: reqId }),
+              })
+              const queryData = await queryRes.json()
+              // ResultCode 0 = paid — redirect even if callback was slow
+              if (queryData.resultCode === 0) {
+                clearInterval(pollInterval)
+                clearCart()
+                router.push(`/order-confirmation/${savedOrderId}?email=${encodeURIComponent(savedEmail)}`)
+              }
             }
           } catch {}
-        }, 3000)
+        }, 4000)
         setTimeout(() => clearInterval(pollInterval), 120000)
       } else {
         clearCart()
@@ -258,13 +324,20 @@ export default function CheckoutPage() {
             <AlertCircle className="text-red-500 w-12 h-12 -rotate-12" />
           </div>
           <h2 className="text-3xl font-black text-[#00004d] mb-4 tracking-tight">Payment Failed</h2>
-          <p className="text-gray-500 font-bold mb-12 leading-relaxed px-4">{errorMsg}</p>
-          <div className="space-y-4">
+          <p className="text-gray-500 font-bold mb-8 leading-relaxed px-4">{errorMsg}</p>
+
+          {/* Retry button */}
+          <div className="space-y-4 mb-10">
             <button 
-              onClick={() => { setStep('form'); setErrorMsg('') }} 
+              onClick={() => {
+                setRetryCount(c => c + 1)
+                setStep('form')
+                setErrorMsg('')
+                setMpesaTimer(120)
+              }} 
               className="w-full h-[64px] rounded-[24px] bg-[#00004d] text-white font-black text-[17px] transition-all hover:translate-y-[-2px] active:scale-95 shadow-xl shadow-[#00004d]/20"
             >
-              Return to Checkout
+              🔄 Retry M-Pesa Payment {retryCount > 0 ? `(Attempt ${retryCount + 1})` : ''}
             </button>
             <Link 
               href="/contact" 
@@ -272,6 +345,32 @@ export default function CheckoutPage() {
             >
               Get Priority Support
             </Link>
+          </div>
+
+          {/* Paybill fallback */}
+          <div className="bg-[#f0fdf4] border border-green-200 rounded-[24px] p-8 text-left">
+            <p className="text-[11px] font-black text-green-700 uppercase tracking-widest mb-4">📱 Alternative: Pay via Paybill</p>
+            <p className="text-sm text-gray-600 font-medium mb-6 leading-relaxed">
+              If STK Push keeps failing, you can pay manually via M-Pesa Paybill:
+            </p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center bg-white rounded-xl px-5 py-3 border border-green-100">
+                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Business No.</span>
+                <span className="font-black text-[18px] text-[#00A651] font-mono">{PAYBILL_NUMBER}</span>
+              </div>
+              <div className="flex justify-between items-center bg-white rounded-xl px-5 py-3 border border-green-100">
+                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Account No.</span>
+                <span className="font-black text-[18px] text-[#00A651] font-mono">{PAYBILL_ACCOUNT}</span>
+              </div>
+              <div className="flex justify-between items-center bg-white rounded-xl px-5 py-3 border border-green-100">
+                <span className="text-xs font-black text-gray-500 uppercase tracking-wider">Name</span>
+                <span className="font-black text-[15px] text-gray-700">{PAYBILL_NAME}</span>
+              </div>
+            </div>
+            <p className="text-[11px] text-gray-400 font-bold mt-4 leading-relaxed text-center">
+              After paying, send your M-Pesa confirmation SMS screenshot to us on{' '}
+              <a href="https://wa.me/254716822014" className="text-green-600 underline">WhatsApp 0716 822 014</a>
+            </p>
           </div>
         </motion.div>
       </div>

@@ -50,6 +50,7 @@ export type Database = {
           delivery_address: Json | null
           mpesa_checkout_request_id: string | null
           mpesa_transaction_code: string | null
+          mpesa_failure_reason: string | null
           notes: string | null
           created_at: string
           updated_at: string
