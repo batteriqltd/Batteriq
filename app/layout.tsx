@@ -12,7 +12,9 @@ const spaceGrotesk = Space_Grotesk({
   variable: '--font-display',
   weight: ['400', '500', '600', '700'],
   display: 'swap',
-  preload: true,
+  preload: false,
+  fallback: ['system-ui', 'sans-serif'],
+  adjustFontFallback: false,
 })
 
 const dmSans = DM_Sans({
@@ -20,7 +22,9 @@ const dmSans = DM_Sans({
   variable: '--font-body',
   weight: ['400', '500', '600', '700'],
   display: 'swap',
-  preload: true,
+  preload: false,
+  fallback: ['system-ui', 'sans-serif'],
+  adjustFontFallback: false,
 })
 
 const jetbrainsMono = JetBrains_Mono({
@@ -29,6 +33,8 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ['400', '500', '700'],
   display: 'swap',
   preload: false,
+  fallback: ['monospace'],
+  adjustFontFallback: false,
 })
 
 export const metadata: Metadata = {
