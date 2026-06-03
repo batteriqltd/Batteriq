@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+
 
 // ─── Phone normalisation ───────────────────────────────────────────────────
 function normalizePhone(raw: string): string {
@@ -234,19 +234,17 @@ export async function POST(req: Request) {
 
       if (orderId) {
         try {
-          const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-          )
+          const { createAdminClient } = await import('@/lib/supabase/admin')
+          const supabase = createAdminClient()
           const { error: dbError } = await supabase
             .from('orders')
             .update({ mpesa_checkout_request_id: stkData.CheckoutRequestID })
             .eq('id', orderId)
 
           if (dbError) {
-            console.error('[MPESA] DB update error (non-fatal):', dbError)
+            console.error('[MPESA] DB update error:', JSON.stringify(dbError))
           } else {
-            console.log('[MPESA] CheckoutRequestID saved to order')
+            console.log('[MPESA] CheckoutRequestID saved to order successfully:', stkData.CheckoutRequestID)
           }
         } catch (dbErr) {
           console.error('[MPESA] DB exception (non-fatal):', dbErr)

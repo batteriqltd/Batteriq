@@ -81,6 +81,8 @@ export async function GET() {
     environment,
     baseUrl,
     shortcode,
+    serviceRoleKeyLength: (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').length,
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'MISSING',
     consumerKeyPreview: consumerKey ? consumerKey.slice(0, 4) + '...' + consumerKey.slice(-4) : 'MISSING',
     consumerKeyLength: consumerKey.length,
     consumerSecretLength: consumerSecret.length,
