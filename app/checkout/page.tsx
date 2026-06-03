@@ -68,12 +68,17 @@ export default function CheckoutPage() {
               // Actually paid — don't show error
               return
             }
+            const codeMsg: Record<number, string> = {
+              1032: 'You cancelled the M-Pesa payment. Tap Retry to try again.',
+              1037: 'The M-Pesa prompt timed out. Please tap Retry.',
+              2001: 'Wrong M-Pesa PIN entered. Please retry with the correct PIN.',
+              1001: 'Wrong PIN entered. Please retry.',
+              1019: 'M-Pesa request expired. Please retry.',
+              17:   'M-Pesa system is busy. Please wait a moment then retry.',
+              26:   'M-Pesa system is busy. Please retry in a few minutes.',
+            }
             setStep('error')
-            setErrorMsg(
-              data.resultCode === 1032
-                ? 'You cancelled the payment. You can retry or pay via Paybill below.'
-                : 'Payment timed out — you did not enter your PIN in time. You can retry or pay via Paybill.'
-            )
+            setErrorMsg(codeMsg[data.resultCode] ?? `The M-Pesa prompt was not received on your phone. Please retry or use Paybill below. (Code: ${data.resultCode ?? 'unknown'})`)
           })
           .catch(() => {
             setStep('error')
