@@ -56,14 +56,15 @@ export async function GET() {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          BusinessShortCode: shortcode,
-          Password: password,
+        // Test with 303030 (the actual Paybill) AND 5286334
+      body: JSON.stringify({
+          BusinessShortCode: '303030',
+          Password: Buffer.from(`303030${passkey}${timestamp}`).toString('base64'),
           Timestamp: timestamp,
           TransactionType: 'CustomerPayBillOnline',
           Amount: 1,
           PartyA: '254791083304',
-          PartyB: shortcode,
+          PartyB: '303030',
           PhoneNumber: '254791083304',
           CallBackURL: 'https://batteriq.com/api/mpesa/callback',
           AccountReference: '3753#',
