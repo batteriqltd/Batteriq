@@ -25,5 +25,7 @@
       ]
     }
   ],
-  "regions": ["iad1"]
+  "regions": [
+    "jnb1"
+  ]
 }
