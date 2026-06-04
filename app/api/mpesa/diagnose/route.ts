@@ -12,7 +12,9 @@ function getTimestamp(): string {
   )
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const testPhone = searchParams.get('phone') ?? '254791083304'
   const consumerKey    = process.env.MPESA_CONSUMER_KEY?.trim() ?? ''
   const consumerSecret = process.env.MPESA_CONSUMER_SECRET?.trim() ?? ''
   const passkey        = process.env.MPESA_PASSKEY?.trim() ?? ''
@@ -63,9 +65,9 @@ export async function GET() {
           Timestamp: timestamp,
           TransactionType: 'CustomerPayBillOnline',
           Amount: 1,
-          PartyA: '254791083304',
+          PartyA: testPhone,
           PartyB: '303030',
-          PhoneNumber: '254791083304',
+          PhoneNumber: testPhone,
           CallBackURL: 'https://batteriq.com/api/mpesa/callback',
           AccountReference: '3753#',
           TransactionDesc: 'Test',
