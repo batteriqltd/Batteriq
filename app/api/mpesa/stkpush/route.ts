@@ -177,13 +177,13 @@ export async function POST(req: Request) {
       BusinessShortCode: env.shortcode,
       Password:          password,
       Timestamp:         timestamp,
-      TransactionType:   'CustomerPayBillOnline',
+      TransactionType:   'CustomerBuyGoodsOnline',
       Amount:            mpesaAmount,
       PartyA:            phone,
-      PartyB:            env.shortcode,
+      PartyB:            '4575142', // actual till number
       PhoneNumber:       phone,
       CallBackURL:       env.callbackUrl,
-      AccountReference:  accountRef,
+      AccountReference:  'BATTERIQ',
       TransactionDesc:   'Batteriq Order Payment',
     }
 

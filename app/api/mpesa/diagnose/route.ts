@@ -60,16 +60,16 @@ export async function GET(request: Request) {
         },
         // Test with 303030 (the actual Paybill) AND 5286334
       body: JSON.stringify({
-          BusinessShortCode: '303030',
-          Password: Buffer.from(`303030${passkey}${timestamp}`).toString('base64'),
+          BusinessShortCode: shortcode,
+          Password: Buffer.from(`${shortcode}${passkey}${timestamp}`).toString('base64'),
           Timestamp: timestamp,
-          TransactionType: 'CustomerPayBillOnline',
+          TransactionType: 'CustomerBuyGoodsOnline',
           Amount: 1,
           PartyA: testPhone,
-          PartyB: '303030',
+          PartyB: '4575142',
           PhoneNumber: testPhone,
           CallBackURL: 'https://batteriq.com/api/mpesa/callback',
-          AccountReference: '3753#',
+          AccountReference: 'BATTERIQ',
           TransactionDesc: 'Test',
         }),
       })
