@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAdminSession } from '@/lib/admin-auth'
 import { revalidatePath } from 'next/cache'
 
 export async function POST(request: NextRequest) {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const body = await request.json()
     const supabase = createAdminClient()

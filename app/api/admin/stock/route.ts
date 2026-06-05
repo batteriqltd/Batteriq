@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getAdminSession } from '@/lib/admin-auth'
 
 function getSupabase() {
   return createClient(
@@ -9,6 +10,7 @@ function getSupabase() {
 }
 
 export async function GET() {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const supabase = getSupabase()
     const { data, error } = await supabase
@@ -38,6 +40,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const { productId, stockQty, inStock } = await req.json()
     if (!productId) {

@@ -14,7 +14,7 @@ export function useAdminAutoLogout() {
   const logout = useCallback(async (reason: string) => {
     console.log(`[ADMIN] Auto-logout: ${reason}`)
     await fetch('/api/admin/auth', { method: 'DELETE' })
-    window.location.href = `/admin/login?reason=${reason}`
+    window.location.href = `/admin/secure-bq9x2026?reason=${reason}`
   }, [])
 
   const resetTimer = useCallback(() => {

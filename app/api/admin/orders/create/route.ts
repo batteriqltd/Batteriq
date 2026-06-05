@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAdminSession } from '@/lib/admin-auth'
 
 function generateOrderNumber(): string {
   const now = new Date()
@@ -11,6 +12,7 @@ function generateOrderNumber(): string {
 }
 
 export async function POST(request: NextRequest) {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const { guestName, guestPhone, guestEmail, items, total, paymentMethod } = await request.json()
 

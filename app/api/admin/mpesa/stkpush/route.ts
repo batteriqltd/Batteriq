@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAdminSession } from '@/lib/admin-auth'
 
 function getTimestamp() {
   const d = new Date()
@@ -12,6 +13,7 @@ function getTimestamp() {
 }
 
 export async function POST(request: NextRequest) {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const { orderId } = await request.json()
     if (!orderId) return NextResponse.json({ error: 'orderId required' }, { status: 400 })

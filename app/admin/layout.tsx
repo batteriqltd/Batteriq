@@ -1,6 +1,11 @@
 import { AdminSidebar, AdminTopBar } from '@/components/admin/Sidebar'
 import { AutoLogoutProvider } from '@/components/admin/AutoLogoutProvider'
 import { getAdminSession } from '@/lib/admin-auth'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  robots: 'noindex, nofollow, noarchive',
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = getAdminSession()

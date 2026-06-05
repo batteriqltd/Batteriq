@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAdminSession } from '@/lib/admin-auth'
 
 interface EmailProduct {
   name: string
@@ -137,6 +138,7 @@ function productEmailHtml(
 }
 
 export async function POST(request: NextRequest) {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const body = await request.json()
     const { subject, introText, footerNote, productIds, customImages, testEmail } = body
@@ -206,6 +208,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: subscribers } = await (supabase.from('newsletter_subscribers') as any)

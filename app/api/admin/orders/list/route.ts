@@ -27,6 +27,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const { orderId, payment_status, fulfillment_status } = await req.json()
     if (!orderId) return NextResponse.json({ error: 'Missing orderId' }, { status: 400 })

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { rateLimit } from '@/lib/rateLimit'
+import { createSessionToken } from '@/lib/admin-auth'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const SESSION_COOKIE = 'batteriq_admin_session'
 
@@ -47,14 +49,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
     }
 
-    const sessionToken = Buffer.from(
-      JSON.stringify({
-        id: data.id,
-        email: data.email,
-        role: data.role,
-        exp: Date.now() + 8 * 60 * 60 * 1000,
-      })
-    ).toString('base64')
+    const sessionToken = createSessionToken({
+      id: data.id,
+      email: data.email,
+      role: data.role,
+      exp: Date.now() + 8 * 60 * 60 * 1000,
+    })
 
     const response = NextResponse.json({ success: true, role: data.role })
     response.cookies.set(SESSION_COOKIE, sessionToken, {
@@ -65,10 +65,21 @@ export async function POST(req: Request) {
       path: '/',
     })
 
+    // Task 6: Audit log (non-blocking)
+    const adminDb = createAdminClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(adminDb.from('admin_audit_log') as any).insert({
+      admin_id: data.id,
+      action: 'login',
+      ip_address: ip,
+      user_agent: req.headers.get('user-agent') || null,
+      details: { email: data.email },
+    }).then(() => {}).catch(() => {})
+
     console.log(`[ADMIN AUTH] ✅ Login: ${data.email}`)
     return response
 
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[ADMIN AUTH] Error:', err)
     return NextResponse.json({ error: 'Server error' }, { status: 500 })
   }
