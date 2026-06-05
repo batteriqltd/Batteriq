@@ -13,7 +13,7 @@ import {
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 
-type PaymentMethod = 'mpesa_now' | 'cod_mpesa'
+type PaymentMethod = 'mpesa_now' | 'cod_mpesa' | 'sales_confirmation'
 
 function normalizePhone(raw: string): string {
   const p = raw.replace(/[\s\-\(\)]/g, '').trim()
@@ -433,6 +433,11 @@ export default function CheckoutPage() {
           </div>
         </div>
 
+        {/* eTIMS Notice */}
+        <div className="mb-8 flex items-center justify-center gap-3 bg-purple-50 border border-purple-100 rounded-2xl px-6 py-3">
+          <span className="text-purple-600 font-black text-xs uppercase tracking-widest">🧾 Official eTIMS KRA Invoice issued after every purchase</span>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
           
           {/* LEFT COLUMN: FORMS (60%) */}
@@ -452,9 +457,10 @@ export default function CheckoutPage() {
                 <div className="md:col-span-2 space-y-3">
                   <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Full Name</label>
                   <div className="relative group">
-                    <input 
+                    <input
                       required value={form.fullName} onChange={e => set('fullName', e.target.value)}
                       placeholder="e.g. Samuel Okoth"
+                      style={{ fontSize: '16px' }}
                       className={`w-full h-[60px] px-6 rounded-[20px] text-[16px] font-medium transition-all duration-300 outline-none border-[1.5px] ${
                         form.fullName.length >= 2 
                           ? 'bg-[#f0fdf4] border-[#00A651] text-gray-900' 
@@ -468,9 +474,10 @@ export default function CheckoutPage() {
                 <div className="space-y-3">
                   <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Email Address</label>
                   <div className="relative group">
-                    <input 
+                    <input
                       required type="email" value={form.email} onChange={e => set('email', e.target.value)}
                       placeholder="samuel@email.com"
+                      style={{ fontSize: '16px' }}
                       className={`w-full h-[60px] px-6 rounded-[20px] text-[16px] font-medium transition-all duration-300 outline-none border-[1.5px] ${
                         form.email.includes('@') 
                           ? 'bg-[#f0fdf4] border-[#00A651] text-gray-900' 
@@ -484,9 +491,10 @@ export default function CheckoutPage() {
                 <div className="space-y-3">
                   <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">M-Pesa Phone</label>
                   <div className="relative group">
-                    <input 
+                    <input
                       required value={form.phone} onChange={e => set('phone', e.target.value)}
                       placeholder="0712 345 678"
+                      style={{ fontSize: '16px' }}
                       className={`w-full h-[60px] px-6 rounded-[20px] text-[16px] font-medium transition-all duration-300 outline-none border-[1.5px] ${
                         form.phone.length >= 10 
                           ? 'bg-[#f0fdf4] border-[#00A651] text-gray-900' 
@@ -513,9 +521,10 @@ export default function CheckoutPage() {
                 <div className="space-y-3">
                   <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Street Address</label>
                   <div className="relative group">
-                    <input 
+                    <input
                       required value={form.address} onChange={e => set('address', e.target.value)}
                       placeholder="e.g. 123 Ngong Road, Karen Heights, Apt 4B"
+                      style={{ fontSize: '16px' }}
                       className={`w-full h-[60px] px-6 rounded-[20px] text-[16px] font-medium transition-all duration-300 outline-none border-[1.5px] ${
                         form.address.length >= 5 
                           ? 'bg-[#f0fdf4] border-[#00A651] text-gray-900' 
@@ -529,15 +538,17 @@ export default function CheckoutPage() {
                 <div className="grid grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">City</label>
-                    <input 
+                    <input
                       required value={form.city} onChange={e => set('city', e.target.value)}
+                      style={{ fontSize: '16px' }}
                       className="w-full h-[60px] px-6 rounded-[20px] bg-[#fafafa] border-[1.5px] border-[#e5e7eb] text-[16px] font-medium focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08] outline-none transition-all duration-300"
                     />
                   </div>
                   <div className="space-y-3">
                     <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">County</label>
-                    <input 
+                    <input
                       required value={form.county} onChange={e => set('county', e.target.value)}
+                      style={{ fontSize: '16px' }}
                       className="w-full h-[60px] px-6 rounded-[20px] bg-[#fafafa] border-[1.5px] border-[#e5e7eb] text-[16px] font-medium focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08] outline-none transition-all duration-300"
                     />
                   </div>
@@ -545,9 +556,10 @@ export default function CheckoutPage() {
 
                 <div className="space-y-3">
                   <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Order Notes (Optional)</label>
-                  <textarea 
+                  <textarea
                     value={form.notes} onChange={e => set('notes', e.target.value)}
                     placeholder="Gate codes or specific delivery instructions..."
+                    style={{ fontSize: '16px' }}
                     className="w-full min-h-[120px] p-6 rounded-[20px] bg-[#fafafa] border-[1.5px] border-[#e5e7eb] text-[16px] font-medium focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08] outline-none transition-all duration-300 resize-none"
                   />
                 </div>
@@ -577,7 +589,7 @@ export default function CheckoutPage() {
             </div>
 
             {/* 3. Payment Method */}
-            <motion.section 
+            <motion.section
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
               className="bg-white rounded-[32px] p-8 lg:p-10 shadow-premium border border-[#f0f0f0]"
             >
@@ -587,80 +599,90 @@ export default function CheckoutPage() {
               </div>
 
               <div className="space-y-5">
-                {/* M-Pesa Now */}
-                <div 
-                  onClick={() => setPaymentMethod('mpesa_now')}
-                  className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 group ${
-                    paymentMethod === 'mpesa_now' 
-                      ? 'border-[#00A651] bg-[#f0fdf4] shadow-[0_0_24px_rgba(0,166,81,0.1)]' 
-                      : 'border-[#f0f0f0] bg-white hover:border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-6">
-                    <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0">
+                {/* Option 1: M-Pesa STK Push */}
+                <div onClick={() => setPaymentMethod('mpesa_now')} className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'mpesa_now' ? 'border-[#00A651] bg-[#f0fdf4] shadow-[0_0_24px_rgba(0,166,81,0.1)]' : 'border-[#f0f0f0] bg-white hover:border-green-200'}`}>
+                  <div className="flex items-center gap-5">
+                    <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0 p-2">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/payment-mpesa.svg" alt="M-Pesa" className="h-6 w-auto" />
+                      <img src="/payment-mpesa.svg" alt="M-Pesa" className="h-8 w-auto object-contain" />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src="/products/payment-mpesa.svg"
-                          alt="M-Pesa"
-                          className="h-8 w-auto object-contain flex-shrink-0"
-                          onError={(e) => { e.currentTarget.style.display = 'none' }}
-                        />
-                        <div>
-                          <p className="font-black text-gray-900 text-sm">M-Pesa Express</p>
-                          <p className="text-xs text-gray-500">Safe, instant STK Push payment</p>
-                        </div>
-                      </div>
+                      <p className="font-black text-gray-900 text-[15px]">Pay via M-Pesa STK Push</p>
+                      <p className="text-xs text-gray-500 mt-1">You will receive a prompt from <strong>BATTERIQ SOLUTIONS</strong>. Confirm the business name before entering your PIN.</p>
                     </div>
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                      paymentMethod === 'mpesa_now' ? 'border-[#00A651] bg-[#00A651]' : 'border-gray-200 bg-white'
-                    }`}>
+                    <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${paymentMethod === 'mpesa_now' ? 'border-[#00A651] bg-[#00A651]' : 'border-gray-200'}`}>
                       {paymentMethod === 'mpesa_now' && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                  </div>
+                  {paymentMethod === 'mpesa_now' && (
+                    <p className="mt-4 text-[11px] text-green-700 bg-green-100 px-4 py-2 rounded-xl font-bold">
+                      No payment is taken until you confirm the M-Pesa prompt on your phone.
+                    </p>
+                  )}
+                </div>
+
+                {/* Option 2: M-Pesa on Delivery */}
+                <div onClick={() => setPaymentMethod('cod_mpesa')} className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'cod_mpesa' ? 'border-[#0000ff] bg-[#f8f9ff] shadow-[0_0_24px_rgba(0,0,255,0.06)]' : 'border-[#f0f0f0] bg-white hover:border-blue-200'}`}>
+                  <div className="flex items-center gap-5">
+                    <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0 p-2">
+                      <Truck className={paymentMethod === 'cod_mpesa' ? 'text-[#0000ff]' : 'text-gray-400'} size={28} />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-black text-gray-900 text-[15px]">M-Pesa on Delivery</p>
+                      <p className="text-xs text-gray-500 mt-1">Our delivery agent will send you an STK Push when they arrive at your door. Pay securely to <strong>BATTERIQ SOLUTIONS</strong>.</p>
+                    </div>
+                    <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${paymentMethod === 'cod_mpesa' ? 'border-[#0000ff] bg-[#0000ff]' : 'border-gray-200'}`}>
+                      {paymentMethod === 'cod_mpesa' && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                   </div>
                 </div>
 
-                {/* COD M-Pesa */}
-                <div 
-                  onClick={() => setPaymentMethod('cod_mpesa')}
-                  className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 group ${
-                    paymentMethod === 'cod_mpesa' 
-                      ? 'border-[#0000ff] bg-[#f8f9ff] shadow-[0_0_24px_rgba(0,0,255,0.06)]' 
-                      : 'border-[#f0f0f0] bg-white hover:border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-6">
-                    <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0">
-                      <Truck className={paymentMethod === 'cod_mpesa' ? 'text-[#0000ff]' : 'text-gray-400'} size={28} />
+                {/* Option 3: Reserve Order / Talk to Sales */}
+                <div onClick={() => setPaymentMethod('sales_confirmation')} className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'sales_confirmation' ? 'border-[#7c3aed] bg-[#faf5ff] shadow-[0_0_24px_rgba(124,58,237,0.06)]' : 'border-[#f0f0f0] bg-white hover:border-purple-200'}`}>
+                  <div className="flex items-center gap-5">
+                    <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0 p-2">
+                      <Phone className={paymentMethod === 'sales_confirmation' ? 'text-[#7c3aed]' : 'text-gray-400'} size={28} />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src="/products/payment-mpesa.svg"
-                          alt="M-Pesa"
-                          className="h-8 w-auto object-contain flex-shrink-0"
-                          onError={(e) => { e.currentTarget.style.display = 'none' }}
-                        />
-                        <div>
-                          <p className="font-black text-gray-900 text-sm">M-Pesa on Delivery</p>
-                          <p className="text-xs text-gray-500">STK prompt sent upon delivery</p>
-                        </div>
-                      </div>
+                      <p className="font-black text-gray-900 text-[15px]">Reserve Order — Speak to Sales First</p>
+                      <p className="text-xs text-gray-500 mt-1">Submit your details and our team will call you to confirm stock, delivery timeline, and payment options. Ideal for orders above KES 100,000.</p>
                     </div>
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-                      paymentMethod === 'cod_mpesa' ? 'border-[#0000ff] bg-[#0000ff]' : 'border-gray-200 bg-white'
-                    }`}>
-                      {paymentMethod === 'cod_mpesa' && <div className="w-2 h-2 rounded-full bg-white" />}
+                    <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${paymentMethod === 'sales_confirmation' ? 'border-[#7c3aed] bg-[#7c3aed]' : 'border-gray-200'}`}>
+                      {paymentMethod === 'sales_confirmation' && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                   </div>
                 </div>
               </div>
             </motion.section>
+
+            {/* Proforma Invoice Request */}
+            <div className="bg-white rounded-[32px] p-8 shadow-premium border border-[#f0f0f0]">
+              <div className="flex items-start gap-5">
+                <div className="w-12 h-12 rounded-2xl bg-[#fffbeb] flex items-center justify-center flex-shrink-0 border border-amber-100">
+                  <CreditCard size={22} className="text-amber-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-black text-gray-900 text-[16px] mb-1">Need an invoice before paying?</p>
+                  <p className="text-sm text-gray-500 leading-relaxed mb-5">Many corporate buyers prefer a proforma invoice before payment. Request one and we will send it to your email or WhatsApp within 30 minutes.</p>
+                  <div className="flex flex-wrap gap-3">
+                    <a
+                      href={`https://wa.me/254716822014?text=${encodeURIComponent('Hi Batteriq! I would like to request a proforma invoice before making payment. My name is ' + (form.fullName || '[Your Name]') + ' and I am interested in purchasing from your store.')}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="h-[42px] px-6 rounded-xl bg-[#00A651] text-white text-[13px] font-black flex items-center gap-2 hover:brightness-110 transition-all"
+                    >
+                      <MessageSquare size={15} /> Request via WhatsApp
+                    </a>
+                    <a
+                      href={`mailto:info@batteriq.com?subject=Proforma Invoice Request&body=Hi Batteriq, I would like to request a proforma invoice. Name: ${form.fullName || '[Your Name]'}`}
+                      className="h-[42px] px-6 rounded-xl bg-white border border-gray-200 text-gray-700 text-[13px] font-black flex items-center gap-2 hover:border-gray-400 transition-all"
+                    >
+                      <Mail size={15} /> Request via Email
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* RIGHT COLUMN: SUMMARY (40%) */}
@@ -743,9 +765,14 @@ export default function CheckoutPage() {
               </div>
 
               <div className="mt-10 space-y-6">
-                <p className="text-[11px] font-black text-purple-600 text-center flex items-center justify-center gap-2 uppercase tracking-widest">
-                  🧾 eTIMS KRA Invoice Included
-                </p>
+                <div className="space-y-2">
+                  <p className="text-[11px] font-black text-purple-600 text-center flex items-center justify-center gap-2 uppercase tracking-widest">
+                    🧾 Official eTIMS KRA Invoice Included
+                  </p>
+                  <p className="text-[10px] text-gray-400 text-center font-bold">
+                    Official EcoFlow & BLUETTI Authorised Dealer · Warranty supported locally
+                  </p>
+                </div>
                 <button
                   onClick={isFormValid ? handleSubmit : undefined}
                   disabled={!isFormValid || loading}
@@ -760,11 +787,21 @@ export default function CheckoutPage() {
                   ) : (
                     <>
                       <Lock size={20} className="transition-transform group-hover:scale-110" />
-                      {paymentMethod === 'mpesa_now' ? 'Complete M-Pesa Payment' : 'Confirm Order'}
+                      {paymentMethod === 'mpesa_now'
+                        ? 'Send M-Pesa Payment Prompt'
+                        : paymentMethod === 'cod_mpesa'
+                        ? 'Place Order — Pay on Delivery'
+                        : 'Submit Order for Confirmation'}
                     </>
                   )}
                 </button>
-                
+
+                {paymentMethod === 'mpesa_now' && (
+                  <p className="text-center text-[11px] text-gray-400 font-bold mt-3 leading-relaxed">
+                    No payment will be taken until you confirm the M-Pesa prompt on your phone.
+                  </p>
+                )}
+
                 <div className="flex items-center justify-center gap-6 pt-4 opacity-40">
                   <div className="flex items-center gap-2">
                     <Shield size={14} className="text-gray-900" />
@@ -773,6 +810,16 @@ export default function CheckoutPage() {
                   <div className="flex items-center gap-2">
                     <CheckCircle size={14} className="text-gray-900" />
                     <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Official Warranty</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-6 border-t border-gray-50">
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Batteriq Kenya</p>
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><Phone size={10} /> +254 716 822 014</p>
+                    <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><MessageSquare size={10} /> WhatsApp: +254 716 822 014</p>
+                    <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><Mail size={10} /> info@batteriq.com</p>
+                    <p className="text-[11px] text-gray-500 font-medium">Mon–Sat, 8:30am–6:00pm</p>
                   </div>
                 </div>
               </div>
@@ -788,7 +835,13 @@ export default function CheckoutPage() {
                   background: isFormValid ? 'linear-gradient(135deg, #0000ff 0%, #00004d 100%)' : '#f3f4f6',
                 }}
               >
-                {loading ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Complete Purchase'}
+                {loading
+                  ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  : paymentMethod === 'mpesa_now'
+                  ? 'Send M-Pesa Prompt'
+                  : paymentMethod === 'cod_mpesa'
+                  ? 'Place Order — Pay on Delivery'
+                  : 'Submit for Sales Confirmation'}
               </button>
             </div>
           </div>
