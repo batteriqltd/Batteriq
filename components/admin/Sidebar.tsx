@@ -50,6 +50,7 @@ function LiveClock() {
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { href: '/admin/new-order', label: 'New Order', icon: ShoppingBag },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, badge: 'live' as const },
   { href: '/admin/customers', label: 'Customers', icon: Users },
   { href: '/admin/payments', label: 'Payments', icon: CreditCard },

@@ -12,7 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-gray-100 flex">
       <AdminSidebar adminName={session.email} adminRole={session.role} />
-      <main className="flex-1 ml-56 sm:ml-64 min-h-screen overflow-auto">
+      <main className="flex-1 ml-56 sm:ml-64 h-screen overflow-y-auto">
         <AutoLogoutProvider />
         <AdminTopBar />
         {children}
