@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { useUIStore } from '@/store/uiStore'
 import { formatKES, getProductImageUrl, getPrimarySpecs, formatSpecLabel } from '@/lib/utils'
@@ -15,20 +15,11 @@ type ProductCardProps = {
   showKenyaContext?: boolean
 }
 
-// Deterministic "viewers" based on product id so it doesn't flicker on re-render
-function getViewers(id: string) {
-  const hash = id.split('').reduce((a, c) => a + c.charCodeAt(0), 0)
-  return 2 + (hash % 6) // 2–7 viewers
-}
-
 export function ProductCard({ product, showKenyaContext = false }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useUIStore((s) => s.openCart)
   const [imgError, setImgError] = useState(false)
   const [added, setAdded] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => { setMounted(true) }, [])
 
   const imageUrl = getProductImageUrl(product)
   const specs = getPrimarySpecs(product.specs as Record<string, string>, 3)
@@ -38,10 +29,6 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
 
   const displayName = showKenyaContext ? `${product.name} — Kenya` : product.name
   const hasImage = !imgError && imageUrl !== '/placeholder-product.jpg'
-  const viewers = getViewers(product.id)
-
-  // Stock urgency — show low stock for higher-priced items
-  const isLowStock = product.price_kes > 50000 && product.in_stock
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault()
@@ -111,34 +98,31 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
               </div>
             )}
 
-            {/* Discount badge */}
+            {/* Offer badge — Jumia style */}
             {(discount > 0 || product.discount_badge) && (
-              <div className="absolute top-3 left-3 z-10">
-                <span
-                  className="text-[10px] font-bold text-white px-2.5 py-1 rounded-lg uppercase tracking-wider"
-                  style={{ background: 'linear-gradient(135deg, #2563eb, #1e40af)' }}
+              <div className="absolute top-0 left-0 z-10">
+                <div
+                  className="px-3 py-1.5 text-white font-black text-[11px] uppercase tracking-wider"
+                  style={{
+                    background: product.discount_badge?.includes('NEW') ? '#00a651' : '#cc0000',
+                    borderRadius: '0 0 12px 0',
+                  }}
                 >
-                  {product.discount_badge || (discount > 0 ? `-${discount}%` : '')}
-                </span>
+                  {product.discount_badge || `-${discount}%`}
+                </div>
               </div>
             )}
 
-            {/* Low stock badge */}
-            {isLowStock && !discount && !product.discount_badge && (
-              <div className="absolute top-3 left-3 z-10">
-                <span className="text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2.5 py-1 rounded-lg uppercase tracking-wider">
-                  Limited Stock
-                </span>
-              </div>
-            )}
-
-            {/* Viewers indicator */}
-            {mounted && product.in_stock && (
-              <div className="absolute bottom-3 right-3 z-10">
-                <span className="text-[10px] font-bold text-slate-500 bg-white/90 backdrop-blur-sm border border-slate-100 px-2 py-1 rounded-lg flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse inline-block" />
-                  {viewers} viewing
-                </span>
+            {/* Save bubble */}
+            {discount > 0 && (
+              <div className="absolute top-0 right-0 z-10">
+                <div
+                  className="w-12 h-12 rounded-full flex flex-col items-center justify-center text-center"
+                  style={{ background: '#ff6600' }}
+                >
+                  <span className="text-white font-black text-[9px] leading-tight">SAVE</span>
+                  <span className="text-white font-black text-[11px] leading-tight">{discount}%</span>
+                </div>
               </div>
             )}
           </div>

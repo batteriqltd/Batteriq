@@ -11,6 +11,7 @@ import { ToastContainer } from '@/components/ui/Toast'
 import { HomepageNewsletter } from '@/components/home/HomepageNewsletter'
 import { ReviewsSection } from '@/components/home/ReviewsSection'
 import { StatsSection } from '@/components/home/StatsSection'
+import { OffersSection } from '@/components/home/OffersSection'
 import { PageWrapper } from '@/components/animations/PageWrapper'
 import { HomeAnimations } from '@/components/animations/HomeAnimations'
 import { SectionTransition } from '@/components/animations/SectionTransition'
@@ -86,6 +87,8 @@ export default async function HomePage() {
       </HeroParallax>
 
       <StatsSection />
+
+      <OffersSection />
 
       <CategoryNav />
 
