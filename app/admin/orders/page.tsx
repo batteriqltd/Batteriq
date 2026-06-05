@@ -116,32 +116,24 @@ export default function AdminOrdersPage() {
     }
   }
 
-  async function triggerMpesa(order: Order) {
-    setToast(`📱 Sending M-Pesa push to ${order.guest_phone}...`)
-
+  async function sendStkPush(order: Order) {
+    setToast(`📱 Sending STK push to ${order.guest_phone}...`)
     try {
-      const res = await fetch('/api/mpesa/stkpush', {
+      const res = await fetch('/api/admin/mpesa/stkpush', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          phoneNumber: order.guest_phone,
-          amount: order.total_kes,
-          orderId: order.id,
-        }),
+        body: JSON.stringify({ orderId: order.id }),
       })
       const data = await res.json()
-
       if (data.success) {
-        setToast(`✅ M-Pesa push sent to ${order.guest_phone} — waiting for customer PIN`)
-        setOrders(prev => prev.map(o => o.id === order.id ? { ...o, mpesa_push_sent: true } as Order : o))
+        setToast(`✅ STK Push sent to ${order.guest_phone} — waiting for customer PIN`)
       } else {
-        setToast(`❌ Push failed: ${data.guide || data.error || 'Unknown error'}`)
+        setToast(`❌ Push failed: ${data.error || 'Unknown error'}`)
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Network error'
       setToast(`❌ Network error: ${message}`)
     }
-
     setTimeout(() => setToast(''), 6000)
   }
 
@@ -338,13 +330,12 @@ export default function AdminOrdersPage() {
                         >
                           <Eye size={16} />
                         </Link>
-                        {order.payment_method === 'cod_mpesa' && order.payment_status === 'pending' && (
+                        {(order.payment_status === 'pending' || order.payment_status === 'failed') && (
                           <button
-                            onClick={() => triggerMpesa(order)}
-                            className="h-9 px-4 rounded-xl text-[10px] font-black text-white uppercase tracking-widest whitespace-nowrap transition-all shadow-lg shadow-green-100 hover:scale-105 active:scale-95"
-                            style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)' }}
+                            onClick={() => sendStkPush(order)}
+                            className="px-3 py-1.5 rounded-lg bg-green-500 text-white text-xs font-black hover:bg-green-600 transition-colors"
                           >
-                            MPESA PUSH
+                            Send STK Push
                           </button>
                         )}
                         {order.payment_method === 'cod_cash' && order.payment_status === 'pending' && (
