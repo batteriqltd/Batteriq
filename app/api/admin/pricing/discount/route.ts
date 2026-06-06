@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -31,6 +32,16 @@ export async function POST(req: Request) {
       discount_end: discountEnd || null,
     }).eq('id', productId)
 
+    
+    // Revalidate all frontend pages so price changes reflect immediately
+    revalidatePath('/', 'layout')
+    revalidatePath('/ecoflow-kenya')
+    revalidatePath('/ecoflow')
+    revalidatePath('/power-stations')
+    revalidatePath('/solar')
+    revalidatePath('/bluetti')
+    revalidatePath('/accessories')
+    revalidatePath('/compare')
     return NextResponse.json({ success: true, newPrice, originalPrice })
   } catch {
     return NextResponse.json({ error: 'Failed to apply discount' }, { status: 500 })
@@ -62,6 +73,16 @@ export async function DELETE(req: Request) {
       discount_end: null,
     }).eq('id', productId)
 
+    
+    // Revalidate all frontend pages so price changes reflect immediately
+    revalidatePath('/', 'layout')
+    revalidatePath('/ecoflow-kenya')
+    revalidatePath('/ecoflow')
+    revalidatePath('/power-stations')
+    revalidatePath('/solar')
+    revalidatePath('/bluetti')
+    revalidatePath('/accessories')
+    revalidatePath('/compare')
     return NextResponse.json({ success: true })
   } catch {
     return NextResponse.json({ error: 'Failed to remove discount' }, { status: 500 })

@@ -9,7 +9,7 @@ import { ToastContainer } from '@/components/ui/Toast'
 import { Shield } from 'lucide-react'
 import Script from 'next/script'
 
-export const revalidate = 3600
+export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'EcoFlow Kenya — Official Authorised Dealer | Buy with M-Pesa | Batteriq',

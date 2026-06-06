@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -26,6 +27,16 @@ export async function PATCH(req: Request) {
       })
     }
 
+    
+    // Revalidate all frontend pages so price changes reflect immediately
+    revalidatePath('/', 'layout')
+    revalidatePath('/ecoflow-kenya')
+    revalidatePath('/ecoflow')
+    revalidatePath('/power-stations')
+    revalidatePath('/solar')
+    revalidatePath('/bluetti')
+    revalidatePath('/accessories')
+    revalidatePath('/compare')
     return NextResponse.json({ success: true, newPrice })
   } catch {
     return NextResponse.json({ error: 'Update failed' }, { status: 500 })
