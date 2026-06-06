@@ -196,7 +196,8 @@ export default function FaqPage() {
           { label: 'Support', href: '/support' },
           { label: 'FAQ', href: '/support/faq' },
         ]}
-        bgGradient="linear-gradient(135deg, #000033 0%, #00004d 60%, #000099 100%)"
+        bgGradient="linear-gradient(135deg, #00004d 0%, #0000aa 100%)"
+        badge="Help Center"
         height="small"
       />
 

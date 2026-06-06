@@ -101,19 +101,11 @@ export default async function PowerStationsPage() {
           />
         )}
 
-        {/* Dark gradient overlay — bottom heavy so text readable */}
+        {/* Single clean overlay */}
         <div
           className="absolute inset-0"
           style={{
-            background: 'linear-gradient(to bottom, rgba(0,0,10,0.2) 0%, rgba(0,0,10,0.5) 50%, rgba(0,0,10,0.92) 100%)',
-          }}
-        />
-
-        {/* Blue brand glow bottom left */}
-        <div
-          className="absolute bottom-0 left-0 w-96 h-64 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse at bottom left, rgba(0,0,255,0.25), transparent)',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.05) 35%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.85) 100%)',
           }}
         />
 

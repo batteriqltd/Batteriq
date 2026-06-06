@@ -113,7 +113,10 @@ export default async function EcoFlowKenyaPage() {
           { label: 'Home', href: '/' },
           { label: 'EcoFlow Kenya', href: '/ecoflow-kenya' },
         ]}
-        bgGradient="linear-gradient(135deg, #000033 0%, #0000ff 100%)"
+        bgImage="/heroes/hero-power-stations.jpg"
+        badge="Official Authorised Dealer — Kenya"
+        height="medium"
+        align="left"
       />
 
       {/* Hidden SEO content */}

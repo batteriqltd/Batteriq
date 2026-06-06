@@ -42,13 +42,15 @@ export default async function AccessoriesPage() {
       <ToastContainer />
       <PageHero
         title="Accessories & Add-ons"
-        subtitle="Complete your EcoFlow system with official batteries, chargers, and accessories."
+        subtitle="Complete your EcoFlow system with official batteries, chargers, cables and smart accessories."
         breadcrumb={[
           { label: 'Home', href: '/' },
           { label: 'Accessories', href: '/accessories' },
         ]}
-        bgGradient="linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%)"
-        // bgImage="/heroes/accessories.jpg"
+        bgImage="/heroes/delta-pro-hero.jpg"
+        badge="Official EcoFlow Accessories"
+        height="medium"
+        align="left"
       />
       <div className="max-w-8xl mx-auto px-4 lg:px-8 py-12">
         <FilteredProductGrid products={products} filterType="accessories" />

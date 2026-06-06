@@ -42,13 +42,15 @@ export default async function BluesttiCollectionPage() {
       <ToastContainer />
       <PageHero
         title="Bluetti Power Stations"
-        subtitle="The full range of Bluetti portable power stations, solar panels and batteries available in Kenya."
+        subtitle="The full range of BLUETTI portable power stations, solar panels and batteries available in Kenya."
         breadcrumb={[
           { label: 'Home', href: '/' },
           { label: 'Bluetti', href: '/bluetti' },
         ]}
-        bgGradient="linear-gradient(135deg, #0a0a1a 0%, #1a1a4d 100%)"
-        // bgImage="/heroes/bluetti.jpg"
+        bgImage="/heroes/battery-hero.jpg"
+        badge="Official BLUETTI Authorised Dealer"
+        height="medium"
+        align="left"
       />
       <div className="max-w-8xl mx-auto px-4 lg:px-8 py-12">
         <FilteredProductGrid products={products} filterType="bluetti" />

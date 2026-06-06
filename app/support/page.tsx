@@ -23,7 +23,8 @@ export default function SupportPage() {
         title="Support & Help Center"
         subtitle="Experience comprehensive care for your power systems. Access technical documentation, warranty services, and expert guidance."
         breadcrumb={[{ label: 'Home', href: '/' }, { label: 'Support', href: '/support' }]}
-        bgGradient="linear-gradient(135deg, #020617 0%, #1e1b4b 60%, #1e40af 100%)"
+        bgGradient="linear-gradient(135deg, #00004d 0%, #000080 60%, #0000cc 100%)"
+        badge="Batteriq Kenya — Customer Care"
         height="small"
         align="center"
       />

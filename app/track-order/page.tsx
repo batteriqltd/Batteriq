@@ -97,10 +97,11 @@ export default function TrackOrderPage() {
       <Header />
       <div className="min-h-screen bg-gray-50 pt-16 sm:pt-[72px]">
         {/* Hero */}
-        <div style={{ background: 'linear-gradient(135deg, #00004d 0%, #0000ff 100%)' }} className="py-10 sm:py-16 px-4 sm:px-6">
+        <div style={{ background: 'linear-gradient(135deg, #00004d 0%, #0000cc 100%)' }} className="py-10 sm:py-16 px-4 sm:px-6">
           <div className="max-w-2xl mx-auto text-center">
-            <div className="w-14 h-14 rounded-2xl bg-white/15 flex items-center justify-center mx-auto mb-4">
-              <Search className="w-7 h-7 text-white" />
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 border border-white/20 bg-white/10 backdrop-blur-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+              <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">Order Tracking</span>
             </div>
             <h1 className="text-3xl font-black text-white mb-2" style={{ fontFamily: 'var(--font-display, sans-serif)', letterSpacing: '-0.03em' }}>
               Track Your Order

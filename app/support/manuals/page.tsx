@@ -83,7 +83,8 @@ export default function ManualsPage() {
           { label: 'Support', href: '/support' },
           { label: 'Manuals', href: '/support/manuals' },
         ]}
-        bgGradient="linear-gradient(135deg, #0a0a1a 0%, #1a1a4d 60%, #00004d 100%)"
+        bgGradient="linear-gradient(135deg, #00004d 0%, #0000aa 100%)"
+        badge="Product Documentation"
         height="small"
       />
 

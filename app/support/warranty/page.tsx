@@ -230,6 +230,7 @@ export default function WarrantyPage() {
           { label: 'Warranty Registration', href: '/support/warranty' },
         ]}
         bgGradient="linear-gradient(135deg, #00004d 0%, #000080 100%)"
+        badge="Official Warranty Registration"
         height="small"
       />
 
