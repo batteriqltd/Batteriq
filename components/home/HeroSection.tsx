@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ChevronLeft, ChevronRight, Shield, Zap } from 'lucide-react'
+import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react'
 
 type Slide = {
   id: number
@@ -25,7 +25,7 @@ const slides: Slide[] = [
     badge: 'Authorised EcoFlow & Bluetti Dealer — Kenya',
     headline: 'Power Through',
     headlineAccent: 'Every Outage',
-    subline: "Kenya's #1 authorised EcoFlow & Bluetti dealer. Instant M-Pesa checkout. Nairobi delivery & nationwide shipping.",
+    subline: "Kenya's #1 authorised EcoFlow & Bluetti dealer. Instant M-Pesa checkout. Same-day Nairobi delivery.",
     cta: { label: 'Shop Power Stations', href: '/ecoflow-kenya' },
     ctaSecondary: { label: 'View All Products', href: '/#power-stations' },
     bg: 'from-slate-900 via-blue-950 to-slate-900',
@@ -38,7 +38,7 @@ const slides: Slide[] = [
     badge: 'EcoFlow Solar Panels Kenya',
     headline: 'Harvest the',
     headlineAccent: 'African Sun',
-    subline: 'From 45W portable panels to 400W powerhouses. IP68 waterproof. Compatible with all EcoFlow power stations.',
+    subline: 'From 45W portable panels to 400W powerhouses. IP68 waterproof. Works with all EcoFlow stations.',
     cta: { label: 'Shop Solar Panels', href: '/solar' },
     ctaSecondary: { label: 'Learn More', href: '/#solar-panels' },
     bg: 'from-amber-900 via-orange-950 to-slate-900',
@@ -51,9 +51,9 @@ const slides: Slide[] = [
     badge: 'Compact & Portable Power',
     headline: 'Power Anywhere',
     headlineAccent: 'You Go',
-    subline: 'RIVER series power stations from KES 27,259. Lightweight, powerful, M-Pesa ready. Perfect for home backup, camping & safari.',
+    subline: 'RIVER series from KES 27,259. Lightweight, powerful, M-Pesa ready. Perfect for home, camping & safari.',
     cta: { label: 'Shop RIVER Series', href: '/ecoflow-kenya#power-stations' },
-    ctaSecondary: { label: 'Ask AI Assistant', href: '#' },
+    ctaSecondary: { label: 'Compare Models', href: '/compare' },
     bg: 'from-emerald-900 via-teal-950 to-slate-900',
     image: '/heroes/hero-river.jpg',
     product: 'EcoFlow RIVER 2',
@@ -95,25 +95,29 @@ export function HeroSection() {
           transition={{ duration: 0.8 }}
           className="absolute inset-0"
         >
-          <div className={`absolute inset-0 bg-gradient-to-br ${slide.bg}`} />
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${slide.image}')` }} />
-          <div className="absolute inset-0 z-10" style={{ background: 'linear-gradient(180deg, rgba(0,0,20,0.25) 0%, rgba(0,0,20,0.15) 40%, rgba(0,0,20,0.65) 80%, rgba(0,0,10,0.92) 100%)' }} />
-          <div className="absolute inset-0 z-10 hidden sm:block" style={{ background: 'linear-gradient(90deg, rgba(0,0,20,0.55) 0%, rgba(0,0,20,0.3) 35%, transparent 65%)' }} />
-          <div className={`absolute inset-0 bg-gradient-to-br ${slide.bg} opacity-30 mix-blend-multiply`} />
+          {/* Product image — full clear display */}
+          <div className="absolute inset-0">
+            <img
+              src={slide.image}
+              alt={slide.product}
+              className="w-full h-full object-cover object-center"
+              style={{ display: 'block' }}
+            />
+          </div>
+          {/* Single soft gradient ONLY at the bottom for text readability */}
+          <div className="absolute inset-0" style={{
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.05) 30%, rgba(0,0,0,0.45) 65%, rgba(0,0,0,0.85) 100%)'
+          }} />
+          {/* Left side gradient for text area on desktop */}
+          <div className="absolute inset-0 hidden lg:block" style={{
+            background: 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 40%, transparent 65%)'
+          }} />
         </motion.div>
       </AnimatePresence>
 
-      {/* Grid overlay */}
-      <div className="absolute inset-0 pointer-events-none opacity-20" aria-hidden="true"
-        style={{ backgroundImage: 'linear-gradient(rgba(0,0,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,255,0.08) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
-
-      {/* Glow */}
-      <div className="absolute inset-0 pointer-events-none" aria-hidden="true"
-        style={{ background: 'radial-gradient(ellipse 70% 50% at 50% 60%, rgba(0,0,255,0.12) 0%, transparent 70%)' }} />
-
       {/* Content */}
-      <div className="absolute inset-0 z-20 flex items-end sm:items-center pb-10 sm:pb-0">
-        <div className="max-w-5xl mx-auto px-4 sm:px-8 w-full text-center" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="absolute inset-0 z-20 flex items-end pb-12 sm:pb-16 lg:pb-20">
+        <div className="max-w-7xl mx-auto px-6 sm:px-10 w-full text-left lg:max-w-2xl lg:ml-16">
           <AnimatePresence mode="wait">
             <motion.div
               key={slide.id}
@@ -123,59 +127,66 @@ export function HeroSection() {
               transition={{ duration: 0.5 }}
             >
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-6 border border-bq-blue/40 rounded-full bg-bq-blue/10 text-sm text-blue-300 font-medium">
-                <span className="w-2 h-2 bg-bq-blue rounded-full animate-pulse" />
+              <div className="inline-flex items-center gap-2 px-4 py-2 mb-5 border border-white/20 rounded-full bg-white/10 backdrop-blur-sm text-xs text-white font-bold uppercase tracking-widest">
+                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
                 {slide.badge}
               </div>
 
               {/* Headline */}
-              <h1 data-hero-title className="text-white mb-4"
-                style={{ fontSize: 'clamp(2rem, 6vw, 4.5rem)', letterSpacing: '-0.03em', lineHeight: 1.05, fontWeight: 900 }}>
-                {slide.headline}{' '}
-                <span className="text-bq-blue">{slide.headlineAccent}</span>
+              <h1 className="text-white mb-4 text-left"
+                style={{ fontSize: 'clamp(2.4rem, 6vw, 5rem)', letterSpacing: '-0.03em', lineHeight: 1.0, fontWeight: 900, textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
+                {slide.headline}<br />
+                <span style={{ color: '#4d9fff' }}>{slide.headlineAccent}</span>
               </h1>
 
-              <p data-hero-sub className="text-gray-300 mx-auto mb-8"
-                style={{ fontSize: 'clamp(0.85rem, 2vw, 1.15rem)', maxWidth: '520px', lineHeight: 1.6 }}>
+              {/* Price tag */}
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5 bg-white/10 backdrop-blur-sm border border-white/15">
+                <span className="text-white/60 text-xs font-bold uppercase tracking-widest">Starting</span>
+                <span className="text-white font-black text-base">{slide.startingPrice}</span>
+              </div>
+
+              <p className="text-white/75 mb-8 text-left leading-relaxed max-w-md"
+                style={{ fontSize: 'clamp(0.875rem, 1.8vw, 1.05rem)' }}>
                 {slide.subline}
               </p>
 
               {/* CTAs */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
-                <Link data-hero-btn href={slide.cta.href}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-bq-blue text-white font-bold text-sm sm:text-base rounded-2xl hover:bg-bq-blue-dim hover:shadow-blue-glow transition-all duration-250 min-h-[52px]">
+              <div className="flex flex-col sm:flex-row items-start gap-3 mb-10">
+                <Link href={slide.cta.href}
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 text-white font-black text-sm rounded-2xl transition-all duration-200 hover:-translate-y-0.5 min-h-[52px]"
+                  style={{ background: '#0000ff', boxShadow: '0 8px 32px rgba(0,0,255,0.4)' }}>
                   {slide.cta.label} <ArrowRight size={18} />
                 </Link>
-                <Link data-hero-btn href={slide.ctaSecondary.href}
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-4 bg-transparent text-white font-bold text-sm sm:text-base rounded-2xl border-2 border-white/40 hover:border-white hover:bg-white/5 transition-all duration-250 min-h-[52px]">
+                <Link href={slide.ctaSecondary.href}
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white font-black text-sm rounded-2xl border border-white/25 hover:bg-white/20 hover:border-white/40 transition-all duration-200 min-h-[52px]">
                   {slide.ctaSecondary.label}
                 </Link>
               </div>
+
+              {/* Dots */}
+              <div className="flex items-center gap-2 mt-0" role="tablist" aria-label="Slide navigation">
+                {slides.map((s, i) => (
+                  <button key={s.id} role="tab" aria-selected={i === current} aria-label={`Go to slide ${i + 1}`}
+                    onClick={() => { setCurrent(i); setPaused(true) }}
+                    className={`h-1 rounded-full transition-all duration-400 ${i === current ? 'w-10 bg-white' : 'w-4 bg-white/30 hover:bg-white/60'}`}
+                  />
+                ))}
+              </div>
             </motion.div>
           </AnimatePresence>
-
-          {/* Dots */}
-          <div className="flex items-center justify-center gap-2 mt-8" role="tablist" aria-label="Slide navigation">
-            {slides.map((s, i) => (
-              <button key={s.id} role="tab" aria-selected={i === current} aria-label={`Go to slide ${i + 1}`}
-                onClick={() => { setCurrent(i); setPaused(true) }}
-                className={`h-2 rounded-full transition-all duration-300 ${i === current ? 'w-8 bg-bq-blue' : 'w-2 bg-white/30 hover:bg-white/60'}`}
-              />
-            ))}
-          </div>
         </div>
       </div>
 
       {/* Arrows */}
       <button onClick={() => { prev(); setPaused(true) }}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-2 text-white/60 hover:text-white bg-black/20 hover:bg-black/40 rounded-full transition-all"
+        className="absolute left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-all"
         aria-label="Previous slide">
-        <ChevronLeft size={24} />
+        <ChevronLeft size={20} />
       </button>
       <button onClick={() => { next(); setPaused(true) }}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-2 text-white/60 hover:text-white bg-black/20 hover:bg-black/40 rounded-full transition-all"
+        className="absolute right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-all"
         aria-label="Next slide">
-        <ChevronRight size={24} />
+        <ChevronRight size={20} />
       </button>
     </section>
   )
