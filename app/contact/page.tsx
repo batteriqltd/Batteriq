@@ -64,66 +64,70 @@ export default function ContactPage() {
       <main className="min-h-screen bg-[#f8f9fa]">
 
         {/* HERO — full width image with overlay text */}
-        <div className="relative w-full overflow-hidden" style={{ height: 'clamp(320px, 45vh, 520px)' }}>
+        <div className="relative w-full overflow-hidden" style={{ height: 'clamp(460px, 60vh, 680px)' }}>
           <Image
             src="/images/batteriq-team.jpg"
             alt="Batteriq Team"
             fill
-            className="object-cover object-center"
+            className="object-cover"
+            style={{ objectPosition: 'center 20%' }}
             priority
           />
-          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(0,0,77,0.82) 0%, rgba(0,0,30,0.65) 50%, rgba(0,0,77,0.45) 100%)' }} />
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
-            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-              <p className="text-[11px] font-black text-blue-300 uppercase tracking-[0.25em] mb-4">Batteriq Kenya — Official Support</p>
-              <h1 className="text-white font-black tracking-tight mb-4" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', lineHeight: 1.1 }}>
-                Get in Touch
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,40,0.75) 85%, rgba(0,0,40,0.92) 100%)' }} />
+          <div className="absolute inset-x-0 bottom-0 flex flex-col items-start justify-end text-left px-6 sm:px-12 pb-10 sm:pb-14 max-w-3xl">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-5" style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                <span className="text-white text-[11px] font-black uppercase tracking-widest">Our Team is Ready to Help</span>
+              </div>
+              <h1 className="text-white font-black tracking-tight mb-4 leading-tight" style={{ fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
+                We are here<br />for you.
               </h1>
-              <p className="text-blue-100 font-medium max-w-lg mx-auto" style={{ fontSize: 'clamp(0.875rem, 2vw, 1.1rem)' }}>
-                Kenya&apos;s authorised EcoFlow &amp; BLUETTI dealer. Our team responds within 2 hours during business hours.
+              <p className="text-white/80 font-medium leading-relaxed max-w-md" style={{ fontSize: 'clamp(0.9rem, 2vw, 1.1rem)', textShadow: '0 1px 8px rgba(0,0,0,0.3)' }}>
+                Kenya&apos;s authorised EcoFlow &amp; BLUETTI dealer. Real people, real solutions. We respond within 2 hours.
               </p>
             </motion.div>
           </div>
         </div>
 
         {/* QUICK CONTACT STRIP */}
-        <div className="bg-[#00004d] py-5">
+        <div className="bg-white border-b border-gray-100 py-5 shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-8">
             <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-10">
-              <a href="tel:+254716822014" className="flex items-center gap-3 text-white hover:text-blue-200 transition-colors group">
-                <div className="w-9 h-9 rounded-xl bg-white/10 group-hover:bg-white/20 flex items-center justify-center transition-colors">
-                  <Phone size={16} className="text-white" />
+              <a href="tel:+254716822014" className="flex items-center gap-3 text-gray-800 hover:text-[#0000ff] transition-colors group">
+                <div className="w-9 h-9 rounded-xl bg-[#f0f2ff] group-hover:bg-[#e8ebff] flex items-center justify-center transition-colors">
+                  <Phone size={16} className="text-[#0000ff]" />
                 </div>
                 <div>
-                  <p className="text-[9px] text-blue-300 font-black uppercase tracking-widest">Call Us</p>
-                  <p className="text-sm font-black">0716 822 014</p>
+                  <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Call Us</p>
+                  <p className="text-sm font-black text-gray-900">0716 822 014</p>
                 </div>
               </a>
-              <a href="https://wa.me/254716822014" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-white hover:text-green-300 transition-colors group">
-                <div className="w-9 h-9 rounded-xl bg-white/10 group-hover:bg-white/20 flex items-center justify-center transition-colors">
+              <a href="https://wa.me/254716822014" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 text-gray-800 hover:text-[#0000ff] transition-colors group">
+                <div className="w-9 h-9 rounded-xl bg-[#f0f2ff] group-hover:bg-[#e8ebff] flex items-center justify-center transition-colors">
                   <WhatsAppIcon size={18} />
                 </div>
                 <div>
-                  <p className="text-[9px] text-blue-300 font-black uppercase tracking-widest">WhatsApp</p>
-                  <p className="text-sm font-black">Instant Reply</p>
+                  <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest">WhatsApp</p>
+                  <p className="text-sm font-black text-gray-900">Instant Reply</p>
                 </div>
               </a>
-              <a href="mailto:info@batteriq.com" className="flex items-center gap-3 text-white hover:text-blue-200 transition-colors group">
-                <div className="w-9 h-9 rounded-xl bg-white/10 group-hover:bg-white/20 flex items-center justify-center transition-colors">
+              <a href="mailto:info@batteriq.com" className="flex items-center gap-3 text-gray-800 hover:text-[#0000ff] transition-colors group">
+                <div className="w-9 h-9 rounded-xl bg-[#f0f2ff] group-hover:bg-[#e8ebff] flex items-center justify-center transition-colors">
                   <EmailIcon size={18} />
                 </div>
                 <div>
-                  <p className="text-[9px] text-blue-300 font-black uppercase tracking-widest">Email</p>
-                  <p className="text-sm font-black">info@batteriq.com</p>
+                  <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Email</p>
+                  <p className="text-sm font-black text-gray-900">info@batteriq.com</p>
                 </div>
               </a>
-              <div className="flex items-center gap-3 text-white">
-                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
-                  <MapPin size={16} className="text-white" />
+              <div className="flex items-center gap-3 text-gray-800">
+                <div className="w-9 h-9 rounded-xl bg-[#f0f2ff] flex items-center justify-center">
+                  <MapPin size={16} className="text-[#0000ff]" />
                 </div>
                 <div>
-                  <p className="text-[9px] text-blue-300 font-black uppercase tracking-widest">Location</p>
-                  <p className="text-sm font-black">Nairobi, Kenya</p>
+                  <p className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Location</p>
+                  <p className="text-sm font-black text-gray-900">Nairobi, Kenya</p>
                 </div>
               </div>
             </div>
