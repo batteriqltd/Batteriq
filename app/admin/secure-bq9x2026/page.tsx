@@ -20,6 +20,7 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [loadingPhase, setLoadingPhase] = useState<'idle' | 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'done'>('idle')
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -41,15 +42,27 @@ function LoginForm() {
 
       if (!res.ok) {
         setError(data.error || 'Invalid credentials')
+        setLoading(false)
         return
       }
 
+      // Start the cinematic loading sequence — 6 seconds total
+      setLoadingPhase('phase1')
+      await new Promise(r => setTimeout(r, 1500)) // Phase 1: 1.5s
+      setLoadingPhase('phase2')
+      await new Promise(r => setTimeout(r, 1500)) // Phase 2: 1.5s
+      setLoadingPhase('phase3')
+      await new Promise(r => setTimeout(r, 1500)) // Phase 3: 1.5s
+      setLoadingPhase('phase4')
+      await new Promise(r => setTimeout(r, 1000)) // Phase 4: 1s
+      setLoadingPhase('done')
+      await new Promise(r => setTimeout(r, 500))  // Brief pause before redirect
       router.push('/admin')
       router.refresh()
     } catch {
       setError('Connection error. Please try again.')
-    } finally {
       setLoading(false)
+      setLoadingPhase('idle')
     }
   }
 
@@ -65,6 +78,8 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#000022]">
+
+      {loadingPhase !== 'idle' && <AdminLoadingScreen phase={loadingPhase} />}
 
       <div
         className="absolute top-0 left-0 w-full h-full z-0"
@@ -201,6 +216,166 @@ function LoginForm() {
       <style jsx global>{`
         @keyframes shimmer {
           100% { transform: translateX(100%); }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+function AdminLoadingScreen({ phase }: { phase: 'phase1' | 'phase2' | 'phase3' | 'phase4' | 'done' }) {
+  const phases = {
+    phase1: { label: 'Verifying credentials...', sublabel: 'Authenticating identity', progress: 20 },
+    phase2: { label: 'Checking authorization...', sublabel: 'Validating admin privileges', progress: 50 },
+    phase3: { label: 'One more step...', sublabel: 'Loading secure workspace', progress: 78 },
+    phase4: { label: 'Welcome back, Admin', sublabel: 'Initializing operations console', progress: 95 },
+    done: { label: 'Access Granted', sublabel: 'Redirecting to dashboard...', progress: 100 },
+  }
+
+  const current = phases[phase]
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden"
+      style={{ background: '#000011' }}>
+
+      {/* Animated background grid */}
+      <div className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: 'linear-gradient(rgba(0,100,255,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(0,100,255,0.3) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+          animation: 'gridMove 8s linear infinite',
+        }} />
+
+      {/* Radial glow */}
+      <div className="absolute inset-0"
+        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,0,180,0.25) 0%, transparent 70%)' }} />
+
+      {/* Scanning line */}
+      <div className="absolute left-0 right-0 h-px opacity-60"
+        style={{
+          background: 'linear-gradient(90deg, transparent 0%, rgba(0,150,255,0.8) 40%, rgba(0,255,200,1) 50%, rgba(0,150,255,0.8) 60%, transparent 100%)',
+          animation: 'scanLine 3s ease-in-out infinite',
+          boxShadow: '0 0 20px rgba(0,200,255,0.8)',
+        }} />
+
+      {/* Corner brackets */}
+      {[
+        { top: 20, left: 20, borderTop: true, borderLeft: true },
+        { top: 20, right: 20, borderTop: true, borderRight: true },
+        { bottom: 20, left: 20, borderBottom: true, borderLeft: true },
+        { bottom: 20, right: 20, borderBottom: true, borderRight: true },
+      ].map((c, i) => (
+        <div key={i} className="absolute w-12 h-12 opacity-50"
+          style={{
+            top: c.top, left: (c as { left?: number }).left, right: (c as { right?: number }).right, bottom: (c as { bottom?: number }).bottom,
+            borderTop: c.borderTop ? '2px solid rgba(0,200,255,0.8)' : 'none',
+            borderBottom: (c as { borderBottom?: boolean }).borderBottom ? '2px solid rgba(0,200,255,0.8)' : 'none',
+            borderLeft: c.borderLeft ? '2px solid rgba(0,200,255,0.8)' : 'none',
+            borderRight: (c as { borderRight?: boolean }).borderRight ? '2px solid rgba(0,200,255,0.8)' : 'none',
+          }} />
+      ))}
+
+      {/* Center content */}
+      <div className="relative z-10 text-center px-8" style={{ maxWidth: 480 }}>
+
+        {/* Animated rings */}
+        <div className="relative w-32 h-32 mx-auto mb-10">
+          <div className="absolute inset-0 rounded-full border-2 opacity-30"
+            style={{ borderColor: 'rgba(0,200,255,0.6)', animation: 'spin 4s linear infinite' }} />
+          <div className="absolute inset-3 rounded-full border opacity-50"
+            style={{ borderColor: 'rgba(0,150,255,0.8)', animation: 'spin 2.5s linear infinite reverse' }} />
+          <div className="absolute inset-6 rounded-full border-2"
+            style={{ borderColor: 'rgba(0,255,200,0.9)', animation: 'spin 1.5s linear infinite' }} />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-4 h-4 rounded-full"
+              style={{
+                background: phase === 'done' ? '#00ff88' : 'rgba(0,200,255,1)',
+                boxShadow: phase === 'done' ? '0 0 20px #00ff88, 0 0 40px #00ff88' : '0 0 20px rgba(0,200,255,1)',
+                animation: 'pulseDot 1s ease-in-out infinite',
+              }} />
+          </div>
+        </div>
+
+        {/* BATTERIQ branding */}
+        <div className="mb-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-2"
+            style={{ color: 'rgba(0,200,255,0.5)' }}>
+            BATTERIQ™ SECURE PORTAL
+          </p>
+          <div className="h-px w-32 mx-auto mb-6"
+            style={{ background: 'linear-gradient(90deg, transparent, rgba(0,200,255,0.6), transparent)' }} />
+        </div>
+
+        {/* Phase message */}
+        <div style={{ minHeight: 80 }}>
+          <h2 className="font-black text-2xl mb-2 transition-all duration-500"
+            style={{
+              color: phase === 'done' ? '#00ff88' : '#ffffff',
+              textShadow: phase === 'done' ? '0 0 30px #00ff88' : '0 0 20px rgba(0,200,255,0.5)',
+              letterSpacing: '-0.02em',
+            }}>
+            {current.label}
+          </h2>
+          <p className="text-sm font-medium"
+            style={{ color: 'rgba(150,200,255,0.6)' }}>
+            {current.sublabel}
+          </p>
+        </div>
+
+        {/* Progress bar */}
+        <div className="mt-10 mx-auto" style={{ maxWidth: 320 }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[9px] font-black uppercase tracking-widest"
+              style={{ color: 'rgba(0,200,255,0.4)' }}>
+              SYSTEM ACCESS
+            </span>
+            <span className="text-[10px] font-black font-mono"
+              style={{ color: 'rgba(0,200,255,0.7)' }}>
+              {current.progress}%
+            </span>
+          </div>
+          <div className="h-1 rounded-full overflow-hidden"
+            style={{ background: 'rgba(0,100,255,0.15)', border: '1px solid rgba(0,150,255,0.2)' }}>
+            <div className="h-full rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: `${current.progress}%`,
+                background: phase === 'done'
+                  ? 'linear-gradient(90deg, #00cc66, #00ff88)'
+                  : 'linear-gradient(90deg, #0000ff, #00aaff, #00ffcc)',
+                boxShadow: phase === 'done'
+                  ? '0 0 10px #00ff88'
+                  : '0 0 10px rgba(0,200,255,0.8)',
+              }} />
+          </div>
+        </div>
+
+        {/* Scrolling hex codes for sci-fi effect */}
+        <div className="mt-8 font-mono text-[9px] opacity-20 overflow-hidden"
+          style={{ color: 'rgba(0,200,255,1)', height: 16 }}>
+          {Array.from({ length: 8 }, (_, i) =>
+            ((i * 0x1F3A7B + 0xA4C2E8) % 0xFFFFFF).toString(16).padStart(6, '0').toUpperCase()
+          ).join('  ')}
+        </div>
+
+      </div>
+
+      <style jsx global>{`
+        @keyframes gridMove {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(60px); }
+        }
+        @keyframes scanLine {
+          0% { top: -2%; opacity: 0; }
+          10% { opacity: 0.6; }
+          90% { opacity: 0.6; }
+          100% { top: 102%; opacity: 0; }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes pulseDot {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.3); opacity: 0.8; }
         }
       `}</style>
     </div>
