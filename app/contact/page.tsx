@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Phone, Mail, MapPin, MessageCircle, CheckCircle, Smartphone, Send, Lock, Shield } from 'lucide-react'
+import { WhatsAppIcon, EmailIcon } from '@/components/ui/ContactIcons'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
@@ -241,7 +242,13 @@ export default function ContactPage() {
                   ].map((item, i) => (
                     <div key={i} className="flex items-start gap-5 p-5 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
                       <div className={`w-12 h-12 rounded-xl ${item.color} flex items-center justify-center flex-shrink-0 shadow-lg shadow-black/20 group-hover:scale-110 transition-transform`}>
-                        <item.icon className="w-5 h-5 text-white" />
+                        {item.label === 'Official WhatsApp' ? (
+                          <WhatsAppIcon size={22} />
+                        ) : item.label === 'Email Support' ? (
+                          <EmailIcon size={22} />
+                        ) : (
+                          <item.icon className="w-5 h-5 text-white" />
+                        )}
                       </div>
                       <div>
                         <p className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.15em] mb-1">{item.label}</p>
@@ -249,17 +256,13 @@ export default function ContactPage() {
                           <div className="flex flex-col sm:flex-row gap-3 mt-2">
                             <a href="mailto:info@batteriq.com"
                               className="flex items-center gap-2 text-sm font-bold text-blue-400 hover:text-blue-200 transition-colors">
-                              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                              </svg>
+                              <EmailIcon size={16} />
                               info@batteriq.com
                             </a>
                             <span className="text-gray-500 hidden sm:block">|</span>
                             <a href="mailto:batteriq@gmail.com"
                               className="flex items-center gap-2 text-sm font-bold text-blue-400 hover:text-blue-200 transition-colors">
-                              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                              </svg>
+                              <EmailIcon size={16} />
                               batteriq@gmail.com
                             </a>
                           </div>

@@ -6,6 +6,7 @@ import { PageHero } from '@/components/layout/PageHero'
 import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { HelpCircle, BookOpen, Shield, MessageCircle, Phone, Mail, ChevronRight } from 'lucide-react'
+import { WhatsAppIcon, EmailIcon } from '@/components/ui/ContactIcons'
 
 export const metadata: Metadata = {
   title: 'Support & Help | Batteriq Kenya',
@@ -102,7 +103,13 @@ export default function SupportPage() {
               ].map(c => (
                 <div key={c.label} className="flex items-center gap-5 bg-slate-50/50 rounded-2xl p-6 border border-slate-100/50 hover:bg-white hover:shadow-sm transition-all group">
                   <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm border border-slate-100 group-hover:border-blue-600/20 group-hover:bg-blue-50 transition-all">
-                    <c.icon className="w-5 h-5 text-blue-600" />
+                    {c.label === 'WhatsApp Hub' ? (
+                      <WhatsAppIcon size={22} />
+                    ) : c.label === 'Email Support' ? (
+                      <EmailIcon size={22} />
+                    ) : (
+                      <c.icon className="w-5 h-5 text-blue-600" />
+                    )}
                   </div>
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1">{c.label}</p>

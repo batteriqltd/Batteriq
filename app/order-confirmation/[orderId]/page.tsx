@@ -1,7 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { CheckCircle, Package, Mail, ArrowRight, Truck, Clock, MapPin, MessageCircle, Search } from 'lucide-react'
+import { CheckCircle, Package, ArrowRight, Truck, Clock, MapPin, Search } from 'lucide-react'
+import { WhatsAppIcon, EmailIcon } from '@/components/ui/ContactIcons'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { formatKES } from '@/lib/utils'
@@ -166,14 +167,14 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
             </div>
             {order.guest_email ? (
               <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                <Mail size={20} className="text-bq-blue mb-3" />
-                <p className="text-sm font-bold text-gray-900 mb-1">Confirmation email sent</p>
+                <EmailIcon size={20} />
+                <p className="text-sm font-bold text-gray-900 mb-3 mt-2">Confirmation email sent</p>
                 <p className="text-xs text-gray-500 leading-relaxed">Check <span className="font-medium text-gray-700">{order.guest_email}</span> for your order confirmation.</p>
               </div>
             ) : (
               <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                <MessageCircle size={20} className="text-bq-blue mb-3" />
-                <p className="text-sm font-bold text-gray-900 mb-1">Need help?</p>
+                <WhatsAppIcon size={20} />
+                <p className="text-sm font-bold text-gray-900 mb-1 mt-2">Need help?</p>
                 <p className="text-xs text-gray-500 leading-relaxed">WhatsApp us for instant order updates and delivery coordination.</p>
               </div>
             )}

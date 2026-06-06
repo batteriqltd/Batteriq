@@ -6,10 +6,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Shield, Truck, Lock, Smartphone,
+  Lock, Smartphone,
   CheckCircle, ChevronRight, Package, CreditCard,
-  AlertCircle, MessageSquare, Phone, Mail
+  AlertCircle, Phone
 } from 'lucide-react'
+import { WhatsAppIcon, EmailIcon, ContactSalesIcon } from '@/components/ui/ContactIcons'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 
@@ -568,21 +569,21 @@ export default function CheckoutPage() {
 
             {/* "Not sure?" box */}
             <div className="bg-[#fffbeb] border-[1.5px] border-[#fde68a] rounded-[24px] p-8 flex flex-col md:flex-row items-start md:items-center gap-8 shadow-sm">
-              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-amber-500 shadow-sm flex-shrink-0">
-                <Shield size={28} />
+              <div className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center shadow-sm flex-shrink-0">
+                <ContactSalesIcon size={28} />
               </div>
               <div className="flex-1">
                 <p className="font-black text-gray-900 text-[17px] mb-1">Need help before paying?</p>
                 <p className="text-sm text-amber-800/80 font-medium mb-6 leading-relaxed max-w-lg">Our team can confirm stock, warranty, and delivery timing before you complete your purchase.</p>
                 <div className="flex flex-wrap gap-3">
                   <a href="https://wa.me/254716822014" target="_blank" className="h-[42px] px-6 rounded-xl bg-[#00A651] text-white text-[13px] font-black flex items-center gap-2 transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-green-100">
-                    <MessageSquare size={16} /> WhatsApp
+                    <WhatsAppIcon size={18} /> WhatsApp
                   </a>
                   <a href="tel:+254716822014" className="h-[42px] px-6 rounded-xl bg-white border border-[#e5e7eb] text-[#0000ff] text-[13px] font-black flex items-center gap-2 transition-all hover:border-[#0000ff] active:scale-95">
                     <Phone size={16} /> Call
                   </a>
                   <a href="mailto:batteriq@gmail.com" className="h-[42px] px-6 rounded-xl bg-white border border-[#e5e7eb] text-gray-500 text-[13px] font-black flex items-center gap-2 transition-all hover:border-gray-400 active:scale-95">
-                    <Mail size={16} /> Email
+                    <EmailIcon size={18} /> Email
                   </a>
                 </div>
               </div>
@@ -673,13 +674,13 @@ export default function CheckoutPage() {
                       rel="noopener noreferrer"
                       className="h-[42px] px-6 rounded-xl bg-[#00A651] text-white text-[13px] font-black flex items-center gap-2 hover:brightness-110 transition-all"
                     >
-                      <MessageSquare size={15} /> Request via WhatsApp
+                      <WhatsAppIcon size={16} /> Request via WhatsApp
                     </a>
                     <a
                       href={`mailto:info@batteriq.com?subject=Proforma Invoice Request&body=Hi Batteriq, I would like to request a proforma invoice. Name: ${form.fullName || '[Your Name]'}`}
                       className="h-[42px] px-6 rounded-xl bg-white border border-gray-200 text-gray-700 text-[13px] font-black flex items-center gap-2 hover:border-gray-400 transition-all"
                     >
-                      <Mail size={15} /> Request via Email
+                      <EmailIcon size={16} /> Request via Email
                     </a>
                   </div>
                 </div>
@@ -819,8 +820,8 @@ export default function CheckoutPage() {
                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Batteriq Kenya</p>
                   <div className="space-y-1.5">
                     <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><Phone size={10} /> +254 716 822 014</p>
-                    <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><MessageSquare size={10} /> WhatsApp: +254 716 822 014</p>
-                    <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><Mail size={10} /> info@batteriq.com</p>
+                    <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><WhatsAppIcon size={12} /> WhatsApp: +254 716 822 014</p>
+                    <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><EmailIcon size={12} /> info@batteriq.com</p>
                     <p className="text-[11px] text-gray-500 font-medium">Mon–Sat, 8:30am–6:00pm</p>
                   </div>
                 </div>
