@@ -14,6 +14,7 @@ function LoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const reason = searchParams.get('reason')
+  const redirectTo = searchParams.get('redirect') || '/admin'
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -57,7 +58,7 @@ function LoginForm() {
       await new Promise(r => setTimeout(r, 1000)) // Phase 4: 1s
       setLoadingPhase('done')
       await new Promise(r => setTimeout(r, 500))  // Brief pause before redirect
-      router.push('/admin')
+      router.push(redirectTo)
       router.refresh()
     } catch {
       setError('Connection error. Please try again.')
@@ -102,14 +103,22 @@ function LoginForm() {
         <div className="bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[32px] p-8 lg:p-10 shadow-2xl shadow-black/50 admin-login-animate" style={{ animationDelay: '0.1s' }}>
 
           <div className="mb-10">
-            {reason === 'inactivity' && (
+            {reason && {
+              inactivity: 'You were logged out due to 30 minutes of inactivity.',
+              session_expired: 'Your session has expired. Please log in again.',
+              logout: 'You have been logged out successfully.',
+            }[reason] && (
               <div
                 className="flex items-center gap-2 px-4 py-3 rounded-2xl mb-4"
-                style={{ background: '#fff7ed', border: '1.5px solid #fed7aa' }}
+                style={{ background: 'rgba(255,200,0,0.08)', border: '1px solid rgba(255,200,0,0.25)' }}
               >
-                <span className="text-base">⏱️</span>
-                <p className="text-sm font-bold text-orange-700">
-                  You were logged out due to inactivity
+                <span className="text-base">{reason === 'logout' ? '✓' : '⏱️'}</span>
+                <p className="text-sm font-bold" style={{ color: 'rgba(255,210,100,0.9)' }}>
+                  {{
+                    inactivity: 'You were logged out due to 30 minutes of inactivity.',
+                    session_expired: 'Your session has expired. Please log in again.',
+                    logout: 'You have been logged out successfully.',
+                  }[reason]}
                 </p>
               </div>
             )}

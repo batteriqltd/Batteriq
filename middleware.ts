@@ -78,12 +78,18 @@ export async function middleware(request: NextRequest) {
   const session = request.cookies.get(SESSION_COOKIE)?.value
 
   if (!session) {
-    return NextResponse.rewrite(new URL('/404', request.url))
+    const loginUrl = new URL('/admin/secure-bq9x2026', request.url)
+    loginUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(loginUrl)
   }
 
   const decoded = await verifyHmacToken(session)
   if (!decoded) {
-    return NextResponse.rewrite(new URL('/404', request.url))
+    const loginUrl = new URL('/admin/secure-bq9x2026', request.url)
+    loginUrl.searchParams.set('reason', 'session_expired')
+    const response = NextResponse.redirect(loginUrl)
+    response.cookies.set('batteriq_admin_session', '', { maxAge: 0, path: '/' })
+    return response
   }
 
   return NextResponse.next()

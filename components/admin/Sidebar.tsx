@@ -81,7 +81,7 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
 
   async function handleSignOut() {
     await fetch('/api/admin/auth', { method: 'DELETE' })
-    window.location.href = '/admin/login'
+    window.location.href = '/admin/secure-bq9x2026'
   }
 
   function isActive(item: typeof NAV[0]) {
