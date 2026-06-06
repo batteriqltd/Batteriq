@@ -20,10 +20,10 @@ const SUPPORT_LINKS = [
 ]
 
 const TRUST_BADGES = [
-  { label: 'Official EcoFlow Dealer', color: '#0066CC', bg: '#EBF5FF' },
-  { label: 'Official BLUETTI Dealer', color: '#E65100', bg: '#FFF3E0' },
-  { label: 'M-Pesa Accepted', color: '#00A651', bg: '#F0FDF4' },
-  { label: 'eTIMS Invoice Issued', color: '#7c3aed', bg: '#F5F3FF' },
+  { label: 'Official EcoFlow Dealer', color: '#0066CC', bg: '#EBF5FF', logo: undefined },
+  { label: 'Official BLUETTI Dealer', color: '#E65100', bg: '#FFF3E0', logo: undefined },
+  { label: 'M-Pesa Accepted', color: '#00A651', bg: '#F0FDF4', logo: '/logos/mpesa.png' },
+  { label: 'eTIMS Invoice Issued', color: '#7c3aed', bg: '#F5F3FF', logo: undefined },
 ]
 
 export function Footer() {
@@ -168,10 +168,15 @@ export function Footer() {
                   className="flex items-center gap-2 px-3 py-2 rounded-xl"
                   style={{ background: badge.bg }}
                 >
-                  <div
-                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                    style={{ background: badge.color }}
-                  />
+                  {badge.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={badge.logo} alt={badge.label} className="h-4 w-auto object-contain flex-shrink-0" />
+                  ) : (
+                    <div
+                      className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                      style={{ background: badge.color }}
+                    />
+                  )}
                   <span className="text-xs font-bold" style={{ color: badge.color }}>
                     {badge.label}
                   </span>

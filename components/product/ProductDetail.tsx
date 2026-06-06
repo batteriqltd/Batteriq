@@ -176,7 +176,10 @@ export function ProductDetail({ product }: ProductDetailProps) {
           {/* Trust signals */}
           <div className="flex flex-wrap gap-4 text-sm text-gray-500 pt-2 border-t border-gray-200">
             <span>✓ Authorised Dealer</span>
-            <span>✓ M-Pesa Accepted</span>
+            <span className="flex items-center gap-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logos/mpesa.png" alt="M-Pesa" className="h-4 w-auto object-contain inline" /> M-Pesa Accepted
+            </span>
             <span>✓ Nairobi Delivery</span>
             <span>✓ Warranty Included</span>
           </div>

@@ -178,7 +178,7 @@ export default async function PowerStationsPage() {
 
               {/* M-Pesa */}
               <div className="flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.15)' }}>
-                <img src="/logos/mpesa-logo.jpg" alt="M-Pesa" className="h-4 object-contain" style={{ width: 'auto' }} />
+                <img src="/logos/mpesa.png" alt="M-Pesa" className="h-4 object-contain" style={{ width: 'auto' }} />
                 <span className="text-xs font-bold text-white">M-Pesa Checkout</span>
               </div>
 

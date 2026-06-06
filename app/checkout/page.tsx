@@ -251,7 +251,7 @@ export default function CheckoutPage() {
             <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
             <div className="bg-white rounded-2xl px-8 py-4 inline-flex items-center gap-3 mb-8 shadow-2xl relative z-10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/payment-mpesa.svg" alt="M-Pesa" className="h-7 w-auto" />
+              <img src="/logos/mpesa.png" alt="M-Pesa" className="h-7 w-auto object-contain" onError={(e) => { e.currentTarget.src = '/payment-mpesa.svg' }} />
             </div>
             <h2 className="text-3xl font-black text-white mb-3 relative z-10 tracking-tight">Authorize Payment</h2>
             <p className="text-green-50 font-bold text-[15px] relative z-10 opacity-90">Enter your M-Pesa PIN on your phone</p>
@@ -604,7 +604,7 @@ export default function CheckoutPage() {
                   <div className="flex items-center gap-5">
                     <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0 p-2">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src="/payment-mpesa.svg" alt="M-Pesa" className="h-8 w-auto object-contain" />
+                      <img src="/logos/mpesa.png" alt="M-Pesa" className="h-8 w-auto object-contain" onError={(e) => { e.currentTarget.src = '/payment-mpesa.svg' }} />
                     </div>
                     <div className="flex-1">
                       <p className="font-black text-gray-900 text-[15px]">Pay via M-Pesa STK Push</p>
@@ -625,7 +625,8 @@ export default function CheckoutPage() {
                 <div onClick={() => setPaymentMethod('cod_mpesa')} className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'cod_mpesa' ? 'border-[#0000ff] bg-[#f8f9ff] shadow-[0_0_24px_rgba(0,0,255,0.06)]' : 'border-[#f0f0f0] bg-white hover:border-blue-200'}`}>
                   <div className="flex items-center gap-5">
                     <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0 p-2">
-                      <Truck className={paymentMethod === 'cod_mpesa' ? 'text-[#0000ff]' : 'text-gray-400'} size={28} />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/logos/delivery.png" alt="Delivery" className="h-10 w-auto object-contain" onError={(e) => { e.currentTarget.src = '/placeholder-product.jpg' }} />
                     </div>
                     <div className="flex-1">
                       <p className="font-black text-gray-900 text-[15px]">M-Pesa on Delivery</p>
@@ -641,7 +642,8 @@ export default function CheckoutPage() {
                 <div onClick={() => setPaymentMethod('sales_confirmation')} className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'sales_confirmation' ? 'border-[#7c3aed] bg-[#faf5ff] shadow-[0_0_24px_rgba(124,58,237,0.06)]' : 'border-[#f0f0f0] bg-white hover:border-purple-200'}`}>
                   <div className="flex items-center gap-5">
                     <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0 p-2">
-                      <Phone className={paymentMethod === 'sales_confirmation' ? 'text-[#7c3aed]' : 'text-gray-400'} size={28} />
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src="/logos/contact-sales.png" alt="Talk to Sales" className="h-10 w-auto object-contain" onError={(e) => { e.currentTarget.src = '/placeholder-product.jpg' }} />
                     </div>
                     <div className="flex-1">
                       <p className="font-black text-gray-900 text-[15px]">Reserve Order — Speak to Sales First</p>

@@ -534,7 +534,7 @@ export default async function HomePage() {
               style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}>
               <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 overflow-hidden"
                 style={{ background: '#f0fdf4' }}>
-                <img src="/logos/mpesa-logo.jpg" alt="M-Pesa" className="w-12 h-8 object-contain" />
+                <img src="/logos/mpesa.png" alt="M-Pesa" className="w-12 h-8 object-contain" />
               </div>
               <p className="font-black text-gray-900 text-base mb-2">Pay with M-Pesa</p>
               <p className="text-sm text-gray-400 leading-relaxed">
