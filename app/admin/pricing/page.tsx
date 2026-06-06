@@ -290,9 +290,15 @@ export default function PricingEnginePage() {
   }
 
   async function toggleStock(productId: string, currentStock: boolean) {
-    await supabase.from('products').update({ in_stock: !currentStock }).eq('id', productId)
-    setProducts(prev => prev.map(p => p.id === productId ? { ...p, in_stock: !currentStock } : p))
-    showToast(!currentStock ? 'Product marked as In Stock' : 'Product marked as Out of Stock')
+    const res = await fetch(`/api/admin/products/${productId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ in_stock: !currentStock }),
+    })
+    if (res.ok) {
+      setProducts(prev => prev.map(p => p.id === productId ? { ...p, in_stock: !currentStock } : p))
+      showToast(!currentStock ? 'Product marked as In Stock' : 'Product marked as Out of Stock')
+    }
   }
 
   async function removeDiscount(productId: string) {

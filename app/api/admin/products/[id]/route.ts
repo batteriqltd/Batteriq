@@ -42,12 +42,18 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    if (featured_image !== undefined) {
-      revalidatePath('/')
-      revalidatePath('/power-stations')
-      revalidatePath('/solar')
-      revalidatePath('/bluetti')
-      revalidatePath('/accessories')
+    // Always revalidate all product pages after any update
+    revalidatePath('/', 'layout')
+    revalidatePath('/ecoflow-kenya')
+    revalidatePath('/ecoflow')
+    revalidatePath('/power-stations')
+    revalidatePath('/solar')
+    revalidatePath('/bluetti')
+    revalidatePath('/accessories')
+    revalidatePath('/compare')
+    if (params.id) {
+      revalidatePath(`/ecoflow/${params.id}`)
+      revalidatePath(`/bluetti/${params.id}`)
     }
 
     // Log price change to audit trail (best effort)

@@ -37,6 +37,11 @@ export async function PATCH(req: Request) {
     revalidatePath('/bluetti')
     revalidatePath('/accessories')
     revalidatePath('/compare')
+    // Also get the product slug to revalidate its individual page
+    const { data: slug } = await supabase.from('products').select('slug, brand').eq('id', productId).single()
+    if (slug) {
+      revalidatePath(`/${slug.brand.toLowerCase()}/${slug.slug}`)
+    }
     return NextResponse.json({ success: true, newPrice })
   } catch {
     return NextResponse.json({ error: 'Update failed' }, { status: 500 })
