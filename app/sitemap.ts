@@ -27,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createAdminClient()
     const { data: products } = await supabase
       .from('products')
-      .select('slug, brand, updated_at')
+      .select('slug, brand, updated_at, in_stock')
       .eq('in_stock', true)
 
     const productPages: MetadataRoute.Sitemap = (products ?? []).map((p: { slug: string; brand: string; updated_at: string }) => ({
