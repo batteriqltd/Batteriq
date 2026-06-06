@@ -131,7 +131,7 @@ export default function BroadcastPage() {
   }
 
   return (
-    <div className="p-8 pb-16 bg-[#f8f9fa] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 pb-16 bg-[#f8f9fa] min-h-screen">
       {/* Toast */}
       <AnimatePresence>
         {toast && (
@@ -230,7 +230,7 @@ export default function BroadcastPage() {
         {/* RIGHT — Customer List */}
         <div className="bg-white rounded-[28px] shadow-sm border border-gray-100 overflow-hidden">
           {/* Search + Select All */}
-          <div className="p-6 border-b border-gray-50">
+          <div className="p-4 sm:p-6 border-b border-gray-50">
             <div className="flex items-center gap-3 mb-4">
               <div className="flex-1 flex items-center gap-3 bg-[#f8f9fa] rounded-2xl px-4 py-3">
                 <Search size={16} className="text-gray-400" />

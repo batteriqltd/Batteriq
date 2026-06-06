@@ -155,7 +155,7 @@ export default function NewOrderPage() {
   )
 
   return (
-    <div className="p-8 pb-16 bg-[#f8f9fa] min-h-full">
+    <div className="p-4 sm:p-6 lg:p-8 pb-16 bg-[#f8f9fa] min-h-full">
 
       {/* Header */}
       <div className="mb-8">

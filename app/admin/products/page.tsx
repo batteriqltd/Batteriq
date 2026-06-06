@@ -397,7 +397,7 @@ export default function AdminProductsPage() {
   const bluettiCount = products.filter(p => p.brand === 'Bluetti').length
 
   return (
-    <div className="p-8 pb-12 bg-[#f8f9fa] min-h-full">
+    <div className="p-4 sm:p-6 lg:p-8 pb-12 bg-[#f8f9fa] min-h-full">
       <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="text-[32px] font-black text-gray-900 tracking-tight leading-none">Catalog Inventory</h1>

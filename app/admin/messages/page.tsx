@@ -13,7 +13,7 @@ export default async function AdminMessagesPage() {
     .limit(100) as { data: ContactSubmission[] | null }
 
   return (
-    <div className="p-8 pb-12 bg-[#f8f9fa] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 pb-12 bg-[#f8f9fa] min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>

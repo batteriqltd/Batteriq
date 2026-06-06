@@ -316,7 +316,7 @@ export default function PricingEnginePage() {
   const activeDiscounts = products.filter(p => p.discount_percent && p.discount_percent > 0)
 
   return (
-    <div className="p-8 pb-12 bg-[#f8f9fa] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 pb-12 bg-[#f8f9fa] min-h-screen">
 
       <AnimatePresence>
         {toast && (
@@ -468,8 +468,8 @@ export default function PricingEnginePage() {
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto w-full">
+          <table style={{minWidth:"600px"}} className="w-full">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
                 {['SKU Identity', 'Current Retail', 'Market Variance', 'Live Discount', 'Logistics', 'Operations'].map(h => (

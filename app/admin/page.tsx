@@ -118,7 +118,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#f8f9fa]">
-      <div className="p-8 pb-12">
+      <div className="p-4 sm:p-6 lg:p-8 pb-12">
 
         {/* Header */}
         <div className="flex items-center justify-between mb-10">

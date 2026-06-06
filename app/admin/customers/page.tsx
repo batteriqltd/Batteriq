@@ -47,7 +47,7 @@ export default async function CustomersPage() {
   const avgSpend = totalCustomers > 0 ? Math.round(totalRevenue / totalCustomers) : 0
 
   return (
-    <div className="p-8 pb-12 bg-[#f8f9fa] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 pb-12 bg-[#f8f9fa] min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
@@ -95,8 +95,8 @@ export default async function CustomersPage() {
           <h2 className="text-lg font-black text-gray-900">Operator Directory</h2>
           <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">{customers.length} RECORDS SYNCED</span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <div className="overflow-x-auto w-full">
+          <table style={{minWidth:"600px"}} className="w-full">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
                 {['Customer Identity', 'Contact Channels', 'Primary Location', 'Engagement', 'Lifetime Value', 'Last Seen', 'Category'].map(h => (

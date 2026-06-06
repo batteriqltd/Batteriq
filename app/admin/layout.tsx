@@ -16,11 +16,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar — fixed on desktop, drawer on mobile/tablet */}
       <AdminSidebar adminName={session.email} adminRole={session.role} />
-      <main className="flex-1 ml-56 sm:ml-64 h-screen overflow-y-auto">
+
+      {/* Main content — full width on mobile, offset on desktop */}
+      <main className="flex-1 lg:ml-[260px] min-h-screen overflow-x-hidden">
         <AutoLogoutProvider />
         <AdminTopBar />
-        {children}
+        {/* Content area — responsive padding */}
+        <div className="w-full">
+          {children}
+        </div>
       </main>
     </div>
   )

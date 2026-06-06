@@ -96,7 +96,7 @@ export default function NewsletterPage() {
   const activeCount = subscribers.filter(s => s.status === 'active').length
 
   return (
-    <div className="p-6 lg:p-8 bg-[#f8f9fa] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 bg-[#f8f9fa] min-h-screen">
 
       {/* Toast */}
       {toast && (
