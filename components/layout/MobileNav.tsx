@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, ChevronDown, Zap, Sun, Package, Headphones, Info, ArrowRight, MapPin } from 'lucide-react'
 import { useUIStore } from '@/store/uiStore'
+import { WhatsAppIcon } from '@/components/ui/ContactIcons'
 
 type AccordionKey = 'power-stations' | 'solar-panels' | 'accessories' | null
 
@@ -333,7 +334,7 @@ export function MobileNav() {
                 href="https://wa.me/254716822014"
                 className="w-full flex items-center justify-center gap-2 py-3.5 bg-white text-gray-900 font-semibold text-sm rounded-[10px] border-2 border-gray-200 hover:border-bq-blue hover:text-bq-blue transition-colors"
               >
-                WhatsApp Us
+                <WhatsAppIcon size={18} /> WhatsApp Us
               </a>
               <p className="text-xs text-gray-400 text-center">Authorised EcoFlow & Bluetti Dealer · Nairobi, Kenya</p>
             </div>

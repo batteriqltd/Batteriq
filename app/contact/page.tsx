@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Phone, Mail, MapPin, MessageCircle, CheckCircle, Smartphone, Send, Lock, Shield } from 'lucide-react'
-import { WhatsAppIcon, EmailIcon } from '@/components/ui/ContactIcons'
+import { WhatsAppIcon, EmailIcon, InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from '@/components/ui/ContactIcons'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
@@ -279,16 +279,20 @@ export default function ContactPage() {
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.15em] mb-5">Social Connectivity</p>
                   <div className="flex flex-wrap gap-3">
                     {[
-                      { label: 'Instagram', href: 'https://instagram.com/batteriqkenya' },
-                      { label: 'Facebook', href: 'https://facebook.com/batteriqkenya' },
-                      { label: 'TikTok', href: '#' },
+                      { label: 'Instagram', href: 'https://instagram.com/batteriqkenya', icon: <InstagramIcon size={20} /> },
+                      { label: 'Facebook', href: 'https://facebook.com/batteriqkenya', icon: <FacebookIcon size={20} /> },
+                      { label: 'TikTok', href: 'https://tiktok.com/@batteriqkenya', icon: <TikTokIcon size={20} /> },
+                      { label: 'LinkedIn', href: 'https://linkedin.com/company/batteriq', icon: <LinkedInIcon size={20} /> },
                     ].map((s) => (
                       <Link
                         key={s.label}
                         href={s.href}
-                        className="px-5 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center transition-all text-white text-[10px] font-bold uppercase tracking-widest"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 px-5 py-3 rounded-xl bg-white/5 hover:bg-white/15 border border-white/10 hover:border-white/30 transition-all"
                       >
-                        {s.label}
+                        {s.icon}
+                        <span className="text-white text-[11px] font-bold uppercase tracking-widest">{s.label}</span>
                       </Link>
                     ))}
                   </div>

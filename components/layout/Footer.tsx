@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { WhatsAppIcon, EmailIcon } from '@/components/ui/ContactIcons'
+import { WhatsAppIcon, EmailIcon, InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from '@/components/ui/ContactIcons'
 
 const SHOP_LINKS = [
   { href: '/power-stations', label: 'Power Stations' },
@@ -186,11 +186,26 @@ export function Footer() {
 
       {/* BOTTOM BAR */}
       <div className="border-t border-gray-100">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-12 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-gray-400 text-center sm:text-left">
             &copy; {new Date().getFullYear()} Batteriq Kenya. All rights reserved.
             Kenya&apos;s Official EcoFlow &amp; BLUETTI Dealer.
           </p>
+          <div className="flex items-center gap-3">
+            {[
+              { href: 'https://instagram.com/batteriqkenya', icon: <InstagramIcon size={22} />, label: 'Instagram' },
+              { href: 'https://facebook.com/batteriqkenya', icon: <FacebookIcon size={22} />, label: 'Facebook' },
+              { href: 'https://tiktok.com/@batteriqkenya', icon: <TikTokIcon size={22} />, label: 'TikTok' },
+              { href: 'https://linkedin.com/company/batteriq', icon: <LinkedInIcon size={22} />, label: 'LinkedIn' },
+              { href: 'https://wa.me/254716822014', icon: <WhatsAppIcon size={22} />, label: 'WhatsApp' },
+            ].map(s => (
+              <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer"
+                className="hover:opacity-70 transition-opacity"
+                aria-label={s.label}>
+                {s.icon}
+              </a>
+            ))}
+          </div>
           <div className="flex items-center gap-4">
             <a href="/support/privacy" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
               Privacy
