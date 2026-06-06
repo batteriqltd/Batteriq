@@ -6,7 +6,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Lock, Smartphone,
+  Shield, Lock, Smartphone,
   CheckCircle, ChevronRight, Package, CreditCard,
   AlertCircle, Phone
 } from 'lucide-react'
