@@ -88,52 +88,67 @@ export const viewport: Viewport = {
 
 const organizationSchema = {
   '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Batteriq',
+  '@type': ['Organization', 'LocalBusiness'],
+  name: 'Batteriq Solutions Ltd',
+  alternateName: ['Batteriq Kenya', 'Batteriq'],
   url: 'https://batteriq.com',
   logo: 'https://batteriq.com/logo.png',
-  description:
-    "Kenya's authorised EcoFlow and Bluetti dealer. Power stations, solar panels, and backup energy solutions. M-Pesa checkout available.",
+  description: "Kenya's official authorised EcoFlow and BLUETTI dealer. Power stations, solar panels, and home battery systems.",
+  telephone: '+254-716-822-014',
+  email: 'info@batteriq.com',
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Nairobi',
+    addressRegion: 'Nairobi County',
     addressCountry: 'KE',
   },
+  geo: { '@type': 'GeoCoordinates', latitude: -1.286389, longitude: 36.817223 },
+  openingHoursSpecification: [
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:30', closes: '18:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday'], opens: '09:00', closes: '16:00' },
+  ],
+  priceRange: 'KES 27,259+',
+  paymentAccepted: 'M-Pesa',
+  currenciesAccepted: 'KES',
+  areaServed: { '@type': 'Country', name: 'Kenya' },
   contactPoint: {
     '@type': 'ContactPoint',
+    telephone: '+254-716-822-014',
     contactType: 'customer service',
     areaServed: 'KE',
+    availableLanguage: ['English', 'Swahili'],
   },
   sameAs: [
-    'https://www.instagram.com/batteriqkenya',
-    'https://www.facebook.com/batteriqkenya',
+    'https://instagram.com/batteriqkenya',
+    'https://facebook.com/batteriqkenya',
+    'https://tiktok.com/@batteriqkenya',
+    'https://linkedin.com/company/batteriq',
   ],
 }
 
 const localBusinessSchema = {
   '@context': 'https://schema.org',
-  '@type': 'LocalBusiness',
-  name: 'Batteriq',
-  image: 'https://batteriq.com/logo.png',
-  priceRange: 'KES 7,000 — KES 1,400,000',
+  '@type': 'Store',
+  name: 'Batteriq Solutions Ltd',
+  image: 'https://batteriq.com/heroes/hero-power-stations.jpg',
+  priceRange: 'KES 27,259 — KES 1,049,999',
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Nairobi',
+    addressRegion: 'Nairobi County',
     addressCountry: 'KE',
   },
-  geo: {
-    '@type': 'GeoCoordinates',
-    latitude: -1.2921,
-    longitude: 36.8219,
-  },
+  geo: { '@type': 'GeoCoordinates', latitude: -1.286389, longitude: 36.817223 },
   url: 'https://batteriq.com',
-  telephone: '+254716822014',
-  openingHoursSpecification: {
-    '@type': 'OpeningHoursSpecification',
-    dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
-    opens: '08:00',
-    closes: '18:00',
-  },
+  telephone: '+254-716-822-014',
+  email: 'info@batteriq.com',
+  paymentAccepted: 'M-Pesa, Cash on Delivery',
+  currenciesAccepted: 'KES',
+  areaServed: { '@type': 'Country', name: 'Kenya' },
+  openingHoursSpecification: [
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:30', closes: '18:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday'], opens: '09:00', closes: '16:00' },
+  ],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

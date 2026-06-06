@@ -22,10 +22,32 @@ import { SectionObserver } from '@/components/animations/SectionObserver'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'Batteriq Kenya — Buy EcoFlow & BLUETTI Power Stations | M-Pesa Accepted',
-  description:
-    "Kenya's official EcoFlow and BLUETTI dealer. Shop power stations, solar panels, and batteries. Pay with M-Pesa. Same-day delivery in Nairobi. 24-month warranty.",
+  title: 'Batteriq Kenya — Official EcoFlow & BLUETTI Dealer | Buy with M-Pesa',
+  description: "Kenya's #1 authorised EcoFlow and BLUETTI dealer. Buy power stations, solar panels, and home battery systems. Pay with M-Pesa. Same-day Nairobi delivery. From KES 27,259. Official 24-month warranty.",
+  keywords: [
+    'EcoFlow Kenya', 'BLUETTI Kenya', 'power station Kenya', 'buy EcoFlow Kenya',
+    'portable power station Kenya', 'solar panels Kenya', 'home backup power Kenya',
+    'M-Pesa power station', 'EcoFlow dealer Kenya', 'BLUETTI dealer Kenya',
+    'EcoFlow Nairobi', 'power backup Kenya', 'solar energy Kenya',
+    'Batteriq Kenya', 'EcoFlow DELTA Pro Kenya', 'EcoFlow RIVER 2 Kenya',
+    'buy power station M-Pesa', 'solar panel Kenya price', 'home battery Kenya',
+  ],
   alternates: { canonical: 'https://batteriq.com' },
+  openGraph: {
+    title: "Batteriq Kenya — Kenya's Official EcoFlow & BLUETTI Dealer",
+    description: "Buy genuine EcoFlow and BLUETTI in Kenya. M-Pesa accepted. Same-day Nairobi delivery. From KES 27,259.",
+    url: 'https://batteriq.com',
+    siteName: 'Batteriq Kenya',
+    locale: 'en_KE',
+    type: 'website',
+    images: [{ url: 'https://batteriq.com/heroes/hero-power-stations.jpg', width: 1200, height: 630, alt: 'Batteriq Kenya — Official EcoFlow Dealer' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Batteriq Kenya — Official EcoFlow Dealer',
+    description: "Kenya's #1 EcoFlow dealer. M-Pesa accepted. Same-day delivery.",
+    images: ['https://batteriq.com/heroes/hero-power-stations.jpg'],
+  },
 }
 
 async function getProductsByCategory(brand?: string, category?: string, limit = 8) {

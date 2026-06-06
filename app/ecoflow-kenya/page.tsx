@@ -7,18 +7,37 @@ import { ProductGrid } from '@/components/product/ProductGrid'
 import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { Shield } from 'lucide-react'
+import Script from 'next/script'
 
 export const revalidate = 3600
 
 export const metadata: Metadata = {
-  title: 'Buy EcoFlow in Kenya | Official EcoFlow Dealer — Batteriq',
-  description:
-    'Official EcoFlow dealer in Kenya. Buy EcoFlow DELTA Pro, DELTA 2, RIVER 2, and solar panels. Pay with M-Pesa. Nairobi delivery. 24-month warranty. Batteriq Kenya.',
+  title: 'EcoFlow Kenya — Official Authorised Dealer | Buy with M-Pesa | Batteriq',
+  description: 'Buy genuine EcoFlow power stations in Kenya. Official authorised EcoFlow dealer. EcoFlow DELTA Pro, DELTA 2, RIVER 2, solar panels. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty. From KES 27,259.',
   keywords: [
-    'EcoFlow Kenya', 'buy EcoFlow Kenya', 'EcoFlow dealer Kenya', 'EcoFlow distributor Kenya',
-    'EcoFlow DELTA Pro Kenya', 'EcoFlow DELTA 2 Kenya', 'EcoFlow RIVER 2 Kenya', 'EcoFlow solar panel Kenya',
+    'EcoFlow Kenya', 'buy EcoFlow Kenya', 'EcoFlow dealer Kenya', 'EcoFlow authorised dealer Kenya',
+    'EcoFlow distributor Kenya', 'EcoFlow power station Kenya', 'EcoFlow DELTA Pro Kenya',
+    'EcoFlow DELTA 2 Kenya', 'EcoFlow RIVER 2 Kenya', 'EcoFlow solar panel Kenya',
+    'power station Kenya', 'portable power station Kenya', 'home backup power Kenya',
+    'solar power Kenya', 'M-Pesa power station', 'buy power station Nairobi',
+    'EcoFlow Nairobi', 'Batteriq Kenya', 'EcoFlow official Kenya',
   ],
   alternates: { canonical: 'https://batteriq.com/ecoflow-kenya' },
+  openGraph: {
+    title: 'EcoFlow Kenya — Official Authorised Dealer | Batteriq',
+    description: 'Buy genuine EcoFlow in Kenya. M-Pesa accepted. Same-day Nairobi delivery. From KES 27,259.',
+    url: 'https://batteriq.com/ecoflow-kenya',
+    siteName: 'Batteriq Kenya',
+    locale: 'en_KE',
+    type: 'website',
+    images: [{ url: 'https://batteriq.com/heroes/hero-power-stations.jpg', width: 1200, height: 630, alt: 'EcoFlow Kenya — Batteriq Official Dealer' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'EcoFlow Kenya — Official Dealer | Batteriq',
+    description: 'Buy genuine EcoFlow in Kenya. M-Pesa accepted. Same-day delivery.',
+    images: ['https://batteriq.com/heroes/hero-power-stations.jpg'],
+  },
 }
 
 const faqSchema = {
@@ -68,6 +87,74 @@ const faqSchema = {
   ],
 }
 
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Batteriq Solutions Ltd',
+  alternateName: 'Batteriq Kenya',
+  url: 'https://batteriq.com',
+  logo: 'https://batteriq.com/logo.png',
+  description: "Kenya's official authorised EcoFlow and BLUETTI dealer",
+  address: { '@type': 'PostalAddress', addressLocality: 'Nairobi', addressCountry: 'KE' },
+  contactPoint: {
+    '@type': 'ContactPoint',
+    telephone: '+254-716-822-014',
+    contactType: 'customer service',
+    areaServed: 'KE',
+    availableLanguage: ['English', 'Swahili'],
+  },
+  sameAs: [
+    'https://instagram.com/batteriqkenya',
+    'https://facebook.com/batteriqkenya',
+    'https://tiktok.com/@batteriqkenya',
+    'https://linkedin.com/company/batteriq',
+  ],
+}
+
+const localBusinessSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'LocalBusiness',
+  name: 'Batteriq Solutions Ltd',
+  description: "Kenya's official authorised EcoFlow and BLUETTI dealer. Portable power stations, solar panels, and home battery systems.",
+  url: 'https://batteriq.com',
+  telephone: '+254-716-822-014',
+  email: 'info@batteriq.com',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Nairobi',
+    addressRegion: 'Nairobi County',
+    addressCountry: 'KE',
+  },
+  geo: { '@type': 'GeoCoordinates', latitude: -1.286389, longitude: 36.817223 },
+  openingHoursSpecification: [
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:30', closes: '18:00' },
+    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday'], opens: '09:00', closes: '16:00' },
+  ],
+  priceRange: 'KES 27,259 - KES 1,049,999',
+  paymentAccepted: 'M-Pesa, Cash on Delivery',
+  currenciesAccepted: 'KES',
+  areaServed: { '@type': 'Country', name: 'Kenya' },
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: 'EcoFlow Products Kenya',
+    itemListElement: [
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'EcoFlow DELTA Pro Kenya' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'EcoFlow DELTA 2 Kenya' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'EcoFlow RIVER 2 Kenya' } },
+      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'EcoFlow Solar Panels Kenya' } },
+    ],
+  },
+}
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://batteriq.com' },
+    { '@type': 'ListItem', position: 2, name: 'EcoFlow Kenya', item: 'https://batteriq.com/ecoflow-kenya' },
+  ],
+}
+
 async function getEcoFlowProducts() {
   try {
     const supabase = createAdminClient()
@@ -99,11 +186,11 @@ export default async function EcoFlowKenyaPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-      />
       <Header />
+      <Script id="schema-faq" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <Script id="schema-org" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
+      <Script id="schema-local" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
+      <Script id="schema-breadcrumb" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <ToastContainer />
 
       <PageHero
@@ -261,6 +348,128 @@ export default async function EcoFlowKenyaPage() {
           </section>
         </div>
       </div>
+
+      {/* SEO Content Section */}
+      <section className="bg-white border-t border-gray-50 py-16">
+        <div className="max-w-6xl mx-auto px-4 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div className="lg:col-span-2 space-y-8">
+              <div>
+                <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-4">
+                  Why Kenyans Choose EcoFlow — and Batteriq
+                </h2>
+                <p className="text-gray-600 leading-relaxed mb-4">
+                  EcoFlow has become Kenya&apos;s most trusted portable power station brand, and Batteriq is the official
+                  authorised EcoFlow dealer in Kenya. Whether you need home backup power during outages, a solar energy
+                  system for your business, or a portable power station for camping and safari, EcoFlow has a product for
+                  every need and budget — starting from KES 27,259.
+                </p>
+                <p className="text-gray-600 leading-relaxed">
+                  Every EcoFlow product sold through Batteriq is 100% genuine, carries the full 24-month manufacturer
+                  warranty, and is supported locally by our Nairobi-based team. Batteriq is Kenya&apos;s only authorised
+                  EcoFlow distributor, giving you the confidence that you are buying an authentic product at the right price.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight mb-4">
+                  EcoFlow Products Available in Kenya
+                </h3>
+                <p className="text-gray-600 leading-relaxed mb-4">
+                  Batteriq stocks the full EcoFlow range in Kenya including the DELTA Pro, DELTA 2, DELTA 3, RIVER 2,
+                  RIVER 3, PowerStream, and the complete EcoFlow solar panel range from 45W to 400W. We also stock
+                  EcoFlow smart home appliances, portable air conditioners, extra battery packs, and all official
+                  EcoFlow accessories.
+                </p>
+                <p className="text-gray-600 leading-relaxed">
+                  For businesses and homes looking for a complete energy independence solution, we offer the EcoFlow
+                  PowerKit — a modular whole-home energy system from 5kWh to 15kWh that combines solar panels,
+                  battery storage, and smart home integration into one seamless system.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight mb-4">
+                  Buy EcoFlow in Kenya with M-Pesa
+                </h3>
+                <p className="text-gray-600 leading-relaxed mb-4">
+                  Batteriq makes buying EcoFlow in Kenya simple. Add your chosen EcoFlow product to cart, proceed to
+                  checkout, and pay using M-Pesa STK Push — you receive a payment prompt directly on your phone and
+                  confirm with your PIN. No bank transfers, no running to an ATM. M-Pesa checkout is available for
+                  all EcoFlow products from KES 7,599 to KES 1,049,999.
+                </p>
+                <p className="text-gray-600 leading-relaxed">
+                  For large purchases, we also offer M-Pesa at doorstep delivery, proforma invoicing for corporate
+                  buyers, and a speak-to-sales option for customers who want to confirm stock and delivery before paying.
+                  eTIMS KRA invoices are issued for all purchases within 24 hours of payment confirmation.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight mb-4">
+                  EcoFlow Delivery Across Kenya
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Batteriq delivers EcoFlow products across Kenya. Same-day and next-day delivery is available
+                  within Nairobi for orders placed before 12PM. Nationwide shipping covers all 47 counties —
+                  from Mombasa to Kisumu, Eldoret to Nakuru. All deliveries are handled by trusted courier
+                  partners with tracking available. WhatsApp us on 0716 822 014 for delivery enquiries.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-5">
+              <div className="bg-[#f8f9ff] rounded-2xl p-6 border border-blue-50">
+                <h4 className="font-black text-gray-900 text-base mb-5">Quick Facts</h4>
+                {[
+                  { label: 'Starting Price', value: 'KES 27,259' },
+                  { label: 'Warranty', value: '24 months' },
+                  { label: 'Delivery', value: 'Same-day Nairobi' },
+                  { label: 'Payment', value: 'M-Pesa Accepted' },
+                  { label: 'Invoice', value: 'eTIMS KRA Issued' },
+                  { label: 'Authorised', value: 'Official EcoFlow Dealer' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="flex items-center justify-between py-2.5 border-b border-gray-100 last:border-0">
+                    <span className="text-sm text-gray-500 font-medium">{label}</span>
+                    <span className="text-sm font-black text-gray-900">{value}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="bg-[#f0fdf4] rounded-2xl p-6 border border-green-100">
+                <h4 className="font-black text-gray-900 text-base mb-3">Contact Us</h4>
+                <p className="text-sm text-gray-500 mb-4">Need help choosing the right EcoFlow product for your needs?</p>
+                <div className="space-y-3">
+                  <a href="https://wa.me/254716822014?text=Hi%20Batteriq!%20I%20need%20help%20choosing%20an%20EcoFlow%20product."
+                    target="_blank" rel="noopener noreferrer"
+                    className="flex items-center gap-2 w-full py-3 px-4 rounded-xl bg-[#25D366] text-white font-black text-sm hover:brightness-105 transition-all">
+                    <span>💬</span>
+                    WhatsApp Us
+                  </a>
+                  <a href="tel:+254716822014"
+                    className="flex items-center gap-2 w-full py-3 px-4 rounded-xl bg-[#00004d] text-white font-black text-sm hover:bg-blue-900 transition-all">
+                    📞 0716 822 014
+                  </a>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-6 border border-gray-100">
+                <h4 className="font-black text-gray-900 text-base mb-3">Our Guarantee</h4>
+                {[
+                  '100% Genuine EcoFlow Products',
+                  '24-Month Manufacturer Warranty',
+                  'Official Authorised Dealer',
+                  'Local After-Sales Support',
+                  'eTIMS KRA Invoice Issued',
+                  'M-Pesa Accepted',
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2.5 py-2 border-b border-gray-50 last:border-0">
+                    <span className="text-green-500 font-black text-base flex-shrink-0">✓</span>
+                    <span className="text-sm text-gray-700 font-medium">{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
       <Footer />
       <GeminiChatWidget />

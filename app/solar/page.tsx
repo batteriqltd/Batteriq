@@ -9,10 +9,16 @@ import { ToastContainer } from '@/components/ui/Toast'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'EcoFlow Solar Panels Kenya — 45W to 400W | Batteriq',
-  description:
-    'Buy EcoFlow solar panels in Kenya. 45W to 400W foldable and rigid panels. Official dealer. M-Pesa accepted. Nairobi delivery.',
+  title: 'EcoFlow Solar Panels Kenya — 45W to 400W | Buy with M-Pesa | Batteriq',
+  description: 'Buy EcoFlow solar panels in Kenya. 45W to 400W. IP68 waterproof. Compatible with all EcoFlow power stations. Pay with M-Pesa. Official EcoFlow dealer. Same-day Nairobi delivery.',
+  keywords: ['solar panels Kenya', 'EcoFlow solar panel Kenya', 'buy solar panel Kenya', 'portable solar panel Kenya', 'solar panel Nairobi', 'EcoFlow 400W solar Kenya', 'solar power Kenya'],
   alternates: { canonical: 'https://batteriq.com/solar' },
+  openGraph: {
+    title: 'EcoFlow Solar Panels Kenya | Batteriq',
+    description: 'Official EcoFlow solar panels in Kenya. M-Pesa accepted.',
+    url: 'https://batteriq.com/solar',
+    images: [{ url: 'https://batteriq.com/heroes/hero-solar.jpg', width: 1200, height: 630, alt: 'EcoFlow Solar Panels Kenya' }],
+  },
 }
 
 async function getSolarProducts() {

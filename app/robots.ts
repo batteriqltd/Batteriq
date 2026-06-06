@@ -6,9 +6,10 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin/', '/api/'],
+        disallow: ['/admin/', '/api/', '/cart', '/checkout', '/order-confirmation/'],
       },
     ],
     sitemap: 'https://batteriq.com/sitemap.xml',
+    host: 'https://batteriq.com',
   }
 }

@@ -13,23 +13,16 @@ import type { Product } from '@/lib/supabase/types'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'EcoFlow Power Stations Kenya — DELTA Pro, DELTA 2, RIVER 2 | Batteriq',
-  description:
-    'Shop EcoFlow power stations in Kenya. DELTA Pro, DELTA 2, RIVER 2 and more. Official dealer. M-Pesa accepted. Nairobi delivery. From KES 27,259.',
-  keywords: [
-    'EcoFlow Kenya',
-    'EcoFlow power station Kenya',
-    'buy EcoFlow Kenya',
-    'DELTA Pro Kenya',
-    'RIVER 2 Kenya',
-    'backup power Kenya',
-    'power station M-Pesa',
-  ],
-  openGraph: {
-    title: 'EcoFlow Power Stations Kenya | Batteriq',
-    description: 'Official EcoFlow dealer in Kenya. Full range in stock. Pay with M-Pesa.',
-  },
+  title: 'Power Stations Kenya — EcoFlow DELTA Pro, DELTA 2, RIVER 2 | Batteriq',
+  description: 'Buy power stations in Kenya. Official EcoFlow dealer. DELTA Pro, DELTA 2, RIVER 2, RIVER 3 in stock. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty. From KES 27,259.',
+  keywords: ['power station Kenya', 'buy power station Kenya', 'EcoFlow power station Kenya', 'EcoFlow DELTA Pro Kenya', 'EcoFlow DELTA 2 Kenya', 'EcoFlow RIVER 2 Kenya', 'portable power station Kenya', 'home backup power Kenya', 'power station Nairobi'],
   alternates: { canonical: 'https://batteriq.com/power-stations' },
+  openGraph: {
+    title: 'Power Stations Kenya | Batteriq',
+    description: 'Official EcoFlow power stations in Kenya. M-Pesa accepted.',
+    url: 'https://batteriq.com/power-stations',
+    images: [{ url: 'https://batteriq.com/heroes/hero-power-stations.jpg', width: 1200, height: 630, alt: 'Power Stations Kenya' }],
+  },
 }
 
 async function getProducts(): Promise<Product[]> {

@@ -10,10 +10,16 @@ import { ToastContainer } from '@/components/ui/Toast'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'BLUETTI Power Stations Kenya — AC200PL, AC300, AC500 | Batteriq',
-  description:
-    'Buy BLUETTI power stations in Kenya. AC200PL, AC300, AC500, EB3A and more. Official BLUETTI dealer. M-Pesa accepted. Nairobi delivery.',
+  title: 'BLUETTI Power Stations Kenya — Official Dealer | Buy with M-Pesa | Batteriq',
+  description: 'Buy BLUETTI power stations in Kenya. Official authorised BLUETTI dealer. AC200PL, AC300, AC500, EP500 in stock. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty.',
+  keywords: ['BLUETTI Kenya', 'buy BLUETTI Kenya', 'BLUETTI dealer Kenya', 'BLUETTI power station Kenya', 'BLUETTI AC200PL Kenya', 'BLUETTI Nairobi', 'portable power station Kenya'],
   alternates: { canonical: 'https://batteriq.com/bluetti' },
+  openGraph: {
+    title: 'BLUETTI Kenya — Official Dealer | Batteriq',
+    description: 'Official BLUETTI power stations in Kenya. M-Pesa accepted.',
+    url: 'https://batteriq.com/bluetti',
+    images: [{ url: 'https://batteriq.com/heroes/battery-hero.jpg', width: 1200, height: 630, alt: 'BLUETTI Kenya — Batteriq Official Dealer' }],
+  },
 }
 
 async function getBluesttiData() {
