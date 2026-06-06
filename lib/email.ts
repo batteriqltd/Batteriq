@@ -19,9 +19,12 @@ function fmt(n: number | string): string {
 
 function paymentLabel(m: string): string {
   const map: Record<string, string> = {
-    mpesa_now: 'M-Pesa (Pay Now)',
+    mpesa_now: 'M-Pesa STK Push',
     cod_cash: 'Cash on Delivery',
     cod_mpesa: 'M-Pesa at Doorstep',
+    sales_confirmation: 'Reserve Order — Pay After Confirmation',
+    mpesa: 'M-Pesa',
+    cash: 'Cash',
   }
   return map[m] ?? m
 }
@@ -102,12 +105,20 @@ export async function emailOrderConfirmation(order: {
   const total = Number(order.total_kes) || 0
 
   const itemRows = order.items.map((i: { brand?: string; name: string; quantity: number; price_kes: number | string }) => `
-    <tr>
-      <td><span class="brand">${i.brand ?? ''}</span>${i.name}</td>
-      <td style="text-align:center">${i.quantity}</td>
-      <td style="text-align:right;font-family:monospace">${fmt(i.price_kes)}</td>
-      <td style="text-align:right;font-family:monospace;font-weight:700;color:#0000ff">${fmt(Number(i.price_kes) * i.quantity)}</td>
-    </tr>`).join('')
+  <tr>
+    <td style="padding:12px 10px;border-bottom:1px solid #f5f5f5;vertical-align:top">
+      <span style="font-size:10px;font-weight:800;color:#0000ff;text-transform:uppercase;letter-spacing:.08em;display:block;margin-bottom:3px">${i.brand ?? ''}</span>
+      <span style="font-size:14px;font-weight:700;color:#111">${i.name}</span>
+    </td>
+    <td style="text-align:center;padding:12px 10px;border-bottom:1px solid #f5f5f5;font-size:14px;font-weight:700;color:#333;vertical-align:top">${i.quantity}</td>
+    <td style="text-align:right;padding:12px 10px;border-bottom:1px solid #f5f5f5;font-family:monospace;font-size:13px;color:#666;vertical-align:top">${fmt(i.price_kes)}</td>
+    <td style="text-align:right;padding:12px 10px;border-bottom:1px solid #f5f5f5;font-family:monospace;font-size:14px;font-weight:800;color:#0000ff;vertical-align:top">${fmt(Number(i.price_kes) * i.quantity)}</td>
+  </tr>`).join('')
+
+  const etims = `<div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:12px 16px;margin:16px 0">
+  <div style="font-size:11px;font-weight:800;color:#7c3aed;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">eTIMS KRA Invoice</div>
+  <div style="font-size:12px;color:#6d28d9;line-height:1.5">An official eTIMS KRA invoice will be issued and sent to your email within 24 hours of payment confirmation. This receipt serves as your proof of purchase in the meantime.</div>
+</div>`
 
   const content = `
     <p style="font-size:17px;font-weight:700;color:#111;margin-bottom:6px">Hi ${order.guest_name}!</p>
@@ -147,6 +158,7 @@ export async function emailOrderConfirmation(order: {
     <p style="color:#555;font-size:13px;line-height:1.6;margin-top:16px">
       Questions? Email <a href="mailto:sales@batteriq.com" style="color:#0000ff">sales@batteriq.com</a>
     </p>
+    ${etims}
     <a href="https://batteriq.com/track-order" class="cta">Track My Order</a>
   `
 
@@ -174,8 +186,8 @@ export async function emailOrderConfirmation(order: {
   const emailPayload: any = {
     from: FROM_ORDERS,
     to: resolveEmail(order.guest_email),
-    subject: `Order Confirmed — ${order.order_number} | Batteriq`,
-    html: wrapEmail(content, 'BATTERIQ™ — Order Confirmation', `Order ${order.order_number} · ${fmtDate(order.created_at)}`),
+    subject: `Order Received — ${order.order_number} | Batteriq Kenya`,
+    html: wrapEmail(content, 'BATTERIQ™ — Order Received', `Order ${order.order_number} · Awaiting Payment Confirmation`),
   }
 
   if (pdfBase64) {
@@ -303,6 +315,16 @@ export async function emailPaymentConfirmed(order: {
 }) {
   const total = Number(order.total_kes) || 0
 
+  const itemRows2 = order.items.map((i: { brand?: string; name: string; quantity: number; price_kes: number | string }) => `
+  <tr>
+    <td style="padding:10px;border-bottom:1px solid #f0fdf4;vertical-align:top">
+      <span style="font-size:10px;font-weight:800;color:#059669;text-transform:uppercase;display:block;margin-bottom:2px">${i.brand ?? ''}</span>
+      <span style="font-size:13px;font-weight:700;color:#111">${i.name}</span>
+    </td>
+    <td style="text-align:center;padding:10px;border-bottom:1px solid #f0fdf4;font-weight:700;color:#333">${i.quantity}</td>
+    <td style="text-align:right;padding:10px;border-bottom:1px solid #f0fdf4;font-family:monospace;font-weight:800;color:#059669">${fmt(Number(i.price_kes) * i.quantity)}</td>
+  </tr>`).join('')
+
   const content = `
     <p style="font-size:17px;font-weight:700;color:#111;margin-bottom:6px">Hi ${order.guest_name}!</p>
     <p style="color:#555;line-height:1.6">Your M-Pesa payment has been automatically verified and confirmed. Your order is now being prepared!</p>
@@ -322,6 +344,22 @@ export async function emailPaymentConfirmed(order: {
     </div>
 
     <div class="track-bar">Track your order: batteriq.com/track-order · Order No: ${order.order_number}</div>
+
+    <div class="section-title">Items You Paid For</div>
+    <table class="items-table">
+      <thead><tr><th>Product</th><th style="text-align:center">Qty</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody>${itemRows2}</tbody>
+    </table>
+    <div class="totals-box">
+      <div class="t-total">
+        <span>Total Paid</span>
+        <span style="font-family:monospace;color:#059669">${fmt(total)}</span>
+      </div>
+    </div>
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;margin:16px 0">
+      <div style="font-size:11px;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">eTIMS KRA Invoice</div>
+      <div style="font-size:12px;color:#166534;line-height:1.5">An official eTIMS KRA invoice will be issued and sent to your email within 24 hours. Your M-Pesa receipt above serves as payment proof.</div>
+    </div>
     <a href="https://batteriq.com/track-order" class="cta" style="background:linear-gradient(135deg,#059669,#065f46)">Track My Order</a>
   `
 
@@ -357,8 +395,8 @@ export async function emailPaymentConfirmed(order: {
     resend.emails.send({
       from: FROM_ORDERS,
       to: resolveEmail(order.guest_email),
-      subject: `Payment Confirmed — ${order.order_number} | Batteriq`,
-      html: wrapEmail(content, 'Payment Confirmed!', `M-Pesa payment received for Order ${order.order_number}`, '#065f46'),
+      subject: `Payment Confirmed ✅ — ${order.order_number} | Batteriq Kenya`,
+      html: wrapEmail(content, 'Payment Confirmed!', `M-Pesa payment verified for Order ${order.order_number}`, '#065f46'),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(attachments.length ? { attachments } : {}) as any,
     }),

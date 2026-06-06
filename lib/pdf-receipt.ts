@@ -4,10 +4,10 @@ export interface ReceiptData {
   customerEmail: string
   customerPhone: string
   items: Array<{
-    brand: string
+    brand?: string
     name: string
     quantity: number
-    price_kes: number
+    price_kes: number | string
   }>
   totalKes: number
   paymentMethod: string
@@ -29,9 +29,12 @@ function fmt(n: number | string): string {
 
 function paymentLabel(method: string): string {
   const m: Record<string, string> = {
-    mpesa_now: 'M-Pesa (Pay Now)',
+    mpesa_now: 'M-Pesa STK Push',
     cod_cash: 'Cash on Delivery',
     cod_mpesa: 'M-Pesa at Doorstep',
+    sales_confirmation: 'Reserve Order — Pay After Confirmation',
+    mpesa: 'M-Pesa',
+    cash: 'Cash',
   }
   return m[method] ?? method
 }
@@ -70,7 +73,7 @@ export async function generateReceiptPDF(data: ReceiptData): Promise<string> {
   doc.setTextColor(255, 255, 255)
   doc.setFontSize(10)
   doc.setFont('helvetica', 'bold')
-  const receiptLabel = data.paymentStatus === 'paid' ? 'RECEIPT' : 'ORDER CONFIRMATION'
+  const receiptLabel = data.paymentStatus === 'paid' ? 'OFFICIAL PAID RECEIPT' : 'ORDER RECEIPT — PENDING PAYMENT'
   doc.text(receiptLabel, W - margin, 17, { align: 'right' })
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
@@ -172,7 +175,7 @@ export async function generateReceiptPDF(data: ReceiptData): Promise<string> {
     doc.setTextColor(0, 0, 255)
     doc.setFontSize(7)
     doc.setFont('helvetica', 'bold')
-    doc.text(item.brand.toUpperCase(), margin + 3, y + 5)
+    doc.text((item.brand ?? '').toUpperCase(), margin + 3, y + 5)
 
     doc.setTextColor(17, 17, 17)
     doc.setFontSize(8)
@@ -240,6 +243,20 @@ export async function generateReceiptPDF(data: ReceiptData): Promise<string> {
     doc.text(data.deliveryAddress.street, margin + 4, y + 12)
     doc.text(`${data.deliveryAddress.city ?? ''}, ${data.deliveryAddress.county ?? ''}`, margin + 4, y + 18)
     y += 28
+  }
+
+  // ── eTIMS NOTE ──
+  if (y < 257) {
+    doc.setFillColor(245, 243, 255)
+    doc.roundedRect(margin, y, W - margin * 2, 18, 2, 2, 'F')
+    doc.setTextColor(124, 58, 237)
+    doc.setFontSize(7)
+    doc.setFont('helvetica', 'bold')
+    doc.text('eTIMS KRA INVOICE:', margin + 4, y + 7)
+    doc.setFont('helvetica', 'normal')
+    doc.setTextColor(109, 40, 217)
+    doc.text('Official eTIMS KRA invoice issued separately upon payment confirmation.', margin + 4, y + 13)
+    y += 22
   }
 
   // ── FOOTER ──

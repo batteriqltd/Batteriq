@@ -35,6 +35,7 @@ export default function AdminOrdersPage() {
   const [search, setSearch] = useState('')
   const [toast, setToast] = useState('')
   const [newAlert, setNewAlert] = useState('')
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -42,6 +43,7 @@ export default function AdminOrdersPage() {
       const data = await res.json()
       setOrders((data.orders ?? []) as Order[])
       setLoading(false)
+      setLastRefresh(new Date())
     }
     load()
 
@@ -75,6 +77,16 @@ export default function AdminOrdersPage() {
 
     return () => { supabase.removeChannel(channel) }
   }, [supabase])
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const res = await fetch('/api/admin/orders/list')
+      const data = await res.json()
+      setOrders((data.orders ?? []) as Order[])
+      setLastRefresh(new Date())
+    }, 30000)
+    return () => clearInterval(interval)
+  }, [])
 
   async function updateFulfillment(orderId: string, value: string) {
     const res = await fetch(`/api/admin/orders/${orderId}/update`, {
@@ -199,10 +211,17 @@ export default function AdminOrdersPage() {
       <div className="flex items-center justify-between mb-10">
         <div>
           <h1 className="text-[32px] font-black text-gray-900 tracking-tight leading-none">Order Management</h1>
-          <p className="text-gray-400 text-sm font-medium mt-2 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            Live Monitoring — {orders.length} orders tracked
-          </p>
+          <div className="flex items-center gap-4 mt-2">
+            <p className="text-gray-400 text-sm font-medium flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              Live Monitoring — {orders.length} orders tracked
+            </p>
+            <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
+              Live · Auto-refreshes every 30s
+              {lastRefresh && <span className="text-gray-300 font-normal ml-1">· Last: {lastRefresh.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>}
+            </span>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <a
