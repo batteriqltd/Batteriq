@@ -37,7 +37,7 @@ export default function CheckoutPage() {
   const [step, setStep] = useState<'form' | 'processing' | 'transitioning' | 'waiting_mpesa' | 'error'>('form')
   const [errorMsg, setErrorMsg] = useState('')
   const [orderId, setOrderId] = useState('')
-  const [mpesaTimer, setMpesaTimer] = useState(120)
+  const [mpesaTimer, setMpesaTimer] = useState(60)
   const [checkoutRequestId, setCheckoutRequestId] = useState('')
   const checkoutRequestIdRef = useRef('')
   const [retryCount, setRetryCount] = useState(0)
@@ -56,8 +56,21 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (step !== 'waiting_mpesa') return
     if (mpesaTimer <= 0) {
-      // Query Safaricom directly before giving up
+      // Final check — query both order status AND Safaricom before showing error
       if (checkoutRequestId) {
+        // First check order status directly
+        const savedOrderIdForTimer = orderId
+        if (savedOrderIdForTimer) {
+          fetch(`/api/orders/${savedOrderIdForTimer}/status`)
+            .then(r => r.json())
+            .then(statusData => {
+              if (statusData.paymentStatus === 'paid') {
+                clearCart()
+                router.push(`/order-confirmation/${savedOrderIdForTimer}?email=${encodeURIComponent(form.email)}`)
+                return
+              }
+            }).catch(() => {})
+        }
         fetch('/api/mpesa/stkquery', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -66,7 +79,11 @@ export default function CheckoutPage() {
           .then(r => r.json())
           .then(data => {
             if (data.resultCode === 0) {
-              // Actually paid — don't show error
+              // Actually paid — redirect immediately
+              if (orderId) {
+                clearCart()
+                router.push(`/order-confirmation/${orderId}?email=${encodeURIComponent(form.email)}`)
+              }
               return
             }
             const codeMsg: Record<number, string> = {
@@ -154,7 +171,7 @@ export default function CheckoutPage() {
           setCheckoutRequestId(mpesaData.checkoutRequestId)
           checkoutRequestIdRef.current = mpesaData.checkoutRequestId
         }
-        setMpesaTimer(120)
+        setMpesaTimer(60)
         setStep('transitioning')
         await new Promise(resolve => setTimeout(resolve, 1200))
         setStep('waiting_mpesa')
@@ -200,8 +217,8 @@ export default function CheckoutPage() {
               }
             }
           } catch {}
-        }, 4000)
-        setTimeout(() => clearInterval(pollInterval), 120000)
+        }, 2000)
+        setTimeout(() => clearInterval(pollInterval), 70000)
       } else {
         clearCart()
         router.push(`/order-confirmation/${orderData.orderId}?email=${encodeURIComponent(form.email)}`)
@@ -243,7 +260,7 @@ export default function CheckoutPage() {
   if (step === 'waiting_mpesa') {
     const mins = Math.floor(mpesaTimer / 60)
     const secs = String(mpesaTimer % 60).padStart(2, '0')
-    const progress = ((120 - mpesaTimer) / 120) * 100
+    const progress = ((60 - mpesaTimer) / 60) * 100
 
     return (
       <div className="min-h-screen flex items-center justify-center px-4 checkout-bg py-12">
@@ -298,7 +315,7 @@ export default function CheckoutPage() {
                   <div className="w-2 h-2 rounded-full bg-[#00A651] animate-pulse" />
                   Securing Transaction
                 </span>
-                <span className={mpesaTimer < 30 ? 'text-red-500 animate-pulse' : 'text-[#00A651]'}>{mins}:{secs}</span>
+                <span className={mpesaTimer < 15 ? 'text-red-500 animate-pulse' : 'text-[#00A651]'}>{mins}:{secs}</span>
               </div>
             </div>
 
@@ -338,7 +355,7 @@ export default function CheckoutPage() {
                 setRetryCount(c => c + 1)
                 setStep('form')
                 setErrorMsg('')
-                setMpesaTimer(120)
+                setMpesaTimer(60)
               }} 
               className="w-full h-[64px] rounded-[24px] bg-[#00004d] text-white font-black text-[17px] transition-all hover:translate-y-[-2px] active:scale-95 shadow-xl shadow-[#00004d]/20"
             >

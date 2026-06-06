@@ -84,7 +84,7 @@ export default function AdminOrdersPage() {
       const data = await res.json()
       setOrders((data.orders ?? []) as Order[])
       setLastRefresh(new Date())
-    }, 30000)
+    }, 10000)
     return () => clearInterval(interval)
   }, [])
 
@@ -218,7 +218,7 @@ export default function AdminOrdersPage() {
             </p>
             <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
-              Live · Auto-refreshes every 30s
+              Live · Auto-refreshes every 10s
               {lastRefresh && <span className="text-gray-300 font-normal ml-1">· Last: {lastRefresh.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>}
             </span>
           </div>
