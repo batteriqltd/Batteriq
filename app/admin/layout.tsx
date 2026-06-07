@@ -15,19 +15,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
-      {/* Sidebar — fixed on desktop, drawer on mobile/tablet */}
+    <div className="min-h-screen bg-[#f8f9fa] flex">
+      {/* Sidebar — fixed on desktop, drawer on mobile */}
       <AdminSidebar adminName={session.email} adminRole={session.role} />
 
-      {/* Main content — full width on mobile, offset on desktop */}
-      <main className="flex-1 lg:ml-[260px] min-h-screen overflow-x-hidden">
+      {/* Main content column — offset by sidebar width on desktop */}
+      <div className="flex-1 lg:ml-[260px] flex flex-col min-h-screen">
         <AutoLogoutProvider />
-        <AdminTopBar />
-        {/* Content area — responsive padding */}
-        <div className="w-full">
-          {children}
+
+        {/* TOP BAR — sticky, stays at top when scrolling */}
+        <div className="sticky top-0 z-20 flex-shrink-0">
+          <AdminTopBar />
         </div>
-      </main>
+
+        {/* Page content — scrolls beneath the sticky top bar */}
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }

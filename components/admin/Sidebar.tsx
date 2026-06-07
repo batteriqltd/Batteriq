@@ -83,7 +83,7 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
 
   const SidebarContent = () => (
     <aside
-      className="w-[260px] min-h-screen flex flex-col flex-shrink-0 overflow-y-auto"
+      className="w-[260px] h-full flex flex-col flex-shrink-0"
       style={{ background: 'linear-gradient(180deg, #00004d 0%, #000033 100%)' }}
     >
       {/* Logo + Clock */}
@@ -107,7 +107,7 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-4 py-6 space-y-1">
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] px-3 mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>Management</p>
         {NAV.map(item => {
           const active = isActive(item)
@@ -182,7 +182,7 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
   return (
     <>
       {/* Desktop sidebar — always visible on lg+ */}
-      <div className="hidden lg:block fixed left-0 top-0 bottom-0 z-30 w-[260px]">
+      <div className="hidden lg:block fixed left-0 top-0 bottom-0 z-30 w-[260px] overflow-hidden">
         <SidebarContent />
       </div>
 
@@ -220,7 +220,7 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
 export function AdminTopBar() {
   return (
     <div
-      className="flex items-center justify-between px-4 sm:px-8 py-3 sm:py-4 sticky top-0 z-20"
+      className="flex items-center justify-between px-4 sm:px-8 py-3 sm:py-4"
       style={{
         background: 'linear-gradient(135deg, #1a237e 0%, #283593 50%, #1e2f8f 100%)',
         boxShadow: '0 2px 20px rgba(26,35,126,0.45), 0 1px 0 rgba(255,255,255,0.08) inset',
