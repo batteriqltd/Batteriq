@@ -229,8 +229,8 @@ export function AdminTopBar() {
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 100%)' }} />
 
       {/* Left — offset on mobile to avoid hamburger overlap */}
-      <div className="relative pl-12 lg:pl-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-0.5 hidden sm:block" style={{ color: 'rgba(255,255,255,0.55)' }}>Operations Console</p>
+      <div className="relative pl-14 lg:pl-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>Operations Console</p>
         <h2 className="text-base sm:text-xl font-black text-white" style={{ letterSpacing: '-0.02em', textShadow: '0 1px 6px rgba(0,0,0,0.25)' }}>
           Welcome back, Admin 👋
         </h2>
