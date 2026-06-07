@@ -95,8 +95,8 @@ export default async function CustomersPage() {
           <h2 className="text-lg font-black text-gray-900">Operator Directory</h2>
           <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">{customers.length} RECORDS SYNCED</span>
         </div>
-        <div className="overflow-x-auto w-full">
-          <table style={{minWidth:"600px"}} className="w-full">
+        <div className="overflow-x-auto w-full" style={{WebkitOverflowScrolling:"touch"}}>
+          <table style={{minWidth:"800px"}} className="w-full">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
                 {['Customer Identity', 'Contact Channels', 'Primary Location', 'Engagement', 'Lifetime Value', 'Last Seen', 'Category'].map(h => (

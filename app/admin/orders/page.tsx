@@ -269,8 +269,8 @@ export default function AdminOrdersPage() {
         className="bg-white rounded-[32px] overflow-hidden"
         style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}
       >
-        <div className="overflow-x-auto w-full">
-          <table style={{minWidth:"600px"}} className="w-full border-collapse">
+        <div className="overflow-x-auto w-full" style={{WebkitOverflowScrolling:"touch"}}>
+          <table style={{minWidth:"800px"}} className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
                 {['Reference', 'Customer', 'Items', 'Amount', 'Payment', 'Fulfillment', 'Timestamp', 'Actions'].map(h => (

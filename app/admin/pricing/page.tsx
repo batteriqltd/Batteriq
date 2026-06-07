@@ -448,12 +448,12 @@ export default function PricingEnginePage() {
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto w-full">
-          <table style={{minWidth:"600px"}} className="w-full">
+        <div className="overflow-x-auto w-full" style={{WebkitOverflowScrolling:"touch"}}>
+          <table style={{minWidth:"900px"}} className="w-full">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
                 {['SKU Identity', 'Current Retail', 'Market Variance', 'Live Discount', 'Logistics', 'Operations'].map(h => (
-                  <th key={h} className="text-left text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 px-8 py-5">{h}</th>
+                  <th key={h} className="text-left text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 px-4 sm:px-6 lg:px-8 py-5 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>

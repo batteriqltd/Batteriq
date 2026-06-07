@@ -208,8 +208,8 @@ export default function StockManagementPage() {
             <span className="text-[10px] font-black text-gray-300 uppercase tracking-[0.2em]">GLOBAL STOCK ENGINE</span>
           </div>
         </div>
-        <div className="overflow-x-auto w-full">
-          <table style={{minWidth:"600px"}} className="w-full">
+        <div className="overflow-x-auto w-full" style={{WebkitOverflowScrolling:"touch"}}>
+          <table style={{minWidth:"800px"}} className="w-full">
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
                 {['SKU Identity', 'Market Price', 'Inventory Status', 'Available Units', 'Operations'].map(h => (
