@@ -12,33 +12,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!session) return <>{children}</>
 
   return (
-    <div style={{
-      display: 'flex',
-      height: '100vh',
-      overflow: 'hidden',
-      background: '#f8f9fa',
-    }}>
-      {/* Sidebar — fixed height, no scroll on outer */}
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f8f9fa' }}>
+
+      {/* Sidebar */}
       <AdminSidebar adminName={session.email} adminRole={session.role} />
 
-      {/* Right column — fixed height column */}
+      {/* Right column — must start after 260px sidebar on desktop */}
       <div style={{
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
         height: '100vh',
         overflow: 'hidden',
-        marginLeft: 0,
-      }} className="lg:ml-[260px]">
+        minWidth: 0,
+        marginLeft: '260px', // desktop: push right of sidebar
+      }} className="max-lg:!ml-0"> {/* mobile: no margin since sidebar is a drawer overlay */}
 
         <AutoLogoutProvider />
 
-        {/* TOP BAR — never moves, always at top */}
-        <div style={{ flexShrink: 0, zIndex: 20, position: 'relative' }}>
+        {/* TOP BAR — permanently fixed, never scrolls */}
+        <div style={{ flexShrink: 0, zIndex: 20 }}>
           <AdminTopBar />
         </div>
 
-        {/* CONTENT — only this scrolls */}
+        {/* CONTENT — only this area scrolls */}
         <div style={{
           flex: 1,
           overflowY: 'auto',
