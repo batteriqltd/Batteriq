@@ -15,40 +15,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f8f9fa' }}>
+    <div className="min-h-screen bg-[#f8f9fa]">
 
-      {/* Sidebar — fixed left column */}
+      {/* Sidebar */}
       <AdminSidebar adminName={session.email} adminRole={session.role} />
 
-      {/* Right column — fills remaining width */}
-      <div style={{
-        flex: 1,
-        marginLeft: 0,
-        display: 'flex',
-        flexDirection: 'column',
-        minHeight: '100vh',
-        overflow: 'hidden',
-      }} className="lg:ml-[260px]">
-
+      {/* Everything to the right of sidebar */}
+      <div className="lg:ml-[260px]">
         <AutoLogoutProvider />
 
-        {/* STICKY TOP BAR — never scrolls */}
-        <div style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 25,
-          flexShrink: 0,
-        }}>
+        {/* TOP BAR — sticks to top of viewport as page scrolls */}
+        <div className="sticky top-0 z-20">
           <AdminTopBar />
         </div>
 
-        {/* SCROLLABLE CONTENT — scrolls under the sticky bar */}
-        <main style={{
-          flex: 1,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          WebkitOverflowScrolling: 'touch' as const,
-        }}>
+        {/* Page content — normal flow, scrolls with the page */}
+        <main>
           {children}
         </main>
 
