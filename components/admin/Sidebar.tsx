@@ -83,8 +83,7 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
 
   const SidebarContent = () => (
     <aside
-      style={{height:"100%",display:"flex",flexDirection:"column",flexShrink:0,width:"260px"}}
-      style={{ background: 'linear-gradient(180deg, #00004d 0%, #000033 100%)' }}
+      style={{height:"100%",display:"flex",flexDirection:"column",flexShrink:0,width:"260px",background:"linear-gradient(180deg, #00004d 0%, #000033 100%)"}}
     >
       {/* Logo + Clock */}
       <div className="h-[72px] px-6 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
