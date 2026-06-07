@@ -431,7 +431,7 @@ export default function PricingEnginePage() {
       </div>
 
       {/* Products table */}
-      <div className="bg-white rounded-[32px] overflow-hidden" style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}>
+      <div className="bg-white rounded-[32px]" style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)', overflow: 'hidden' }}>
         <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between">
           <h2 className="text-lg font-black text-gray-900">SKU Pricing Ledger</h2>
           <div className="flex gap-1.5 p-1 bg-gray-50 rounded-xl border border-gray-100">
@@ -448,12 +448,12 @@ export default function PricingEnginePage() {
             ))}
           </div>
         </div>
-        <div className="overflow-x-auto w-full" style={{WebkitOverflowScrolling:"touch"}}>
-          <table style={{minWidth:"900px"}} className="w-full">
+        <div style={{overflowX:"auto",overflowY:"visible",WebkitOverflowScrolling:"touch",width:"100%"}}>
+          <table style={{minWidth:"1100px",width:"100%"}}>
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-50">
                 {['SKU Identity', 'Current Retail', 'Market Variance', 'Live Discount', 'Logistics', 'Operations'].map(h => (
-                  <th key={h} className="text-left text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 px-4 sm:px-6 lg:px-8 py-5 whitespace-nowrap">{h}</th>
+                  <th key={h} className="text-left text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 px-4 py-5 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -472,14 +472,14 @@ export default function PricingEnginePage() {
                 const hasDiscount = p.discount_percent && p.discount_percent > 0
                 return (
                   <tr key={p.id} className={`hover:bg-blue-50/30 transition-all cursor-default ${hasDiscount ? 'bg-red-50/20' : ''}`}>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-4">
                       <div className="min-w-0">
                         <p className="text-[14px] font-black text-gray-900 tracking-tight leading-none mb-1 truncate max-w-[240px]">{p.name}</p>
                         <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-2">{p.brand} · {p.category}</p>
                         {hasDiscount && p.discount_end && <DiscountCountdown end={p.discount_end} />}
                       </div>
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-4">
                       <div className="relative group/price">
                         <input
                           key={`${p.id}-${p.price_kes}`}
@@ -499,7 +499,7 @@ export default function PricingEnginePage() {
                         <p className="text-[10px] text-gray-300 line-through font-mono mt-1 ml-1">{fmt(p.compare_price_kes)}</p>
                       )}
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-4">
                       {previewItem ? (
                         <div className="flex flex-col gap-1">
                           <span className="text-[14px] font-black font-mono text-orange-600 leading-none">{fmt(previewItem.newPrice)}</span>
@@ -512,7 +512,7 @@ export default function PricingEnginePage() {
                         <span className="text-[10px] font-black text-gray-200 uppercase tracking-[0.2em]">STABLE PRICE</span>
                       )}
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-4">
                       {hasDiscount ? (
                         <div className="flex flex-col gap-1.5">
                           <span className="text-[10px] font-black px-3 py-1 rounded-xl bg-red-600 text-white shadow-lg shadow-red-100 w-fit">
@@ -524,7 +524,7 @@ export default function PricingEnginePage() {
                         <span className="text-[10px] font-black text-gray-200 uppercase tracking-[0.2em]">NO CAMPAIGN</span>
                       )}
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-4">
                       <button
                         onClick={() => toggleStock(p.id, p.in_stock)}
                         className={`text-[10px] font-black px-3 py-1 rounded-lg uppercase tracking-widest transition-all border shadow-sm ${
@@ -534,7 +534,7 @@ export default function PricingEnginePage() {
                         {p.in_stock ? 'TRACKING' : 'SUSPENDED'}
                       </button>
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => {
