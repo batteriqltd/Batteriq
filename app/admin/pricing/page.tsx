@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Tag, Save, AlertTriangle, Loader2, Zap, X, Clock, Trash2, TrendingUp, TrendingDown, Percent, Settings2, CheckCircle } from 'lucide-react'
+import { Tag, Save, AlertTriangle, Loader2, Zap, X, Clock, Trash2, TrendingUp, TrendingDown, Percent, Settings2, CheckCircle, RotateCcw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 function fmt(n: number) { return `KES ${Number(n || 0).toLocaleString('en-KE')}` }
@@ -46,7 +46,8 @@ function DiscountModal({ product, onClose, onApplied }: { product: any; onClose:
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
 
-  const previewPrice = Math.round(Number(product.price_kes) * (1 - parseFloat(pct || '0') / 100))
+  const originalPrice = product.compare_price_kes ?? product.price_kes
+  const previewPrice = Math.round(Number(originalPrice) * (1 - parseFloat(pct || '0') / 100))
 
   function resolveEnd(): string | null {
     if (duration === 'custom') return customEnd || null
@@ -83,124 +84,97 @@ function DiscountModal({ product, onClose, onApplied }: { product: any; onClose:
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-[#00004d]/40 backdrop-blur-md">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white rounded-[32px] w-full max-w-lg shadow-[0_32px_64px_rgba(0,0,77,0.3)] overflow-hidden"
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-6 bg-[#00004d]/50 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) onClose() }}>
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 40 }}
+        className="bg-white w-full sm:max-w-lg sm:rounded-[28px] rounded-t-[28px] shadow-2xl overflow-hidden flex flex-col max-h-[92vh]"
       >
         {/* Header */}
-        <div className="px-8 py-8 border-b border-gray-50 flex items-center justify-between">
-          <div>
-            <h3 className="text-[20px] font-black text-gray-900 tracking-tight leading-none mb-2">Configure Discount</h3>
-            <p className="text-[13px] font-bold text-blue-600 uppercase tracking-widest">{product.name.slice(0, 40)}...</p>
+        <div className="px-5 sm:px-8 py-5 sm:py-7 border-b border-gray-100 flex items-start justify-between flex-shrink-0">
+          <div className="flex-1 min-w-0 pr-4">
+            <h3 className="text-lg sm:text-xl font-black text-gray-900 tracking-tight leading-tight mb-1">Set Discount</h3>
+            <p className="text-xs sm:text-sm font-bold text-blue-600 truncate">{product.name}</p>
+            <p className="text-xs text-gray-400 mt-1">Current: <span className="font-black text-gray-700">{fmt(product.price_kes)}</span>{product.compare_price_kes && <span className="ml-2 line-through text-gray-300">{fmt(product.compare_price_kes)}</span>}</p>
           </div>
-          <button onClick={onClose} className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors">
-            <X size={20} className="text-gray-400" />
+          <button onClick={onClose} className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center hover:bg-gray-100 transition-colors flex-shrink-0">
+            <X size={18} className="text-gray-400" />
           </button>
         </div>
 
-        <div className="px-8 py-8 space-y-8">
-          {/* Discount % */}
+        {/* Scrollable body */}
+        <div className="overflow-y-auto flex-1 px-5 sm:px-8 py-5 sm:py-7 space-y-6">
+
+          {/* Discount % presets */}
           <div>
-            <label className="block text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">REDUCTION MAGNITUDE (%)</label>
-            <div className="flex gap-2.5 flex-wrap">
-              {['5', '10', '15', '20', '25', '50'].map(v => (
-                <button
-                  key={v}
-                  onClick={() => setPct(v)}
-                  className={`px-5 py-2.5 rounded-xl text-[13px] font-black transition-all ${
-                    pct === v ? 'bg-[#0000ff] text-white shadow-lg shadow-blue-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
-                  }`}
-                >
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Discount Percentage</label>
+            <div className="flex gap-2 flex-wrap mb-3">
+              {['5', '10', '15', '20', '25', '30', '50'].map(v => (
+                <button key={v} onClick={() => setPct(v)}
+                  className={`h-10 px-4 rounded-xl text-sm font-black transition-all ${pct === v ? 'bg-[#0000ff] text-white shadow-lg shadow-blue-200' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
                   {v}%
                 </button>
               ))}
-              <div className="relative">
-                <input
-                  type="number"
-                  value={pct}
-                  onChange={e => setPct(e.target.value)}
-                  placeholder="Custom"
-                  className="w-28 px-4 py-2.5 rounded-xl border border-gray-100 bg-gray-50 text-[13px] font-mono font-black outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 shadow-sm"
-                />
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="relative flex-1">
+                <input type="number" value={pct} onChange={e => setPct(e.target.value)} placeholder="Custom %" min="1" max="99"
+                  className="w-full h-12 px-4 pr-10 rounded-xl border border-gray-200 bg-gray-50 text-sm font-black outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-black text-sm">%</span>
               </div>
+              {!isNaN(parseFloat(pct)) && parseFloat(pct) > 0 && (
+                <div className="flex-1 bg-orange-50 border border-orange-100 rounded-xl px-4 py-2 text-center">
+                  <p className="text-[10px] text-orange-500 font-black uppercase tracking-wider">New Price</p>
+                  <p className="text-base font-black text-orange-600">{fmt(previewPrice)}</p>
+                  <p className="text-[10px] text-orange-400 line-through">{fmt(originalPrice)}</p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Badge label */}
+          {/* Badge */}
           <div>
-            <label className="block text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">MARKETING BADGE TEXT</label>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Badge Text <span className="text-gray-300 font-medium normal-case">(optional)</span></label>
             <div className="relative">
-              <Tag size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
-              <input
-                type="text"
-                value={label}
-                onChange={e => setLabel(e.target.value)}
-                placeholder='e.g. FLASH SALE, LIMITED OFFER'
-                maxLength={20}
-                className="w-full pl-12 pr-6 h-14 rounded-2xl border border-gray-100 bg-gray-50 text-[14px] font-bold outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 shadow-sm transition-all"
-              />
+              <Tag size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" />
+              <input type="text" value={label} onChange={e => setLabel(e.target.value)} placeholder="e.g. FLASH SALE, HOT DEAL, LIMITED OFFER" maxLength={20}
+                className="w-full h-12 pl-10 pr-4 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             </div>
           </div>
 
           {/* Duration */}
           <div>
-            <label className="block text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">EXPIRATION TIMEFRAME</label>
-            <div className="flex gap-2.5 flex-wrap">
-              {['1h', '6h', '12h', '24h', '48h', 'custom'].map(d => (
-                <button
-                  key={d}
-                  onClick={() => setDuration(d)}
-                  className={`px-5 py-2.5 rounded-xl text-[12px] font-black transition-all uppercase tracking-widest ${
-                    duration === d ? 'bg-[#00004d] text-white shadow-lg shadow-blue-200' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
-                  }`}
-                >
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3">Offer Duration</label>
+            <div className="flex gap-2 flex-wrap">
+              {['1h', '6h', '12h', '24h', '48h', '72h', 'custom'].map(d => (
+                <button key={d} onClick={() => setDuration(d)}
+                  className={`h-10 px-3 sm:px-4 rounded-xl text-xs font-black transition-all uppercase tracking-wider ${duration === d ? 'bg-[#00004d] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
                   {d}
                 </button>
               ))}
             </div>
             {duration === 'custom' && (
-              <input
-                type="datetime-local"
-                value={customEnd}
-                onChange={e => setCustomEnd(e.target.value)}
-                className="mt-4 w-full px-5 h-14 rounded-2xl border border-gray-100 bg-gray-50 text-[14px] font-bold outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 shadow-sm"
-              />
+              <input type="datetime-local" value={customEnd} onChange={e => setCustomEnd(e.target.value)}
+                className="mt-3 w-full h-12 px-4 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
             )}
           </div>
 
-          {/* Price preview */}
-          {!isNaN(parseFloat(pct)) && parseFloat(pct) > 0 && (
-            <div className="bg-orange-50 border border-orange-100 rounded-[24px] p-6 shadow-inner">
-              <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em] mb-3">Live Front-end Preview</p>
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <p className="text-[28px] font-black text-gray-900 font-mono leading-none">{fmt(previewPrice)}</p>
-                  <p className="text-[12px] font-bold text-gray-400 line-through font-mono mt-2">{fmt(product.price_kes)}</p>
-                </div>
-                <div className="px-4 py-2 rounded-xl bg-red-600 text-white text-[18px] font-black shadow-lg shadow-red-200">
-                  -{pct}%
-                </div>
-              </div>
-            </div>
-          )}
+          {err && <p className="text-red-500 text-xs font-bold bg-red-50 px-4 py-3 rounded-xl border border-red-100">{err}</p>}
+        </div>
 
-          {err && <p className="text-[12px] font-bold text-red-500 bg-red-50 px-4 py-2 rounded-lg border border-red-100">{err}</p>}
-
-          <button
-            onClick={apply}
-            disabled={saving}
-            className="w-full h-16 rounded-[20px] text-[15px] font-black text-white flex items-center justify-center gap-3 disabled:opacity-60 transition-all shadow-xl shadow-red-100 hover:scale-[1.02] active:scale-[0.98]"
-            style={{ background: 'linear-gradient(135deg, #dc2626, #991b1b)' }}
-          >
-            {saving ? <><Loader2 size={20} className="animate-spin" />SYNCING ENGINE…</> : <><Zap size={20} />DEPLOY DISCOUNT</>}
+        {/* Footer */}
+        <div className="px-5 sm:px-8 py-5 border-t border-gray-100 flex-shrink-0">
+          <button onClick={apply} disabled={saving}
+            className="w-full h-14 rounded-2xl bg-[#0000ff] text-white font-black text-sm uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50 hover:-translate-y-0.5 transition-all shadow-lg shadow-blue-200">
+            {saving ? <><Loader2 size={16} className="animate-spin" /> Applying...</> : <><Zap size={16} /> Apply Discount</>}
           </button>
         </div>
       </motion.div>
     </div>
   )
 }
+
 
 export default function PricingEnginePage() {
   const supabase = useMemo(() => createClient(), [])
@@ -581,11 +555,13 @@ export default function PricingEnginePage() {
                           <button
                             onClick={() => removeDiscount(p.id)}
                             disabled={removingDiscount === p.id}
-                            className="w-9 h-9 rounded-xl flex items-center justify-center transition-all bg-gray-50 text-gray-400 hover:bg-gray-900 hover:text-white"
+                            title="Remove discount and restore original price"
+                            className="flex items-center gap-1.5 h-9 px-3 rounded-xl transition-all bg-green-50 text-green-700 border border-green-200 hover:bg-green-500 hover:text-white hover:border-green-500 text-[11px] font-black whitespace-nowrap"
                           >
                             {removingDiscount === p.id
-                              ? <Loader2 size={16} className="animate-spin text-gray-400" />
-                              : <Trash2 size={16} />}
+                              ? <Loader2 size={13} className="animate-spin" />
+                              : <RotateCcw size={13} />}
+                            <span>Restore {p.compare_price_kes ? fmt(p.compare_price_kes) : 'Original'}</span>
                           </button>
                         )}
                       </div>
