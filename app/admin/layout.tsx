@@ -9,30 +9,44 @@ export const metadata: Metadata = {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = getAdminSession()
-
-  if (!session) {
-    return <>{children}</>
-  }
+  if (!session) return <>{children}</>
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
-
-      {/* Sidebar */}
+    <div style={{
+      display: 'flex',
+      height: '100vh',
+      overflow: 'hidden',
+      background: '#f8f9fa',
+    }}>
+      {/* Sidebar — fixed height, no scroll on outer */}
       <AdminSidebar adminName={session.email} adminRole={session.role} />
 
-      {/* Everything to the right of sidebar */}
-      <div className="lg:ml-[260px]">
+      {/* Right column — fixed height column */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'hidden',
+        marginLeft: 0,
+      }} className="lg:ml-[260px]">
+
         <AutoLogoutProvider />
 
-        {/* TOP BAR — sticks to top of viewport as page scrolls */}
-        <div className="sticky top-0 z-20">
+        {/* TOP BAR — never moves, always at top */}
+        <div style={{ flexShrink: 0, zIndex: 20, position: 'relative' }}>
           <AdminTopBar />
         </div>
 
-        {/* Page content — normal flow, scrolls with the page */}
-        <main>
+        {/* CONTENT — only this scrolls */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          WebkitOverflowScrolling: 'touch' as const,
+        }}>
           {children}
-        </main>
+        </div>
 
       </div>
     </div>

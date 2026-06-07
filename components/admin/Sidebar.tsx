@@ -83,7 +83,7 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
 
   const SidebarContent = () => (
     <aside
-      style={{height:"100%",display:"flex",flexDirection:"column",flexShrink:0,width:"260px",background:"linear-gradient(180deg, #00004d 0%, #000033 100%)"}}
+      style={{height:"100vh",display:"flex",flexDirection:"column",width:"260px",background:"linear-gradient(180deg, #00004d 0%, #000033 100%)"}}
     >
       {/* Logo + Clock */}
       <div className="h-[72px] px-6 border-b flex items-center justify-between flex-shrink-0" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
@@ -181,7 +181,7 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
   return (
     <>
       {/* Desktop sidebar — always visible on lg+ */}
-      <div className="hidden lg:block fixed left-0 top-0 bottom-0 z-30 w-[260px] overflow-hidden">
+      <div className="hidden lg:block fixed left-0 top-0 bottom-0 z-30 w-[260px]" style={{height:"100vh",overflow:"hidden"}}>
         <SidebarContent />
       </div>
 
