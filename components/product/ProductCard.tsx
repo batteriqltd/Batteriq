@@ -163,7 +163,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
             </div>
 
             {/* M-Pesa installment hint for expensive products */}
-            {product.price_kes >= 50000 && (
+            {product.in_stock && (
               <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-1">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logos/mpesa.png" alt="M-Pesa" className="h-3.5 w-auto object-contain inline" /> Pay via M-Pesa · Instant STK Push

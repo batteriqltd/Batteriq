@@ -98,11 +98,15 @@ const productSchema = (product: Product) => ({
       : 'https://schema.org/OutOfStock',
     seller: { '@type': 'Organization', name: 'Batteriq' },
   },
-  aggregateRating: {
-    '@type': 'AggregateRating',
-    ratingValue: product.schema_rating,
-    reviewCount: product.schema_review_count,
-  },
+  ...(product.schema_rating && product.schema_review_count && product.schema_review_count > 0 ? {
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: product.schema_rating,
+      reviewCount: product.schema_review_count,
+      bestRating: 5,
+      worstRating: 1,
+    }
+  } : {}),
 })
 
 export default async function EcoFlowProductPage({ params }: PageProps) {
