@@ -34,7 +34,7 @@ export default function CheckoutPage() {
     address: '', city: 'Nairobi', county: 'Nairobi', notes: '',
   })
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('mpesa_now')
-  const [step, setStep] = useState<'form' | 'processing' | 'transitioning' | 'waiting_mpesa' | 'error'>('form')
+  const [step, setStep] = useState<'form' | 'processing' | 'transitioning' | 'waiting_mpesa' | 'success' | 'error'>('form')
   const [errorMsg, setErrorMsg] = useState('')
   const [orderId, setOrderId] = useState('')
   const [mpesaTimer, setMpesaTimer] = useState(60)
@@ -56,39 +56,61 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (step !== 'waiting_mpesa') return
     if (mpesaTimer <= 0) {
-      // Final check — query both order status AND Safaricom before showing error
-      if (checkoutRequestId) {
-        // First check order status directly
+      // SEQUENTIAL final check — order status first, THEN Safaricom, never in parallel
+      const finalCheck = async () => {
         const savedOrderIdForTimer = orderId
-        if (savedOrderIdForTimer) {
-          fetch(`/api/orders/${savedOrderIdForTimer}/status`)
-            .then(r => r.json())
-            .then(statusData => {
-              if (statusData.paymentStatus === 'paid') {
-                clearCart()
+        try {
+          // 1. Check our database first — callback may have already confirmed
+          if (savedOrderIdForTimer) {
+            const statusRes = await fetch(`/api/orders/${savedOrderIdForTimer}/status?t=${Date.now()}`, { cache: 'no-store' })
+            const statusData = await statusRes.json()
+            if (statusData.paymentStatus === 'paid') {
+              setStep('success')
+              clearCart()
+              setTimeout(() => {
                 router.push(`/order-confirmation/${savedOrderIdForTimer}?email=${encodeURIComponent(form.email)}`)
-                return
-              }
-            }).catch(() => {})
-        }
-        fetch('/api/mpesa/stkquery', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ checkoutRequestId }),
-        })
-          .then(r => r.json())
-          .then(data => {
+              }, 2200)
+              return // STOP — paid, never show error
+            }
+          }
+
+          // 2. Only if NOT paid in DB — ask Safaricom directly
+          if (checkoutRequestId) {
+            const queryRes = await fetch('/api/mpesa/stkquery', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ checkoutRequestId }),
+            })
+            const data = await queryRes.json()
             if (data.resultCode === 0) {
-              // Actually paid — redirect immediately
-              if (orderId) {
-                clearCart()
-                router.push(`/order-confirmation/${orderId}?email=${encodeURIComponent(form.email)}`)
-              }
+              // Paid per Safaricom — callback was just slow
+              setStep('success')
+              clearCart()
+              setTimeout(() => {
+                router.push(`/order-confirmation/${savedOrderIdForTimer || orderId}?email=${encodeURIComponent(form.email)}`)
+              }, 2200)
               return
             }
+
+            // 3. Give the callback one last chance — wait 3s and re-check DB
+            await new Promise(r => setTimeout(r, 3000))
+            if (savedOrderIdForTimer) {
+              const finalRes = await fetch(`/api/orders/${savedOrderIdForTimer}/status?t=${Date.now()}`, { cache: 'no-store' })
+              const finalData = await finalRes.json()
+              if (finalData.paymentStatus === 'paid') {
+                setStep('success')
+                clearCart()
+                setTimeout(() => {
+                  router.push(`/order-confirmation/${savedOrderIdForTimer}?email=${encodeURIComponent(form.email)}`)
+                }, 2200)
+                return
+              }
+            }
+
+            // 4. Genuinely not paid — show specific error
             const codeMsg: Record<number, string> = {
               1032: 'You cancelled the M-Pesa payment. Tap Retry to try again.',
-              1037: 'The M-Pesa prompt timed out. Please tap Retry.',
+              1037: 'The M-Pesa prompt timed out before you entered your PIN. Please tap Retry.',
               2001: 'Wrong M-Pesa PIN entered. Please retry with the correct PIN.',
               1001: 'Wrong PIN entered. Please retry.',
               1019: 'M-Pesa request expired. Please retry.',
@@ -96,16 +118,17 @@ export default function CheckoutPage() {
               26:   'M-Pesa system is busy. Please retry in a few minutes.',
             }
             setStep('error')
-            setErrorMsg(codeMsg[data.resultCode] ?? `The M-Pesa prompt was not received on your phone. Please retry or use Paybill below. (Code: ${data.resultCode ?? 'unknown'})`)
-          })
-          .catch(() => {
+            setErrorMsg(codeMsg[data.resultCode] ?? `Payment was not completed. Please retry or use Paybill below. (Code: ${data.resultCode ?? 'pending'})`)
+          } else {
             setStep('error')
             setErrorMsg('Payment timed out. Please try again.')
-          })
-      } else {
-        setStep('error')
-        setErrorMsg('Payment timed out. Please try again.')
+          }
+        } catch {
+          setStep('error')
+          setErrorMsg('Could not verify payment. If money was deducted, contact us on WhatsApp 0716 822 014 — we will confirm and process your order.')
+        }
       }
+      finalCheck()
       return
     }
     const t = setTimeout(() => setMpesaTimer(s => s - 1), 1000)
@@ -181,13 +204,16 @@ export default function CheckoutPage() {
         const pollInterval = setInterval(async () => {
           try {
             // 1. Check if callback already updated the order
-            const statusRes = await fetch(`/api/orders/${savedOrderId}/status`)
+            const statusRes = await fetch(`/api/orders/${savedOrderId}/status?t=${Date.now()}`, { cache: 'no-store' })
             const statusData = await statusRes.json()
 
             if (statusData.paymentStatus === 'paid') {
               clearInterval(pollInterval)
+              setStep('success')
               clearCart()
-              router.push(`/order-confirmation/${savedOrderId}?email=${encodeURIComponent(savedEmail)}`)
+              setTimeout(() => {
+                router.push(`/order-confirmation/${savedOrderId}?email=${encodeURIComponent(savedEmail)}`)
+              }, 2200)
               return
             }
 
@@ -212,8 +238,11 @@ export default function CheckoutPage() {
               // ResultCode 0 = paid — redirect even if callback was slow
               if (queryData.resultCode === 0) {
                 clearInterval(pollInterval)
+                setStep('success')
                 clearCart()
-                router.push(`/order-confirmation/${savedOrderId}?email=${encodeURIComponent(savedEmail)}`)
+                setTimeout(() => {
+                  router.push(`/order-confirmation/${savedOrderId}?email=${encodeURIComponent(savedEmail)}`)
+                }, 2200)
               }
             }
           } catch {}
@@ -329,6 +358,83 @@ export default function CheckoutPage() {
             </div>
           </div>
         </div>
+      </div>
+    )
+  }
+
+  // ── SUCCESS SCREEN — payment confirmed ──
+  if (step === 'success') {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 checkout-bg">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="bg-white rounded-[32px] p-10 sm:p-14 max-w-md w-full text-center shadow-2xl"
+        >
+          {/* Animated checkmark */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.15, type: 'spring', stiffness: 200, damping: 12 }}
+            className="w-24 h-24 rounded-full mx-auto mb-8 flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, #00A651 0%, #00C853 100%)', boxShadow: '0 16px 48px rgba(0,166,81,0.35)' }}
+          >
+            <motion.svg
+              width="44" height="44" viewBox="0 0 24 24" fill="none"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+            >
+              <motion.path
+                d="M4 12.5L9.5 18L20 6"
+                stroke="white"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ delay: 0.35, duration: 0.5, ease: 'easeOut' }}
+              />
+            </motion.svg>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight mb-3">
+              Payment Successful! 🎉
+            </h2>
+            <p className="text-gray-500 text-sm font-medium leading-relaxed mb-2">
+              Your M-Pesa payment has been confirmed.
+            </p>
+            <p className="text-gray-400 text-xs font-medium mb-8">
+              A receipt has been sent to your email.
+            </p>
+          </motion.div>
+
+          {/* Progress to redirect */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="space-y-3"
+          >
+            <div className="h-1 rounded-full bg-gray-100 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full"
+                style={{ background: 'linear-gradient(90deg, #00A651, #00C853)' }}
+                initial={{ width: '0%' }}
+                animate={{ width: '100%' }}
+                transition={{ duration: 2, ease: 'linear' }}
+              />
+            </div>
+            <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
+              Taking you to your order...
+            </p>
+          </motion.div>
+        </motion.div>
       </div>
     )
   }
