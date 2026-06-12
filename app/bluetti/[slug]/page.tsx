@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const product = await getProduct(params.slug)
   if (!product) return {}
 
-  const title = `Buy Bluetti ${product.name} in Kenya — Price KES ${product.price_kes.toLocaleString()} | Batteriq`
+  const title = `${product.name} Price in Kenya — KES ${product.price_kes.toLocaleString()} | Batteriq`
   const description = product.meta_description ??
     `Buy the Bluetti ${product.name} in Kenya for KES ${product.price_kes.toLocaleString()}. Authorised Bluetti dealer. Instant M-Pesa payment. Fast Nairobi delivery. Batteriq.`
 

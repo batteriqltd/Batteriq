@@ -1,6 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  async redirects() {
+    return [
+      // Old WordPress shop URLs → new EcoFlow hub (301 permanent, passes link equity)
+      { source: '/shop', destination: '/ecoflow-kenya', permanent: true },
+      { source: '/shop/page/:page', destination: '/ecoflow-kenya', permanent: true },
+      { source: '/shop/:path*', destination: '/ecoflow-kenya', permanent: true },
+      { source: '/product/:slug', destination: '/ecoflow-kenya', permanent: true },
+      { source: '/product-category/:path*', destination: '/ecoflow-kenya', permanent: true },
+      { source: '/cart-2', destination: '/cart', permanent: true },
+      { source: '/my-account/:path*', destination: '/', permanent: true },
+    ]
+  },
   webpack: (config) => {
     // Disable filesystem cache to prevent stale chunk errors on Windows
     config.cache = false

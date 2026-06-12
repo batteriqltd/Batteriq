@@ -22,7 +22,7 @@ import { SectionObserver } from '@/components/animations/SectionObserver'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'Batteriq Kenya — Official EcoFlow & BLUETTI Dealer | Buy with M-Pesa',
+  title: 'Batteriq Kenya | Portable Power Stations & Solar Solutions',
   description: "Kenya's #1 authorised EcoFlow and BLUETTI dealer. Buy power stations, solar panels, and home battery systems. Pay with M-Pesa. Same-day Nairobi delivery. From KES 27,259. Official 24-month warranty.",
   keywords: [
     'EcoFlow Kenya', 'BLUETTI Kenya', 'power station Kenya', 'buy EcoFlow Kenya',

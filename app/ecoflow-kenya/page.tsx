@@ -12,7 +12,7 @@ import Script from 'next/script'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'EcoFlow Kenya — Official Authorised Dealer | Buy with M-Pesa | Batteriq',
+  title: 'EcoFlow Kenya | Portable Power Stations & Solar Panels — Batteriq',
   description: 'Buy genuine EcoFlow power stations in Kenya. Official authorised EcoFlow dealer. EcoFlow DELTA Pro, DELTA 2, RIVER 2, solar panels. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty. From KES 27,259.',
   keywords: [
     'EcoFlow Kenya', 'buy EcoFlow Kenya', 'EcoFlow dealer Kenya', 'EcoFlow authorised dealer Kenya',
@@ -134,16 +134,6 @@ const localBusinessSchema = {
   paymentAccepted: 'M-Pesa, Cash on Delivery',
   currenciesAccepted: 'KES',
   areaServed: { '@type': 'Country', name: 'Kenya' },
-  hasOfferCatalog: {
-    '@type': 'OfferCatalog',
-    name: 'EcoFlow Products Kenya',
-    itemListElement: [
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'EcoFlow DELTA Pro Kenya' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'EcoFlow DELTA 2 Kenya' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'EcoFlow RIVER 2 Kenya' } },
-      { '@type': 'Offer', itemOffered: { '@type': 'Product', name: 'EcoFlow Solar Panels Kenya' } },
-    ],
-  },
 }
 
 const breadcrumbSchema = {
