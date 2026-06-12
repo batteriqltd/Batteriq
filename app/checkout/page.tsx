@@ -11,7 +11,7 @@ import {
   AlertCircle, Phone
 } from 'lucide-react'
 import { WhatsAppIcon, EmailIcon, MpesaIcon, DeliveryIcon, ContactSalesIcon } from '@/components/ui/ContactIcons'
-import { KENYAN_COUNTIES, getDeliveryFee } from '@/lib/delivery'
+import { KENYAN_COUNTIES } from '@/lib/delivery'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 
@@ -137,8 +137,7 @@ export default function CheckoutPage() {
   }, [step, mpesaTimer, checkoutRequestId])
 
   const subtotal = mounted ? items.reduce((s, i) => s + (Number(i.price_kes) || 0) * i.quantity, 0) : 0
-  const deliveryFee = form.county ? getDeliveryFee(form.county) : 0
-  const grandTotal = subtotal + deliveryFee
+  const grandTotal = subtotal // items only — delivery fee is communicated separately when delivery is arranged
   const totalQuantity = mounted ? items.reduce((sum, item) => sum + item.quantity, 0) : 0
   const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
 
@@ -171,7 +170,7 @@ export default function CheckoutPage() {
             image: i.image || null,
           })),
           subtotalKes: subtotal,
-          deliveryFeeKes: deliveryFee,
+          deliveryFeeKes: 0,
           totalKes: grandTotal,
           paymentMethod,
           deliveryAddress: {
@@ -687,7 +686,7 @@ export default function CheckoutPage() {
                       <div className="flex items-center gap-2 ml-1">
                         <DeliveryIcon size={15} />
                         <p className="text-[12px] font-bold text-gray-500">
-                          Delivery to {form.county}: <span className="text-[#0000ff] font-black">KES {getDeliveryFee(form.county).toLocaleString('en-KE')}</span>
+                          Delivery to {form.county} — fee communicated when delivery is arranged
                         </p>
                       </div>
                     )}
@@ -892,11 +891,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Delivery</span>
-                  {form.county ? (
-                    <span className="text-[16px] font-black text-gray-900 font-mono tracking-tighter">{formatKES(deliveryFee)}</span>
-                  ) : (
-                    <span className="text-[11px] font-black text-gray-400 bg-gray-50 px-4 py-1.5 rounded-xl uppercase tracking-widest">Select county</span>
-                  )}
+                  <span className="text-[11px] font-black text-gray-500 bg-gray-50 border border-gray-100 px-4 py-1.5 rounded-xl uppercase tracking-widest">Communicated on delivery</span>
                 </div>
                 {form.county && (
                   <div className="flex items-center gap-2 -mt-2">
