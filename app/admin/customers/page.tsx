@@ -47,11 +47,12 @@ export default async function CustomersPage() {
   const avgSpend = totalCustomers > 0 ? Math.round(totalRevenue / totalCustomers) : 0
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 pb-12 bg-[#f8f9fa] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 pb-12 min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-[32px] font-black text-gray-900 tracking-tight leading-none">Customer Database</h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2.5">Relationship Management</p>
+          <h1 className="text-[26px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">Customer Database</h1>
           <p className="text-gray-400 text-sm font-medium mt-2 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
             Analyzing {totalCustomers} unique buyer profiles

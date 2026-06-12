@@ -96,7 +96,7 @@ export default function NewsletterPage() {
   const activeCount = subscribers.filter(s => s.status === 'active').length
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 bg-[#f8f9fa] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 min-h-screen">
 
       {/* Toast */}
       {toast && (
@@ -107,7 +107,8 @@ export default function NewsletterPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-black text-gray-900 tracking-tight">Newsletter</h1>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2.5">Email Marketing</p>
+        <h1 className="text-[26px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">Newsletter</h1>
         <p className="text-gray-400 text-sm mt-1">Send professional product announcements to your subscribers</p>
       </div>
 

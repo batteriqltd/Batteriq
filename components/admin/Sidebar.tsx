@@ -221,7 +221,8 @@ export function AdminTopBar() {
     <div
       className="flex items-center justify-between px-4 sm:px-8 py-3 sm:py-4"
       style={{
-        background: 'linear-gradient(135deg, #1a237e 0%, #283593 50%, #1e2f8f 100%)',
+        background: 'linear-gradient(135deg, #141c6e 0%, #1f2a8f 45%, #16226e 100%)',
+        backdropFilter: 'blur(12px)',
         boxShadow: '0 2px 20px rgba(26,35,126,0.45), 0 1px 0 rgba(255,255,255,0.08) inset',
         borderBottom: '1px solid rgba(255,255,255,0.12)',
       }}

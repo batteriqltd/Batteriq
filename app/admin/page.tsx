@@ -117,18 +117,19 @@ export default async function AdminDashboardPage() {
   const topCounty = Object.entries(countyCounts).sort((a, b) => b[1] - a[1])[0] as [string, number] | undefined
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa]">
+    <div className="min-h-screen">
       <div className="p-4 sm:p-6 lg:p-8 pb-12">
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-10">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 mb-10">
           <div>
-            <h1 className="text-[32px] font-black text-gray-900 tracking-tight leading-none">Command Center</h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2.5">Batteriq Operations</p>
+            <h1 className="text-[28px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">Command Center</h1>
             <p className="text-gray-400 text-sm font-medium mt-2">
               Welcome back. Here's what's happening with Batteriq today.
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 flex-wrap">
             {(lowStock.length > 0 || outOfStock.length > 0) && (
               <Link href="/admin/stock"
                 className="flex items-center gap-2 px-4 py-2 rounded-2xl border border-orange-100 bg-white shadow-sm text-xs font-black text-orange-600 transition-transform hover:scale-105">

@@ -159,7 +159,8 @@ export default function NewOrderPage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-[32px] font-black text-gray-900 tracking-tight leading-none">New Walk-In Order</h1>
+        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2.5">Point of Sale</p>
+          <h1 className="text-[26px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">New Walk-In Order</h1>
         <p className="text-gray-400 text-sm font-medium mt-2">Create an order for a customer at the counter</p>
       </div>
 

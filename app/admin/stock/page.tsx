@@ -89,14 +89,14 @@ export default function StockManagementPage() {
   const okCount = products.filter(p => getStockStatus(p) === 'ok').length
 
   if (loading) return (
-    <div className="p-4 sm:p-6 lg:p-8 pb-12 bg-[#f8f9fa] min-h-screen flex flex-col items-center justify-center">
+    <div className="p-4 sm:p-6 lg:p-8 pb-12 min-h-screen flex flex-col items-center justify-center">
       <div className="w-12 h-12 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-4" />
       <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Inventory Synchronization…</p>
     </div>
   )
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 pb-12 bg-[#f8f9fa] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 pb-12 min-h-screen">
 
       <AnimatePresence>
         {toast && (
@@ -118,7 +118,8 @@ export default function StockManagementPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-[32px] font-black text-gray-900 tracking-tight leading-none">Inventory Control</h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2.5">Stock Management</p>
+          <h1 className="text-[26px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">Inventory Control</h1>
           <p className="text-gray-400 text-sm font-medium mt-2 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             Live Stock Tracking — {products.length} cataloged SKUs

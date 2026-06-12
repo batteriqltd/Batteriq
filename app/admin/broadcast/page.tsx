@@ -131,7 +131,7 @@ export default function BroadcastPage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 pb-16 bg-[#f8f9fa] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 pb-16 min-h-screen">
       {/* Toast */}
       <AnimatePresence>
         {toast && (
@@ -145,7 +145,8 @@ export default function BroadcastPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-[32px] font-black text-gray-900 tracking-tight leading-none">WhatsApp Broadcast</h1>
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2.5">Customer Outreach</p>
+          <h1 className="text-[26px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">WhatsApp Broadcast</h1>
           <p className="text-gray-400 text-sm font-medium mt-2 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
             {customers.length} customers from order history

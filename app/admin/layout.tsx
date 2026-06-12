@@ -13,7 +13,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!session) return <>{children}</>
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#f8f9fa' }}>
+    <div className="admin-shell" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'linear-gradient(135deg, #f8f9fb 0%, #f3f5f9 60%, #eef1f7 100%)' }}>
 
       {/* Sidebar */}
       <AdminSidebar adminName={session.email} adminRole={session.role} />
