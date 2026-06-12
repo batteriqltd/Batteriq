@@ -14,7 +14,7 @@ type DisplayMessage = {
 }
 
 export function GeminiChatWidget() {
-  const { chatOpen, openChat, closeChat } = useUIStore()
+  const { chatOpen, openChat, closeChat, cartOpen, mobileNavOpen } = useUIStore()
   const [messages, setMessages] = useState<DisplayMessage[]>([
     {
       role: 'assistant',
@@ -99,6 +99,9 @@ export function GeminiChatWidget() {
       sendMessage()
     }
   }
+
+  // Hide while cart drawer or mobile nav is open so it never blocks checkout
+  if (cartOpen || mobileNavOpen) return null
 
   return (
     <>

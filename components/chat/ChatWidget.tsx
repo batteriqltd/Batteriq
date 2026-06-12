@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useUIStore } from '@/store/uiStore'
 import { WhatsAppIcon } from '@/components/ui/ContactIcons'
 
 const WHATSAPP_NUMBER = '254716822014'
@@ -12,6 +13,7 @@ const QUICK_MESSAGES = [
 ]
 
 export function ChatWidget() {
+  const { cartOpen, mobileNavOpen } = useUIStore()
   const [open, setOpen] = useState(false)
   const [showTooltip, setShowTooltip] = useState(false)
 
@@ -29,6 +31,9 @@ export function ChatWidget() {
   function waLink(msg: string) {
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`
   }
+
+  // Hide the widget entirely while the cart drawer or mobile nav is open
+  if (cartOpen || mobileNavOpen) return null
 
   return (
     <>

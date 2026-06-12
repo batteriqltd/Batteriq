@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Trash2, ShoppingBag } from 'lucide-react'
+import { X, Trash2, ShoppingBag, Truck, ArrowRight, Shield } from 'lucide-react'
+import { MpesaIcon } from '@/components/ui/ContactIcons'
 import { useCartStore, formatKES } from '@/store/cartStore'
 import { useUIStore } from '@/store/uiStore'
 
@@ -88,7 +89,7 @@ export function CartDrawer() {
                     className="flex gap-4 bg-white rounded-2xl border border-gray-100 p-5 hover:border-blue-100 hover:shadow-sm transition-all duration-200"
                   >
                     {/* Product image */}
-                    <div className="w-24 h-24 rounded-xl bg-gray-50 flex items-center justify-center flex-shrink-0 border border-gray-100 overflow-hidden">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-xl bg-[#fafbff] flex items-center justify-center flex-shrink-0 border border-gray-100 overflow-hidden">
                       {item.image ? (
                         <Image
                           src={item.image}
@@ -123,40 +124,39 @@ export function CartDrawer() {
                         </p>
                       </div>
 
-                      {/* Quantity controls + item total + delete */}
-                      <div className="flex items-center justify-between mt-4">
-                        <div className="flex items-center gap-1 bg-gray-50 rounded-xl p-1 border border-gray-100">
+                      {/* Item total */}
+                      <p className="text-base font-black text-[#0000ff] font-mono mt-2">
+                        {formatKES(Number(item.price_kes) * item.quantity)}
+                      </p>
+
+                      {/* Quantity controls + delete */}
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center gap-0.5 bg-gray-50 rounded-xl p-1 border border-gray-100">
                           <button
                             onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:bg-white hover:text-blue-600 hover:shadow-sm transition-all font-bold text-lg"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:bg-white hover:text-[#0000ff] hover:shadow-sm transition-all font-bold"
                             aria-label="Decrease quantity"
                           >
                             −
                           </button>
-                          <span className="w-8 text-center text-sm font-black text-gray-900 select-none">
+                          <span className="w-7 text-center text-sm font-black text-gray-900 select-none">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:bg-white hover:text-blue-600 hover:shadow-sm transition-all font-bold text-lg"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-500 hover:bg-white hover:text-[#0000ff] hover:shadow-sm transition-all font-bold"
                             aria-label="Increase quantity"
                           >
                             +
                           </button>
                         </div>
-
-                        <div className="flex items-center gap-3">
-                          <span className="text-base font-black text-gray-900 font-mono">
-                            {formatKES(Number(item.price_kes) * item.quantity)}
-                          </span>
-                          <button
-                            onClick={() => removeItem(item.productId)}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-200 hover:text-red-500 hover:bg-red-50 transition-all"
-                            aria-label={`Remove ${item.name}`}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => removeItem(item.productId)}
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                          aria-label={`Remove ${item.name}`}
+                        >
+                          <Trash2 size={15} />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -166,43 +166,72 @@ export function CartDrawer() {
 
             {/* ── Bottom summary ── */}
             {items.length > 0 && (
-              <div className="flex-shrink-0 bg-white border-t border-gray-100">
+              <div className="flex-shrink-0 bg-white border-t border-gray-100" style={{ boxShadow: '0 -8px 24px rgba(0,0,40,0.05)' }}>
 
-                {/* Totals only */}
+                {/* Free delivery progress */}
+                {total < 50000 ? (
+                  <div className="px-5 pt-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Truck size={13} className="text-[#0000ff]" />
+                      <p className="text-[11px] font-bold text-gray-500">
+                        Add <span className="text-[#0000ff] font-black">{formatKES(50000 - total)}</span> more for FREE delivery
+                      </p>
+                    </div>
+                    <div className="h-1 rounded-full bg-gray-100 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.min(100, (total / 50000) * 100)}%`, background: 'linear-gradient(90deg, #0000ff, #4d9fff)' }}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="px-5 pt-4">
+                    <div className="flex items-center gap-2 bg-green-50 rounded-xl px-3 py-2 border border-green-100">
+                      <Truck size={13} className="text-green-600" />
+                      <p className="text-[11px] font-black text-green-700">You qualify for FREE delivery 🎉</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Totals */}
                 <div className="px-5 py-4 space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Subtotal</span>
+                    <span className="text-sm text-gray-400 font-medium">Subtotal</span>
                     <span className="text-sm font-bold text-gray-900 font-mono">
-                      KES {total.toLocaleString('en-KE')}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">Delivery</span>
-                    <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
-                      Calculated at checkout
+                      {formatKES(total)}
                     </span>
                   </div>
                   <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                     <span className="text-base font-black text-gray-900">Total</span>
-                    <span className="text-xl font-black text-gray-900 font-mono">
-                      KES {total.toLocaleString('en-KE')}
+                    <span className="text-xl font-black text-[#0000ff] font-mono">
+                      {formatKES(total)}
                     </span>
                   </div>
                 </div>
 
                 {/* Checkout button */}
-                <div className="px-5 pb-6">
+                <div className="px-5 pb-5">
                   <Link
                     href="/checkout"
                     onClick={closeCart}
-                    className="block w-full py-4 text-white font-black text-base rounded-2xl text-center transition-all duration-200"
-                    style={{ background: 'linear-gradient(135deg, #0000ff, #00004d)', boxShadow: '0 6px 24px rgba(0,0,255,0.25)' }}
+                    className="flex items-center justify-center gap-2 w-full py-4 text-white font-black text-[15px] rounded-2xl text-center transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.98]"
+                    style={{ background: 'linear-gradient(135deg, #0000ff, #0000cc)', boxShadow: '0 8px 28px rgba(0,0,255,0.3)' }}
                   >
-                    Checkout — KES {total.toLocaleString('en-KE')}
+                    Proceed to Checkout <ArrowRight size={17} />
                   </Link>
+
+                  {/* M-Pesa trust strip */}
+                  <div className="flex items-center justify-center gap-2 mt-3">
+                    <MpesaIcon size={18} />
+                    <span className="text-[10px] font-bold text-gray-400">Secure M-Pesa STK Push</span>
+                    <span className="text-gray-200">·</span>
+                    <Shield size={11} className="text-gray-300" />
+                    <span className="text-[10px] font-bold text-gray-400">Official Dealer</span>
+                  </div>
+
                   <button
                     onClick={closeCart}
-                    className="w-full mt-2.5 py-3 text-sm font-semibold text-gray-400 hover:text-gray-600 transition-colors"
+                    className="w-full mt-2 py-2.5 text-[13px] font-bold text-gray-400 hover:text-[#0000ff] transition-colors"
                   >
                     Continue Shopping
                   </button>
