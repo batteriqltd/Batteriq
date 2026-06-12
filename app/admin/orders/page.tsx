@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAdminNotify } from '@/components/admin/AdminNotify'
 
 interface Order {
   id: string
@@ -33,7 +34,7 @@ export default function AdminOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
-  const [toast, setToast] = useState('')
+  const { notify } = useAdminNotify()
   const [newAlert, setNewAlert] = useState('')
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null)
 
@@ -63,14 +64,12 @@ export default function AdminOrdersPage() {
 
         if (previous.payment_status !== 'paid' && updated.payment_status === 'paid') {
           const amount = `KES ${Number(updated.total_kes).toLocaleString('en-KE')}`
-          setToast(`💰 PAYMENT RECEIVED — ${updated.guest_name} paid ${amount} via M-Pesa (Ref: ${updated.mpesa_transaction_code || 'N/A'})`)
-          setTimeout(() => setToast(''), 8000)
+          notify('success', '💰 Payment Received', `${updated.guest_name} paid ${amount} via M-Pesa — Ref: ${updated.mpesa_transaction_code || 'N/A'}`)
           try { new Audio('/notification.mp3').play().catch(() => {}) } catch {}
         }
 
         if (previous.payment_status !== 'failed' && updated.payment_status === 'failed') {
-          setToast(`❌ Payment failed — ${updated.guest_name}: ${updated.mpesa_failure_reason || 'PIN error or cancelled'}`)
-          setTimeout(() => setToast(''), 6000)
+          notify('error', 'Payment Failed', `${updated.guest_name}: ${updated.mpesa_failure_reason || 'PIN error or cancelled'}`)
         }
       })
       .subscribe()
@@ -98,8 +97,7 @@ export default function AdminOrdersPage() {
     if (data.success) {
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, fulfillment_status: value } : o))
       const needsEmail = ['processing', 'shipped', 'delivered'].includes(value)
-      setToast(`Order updated to "${value}"${needsEmail ? ' — customer notified by email' : ''}`)
-      setTimeout(() => setToast(''), 4000)
+      notify('success', `Order updated to "${value}"`, needsEmail ? 'Customer notified by email' : undefined)
     }
   }
 
@@ -123,13 +121,12 @@ export default function AdminOrdersPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ payment_status: 'paid', fulfillment_status: 'processing' }),
       }).catch(console.error)
-      setToast(`Cash payment confirmed for ${order.guest_name ?? 'customer'} — email sent to customer`)
-      setTimeout(() => setToast(''), 5000)
+      notify('success', 'Cash Payment Confirmed', `${order.guest_name ?? 'Customer'} — receipt emailed to customer`)
     }
   }
 
   async function sendStkPush(order: Order) {
-    setToast(`📱 Sending STK push to ${order.guest_phone}...`)
+    notify('info', 'Sending STK Push', `Prompt going to ${order.guest_phone}...`)
     try {
       const res = await fetch('/api/admin/mpesa/stkpush', {
         method: 'POST',
@@ -138,15 +135,14 @@ export default function AdminOrdersPage() {
       })
       const data = await res.json()
       if (data.success) {
-        setToast(`✅ STK Push sent to ${order.guest_phone} — waiting for customer PIN`)
+        notify('success', 'STK Push Sent', `${order.guest_phone} — waiting for customer to enter PIN`)
       } else {
-        setToast(`❌ Push failed: ${data.error || 'Unknown error'}`)
+        notify('error', 'STK Push Failed', data.error || 'Unknown error — please retry')
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Network error'
-      setToast(`❌ Network error: ${message}`)
+      notify('error', 'Network Error', message)
     }
-    setTimeout(() => setToast(''), 6000)
   }
 
   const filtered = orders.filter(o => {
@@ -189,23 +185,6 @@ export default function AdminOrdersPage() {
         )}
       </AnimatePresence>
 
-      {/* Toast */}
-      <AnimatePresence>
-        {toast && (
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 50 }}
-            className="fixed bottom-8 right-8 z-50 px-6 py-4 rounded-[20px] shadow-2xl text-white text-[13px] font-black border border-white/10"
-            style={{ background: 'linear-gradient(135deg, #0000ff, #00004d)' }}
-          >
-            <div className="flex items-center gap-3">
-              <CheckCircle size={18} />
-              {toast}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-10">

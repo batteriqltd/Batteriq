@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Tag, Save, AlertTriangle, Loader2, Zap, X, Clock, Trash2, TrendingUp, TrendingDown, Percent, Settings2, CheckCircle, RotateCcw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAdminNotify } from '@/components/admin/AdminNotify'
 
 function fmt(n: number) { return `KES ${Number(n || 0).toLocaleString('en-KE')}` }
 
@@ -184,6 +185,7 @@ export default function PricingEnginePage() {
   const [adjustPct, setAdjustPct] = useState('')
   const [filterBrand, setFilterBrand] = useState('all')
   const [toast, setToast] = useState('')
+  const { notify } = useAdminNotify()
   const [applying, setApplying] = useState(false)
   const [preview, setPreview] = useState<{ id: string; newPrice: number }[]>([])
   const [editedPrices, setEditedPrices] = useState<Record<string, string>>({})
@@ -210,8 +212,7 @@ export default function PricingEnginePage() {
   }, [supabase, load])
 
   function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), 4000)
+    notify('success', msg)
   }
 
   function generatePreview() {

@@ -1,5 +1,6 @@
 import { AdminSidebar, AdminTopBar } from '@/components/admin/Sidebar'
 import { AutoLogoutProvider } from '@/components/admin/AutoLogoutProvider'
+import { AdminNotifyProvider } from '@/components/admin/AdminNotify'
 import { getAdminSession } from '@/lib/admin-auth'
 import type { Metadata } from 'next'
 
@@ -42,7 +43,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           overflowX: 'hidden',
           WebkitOverflowScrolling: 'touch' as const,
         }}>
-          {children}
+          <AdminNotifyProvider>
+            {children}
+          </AdminNotifyProvider>
         </div>
 
       </div>

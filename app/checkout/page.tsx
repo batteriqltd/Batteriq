@@ -576,7 +576,7 @@ export default function CheckoutPage() {
                 <h2 className="text-[20px] font-black text-gray-900 tracking-tight">Contact Information</h2>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-8">
                 <div className="md:col-span-2 space-y-3">
                   <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Full Name</label>
                   <div className="relative group">
@@ -658,7 +658,7 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-8">
                   <div className="space-y-3">
                     <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">City</label>
                     <input
