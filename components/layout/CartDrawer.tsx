@@ -3,8 +3,8 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Trash2, ShoppingBag, Truck, ArrowRight, Shield } from 'lucide-react'
-import { MpesaIcon } from '@/components/ui/ContactIcons'
+import { X, Trash2, ShoppingBag, ArrowRight, Shield } from 'lucide-react'
+import { MpesaIcon, DeliveryIcon } from '@/components/ui/ContactIcons'
 import { useCartStore, formatKES } from '@/store/cartStore'
 import { useUIStore } from '@/store/uiStore'
 
@@ -168,40 +168,23 @@ export function CartDrawer() {
             {items.length > 0 && (
               <div className="flex-shrink-0 bg-white border-t border-gray-100" style={{ boxShadow: '0 -8px 24px rgba(0,0,40,0.05)' }}>
 
-                {/* Free delivery progress */}
-                {total < 50000 ? (
-                  <div className="px-5 pt-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Truck size={13} className="text-[#0000ff]" />
-                      <p className="text-[11px] font-bold text-gray-500">
-                        Add <span className="text-[#0000ff] font-black">{formatKES(50000 - total)}</span> more for FREE delivery
-                      </p>
-                    </div>
-                    <div className="h-1 rounded-full bg-gray-100 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(100, (total / 50000) * 100)}%`, background: 'linear-gradient(90deg, #0000ff, #4d9fff)' }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="px-5 pt-4">
-                    <div className="flex items-center gap-2 bg-green-50 rounded-xl px-3 py-2 border border-green-100">
-                      <Truck size={13} className="text-green-600" />
-                      <p className="text-[11px] font-black text-green-700">You qualify for FREE delivery 🎉</p>
-                    </div>
-                  </div>
-                )}
-
                 {/* Totals */}
-                <div className="px-5 py-4 space-y-2">
+                <div className="px-5 py-4 space-y-2.5">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-400 font-medium">Subtotal</span>
                     <span className="text-sm font-bold text-gray-900 font-mono">
                       {formatKES(total)}
                     </span>
                   </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-400 font-medium flex items-center gap-2">
+                      <DeliveryIcon size={15} /> Delivery
+                    </span>
+                    <span className="text-[10px] font-black text-gray-500 bg-gray-50 border border-gray-100 px-3 py-1 rounded-full uppercase tracking-widest">
+                      Calculated at checkout
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2.5 border-t border-gray-100">
                     <span className="text-base font-black text-gray-900">Total</span>
                     <span className="text-xl font-black text-[#0000ff] font-mono">
                       {formatKES(total)}

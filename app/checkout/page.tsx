@@ -11,6 +11,7 @@ import {
   AlertCircle, Phone
 } from 'lucide-react'
 import { WhatsAppIcon, EmailIcon, MpesaIcon, DeliveryIcon, ContactSalesIcon } from '@/components/ui/ContactIcons'
+import { KENYAN_COUNTIES, getDeliveryFee } from '@/lib/delivery'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 
@@ -136,6 +137,8 @@ export default function CheckoutPage() {
   }, [step, mpesaTimer, checkoutRequestId])
 
   const subtotal = mounted ? items.reduce((s, i) => s + (Number(i.price_kes) || 0) * i.quantity, 0) : 0
+  const deliveryFee = form.county ? getDeliveryFee(form.county) : 0
+  const grandTotal = subtotal + deliveryFee
   const totalQuantity = mounted ? items.reduce((sum, item) => sum + item.quantity, 0) : 0
   const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
 
@@ -168,7 +171,8 @@ export default function CheckoutPage() {
             image: i.image || null,
           })),
           subtotalKes: subtotal,
-          totalKes: subtotal,
+          deliveryFeeKes: deliveryFee,
+          totalKes: grandTotal,
           paymentMethod,
           deliveryAddress: {
             street: form.address,
@@ -186,7 +190,7 @@ export default function CheckoutPage() {
         const mpesaRes = await fetch('/api/mpesa/stkpush', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phoneNumber: normalizePhone(form.phone), orderId: orderData.orderId, amount: subtotal }),
+          body: JSON.stringify({ phoneNumber: normalizePhone(form.phone), orderId: orderData.orderId, amount: grandTotal }),
         })
         if (!mpesaRes.ok) throw new Error('M-Pesa push failed')
         const mpesaData = await mpesaRes.json()
@@ -669,11 +673,24 @@ export default function CheckoutPage() {
                   </div>
                   <div className="space-y-3">
                     <label className="text-[12px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">County</label>
-                    <input
+                    <select
                       required value={form.county} onChange={e => set('county', e.target.value)}
                       style={{ fontSize: '16px' }}
-                      className="w-full h-[60px] px-6 rounded-[20px] bg-[#fafafa] border-[1.5px] border-[#e5e7eb] text-[16px] font-medium focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08] outline-none transition-all duration-300"
-                    />
+                      className="w-full h-[60px] px-6 rounded-[20px] bg-[#fafafa] border-[1.5px] border-[#e5e7eb] text-[16px] font-medium focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08] outline-none transition-all duration-300 appearance-none cursor-pointer"
+                    >
+                      <option value="">Select your county</option>
+                      {KENYAN_COUNTIES.map(c => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                    {form.county && (
+                      <div className="flex items-center gap-2 ml-1">
+                        <DeliveryIcon size={15} />
+                        <p className="text-[12px] font-bold text-gray-500">
+                          Delivery to {form.county}: <span className="text-[#0000ff] font-black">KES {getDeliveryFee(form.county).toLocaleString('en-KE')}</span>
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -819,7 +836,7 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <p className="text-sm font-black text-gray-900">Show Order Summary</p>
-                    <p className="text-xs text-gray-500 font-bold">{totalQuantity} items • {formatKES(subtotal)}</p>
+                    <p className="text-xs text-gray-500 font-bold">{totalQuantity} items • {formatKES(grandTotal)}</p>
                   </div>
                 </div>
                 <ChevronRight className="text-gray-400 transition-transform group-open:rotate-90" size={20} />
@@ -875,13 +892,23 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Delivery</span>
-                  <span className="text-[11px] font-black text-green-600 bg-green-50 px-4 py-1.5 rounded-xl uppercase tracking-widest">Confirmed at checkout</span>
+                  {form.county ? (
+                    <span className="text-[16px] font-black text-gray-900 font-mono tracking-tighter">{formatKES(deliveryFee)}</span>
+                  ) : (
+                    <span className="text-[11px] font-black text-gray-400 bg-gray-50 px-4 py-1.5 rounded-xl uppercase tracking-widest">Select county</span>
+                  )}
                 </div>
+                {form.county && (
+                  <div className="flex items-center gap-2 -mt-2">
+                    <DeliveryIcon size={13} />
+                    <span className="text-[11px] font-bold text-gray-400">Delivery to {form.county}</span>
+                  </div>
+                )}
                 <div className="pt-8 border-t border-gray-50 flex justify-between items-end">
                   <span className="text-[20px] font-black text-gray-900 tracking-tight uppercase">Total Amount</span>
                   <div className="text-right">
                     <span className="block text-[10px] font-black text-[#0000ff] uppercase tracking-[0.2em] mb-2">KES (Inc. VAT)</span>
-                    <span className="text-[32px] font-black text-[#00004d] font-mono leading-none tracking-tighter">{formatKES(subtotal)}</span>
+                    <span className="text-[32px] font-black text-[#00004d] font-mono leading-none tracking-tighter">{formatKES(grandTotal)}</span>
                   </div>
                 </div>
               </div>

@@ -63,12 +63,14 @@ export async function POST(req: Request) {
     const {
       items,
       subtotalKes,
+      deliveryFeeKes,
       totalKes,
       paymentMethod,
       deliveryAddress,
     } = body as {
       items?: unknown[]
       subtotalKes?: number
+      deliveryFeeKes?: number
       totalKes?: number
       paymentMethod?: string
       deliveryAddress?: Record<string, string>
@@ -91,7 +93,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Payment method is required' }, { status: 400 })
     }
 
-    const total = Number(totalKes) || Number(subtotalKes) || 0
+    const itemsSubtotal = Number(subtotalKes) || 0
+    const deliveryFee = Number(deliveryFeeKes) || 0
+    const total = Number(totalKes) || (itemsSubtotal + deliveryFee) || 0
     const orderNumber = generateOrderNumber()
     console.log('[ORDER] Generated order number:', orderNumber)
 
@@ -125,7 +129,8 @@ export async function POST(req: Request) {
       guest_email: email,
       guest_phone: phone,
       items: safeItems,
-      subtotal_kes: total,
+      subtotal_kes: itemsSubtotal || total,
+      delivery_fee_kes: deliveryFee,
       total_kes: total,
       payment_method: paymentMethod,
       payment_status: 'pending',

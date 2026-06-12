@@ -10,13 +10,11 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
-import { MpesaIcon } from '@/components/ui/ContactIcons'
+import { MpesaIcon, DeliveryIcon } from '@/components/ui/ContactIcons'
 
 export default function CartPage() {
   const { items, removeItem, updateQuantity, subtotal } = useCartStore()
-  const delivery = subtotal() >= 50000 ? 0 : 500
-  const total = subtotal() + delivery
-  const freeDeliveryRemaining = Math.max(0, 50000 - subtotal())
+  const total = subtotal()
 
   return (
     <>
@@ -67,35 +65,6 @@ export default function CartPage() {
 
               {/* Cart items */}
               <div className="lg:col-span-2 space-y-4">
-
-                {/* Free delivery progress */}
-                {freeDeliveryRemaining > 0 && (
-                  <div className="bg-white rounded-2xl p-5 border border-blue-50" style={{ boxShadow: '0 2px 12px rgba(0,0,64,0.04)' }}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <Truck size={16} className="text-[#0000ff]" />
-                      <p className="text-sm font-bold text-gray-700">
-                        Add <span className="text-[#0000ff] font-black">{formatKES(freeDeliveryRemaining)}</span> more for FREE delivery
-                      </p>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                      <motion.div
-                        className="h-full rounded-full"
-                        style={{ background: 'linear-gradient(90deg, #0000ff, #4d9fff)' }}
-                        initial={{ width: 0 }}
-                        animate={{ width: `${Math.min(100, (subtotal() / 50000) * 100)}%` }}
-                        transition={{ duration: 0.6, ease: 'easeOut' }}
-                      />
-                    </div>
-                  </div>
-                )}
-                {freeDeliveryRemaining === 0 && (
-                  <div className="bg-green-50 rounded-2xl p-4 border border-green-100 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-green-500 flex items-center justify-center flex-shrink-0">
-                      <Truck size={15} className="text-white" />
-                    </div>
-                    <p className="text-sm font-black text-green-700">You qualify for FREE delivery! 🎉</p>
-                  </div>
-                )}
 
                 <AnimatePresence>
                   {items.map((item) => (
@@ -194,10 +163,12 @@ export default function CartPage() {
                       <span className="text-gray-400 font-medium">Subtotal</span>
                       <span className="text-gray-900 font-mono font-bold">{formatKES(subtotal())}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400 font-medium">Delivery</span>
-                      <span className={`font-mono font-bold ${delivery === 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                        {delivery === 0 ? 'FREE' : formatKES(delivery)}
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400 font-medium flex items-center gap-2">
+                        <DeliveryIcon size={15} /> Delivery
+                      </span>
+                      <span className="text-[10px] font-black text-gray-500 bg-gray-50 border border-gray-100 px-3 py-1 rounded-full uppercase tracking-widest">
+                        Calculated at checkout
                       </span>
                     </div>
                   </div>

@@ -8,6 +8,22 @@ const SECRET_LOGIN_PATH = '/admin/secure-bq9x2026'
 // Task 5: In-memory rate limiter for admin API routes (per Edge instance)
 const apiRateMap = new Map<string, { count: number; resetAt: number }>()
 
+// Public API rate limiter — protects orders, mpesa, contact from abuse/DDoS
+const publicRateMap = new Map<string, { count: number; resetAt: number }>()
+
+function checkPublicRateLimit(ip: string, route: string, max: number): boolean {
+  const key = `pub:${route}:${ip}`
+  const now = Date.now()
+  const entry = publicRateMap.get(key)
+  if (!entry || now > entry.resetAt) {
+    publicRateMap.set(key, { count: 1, resetAt: now + 60_000 })
+    return true
+  }
+  if (entry.count >= max) return false
+  entry.count++
+  return true
+}
+
 function checkApiRateLimit(ip: string): boolean {
   const key = `admin-api:${ip}`
   const now = Date.now()
@@ -56,6 +72,34 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Task 5: Rate limit admin API routes (excluding auth)
+  // ── Public API protection (anti-abuse / DDoS mitigation) ──
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+
+  if (pathname === '/api/orders' && request.method === 'POST') {
+    // Max 5 order creations per minute per IP
+    if (!checkPublicRateLimit(ip, 'orders', 5)) {
+      return NextResponse.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429 })
+    }
+  }
+  if (pathname.startsWith('/api/mpesa/stkpush') || pathname.startsWith('/api/mpesa/stkquery')) {
+    // Max 10 M-Pesa requests per minute per IP
+    if (!checkPublicRateLimit(ip, 'mpesa', 10)) {
+      return NextResponse.json({ error: 'Too many payment attempts. Please wait a minute.' }, { status: 429 })
+    }
+  }
+  if (pathname === '/api/contact' && request.method === 'POST') {
+    // Max 3 contact submissions per minute per IP
+    if (!checkPublicRateLimit(ip, 'contact', 3)) {
+      return NextResponse.json({ error: 'Too many messages. Please wait a moment.' }, { status: 429 })
+    }
+  }
+  if (pathname.startsWith('/api/orders/') && pathname.endsWith('/status')) {
+    // Polling: generous but bounded — 60 per minute per IP
+    if (!checkPublicRateLimit(ip, 'status', 60)) {
+      return NextResponse.json({ error: 'Rate limit exceeded' }, { status: 429 })
+    }
+  }
+
   if (pathname.startsWith('/api/admin/') && pathname !== '/api/admin/auth') {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
     if (!checkApiRateLimit(ip)) {
@@ -96,5 +140,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*'],
+  matcher: ['/admin/:path*', '/api/admin/:path*', '/api/orders/:path*', '/api/orders', '/api/mpesa/:path*', '/api/contact'],
 }
