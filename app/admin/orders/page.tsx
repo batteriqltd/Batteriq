@@ -64,7 +64,7 @@ export default function AdminOrdersPage() {
 
         if (previous.payment_status !== 'paid' && updated.payment_status === 'paid') {
           const amount = `KES ${Number(updated.total_kes).toLocaleString('en-KE')}`
-          notify('success', '💰 Payment Received', `${updated.guest_name} paid ${amount} via M-Pesa — Ref: ${updated.mpesa_transaction_code || 'N/A'}`)
+          notify('success', 'Payment Received', `${updated.guest_name} paid ${amount} via M-Pesa — Ref: ${updated.mpesa_transaction_code || 'N/A'}`)
           try { new Audio('/notification.mp3').play().catch(() => {}) } catch {}
         }
 

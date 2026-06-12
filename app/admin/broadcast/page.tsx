@@ -16,19 +16,19 @@ interface Customer {
 
 const QUICK_TEMPLATES = [
   {
-    label: '🎉 Promotion',
+    label: 'Promotion',
     text: `Hi {name}! 👋 We have an exclusive offer just for you at Batteriq. Check out our latest deals on EcoFlow power stations: https://batteriq.com 🔋`,
   },
   {
-    label: '📦 Order Ready',
+    label: 'Order Ready',
     text: `Hi {name}! Your Batteriq order is ready and being processed. We'll update you once it ships. Questions? Reply here or call 0716 822 014.`,
   },
   {
-    label: '⚡ New Arrival',
+    label: 'New Arrival',
     text: `Hi {name}! We just got new EcoFlow products in stock at Batteriq. Be the first to grab yours: https://batteriq.com 🔋✨`,
   },
   {
-    label: '🙏 Follow Up',
+    label: 'Follow Up',
     text: `Hi {name}! Thank you for shopping with Batteriq. We hope you're enjoying your product. Feel free to reach out if you need any support — we're always here!`,
   },
 ]
@@ -126,7 +126,7 @@ export default function BroadcastPage() {
       await new Promise(r => setTimeout(r, 800)) // small delay between tabs
     }
     setSending(false)
-    setToast(`✅ Opened ${toSend.length} WhatsApp chats!`)
+    setToast(`Opened ${toSend.length} WhatsApp chats`)
     setTimeout(() => setToast(''), 4000)
   }
 
@@ -173,7 +173,7 @@ export default function BroadcastPage() {
               onClick={() => setShowTemplates(!showTemplates)}
               className="w-full flex items-center justify-between px-5 py-3 rounded-2xl bg-[#f0fdf4] border border-green-100 text-green-700 font-black text-sm mb-4 hover:bg-green-50 transition-colors"
             >
-              <span>⚡ Quick Templates</span>
+              <span>Quick Templates</span>
               {showTemplates ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </button>
 

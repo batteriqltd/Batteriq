@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useUIStore } from '@/store/uiStore'
+import { usePathname } from 'next/navigation'
 import { WhatsAppIcon } from '@/components/ui/ContactIcons'
 
 const WHATSAPP_NUMBER = '254716822014'
@@ -32,7 +33,9 @@ export function ChatWidget() {
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`
   }
 
-  // Hide the widget entirely while the cart drawer or mobile nav is open
+  const pathname = usePathname()
+  // Never show on admin routes; hide while cart drawer or mobile nav is open
+  if (pathname?.startsWith('/admin')) return null
   if (cartOpen || mobileNavOpen) return null
 
   return (

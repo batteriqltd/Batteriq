@@ -7,7 +7,12 @@ import {
   EyeOff,
   Loader2,
   Lock,
-  ArrowRight
+  ArrowRight,
+  Sun,
+  CloudSun,
+  Sunset,
+  Moon,
+  ShieldCheck
 } from 'lucide-react'
 
 function LoginForm() {
@@ -69,10 +74,10 @@ function LoginForm() {
 
   function getGreeting() {
     const hour = new Date().getHours()
-    if (hour >= 5 && hour < 12) return { text: 'Good Morning', emoji: '☀️' }
-    if (hour >= 12 && hour < 17) return { text: 'Good Afternoon', emoji: '🌤️' }
-    if (hour >= 17 && hour < 21) return { text: 'Good Evening', emoji: '🌆' }
-    return { text: 'Good Night', emoji: '🌙' }
+    if (hour >= 5 && hour < 12) return { text: 'Good Morning', Icon: Sun }
+    if (hour >= 12 && hour < 17) return { text: 'Good Afternoon', Icon: CloudSun }
+    if (hour >= 17 && hour < 21) return { text: 'Good Evening', Icon: Sunset }
+    return { text: 'Good Night', Icon: Moon }
   }
 
   const greeting = getGreeting()
@@ -130,7 +135,7 @@ function LoginForm() {
                   border: '1px solid #dde8ff',
                 }}
               >
-                <span className="text-base">{greeting.emoji}</span>
+                <greeting.Icon size={15} style={{ color: '#0000ff' }} strokeWidth={2.5} />
                 <span className="text-sm font-black" style={{ color: '#0000ff' }}>
                   {greeting.text}
                 </span>
@@ -330,8 +335,39 @@ function AdminLoadingScreen({ phase }: { phase: 'phase1' | 'phase2' | 'phase3' |
           </p>
         </div>
 
+        {/* Security steps checklist */}
+        <div className="mt-7 mx-auto text-left space-y-2" style={{ maxWidth: 280 }}>
+          {[
+            { label: 'Identity verified', done: ['phase2','phase3','phase4','done'].includes(phase) },
+            { label: 'Admin privileges confirmed', done: ['phase3','phase4','done'].includes(phase) },
+            { label: 'Secure session established', done: ['phase4','done'].includes(phase) },
+            { label: 'Operations console ready', done: phase === 'done' },
+          ].map((s, i) => (
+            <div key={i} className="flex items-center gap-3 transition-all duration-500"
+              style={{ opacity: s.done ? 1 : 0.3 }}>
+              <div className="w-4 h-4 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500"
+                style={{
+                  background: s.done ? 'rgba(0,255,136,0.15)' : 'rgba(0,150,255,0.08)',
+                  border: s.done ? '1px solid rgba(0,255,136,0.6)' : '1px solid rgba(0,150,255,0.25)',
+                }}>
+                {s.done ? (
+                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 12.5L9.5 18L20 6" stroke="#00ff88" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : (
+                  <div className="w-1 h-1 rounded-full" style={{ background: 'rgba(0,150,255,0.5)' }} />
+                )}
+              </div>
+              <span className="text-[11px] font-bold tracking-wide font-mono uppercase"
+                style={{ color: s.done ? 'rgba(0,255,180,0.85)' : 'rgba(120,170,255,0.5)' }}>
+                {s.label}
+              </span>
+            </div>
+          ))}
+        </div>
+
         {/* Progress bar */}
-        <div className="mt-10 mx-auto" style={{ maxWidth: 320 }}>
+        <div className="mt-8 mx-auto" style={{ maxWidth: 320 }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[9px] font-black uppercase tracking-widest"
               style={{ color: 'rgba(0,200,255,0.4)' }}>
@@ -344,16 +380,22 @@ function AdminLoadingScreen({ phase }: { phase: 'phase1' | 'phase2' | 'phase3' |
           </div>
           <div className="h-1 rounded-full overflow-hidden"
             style={{ background: 'rgba(0,100,255,0.15)', border: '1px solid rgba(0,150,255,0.2)' }}>
-            <div className="h-full rounded-full transition-all duration-700 ease-out"
+            <div className="h-full rounded-full transition-all duration-700 ease-out relative overflow-hidden"
               style={{
                 width: `${current.progress}%`,
                 background: phase === 'done'
                   ? 'linear-gradient(90deg, #00cc66, #00ff88)'
                   : 'linear-gradient(90deg, #0000ff, #00aaff, #00ffcc)',
                 boxShadow: phase === 'done'
-                  ? '0 0 10px #00ff88'
-                  : '0 0 10px rgba(0,200,255,0.8)',
-              }} />
+                  ? '0 0 14px #00ff88'
+                  : '0 0 12px rgba(0,200,255,0.8)',
+              }}>
+              <div className="absolute inset-0"
+                style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent)',
+                  animation: 'shimmerSweep 1.4s ease-in-out infinite',
+                }} />
+            </div>
           </div>
         </div>
 
@@ -381,6 +423,10 @@ function AdminLoadingScreen({ phase }: { phase: 'phase1' | 'phase2' | 'phase3' |
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes shimmerSweep {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
         }
         @keyframes pulseDot {
           0%, 100% { transform: scale(1); opacity: 1; }

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bot, X, Send, Loader2, MinimizeIcon } from 'lucide-react'
 import { useUIStore } from '@/store/uiStore'
+import { usePathname } from 'next/navigation'
 import { generateSessionToken } from '@/lib/utils'
 import type { ChatMessage } from '@/lib/supabase/types'
 import type { GeminiMessage } from '@/lib/gemini'
@@ -100,7 +101,9 @@ export function GeminiChatWidget() {
     }
   }
 
-  // Hide while cart drawer or mobile nav is open so it never blocks checkout
+  const pathname = usePathname()
+  // Never show on admin routes; hide while cart drawer or mobile nav is open
+  if (pathname?.startsWith('/admin')) return null
   if (cartOpen || mobileNavOpen) return null
 
   return (

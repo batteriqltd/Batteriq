@@ -232,7 +232,7 @@ export function AdminTopBar() {
       <div className="relative pl-14 lg:pl-0">
         <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>Operations Console</p>
         <h2 className="text-base sm:text-xl font-black text-white" style={{ letterSpacing: '-0.02em', textShadow: '0 1px 6px rgba(0,0,0,0.25)' }}>
-          Welcome back, Admin 👋
+          Welcome back, Admin
         </h2>
       </div>
 
