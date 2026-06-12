@@ -12,10 +12,10 @@ import Script from 'next/script'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'EcoFlow Kenya | Portable Power Stations & Solar Panels — Batteriq',
-  description: 'Buy genuine EcoFlow power stations in Kenya. Official authorised EcoFlow dealer. EcoFlow DELTA Pro, DELTA 2, RIVER 2, solar panels. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty. From KES 27,259.',
+  title: 'EcoFlow Kenya — Official Authorised EcoFlow Dealer | Batteriq',
+  description: 'Batteriq is the official EcoFlow dealer in Kenya. Buy genuine EcoFlow power stations as an authorised dealer. EcoFlow DELTA Pro, DELTA 2, RIVER 2, solar panels. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty. From KES 27,259.',
   keywords: [
-    'EcoFlow Kenya', 'buy EcoFlow Kenya', 'EcoFlow dealer Kenya', 'EcoFlow authorised dealer Kenya',
+    'EcoFlow Kenya', 'official EcoFlow dealer', 'official EcoFlow dealer Kenya', 'buy EcoFlow Kenya', 'EcoFlow dealer Kenya', 'EcoFlow authorised dealer Kenya', 'authorised EcoFlow dealer',
     'EcoFlow distributor Kenya', 'EcoFlow power station Kenya', 'EcoFlow DELTA Pro Kenya',
     'EcoFlow DELTA 2 Kenya', 'EcoFlow RIVER 2 Kenya', 'EcoFlow solar panel Kenya',
     'power station Kenya', 'portable power station Kenya', 'home backup power Kenya',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   ],
   alternates: { canonical: 'https://batteriq.com/ecoflow-kenya' },
   openGraph: {
-    title: 'EcoFlow Kenya — Official Authorised Dealer | Batteriq',
+    title: 'EcoFlow Kenya — Official Authorised EcoFlow Dealer | Batteriq',
     description: 'Buy genuine EcoFlow in Kenya. M-Pesa accepted. Same-day Nairobi delivery. From KES 27,259.',
     url: 'https://batteriq.com/ecoflow-kenya',
     siteName: 'Batteriq Kenya',
@@ -346,7 +346,7 @@ export default async function EcoFlowKenyaPage() {
             <div className="lg:col-span-2 space-y-8">
               <div>
                 <h2 className="text-2xl font-black text-gray-900 tracking-tight mb-4">
-                  Why Kenyans Choose EcoFlow — and Batteriq
+                  Batteriq — The Official EcoFlow Dealer in Kenya
                 </h2>
                 <p className="text-gray-600 leading-relaxed mb-4">
                   EcoFlow has become Kenya&apos;s most trusted portable power station brand, and Batteriq is the official

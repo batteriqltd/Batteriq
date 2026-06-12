@@ -23,7 +23,7 @@ export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Batteriq Kenya | Portable Power Stations & Solar Solutions',
-  description: "Kenya's #1 authorised EcoFlow and BLUETTI dealer. Buy power stations, solar panels, and home battery systems. Pay with M-Pesa. Same-day Nairobi delivery. From KES 27,259. Official 24-month warranty.",
+  description: "Batteriq is the official EcoFlow dealer and official BLUETTI dealer in Kenya. Buy power stations, solar panels, and home battery systems. Pay with M-Pesa. Same-day Nairobi delivery. From KES 27,259. Official 24-month warranty.",
   keywords: [
     'EcoFlow Kenya', 'BLUETTI Kenya', 'power station Kenya', 'buy EcoFlow Kenya',
     'portable power station Kenya', 'solar panels Kenya', 'home backup power Kenya',
