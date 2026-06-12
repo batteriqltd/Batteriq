@@ -407,7 +407,7 @@ export default function CheckoutPage() {
             transition={{ delay: 0.4 }}
           >
             <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight mb-3">
-              Payment Successful! 🎉
+              Payment Successful
             </h2>
             <p className="text-gray-500 text-sm font-medium leading-relaxed mb-2">
               Your M-Pesa payment has been confirmed.
@@ -480,7 +480,7 @@ export default function CheckoutPage() {
 
           {/* Paybill fallback */}
           <div className="bg-[#f0fdf4] border border-green-200 rounded-[24px] p-8 text-left">
-            <p className="text-[11px] font-black text-green-700 uppercase tracking-widest mb-4">📱 Alternative: Pay via Paybill</p>
+            <p className="flex items-center gap-2 text-[11px] font-black text-green-700 uppercase tracking-widest mb-4"><MpesaIcon size={16} /> Alternative: Pay via Paybill</p>
             <p className="text-sm text-gray-600 font-medium mb-6 leading-relaxed">
               If STK Push keeps failing, you can pay manually via M-Pesa Paybill:
             </p>

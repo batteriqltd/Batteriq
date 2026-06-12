@@ -37,7 +37,7 @@ export function Header() {
       )}
 
       <header
-        className="bg-white/80 border-b border-slate-200/60 backdrop-blur-md"
+        className="bg-white border-b border-slate-200/70"
         style={{
           position: 'fixed',
           top: 0,

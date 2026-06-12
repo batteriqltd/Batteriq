@@ -50,12 +50,18 @@ export default async function OrderConfirmationPage({ params }: PageProps) {
         <div className="max-w-2xl mx-auto px-4 py-12">
           {/* Success header */}
           <div className="text-center mb-10">
-            <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-lg shadow-green-500/20">
-              <CheckCircle size={40} className="text-white" />
+            <div className="relative w-24 h-24 mx-auto mb-6">
+              <div className="absolute inset-0 rounded-full bg-green-500/10" style={{ transform: 'scale(1.35)' }} />
+              <div className="absolute inset-0 rounded-full bg-green-500/15" style={{ transform: 'scale(1.18)' }} />
+              <div className="relative w-24 h-24 rounded-[28px] flex items-center justify-center"
+                style={{ background: 'linear-gradient(135deg, #00A651 0%, #00C853 100%)', boxShadow: '0 16px 48px rgba(0,166,81,0.32)' }}>
+                <CheckCircle size={44} className="text-white" strokeWidth={2.5} />
+              </div>
             </div>
-            <h1 className="font-display font-bold text-gray-900 text-3xl mb-2">Order Confirmed!</h1>
-            <p className="text-gray-500">
-              Thank you{order.guest_name ? `, ${order.guest_name}` : ''}. Your order has been received and is being processed.
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-green-600 mb-2.5">Order Received</p>
+            <h1 className="font-black text-gray-900 tracking-tight mb-3" style={{ fontSize: 'clamp(1.75rem, 4.5vw, 2.4rem)' }}>Order Confirmed</h1>
+            <p className="text-gray-500 text-sm sm:text-base font-medium max-w-md mx-auto leading-relaxed">
+              Thank you{order.guest_name ? `, ${order.guest_name}` : ''}. Your order has been received and a receipt has been sent to your email.
             </p>
           </div>
 
