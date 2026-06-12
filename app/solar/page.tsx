@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Header } from '@/components/layout/Header'
+import { Hero3DProduct } from '@/components/layout/Hero3DProduct'
 import { Footer } from '@/components/layout/Footer'
 import { FilteredProductGrid } from '@/components/product/FilteredProductGrid'
 import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
@@ -65,6 +66,11 @@ export default async function SolarPanelsPage() {
             background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.05) 35%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.85) 100%)',
           }}
         />
+
+        {/* 3D interactive solar panel */}
+        <div className="absolute z-10 hidden md:flex items-center justify-center right-[5%] lg:right-[8%] top-1/2 -translate-y-1/2">
+          <Hero3DProduct src="/products/ecoflow/solar-panel-400w.jpg" alt="EcoFlow 400W Solar Panel" />
+        </div>
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-10 pb-14 sm:pb-20">
           <div className="max-w-xl">

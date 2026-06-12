@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { Hero3DProduct } from './Hero3DProduct'
 
 interface PageHeroProps {
   title: string
@@ -10,6 +11,8 @@ interface PageHeroProps {
   height?: 'full' | 'medium' | 'small'
   align?: 'left' | 'center'
   badge?: string
+  productImage?: string
+  productAlt?: string
 }
 
 export function PageHero({
@@ -21,6 +24,8 @@ export function PageHero({
   height = 'medium',
   align = 'left',
   badge,
+  productImage,
+  productAlt,
 }: PageHeroProps) {
   const heights = {
     full: 'min-h-screen',
@@ -54,6 +59,13 @@ export function PageHero({
         </>
       ) : (
         <div className="absolute inset-0" style={{ background: bgGradient }} />
+      )}
+
+      {/* 3D interactive product — floats right of the text */}
+      {productImage && (
+        <div className="absolute z-10 hidden md:flex items-center justify-center right-[4%] lg:right-[7%] top-1/2 -translate-y-1/2 pt-[72px]">
+          <Hero3DProduct src={productImage} alt={productAlt ?? title} />
+        </div>
       )}
 
       {/* Content — always bottom-left, text readable over any background */}

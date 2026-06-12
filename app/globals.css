@@ -837,3 +837,12 @@ section, .section, [data-section] {
 .admin-shell ::selection {
   background: rgba(0, 0, 255, 0.12);
 }
+
+/* ── Hero 3D product float ── */
+@keyframes heroFloat {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+.animate-hero-float {
+  animation: heroFloat 5s ease-in-out infinite;
+}

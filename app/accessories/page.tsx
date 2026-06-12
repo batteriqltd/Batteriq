@@ -48,6 +48,8 @@ export default async function AccessoriesPage() {
           { label: 'Accessories', href: '/accessories' },
         ]}
         bgImage="/heroes/delta-pro-hero.jpg"
+        productImage="/products/ecoflow/glacier-portable-fridge-freezer.jpg"
+        productAlt="EcoFlow GLACIER Portable Fridge"
         badge="Official EcoFlow Accessories"
         height="medium"
         align="left"

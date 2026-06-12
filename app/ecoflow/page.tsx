@@ -51,6 +51,9 @@ export default async function EcoFlowCollectionPage() {
           { label: 'EcoFlow', href: '/ecoflow' },
         ]}
         bgGradient="linear-gradient(135deg, #00001a 0%, #000080 100%)"
+        productImage="/products/ecoflow/delta-pro-3.jpg"
+        productAlt="EcoFlow DELTA Pro 3"
+        badge="Official EcoFlow Authorised Dealer"
       />
       <div className="min-h-screen">
         <div className="max-w-8xl mx-auto px-4 lg:px-8 py-12">
