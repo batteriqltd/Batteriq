@@ -48,7 +48,7 @@ export function Hero3DProduct({ src, alt }: { src: string; alt: string }) {
       {/* Dynamic glow beneath */}
       <div
         className="absolute left-1/2 bottom-2 -translate-x-1/2 w-[70%] h-10 rounded-full pointer-events-none"
-        style={{ background: 'radial-gradient(ellipse, rgba(0,80,255,0.45) 0%, transparent 70%)', filter: 'blur(18px)' }}
+        style={{ background: 'radial-gradient(ellipse, rgba(255,255,255,0.15) 0%, transparent 70%)', filter: 'blur(22px)' }}
       />
 
       {/* Tilting card */}

@@ -20,7 +20,7 @@ export function PageHero({
   subtitle,
   breadcrumb,
   bgImage,
-  bgGradient = 'linear-gradient(135deg, #00004d 0%, #0000ff 100%)',
+  bgGradient = 'linear-gradient(135deg, #0a0a14 0%, #111827 50%, #0f172a 100%)',
   height = 'medium',
   align = 'left',
   badge,
@@ -73,16 +73,16 @@ export function PageHero({
 
         {/* Breadcrumb */}
         {breadcrumb && (
-          <nav className="flex items-center gap-2 text-xs text-white/50 mb-4 flex-wrap" aria-label="Breadcrumb">
+          <nav className="flex items-center gap-2 text-[11px] text-white/35 mb-5 flex-wrap font-medium" aria-label="Breadcrumb">
             {breadcrumb.map((crumb, i) => (
               <span key={crumb.href} className="flex items-center gap-2">
-                {i > 0 && <span className="text-white/30">/</span>}
+                {i > 0 && <span className="text-white/20">/</span>}
                 {i < breadcrumb.length - 1 ? (
                   <Link href={crumb.href} className="hover:text-white transition-colors font-medium">
                     {crumb.label}
                   </Link>
                 ) : (
-                  <span className="text-white/40 font-medium">{crumb.label}</span>
+                  <span className="text-white/30">{crumb.label}</span>
                 )}
               </span>
             ))}
@@ -91,9 +91,8 @@ export function PageHero({
 
         {/* Badge */}
         {badge && (
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5 border border-white/20 bg-white/10 backdrop-blur-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-            <span className="text-white text-[10px] font-black uppercase tracking-[0.2em]">{badge}</span>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+            <span className="text-white/70 text-[10px] font-bold uppercase tracking-[0.18em]">{badge}</span>
           </div>
         )}
 
@@ -101,11 +100,11 @@ export function PageHero({
         <h1
           className="font-black text-white leading-tight mb-4"
           style={{
-            fontSize: 'clamp(2rem, 5vw, 3.8rem)',
-            letterSpacing: '-0.02em',
-            lineHeight: 1.05,
-            textShadow: '0 2px 20px rgba(0,0,0,0.3)',
-            maxWidth: '700px',
+            fontSize: 'clamp(1.85rem, 4.5vw, 3.4rem)',
+            letterSpacing: '-0.03em',
+            lineHeight: 1.08,
+            fontWeight: 900,
+            maxWidth: '640px',
           }}
         >
           {title}
@@ -114,11 +113,13 @@ export function PageHero({
         {/* Subtitle */}
         {subtitle && (
           <p
-            className="text-white/75 leading-relaxed"
+            className="leading-relaxed"
             style={{
-              fontSize: 'clamp(0.875rem, 1.8vw, 1.1rem)',
-              maxWidth: '560px',
-              textShadow: '0 1px 8px rgba(0,0,0,0.3)',
+              fontSize: 'clamp(0.85rem, 1.6vw, 1.05rem)',
+              maxWidth: '480px',
+              color: 'rgba(255,255,255,0.55)',
+              fontWeight: 500,
+              letterSpacing: '0.005em',
             }}
           >
             {subtitle}

@@ -50,7 +50,7 @@ export default async function EcoFlowCollectionPage() {
           { label: 'Home', href: '/' },
           { label: 'EcoFlow', href: '/ecoflow' },
         ]}
-        bgGradient="linear-gradient(135deg, #00001a 0%, #000080 100%)"
+        bgGradient="linear-gradient(135deg, #0a0a14 0%, #111827 50%, #0d1117 100%)"
         productImage="/products/ecoflow/delta-pro-3.jpg"
         productAlt="EcoFlow DELTA Pro 3"
         badge="Official EcoFlow Authorised Dealer"

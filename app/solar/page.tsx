@@ -76,8 +76,8 @@ export default async function SolarPanelsPage() {
           <div className="max-w-xl">
 
             <div className="flex items-center gap-2 mb-4">
-              <div className="h-px w-8" style={{ background: '#0000ff' }} />
-              <span className="text-xs font-black uppercase tracking-[0.2em]" style={{ color: '#66aaff' }}>
+              <div className="h-px w-8" style={{ background: 'rgba(255,255,255,0.25)' }} />
+              <span className="text-[11px] font-bold uppercase tracking-[0.18em]" style={{ color: 'rgba(255,255,255,0.45)' }}>
                 EcoFlow Solar · IP68 Waterproof
               </span>
             </div>
@@ -85,23 +85,26 @@ export default async function SolarPanelsPage() {
             <h1
               className="font-black text-white mb-4"
               style={{
-                fontSize: 'clamp(2.2rem, 6vw, 4rem)',
-                letterSpacing: '-0.04em',
-                lineHeight: 0.95,
+                fontSize: 'clamp(1.85rem, 5vw, 3.4rem)',
+                letterSpacing: '-0.03em',
+                lineHeight: 1.05,
+                fontWeight: 900,
               }}
             >
               Solar<br />Panels
             </h1>
 
-            <p className="text-base sm:text-lg mb-8" style={{ color: 'rgba(255,255,255,0.7)', maxWidth: '340px', lineHeight: 1.5 }}>
+            <p className="text-sm sm:text-base mb-8" style={{ color: 'rgba(255,255,255,0.50)', maxWidth: '340px', lineHeight: 1.6, fontWeight: 500, letterSpacing: '0.005em' }}>
               45W to 400W. Built for Kenyan sun.
             </p>
 
             <a
               href="#products"
-              className="hero-cta-btn inline-flex items-center gap-3 font-black text-sm text-white rounded-2xl transition-all duration-200 shadow-[0_8px_32px_rgba(0,0,255,0.4)] hover:shadow-[0_14px_44px_rgba(0,0,255,0.55)] hover:-translate-y-0.5 active:translate-y-0"
+              className="hero-cta-btn inline-flex items-center gap-3 font-black text-sm text-white rounded-2xl transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0"
               style={{
-                background: 'linear-gradient(135deg, #0000ff 0%, #00004d 100%)',
+                background: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.18)',
+                backdropFilter: 'blur(8px)',
                 padding: '14px 32px',
                 letterSpacing: '-0.01em',
               }}
