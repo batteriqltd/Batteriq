@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export const runtime = 'edge'
+export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -22,13 +22,16 @@ export async function GET(request: NextRequest) {
   if (brand) query = query.eq('brand', brand)
   if (category) query = query.eq('category', category)
   if (featured === 'true') query = query.eq('featured', true)
-  if (q) query = query.ilike('name', `%${q}%`)
+  if (q) {
+    // Search across name, brand, category, and description
+    query = query.or(`name.ilike.%${q}%,brand.ilike.%${q}%,category.ilike.%${q}%,description.ilike.%${q}%`)
+  }
 
   const { data, error } = await query
 
   if (error) {
-    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to fetch products', detail: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ products: data })
+  return NextResponse.json({ products: data ?? [] })
 }
