@@ -136,7 +136,7 @@ export default function BroadcastPage() {
       return
     }
     setCustomers(prev => [{ name, phone, email: null, orderCount: 0, totalSpent: 0, source: 'manual' }, ...prev])
-    setSelected(prev => new Set([...prev, phone]))
+    setSelected(prev => new Set(Array.from(prev).concat(phone)))
     setManualName('')
     setManualPhone('')
     setShowManual(false)
@@ -174,7 +174,7 @@ export default function BroadcastPage() {
     e.stopPropagation()
     if (!message.trim()) { notify('warning', 'No message', 'Write a message first'); return }
     window.open(buildLink(customer.phone, customer.name), '_blank', 'noopener')
-    setSent(prev => new Set([...prev, customer.phone]))
+    setSent(prev => new Set(Array.from(prev).concat(customer.phone)))
     notify('success', 'WhatsApp opened', `Chat opened for ${customer.name}`)
   }
 
@@ -186,7 +186,7 @@ export default function BroadcastPage() {
     let count = 0
     for (const c of toSend) {
       window.open(buildLink(c.phone, c.name), '_blank', 'noopener')
-      setSent(prev => new Set([...prev, c.phone]))
+      setSent(prev => new Set(Array.from(prev).concat(c.phone)))
       count++
       if (count < toSend.length) await new Promise(r => setTimeout(r, 700))
     }
