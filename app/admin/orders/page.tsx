@@ -146,7 +146,28 @@ export default function AdminOrdersPage() {
     }
   }
 
-  const filtered = orders.filter(o => {
+  async function sendInvoice(order: Order) {
+    if (!order.guest_email) {
+      notify('error', 'No Email Address', 'This order has no email — cannot send invoice')
+      return
+    }
+    setSendingInvoice(order.id)
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}/send-invoice`, { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        notify('success', 'Invoice Sent', `Invoice emailed to ${order.guest_email}`)
+      } else {
+        notify('error', 'Send Failed', data.error ?? 'Could not send invoice')
+      }
+    } catch {
+      notify('error', 'Network Error', 'Failed to send invoice')
+    } finally {
+      setSendingInvoice(null)
+    }
+  }
+
+    const filtered = orders.filter(o => {
     const matchFilter =
       filter === 'all' ? true
       : filter === 'paid' ? o.payment_status === 'paid'
