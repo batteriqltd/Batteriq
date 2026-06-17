@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle } from 'lucide-react'
+import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle, FileText, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminNotify } from '@/components/admin/AdminNotify'
 
@@ -32,6 +32,7 @@ export default function AdminOrdersPage() {
   const supabase = useMemo(() => createClient(), [])
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
+  const [sendingInvoice, setSendingInvoice] = useState<string | null>(null)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const { notify } = useAdminNotify()
@@ -326,9 +327,20 @@ export default function AdminOrdersPage() {
                         <Link
                           href={`/admin/orders/${order.id}`}
                           className="w-9 h-9 rounded-xl flex items-center justify-center transition-all bg-gray-50 text-gray-400 hover:bg-[#0000ff] hover:text-white hover:shadow-lg hover:shadow-blue-200"
+                          title="View order details"
                         >
                           <Eye size={16} />
                         </Link>
+                        <button
+                          onClick={() => sendInvoice(order)}
+                          disabled={sendingInvoice === order.id}
+                          title={order.guest_email ? `Send invoice to ${order.guest_email}` : 'No email address on this order'}
+                          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all bg-gray-50 text-gray-400 hover:bg-purple-600 hover:text-white hover:shadow-lg hover:shadow-purple-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {sendingInvoice === order.id
+                            ? <Loader2 size={15} className="animate-spin" />
+                            : <FileText size={15} />}
+                        </button>
                         {(order.payment_status === 'pending' || order.payment_status === 'failed') && (
                           <button
                             onClick={() => sendStkPush(order)}
