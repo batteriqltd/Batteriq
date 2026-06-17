@@ -172,9 +172,7 @@ export async function POST(
       html,
       attachments: pdfBase64 ? [{
         filename: `Batteriq-Invoice-${orderRef}.pdf`,
-        content: pdfBase64,
-        type: 'application/pdf' as const,
-        disposition: 'attachment' as const,
+        content: Buffer.from(pdfBase64, 'base64'),
       }] : [],
     })
 
