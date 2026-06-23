@@ -89,10 +89,17 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
               )}
             </div>
 
-            {/* Out of stock overlay */}
+            {/* Out of stock overlay — high-end */}
             {!product.in_stock && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center z-10">
-                <span className="text-[10px] font-bold px-3 py-1.5 rounded-full bg-slate-900 text-white uppercase tracking-[0.1em]">
+              <div className="absolute inset-0 flex flex-col items-center justify-center z-10"
+                style={{ background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(3px)' }}>
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-2"
+                  style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.15)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                  </svg>
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">
                   Out of Stock
                 </span>
               </div>

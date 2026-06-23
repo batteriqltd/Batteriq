@@ -155,22 +155,60 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   +
                 </button>
               </div>
-              <p className="text-gray-500 text-sm">
-                {product.in_stock ? `${product.stock_qty} in stock` : 'Out of stock'}
-              </p>
+              {product.in_stock ? (
+                <p className="text-sm font-bold text-green-600 flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  {product.stock_qty ? `${product.stock_qty} in stock` : 'In stock'}
+                </p>
+              ) : (
+                <p className="text-sm font-bold text-red-500 flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                  </svg>
+                  Currently out of stock
+                </p>
+              )}
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              onClick={handleAddToCart}
-              disabled={!product.in_stock}
-              className="w-full flex items-center justify-center gap-3 py-4 bg-bq-blue text-white font-bold text-lg rounded-[8px] hover:bg-bq-blue-dim hover:shadow-blue-glow-lg transition-all duration-250 disabled:opacity-50 disabled:cursor-not-allowed min-h-[56px]"
-              aria-label={`Add ${product.name} to cart`}
-            >
-              <ShoppingCart size={20} />
-              {product.in_stock ? 'ADD TO CART' : 'OUT OF STOCK'}
-            </motion.button>
+            {product.in_stock ? (
+              <motion.button
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.99 }}
+                onClick={handleAddToCart}
+                className="w-full flex items-center justify-center gap-3 py-4 bg-bq-blue text-white font-bold text-lg rounded-[8px] hover:bg-bq-blue-dim hover:shadow-blue-glow-lg transition-all duration-250 min-h-[56px]"
+                aria-label={`Add ${product.name} to cart`}
+              >
+                <ShoppingCart size={20} />
+                ADD TO CART
+              </motion.button>
+            ) : (
+              <div className="space-y-3">
+                {/* Out of stock button */}
+                <div className="w-full min-h-[56px] rounded-[8px] flex items-center justify-center gap-3 border-2 border-dashed border-red-200"
+                  style={{ background: 'rgba(254,242,242,0.6)' }}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                  </svg>
+                  <span className="font-black text-red-500 text-base uppercase tracking-widest">Out of Stock</span>
+                </div>
+                {/* Notify me panel */}
+                <div className="rounded-[12px] p-5 border border-blue-100"
+                  style={{ background: 'linear-gradient(135deg, #f0f5ff 0%, #eef3ff 100%)' }}>
+                  <p className="text-sm font-black text-[#00004d] mb-1">Get notified when back in stock</p>
+                  <p className="text-xs text-gray-500 mb-3 font-medium">We will WhatsApp you as soon as this item is available.</p>
+                  <a
+                    href={`https://wa.me/254716822014?text=${encodeURIComponent(`Hi! I want to be notified when "${product.name}" is back in stock on batteriq.com`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-2 py-3 rounded-[8px] text-white font-bold text-sm transition-all hover:-translate-y-0.5"
+                    style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 4px 14px rgba(37,211,102,0.3)' }}
+                  >
+                    <img src="/logos/whatsapp.png" alt="WhatsApp" className="w-4 h-4 object-contain" onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none" }} />
+                    Notify Me via WhatsApp
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Trust signals */}

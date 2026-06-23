@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { getAdminSession } from '@/lib/admin-auth'
 
@@ -63,6 +64,16 @@ export async function PATCH(req: Request) {
       console.error('Stock update error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // Revalidate all product pages so out-of-stock shows instantly on the front end
+    revalidatePath('/', 'layout')
+    revalidatePath('/ecoflow-kenya')
+    revalidatePath('/ecoflow')
+    revalidatePath('/power-stations')
+    revalidatePath('/solar')
+    revalidatePath('/bluetti')
+    revalidatePath('/accessories')
+    revalidatePath('/compare')
 
     return NextResponse.json({ success: true })
   } catch (err) {
