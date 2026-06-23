@@ -56,7 +56,6 @@ async function getProductsByCategory(brand?: string, category?: string, limit = 
     let query = supabase
       .from('products')
       .select('*')
-      .eq('in_stock', true)
       .order('sort_order', { ascending: true })
       .limit(limit)
 

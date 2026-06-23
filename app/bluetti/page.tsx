@@ -29,7 +29,6 @@ async function getBluesttiData() {
       .from('products')
       .select('*')
       .eq('brand', 'Bluetti')
-      .eq('in_stock', true)
       .order('sort_order')
     if (error) { console.error('Supabase error:', error.message); return [] }
     return data ?? []

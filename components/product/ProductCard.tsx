@@ -89,18 +89,13 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
               )}
             </div>
 
-            {/* Out of stock overlay — high-end */}
+            {/* Out of stock overlay */}
             {!product.in_stock && (
               <div className="absolute inset-0 flex flex-col items-center justify-center z-10"
-                style={{ background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(3px)' }}>
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center mb-2"
-                  style={{ background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.15)' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-                  </svg>
-                </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.18em] text-red-600">
-                  Out of Stock
+                style={{ background: 'rgba(255,255,255,0.78)', backdropFilter: 'blur(2.5px)' }}>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-full"
+                  style={{ background: 'rgba(0,0,50,0.08)', color: '#374151', border: '1px solid rgba(0,0,50,0.1)' }}>
+                  Coming Soon
                 </span>
               </div>
             )}
@@ -203,13 +198,18 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
             {added ? '✓ Added to Cart' : 'Shop Now'}
           </button>
         ) : (
-          <button
-            disabled
-            className="w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest text-slate-400 bg-slate-100 cursor-not-allowed border border-slate-200/40"
-            aria-label={`${product.name} is out of stock`}
+          <a
+            href={`https://wa.me/254716822014?text=${encodeURIComponent(`Hi Batteriq! I am interested in "${product.name}" which is currently out of stock. Please notify me when it is available.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
+            style={{ background: 'linear-gradient(135deg, #f8f9ff, #eef2ff)', color: '#00004d', border: '1.5px solid #dde5ff' }}
           >
-            Out of Stock
-          </button>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            Notify When Available
+          </a>
         )}
       </div>
     </article>

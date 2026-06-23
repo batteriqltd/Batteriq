@@ -161,11 +161,9 @@ export function ProductDetail({ product }: ProductDetailProps) {
                   {product.stock_qty ? `${product.stock_qty} in stock` : 'In stock'}
                 </p>
               ) : (
-                <p className="text-sm font-bold text-red-500 flex items-center gap-1.5">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
-                  </svg>
-                  Currently out of stock
+                <p className="text-sm font-bold text-indigo-600 flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Coming Soon — Reserve Now
                 </p>
               )}
             </div>
@@ -182,30 +180,49 @@ export function ProductDetail({ product }: ProductDetailProps) {
                 ADD TO CART
               </motion.button>
             ) : (
-              <div className="space-y-3">
-                {/* Out of stock button */}
-                <div className="w-full min-h-[56px] rounded-[8px] flex items-center justify-center gap-3 border-2 border-dashed border-red-200"
-                  style={{ background: 'rgba(254,242,242,0.6)' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+              <div className="space-y-4">
+                {/* Coming Soon badge */}
+                <div className="w-full min-h-[56px] rounded-[12px] flex items-center justify-center gap-3"
+                  style={{ background: 'linear-gradient(135deg, #f8f9ff, #eef2ff)', border: '1.5px solid #dde5ff' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00004d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                   </svg>
-                  <span className="font-black text-red-500 text-base uppercase tracking-widest">Out of Stock</span>
+                  <span className="font-black text-[#00004d] text-sm uppercase tracking-widest">Coming Soon</span>
                 </div>
-                {/* Notify me panel */}
-                <div className="rounded-[12px] p-5 border border-blue-100"
-                  style={{ background: 'linear-gradient(135deg, #f0f5ff 0%, #eef3ff 100%)' }}>
-                  <p className="text-sm font-black text-[#00004d] mb-1">Get notified when back in stock</p>
-                  <p className="text-xs text-gray-500 mb-3 font-medium">We will WhatsApp you as soon as this item is available.</p>
+
+                {/* Pre-order / notify card */}
+                <div className="rounded-[16px] p-5 border border-[#e0e8ff]"
+                  style={{ background: 'linear-gradient(135deg, #f5f8ff 0%, #edf2ff 100%)' }}>
+                  <div className="flex items-start gap-3 mb-4">
+                    <div className="w-9 h-9 rounded-[10px] flex items-center justify-center flex-shrink-0"
+                      style={{ background: 'linear-gradient(135deg, #00004d, #0000cc)' }}>
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-sm font-black text-[#00004d] leading-tight">This item is currently out of stock</p>
+                      <p className="text-xs text-gray-500 mt-1 leading-relaxed font-medium">
+                        Reserve yours now — we will contact you via WhatsApp as soon as it is back in stock. No payment required to reserve.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Reserve / Notify via WhatsApp */}
                   <a
-                    href={`https://wa.me/254716822014?text=${encodeURIComponent(`Hi! I want to be notified when "${product.name}" is back in stock on batteriq.com`)}`}
+                    href={`https://wa.me/254716822014?text=${encodeURIComponent(`Hi Batteriq! I would like to reserve / be notified when "${product.name}" (KES ${Number(product.price_kes).toLocaleString('en-KE')}) is back in stock. Please let me know when it is available.`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-[8px] text-white font-bold text-sm transition-all hover:-translate-y-0.5"
-                    style={{ background: 'linear-gradient(135deg, #25D366, #128C7E)', boxShadow: '0 4px 14px rgba(37,211,102,0.3)' }}
+                    className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-[10px] text-white font-black text-sm transition-all hover:-translate-y-0.5 active:scale-[0.98]"
+                    style={{ background: 'linear-gradient(135deg, #25D366, #1da851)', boxShadow: '0 6px 18px rgba(37,211,102,0.28)' }}
                   >
-                    <img src="/logos/whatsapp.png" alt="WhatsApp" className="w-4 h-4 object-contain" onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none" }} />
-                    Notify Me via WhatsApp
+                    <img src="/logos/whatsapp.png" alt="WhatsApp" width={16} height={16} className="object-contain" />
+                    Reserve via WhatsApp
                   </a>
+
+                  <p className="text-[10px] text-center text-gray-400 font-medium mt-2.5">
+                    You will be contacted when stock arrives · No payment now
+                  </p>
                 </div>
               </div>
             )}

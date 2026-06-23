@@ -29,7 +29,6 @@ async function getSolarProducts() {
       .from('products')
       .select('*')
       .eq('category', 'Solar Panels')
-      .eq('in_stock', true)
       .order('sort_order')
     if (error) { console.error('Supabase error:', error.message); return [] }
     return data ?? []

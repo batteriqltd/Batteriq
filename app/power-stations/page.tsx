@@ -32,7 +32,6 @@ async function getProducts(): Promise<Product[]> {
       .from('products')
       .select('*')
       .in('category', ['Power Stations', 'Solar Home Systems'])
-      .eq('in_stock', true)
       .order('sort_order')
     if (error) { console.error('Supabase error:', error.message); return [] }
     return data ?? []

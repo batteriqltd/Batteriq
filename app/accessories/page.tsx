@@ -23,7 +23,6 @@ async function getAccessoriesData() {
       .from('products')
       .select('*')
       .in('category', ['Batteries', 'Accessories', 'Appliances', 'Power Banks'])
-      .eq('in_stock', true)
       .order('sort_order')
     if (error) { console.error('Supabase error:', error.message); return [] }
     return data ?? []

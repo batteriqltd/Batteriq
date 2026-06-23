@@ -23,7 +23,6 @@ async function getEcoFlowAll() {
       .from('products')
       .select('*')
       .eq('brand', 'EcoFlow')
-      .eq('in_stock', true)
       .order('sort_order')
     if (error) {
       console.error('Supabase error:', error.message)
