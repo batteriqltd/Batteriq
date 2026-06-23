@@ -1,7 +1,11 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, CheckCircle, Clock, Truck, Package, CreditCard, MapPin, Phone, Mail, Printer } from 'lucide-react'
+
+// ── Client component — needs useState/fetch ──────────────────────────────────
+import { SendInvoiceButton } from './_SendInvoiceButton'
+
+import { ArrowLeft, CheckCircle, Clock, Truck, Package, CreditCard, MapPin, Phone, Mail, Printer, Send } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,12 +52,14 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
             </p>
           </div>
         </div>
-        <a href={`/api/admin/export?type=invoice&orderId=${order.id}`} target="_blank"
-          className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
-          style={{ background: 'linear-gradient(135deg, #00004d, #0000ff)' }}>
-          <Printer size={14} />
-          Print Invoice
-        </a>
+        <div className="flex items-center gap-2">
+          <a href={`/api/admin/export?type=invoice&orderId=${order.id}`} target="_blank"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-600 border border-gray-200 bg-white hover:bg-gray-50 transition-all">
+            <Printer size={14} />
+            Print
+          </a>
+          <SendInvoiceButton orderId={order.id} email={order.guest_email} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
