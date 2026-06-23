@@ -177,6 +177,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="main-content" className="pt-16 lg:pt-[72px]">{children}</main>
         <GSAPProvider />
         <AOSProvider />
+        <VisitorTracker />
         <ChatWidget />
         <Analytics />
         <SpeedInsights />
