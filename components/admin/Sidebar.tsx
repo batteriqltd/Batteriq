@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingBag, Tag,
   MessageSquare, Mail, LogOut, CreditCard, Send, Newspaper,
-  Users, BarChart3, Download, Star, ImageIcon, Menu, X
+  Users, BarChart3, Download, Star, ImageIcon, Menu, X, Radio
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 
@@ -31,6 +31,7 @@ function LiveClock() {
 
 const NAV = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { href: '/admin/visitors', label: 'Live Visitors', icon: Radio, badge: 'live' as const },
   { href: '/admin/new-order', label: 'New Order', icon: ShoppingBag },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, badge: 'live' as const },
   { href: '/admin/customers', label: 'Customers', icon: Users },
