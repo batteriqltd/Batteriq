@@ -81,7 +81,7 @@ export default function VisitorsPage() {
         const state = channel.presenceState()
         const all: Visitor[] = []
         Object.values(state).forEach((presences) => {
-          const arr = presences as Visitor[]
+          const arr = (presences as unknown) as Visitor[]
           if (arr.length > 0) all.push(arr[arr.length - 1])
         })
         setVisitors(all)
@@ -90,7 +90,7 @@ export default function VisitorsPage() {
         const state = channel.presenceState()
         const all: Visitor[] = []
         Object.values(state).forEach((presences) => {
-          const arr = presences as Visitor[]
+          const arr = (presences as unknown) as Visitor[]
           if (arr.length > 0) all.push(arr[arr.length - 1])
         })
         setVisitors(all)
@@ -99,7 +99,7 @@ export default function VisitorsPage() {
         const state = channel.presenceState()
         const all: Visitor[] = []
         Object.values(state).forEach((presences) => {
-          const arr = presences as Visitor[]
+          const arr = (presences as unknown) as Visitor[]
           if (arr.length > 0) all.push(arr[arr.length - 1])
         })
         setVisitors(all)
