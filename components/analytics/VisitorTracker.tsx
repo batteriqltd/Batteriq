@@ -1,16 +1,8 @@
 'use client'
 
-/**
- * VisitorTracker — silent storefront component.
- * Uses Supabase Realtime Presence so the admin sees live visitor count,
- * current page, device type, time on site, and traffic source.
- * No database writes. No cookies. No personal data stored.
- * Never renders anything visible.
- */
-
 import { useEffect, useRef } from 'react'
-import { createClient } from '@supabase/supabase-js'
 import { usePathname } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
 
 function getOrCreateVisitorId(): string {
   try {
@@ -42,12 +34,8 @@ function getReferrer(): string {
     if (r.includes('tiktok')) return 'TikTok'
     if (r.includes('whatsapp')) return 'WhatsApp'
     if (r.includes('twitter') || r.includes('x.com')) return 'Twitter/X'
-    if (r.includes('youtube')) return 'YouTube'
-    if (r.includes('linkedin')) return 'LinkedIn'
     return 'Referral'
-  } catch {
-    return 'Direct'
-  }
+  } catch { return 'Direct' }
 }
 
 function getPageLabel(path: string): string {
@@ -66,7 +54,6 @@ function getPageLabel(path: string): string {
   if (path.startsWith('/compare')) return 'Compare'
   if (path.startsWith('/contact')) return 'Contact'
   if (path.startsWith('/support')) return 'Support'
-  if (path.startsWith('/about')) return 'About'
   return 'Other'
 }
 
@@ -74,78 +61,64 @@ export function VisitorTracker() {
   const pathname = usePathname()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null)
-  const enteredAtRef = useRef<string>(new Date().toISOString())
-  const visitorId = useRef<string>('')
-  const referrer = useRef<string>('')
+  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  const visitorIdRef = useRef('')
+  const enteredAtRef = useRef(new Date().toISOString())
+  const referrerRef = useRef('')
+  const subscribedRef = useRef(false)
 
-  // One-time setup
+  // Mount once — create client, channel, subscribe
   useEffect(() => {
-    visitorId.current = getOrCreateVisitorId()
-    referrer.current = getReferrer()
+    visitorIdRef.current = getOrCreateVisitorId()
+    referrerRef.current = getReferrer()
     enteredAtRef.current = new Date().toISOString()
-  }, [])
 
-  // Track page changes
-  useEffect(() => {
-    if (!visitorId.current) return
+    // Use the singleton Supabase client (same one used everywhere in the app)
+    const supabase = createClient()
+    supabaseRef.current = supabase
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const channel = supabase.channel('bq_visitors', {
+      config: {
+        presence: { key: visitorIdRef.current },
+      },
+    })
+    channelRef.current = channel
 
-    // Reuse the same channel — just update the presence state on page change
-    if (!channelRef.current) {
-      const ch = supabase.channel('bq_visitors', {
-        config: { presence: { key: visitorId.current } },
-      })
-      channelRef.current = ch
-
-      ch.subscribe(async (status: string) => {
-        if (status === 'SUBSCRIBED') {
-          await ch.track({
-            visitorId: visitorId.current,
-            page: pathname,
-            pageLabel: getPageLabel(pathname),
-            device: getDevice(),
-            referrer: referrer.current,
-            enteredAt: enteredAtRef.current,
-            updatedAt: new Date().toISOString(),
-          })
-        }
-      })
-    } else {
-      // Already subscribed — just update the presence payload
-      channelRef.current.track({
-        visitorId: visitorId.current,
-        page: pathname,
-        pageLabel: getPageLabel(pathname),
-        device: getDevice(),
-        referrer: referrer.current,
-        enteredAt: enteredAtRef.current,
-        updatedAt: new Date().toISOString(),
-      }).catch(() => {})
-    }
+    channel.subscribe((status: string) => {
+      if (status === 'SUBSCRIBED') {
+        subscribedRef.current = true
+        channel.track({
+          visitorId: visitorIdRef.current,
+          page: pathname,
+          pageLabel: getPageLabel(pathname),
+          device: getDevice(),
+          referrer: referrerRef.current,
+          enteredAt: enteredAtRef.current,
+          updatedAt: new Date().toISOString(),
+        })
+      }
+    })
 
     return () => {
-      // Only fully unsubscribe when the component unmounts (tab close / navigate away)
-      // On route changes we keep the channel alive and just update the payload
+      subscribedRef.current = false
+      supabase.removeChannel(channel)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // run once only
+
+  // Update presence on page navigation
+  useEffect(() => {
+    if (!subscribedRef.current || !channelRef.current) return
+    channelRef.current.track({
+      visitorId: visitorIdRef.current,
+      page: pathname,
+      pageLabel: getPageLabel(pathname),
+      device: getDevice(),
+      referrer: referrerRef.current,
+      enteredAt: enteredAtRef.current,
+      updatedAt: new Date().toISOString(),
+    })
   }, [pathname])
 
-  // Clean up on unmount
-  useEffect(() => {
-    return () => {
-      if (channelRef.current) {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
-        supabase.removeChannel(channelRef.current)
-        channelRef.current = null
-      }
-    }
-  }, [])
-
-  return null // renders nothing visible
+  return null
 }
