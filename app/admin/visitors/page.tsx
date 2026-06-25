@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useMemo } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@supabase/supabase-js'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Monitor, Smartphone, Tablet, Globe, ArrowUpRight,
@@ -42,7 +42,11 @@ const PAGE_COLORS: Record<string, string> = {
 }
 
 export default function VisitorsPage() {
-  const supabase = useMemo(() => createClient(), [])
+  const supabase = useMemo(() => createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    { realtime: { params: { eventsPerSecond: 2 } }, auth: { persistSession: false, autoRefreshToken: false } }
+  ), [])
 
   const [visitors, setVisitors] = useState<Visitor[]>([])
   const [totalToday, setTotalToday] = useState(0)

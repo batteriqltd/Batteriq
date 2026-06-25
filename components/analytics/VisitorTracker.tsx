@@ -2,7 +2,23 @@
 
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@supabase/supabase-js'
+
+// Singleton Supabase client for realtime — created once for the browser session
+let _realtimeClient: ReturnType<typeof createClient> | null = null
+function getRealtimeClient() {
+  if (!_realtimeClient) {
+    _realtimeClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        realtime: { params: { eventsPerSecond: 2 } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      }
+    )
+  }
+  return _realtimeClient
+}
 
 function getOrCreateVisitorId(): string {
   try {
@@ -54,6 +70,7 @@ function getPageLabel(path: string): string {
   if (path.startsWith('/compare')) return 'Compare'
   if (path.startsWith('/contact')) return 'Contact'
   if (path.startsWith('/support')) return 'Support'
+  if (path.startsWith('/admin')) return 'Admin'
   return 'Other'
 }
 
@@ -61,27 +78,25 @@ export function VisitorTracker() {
   const pathname = usePathname()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const channelRef = useRef<any>(null)
-  const supabaseRef = useRef<ReturnType<typeof createClient> | null>(null)
+  const subscribedRef = useRef(false)
   const visitorIdRef = useRef('')
   const enteredAtRef = useRef(new Date().toISOString())
   const referrerRef = useRef('')
-  const subscribedRef = useRef(false)
 
-  // Mount once — create client, channel, subscribe
+  // Mount once — create channel and subscribe
   useEffect(() => {
     visitorIdRef.current = getOrCreateVisitorId()
     referrerRef.current = getReferrer()
     enteredAtRef.current = new Date().toISOString()
 
-    // Use the singleton Supabase client (same one used everywhere in the app)
-    const supabase = createClient()
-    supabaseRef.current = supabase
+    const supabase = getRealtimeClient()
 
     const channel = supabase.channel('bq_visitors', {
       config: {
         presence: { key: visitorIdRef.current },
       },
     })
+
     channelRef.current = channel
 
     channel.subscribe((status: string) => {
@@ -101,23 +116,25 @@ export function VisitorTracker() {
 
     return () => {
       subscribedRef.current = false
-      supabase.removeChannel(channel)
+      try { supabase.removeChannel(channel) } catch { /* ignore */ }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // run once only
+  }, [])
 
   // Update presence on page navigation
   useEffect(() => {
     if (!subscribedRef.current || !channelRef.current) return
-    channelRef.current.track({
-      visitorId: visitorIdRef.current,
-      page: pathname,
-      pageLabel: getPageLabel(pathname),
-      device: getDevice(),
-      referrer: referrerRef.current,
-      enteredAt: enteredAtRef.current,
-      updatedAt: new Date().toISOString(),
-    })
+    try {
+      channelRef.current.track({
+        visitorId: visitorIdRef.current,
+        page: pathname,
+        pageLabel: getPageLabel(pathname),
+        device: getDevice(),
+        referrer: referrerRef.current,
+        enteredAt: enteredAtRef.current,
+        updatedAt: new Date().toISOString(),
+      })
+    } catch { /* ignore */ }
   }, [pathname])
 
   return null
