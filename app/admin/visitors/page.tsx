@@ -105,8 +105,20 @@ export default function VisitorsPage() {
         })
         setVisitors(all)
       })
-      .subscribe((status) => {
+      .subscribe(async (status) => {
         setIsConnected(status === 'SUBSCRIBED')
+        if (status === 'SUBSCRIBED') {
+          // Track the admin as an active session too
+          await channel.track({
+            visitorId: `admin_${Math.random().toString(36).slice(2)}`,
+            page: '/admin/visitors',
+            pageLabel: 'Admin Dashboard',
+            device: window.innerWidth < 768 ? 'Mobile' : 'Desktop',
+            referrer: 'Direct',
+            enteredAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+        }
       })
 
     return () => { supabase.removeChannel(channel) }
