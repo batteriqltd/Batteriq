@@ -52,11 +52,11 @@ const nextConfig = {
         source: '/(.*)',
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+          // X-Frame-Options replaced by CSP frame-ancestors (modern standard)
           { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          // X-XSS-Protection removed — deprecated, CSP handles XSS protection
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self), interest-cohort=()' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
           {
             key: 'Strict-Transport-Security',
             value: 'max-age=63072000; includeSubDomains; preload',
@@ -67,14 +67,16 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' vercel.live *.vercel-insights.com",
               "style-src 'self' 'unsafe-inline' fonts.googleapis.com https://fonts.googleapis.com",
-              "font-src 'self' fonts.gstatic.com https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https: http: *.supabase.co ecoflow.com *.ecoflow.com",
+              "font-src 'self' fonts.gstatic.com https://fonts.gstatic.com data:",
+              "img-src 'self' data: blob: https: *.supabase.co ecoflow.com *.ecoflow.com",
               "connect-src 'self' *.supabase.co wss://*.supabase.co vercel.live *.vercel-insights.com https://api.safaricom.co.ke https://api.anthropic.com https://generativelanguage.googleapis.com https://api.resend.com",
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
             ].join('; '),
           },
+          // Cache-Control for static assets
+          { key: 'Vary', value: 'Accept-Encoding' },
         ],
       },
     ]
