@@ -1,4 +1,4 @@
 import { redirect } from 'next/navigation'
-export default function SupportPrivacyPage() {
+export default function PrivacyRedirect() {
   redirect('/privacy')
 }
