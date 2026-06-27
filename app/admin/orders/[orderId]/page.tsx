@@ -4,6 +4,7 @@ import Link from 'next/link'
 
 // ── Client component — needs useState/fetch ──────────────────────────────────
 import { SendInvoiceButton } from './_SendInvoiceButton'
+import { PrintReceiptButton } from './_PrintReceiptButton'
 
 import { ArrowLeft, CheckCircle, Clock, Truck, Package, CreditCard, MapPin, Phone, Mail, Printer, Send } from 'lucide-react'
 
@@ -53,11 +54,7 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <a href={`/api/admin/export?type=invoice&orderId=${order.id}`} target="_blank"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-gray-600 border border-gray-200 bg-white hover:bg-gray-50 transition-all">
-            <Printer size={14} />
-            Print
-          </a>
+          <PrintReceiptButton orderId={order.id} orderNumber={order.order_number} />
           <SendInvoiceButton orderId={order.id} email={order.guest_email} />
         </div>
       </div>

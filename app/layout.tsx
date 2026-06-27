@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { ChatWidget } from '@/components/chat/ChatWidget'
 import { VisitorTracker } from '@/components/analytics/VisitorTracker'
+import { NewsletterPopup } from '@/components/home/NewsletterPopup'
 import { GSAPProvider } from '@/components/animations/GSAPProvider'
 import { AOSProvider } from '@/components/animations/AOSProvider'
 import './globals.css'
@@ -178,6 +179,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <GSAPProvider />
         <AOSProvider />
         <VisitorTracker />
+        <NewsletterPopup />
         <ChatWidget />
         <Analytics />
         <SpeedInsights />
