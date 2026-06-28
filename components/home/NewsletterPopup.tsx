@@ -1,198 +1,312 @@
 'use client'
 
+/**
+ * NewsletterPopup — Apple-grade signup modal
+ * - Appears 9s after page load on storefront pages only
+ * - Dismissed forever via localStorage
+ * - Submits to /api/newsletter → saves to newsletter_subscribers table
+ * - Admin can see all subscribers in Admin → Newsletter → Subscribers
+ */
+
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Zap, CheckCircle, Loader2 } from 'lucide-react'
+import { X } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 
-const STORAGE_KEY = 'bq_newsletter_dismissed'
-const DELAY_MS = 8000 // Show after 8 seconds on site
+const STORAGE_KEY = 'bq_nl_v2'
+const SHOW_AFTER_MS = 9000
+
+// Pages where popup should NEVER appear
+const BLOCKED = ['/admin', '/checkout', '/order-confirmation', '/cart', '/privacy', '/terms']
 
 export function NewsletterPopup() {
-  const [visible, setVisible] = useState(false)
+  const pathname = usePathname()
+  const [show, setShow] = useState(false)
   const [email, setEmail] = useState('')
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [phase, setPhase] = useState<'form' | 'loading' | 'success' | 'error'>('form')
   const [errMsg, setErrMsg] = useState('')
 
   useEffect(() => {
-    // Don't show if already dismissed or subscribed this session
-    try {
-      const dismissed = localStorage.getItem(STORAGE_KEY)
-      if (dismissed) return
-    } catch { /* ignore */ }
+    // Block on certain routes
+    if (BLOCKED.some(b => pathname?.startsWith(b))) return
+    // Block if already dismissed
+    try { if (localStorage.getItem(STORAGE_KEY)) return } catch { /* ignore */ }
 
-    // Don't show on admin pages
-    if (window.location.pathname.startsWith('/admin')) return
-    if (window.location.pathname.startsWith('/checkout')) return
-    if (window.location.pathname.startsWith('/order-confirmation')) return
+    const t = setTimeout(() => setShow(true), SHOW_AFTER_MS)
+    return () => clearTimeout(t)
+  }, [pathname])
 
-    const timer = setTimeout(() => setVisible(true), DELAY_MS)
-    return () => clearTimeout(timer)
+  const dismiss = useCallback((permanent = true) => {
+    setShow(false)
+    if (permanent) {
+      try { localStorage.setItem(STORAGE_KEY, '1') } catch { /* ignore */ }
+    }
   }, [])
 
-  const dismiss = useCallback(() => {
-    setVisible(false)
-    try { localStorage.setItem(STORAGE_KEY, '1') } catch { /* ignore */ }
-  }, [])
+  // ESC key
+  useEffect(() => {
+    const fn = (e: KeyboardEvent) => { if (e.key === 'Escape') dismiss() }
+    if (show) window.addEventListener('keydown', fn)
+    return () => window.removeEventListener('keydown', fn)
+  }, [show, dismiss])
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault()
-    if (!email.trim()) return
-    setStatus('loading')
-    setErrMsg('')
+    const trimmed = email.trim()
+    if (!trimmed) return
+    setPhase('loading')
     try {
       const res = await fetch('/api/newsletter', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() }),
+        body: JSON.stringify({ email: trimmed }),
       })
       if (res.ok) {
-        setStatus('success')
+        setPhase('success')
         try { localStorage.setItem(STORAGE_KEY, '1') } catch { /* ignore */ }
-        // Auto-close after 2.5 seconds on success
-        setTimeout(() => setVisible(false), 2500)
+        setTimeout(() => setShow(false), 2800)
       } else {
-        const d = await res.json()
-        setErrMsg(d.error ?? 'Something went wrong. Try again.')
-        setStatus('error')
+        const d = await res.json().catch(() => ({}))
+        // If already subscribed — treat as success
+        if (d.message?.includes('Already')) {
+          setPhase('success')
+          setTimeout(() => setShow(false), 2800)
+        } else {
+          setErrMsg(d.error ?? 'Something went wrong.')
+          setPhase('error')
+        }
       }
     } catch {
       setErrMsg('Network error. Please try again.')
-      setStatus('error')
+      setPhase('error')
     }
   }
 
   return (
     <AnimatePresence>
-      {visible && (
+      {show && (
         <>
           {/* Backdrop */}
           <motion.div
+            key="backdrop"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.25 }}
-            className="fixed inset-0 z-[300] bg-black/30 backdrop-blur-[2px]"
-            onClick={dismiss}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[400]"
+            style={{ background: 'rgba(0, 0, 20, 0.55)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
+            onClick={() => dismiss()}
           />
 
-          {/* Modal */}
+          {/* Card */}
           <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-            className="fixed z-[301] left-4 right-4 bottom-6 sm:left-auto sm:right-6 sm:bottom-6 sm:w-[400px]"
+            key="card"
+            initial={{ opacity: 0, scale: 0.92, y: 24 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.94, y: 16 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+            className="fixed z-[401] inset-x-4 bottom-6 sm:inset-auto sm:left-1/2 sm:bottom-auto sm:top-1/2 sm:w-[420px]"
+            style={{ transform: undefined }}
           >
             <div
-              className="bg-white rounded-[28px] overflow-hidden"
-              style={{ boxShadow: '0 32px 80px rgba(0,0,30,0.28), 0 4px 20px rgba(0,0,30,0.12)' }}
+              className="relative bg-white overflow-hidden"
+              style={{
+                borderRadius: 28,
+                boxShadow: '0 40px 120px rgba(0,0,30,0.32), 0 8px 32px rgba(0,0,30,0.14), inset 0 1px 0 rgba(255,255,255,0.8)',
+              }}
             >
-              {/* Top accent bar */}
-              <div style={{ height: 4, background: 'linear-gradient(90deg, #0000ff, #4d9fff, #0000ff)' }} />
+              {/* ── Dismiss button ────────────────────────── */}
+              <button
+                onClick={() => dismiss()}
+                className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full transition-all"
+                style={{ background: 'rgba(0,0,0,0.06)' }}
+                aria-label="Close"
+              >
+                <X size={14} strokeWidth={2.5} style={{ color: '#888' }} />
+              </button>
 
-              {/* Header image area */}
-              <div className="relative px-7 pt-7 pb-4">
-                {/* Close button */}
-                <button
-                  onClick={dismiss}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-xl flex items-center justify-center text-gray-300 hover:text-gray-600 hover:bg-gray-100 transition-all"
-                  aria-label="Close"
-                >
-                  <X size={16} />
-                </button>
+              {phase === 'success' ? (
+                /* ══════════ SUCCESS ══════════ */
+                <div className="px-8 py-10 text-center">
+                  {/* Animated checkmark */}
+                  <motion.div
+                    initial={{ scale: 0, rotate: -12 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 280, damping: 18, delay: 0.05 }}
+                    className="w-20 h-20 rounded-[22px] mx-auto mb-6 flex items-center justify-center"
+                    style={{
+                      background: 'linear-gradient(135deg, #00004d 0%, #0000cc 100%)',
+                      boxShadow: '0 16px 48px rgba(0,0,200,0.3)',
+                    }}
+                  >
+                    <motion.svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+                      <motion.path
+                        d="M4 12.5L9.5 18L20 6"
+                        stroke="white"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ delay: 0.2, duration: 0.5, ease: 'easeOut' }}
+                      />
+                    </motion.svg>
+                  </motion.div>
 
-                {status === 'success'
-                  ? (
-                    /* ── Success state ── */
-                    <div className="text-center py-4">
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 250, damping: 18 }}
-                        className="w-16 h-16 rounded-[20px] mx-auto mb-4 flex items-center justify-center"
-                        style={{ background: 'linear-gradient(135deg, #00A651, #00C853)', boxShadow: '0 12px 32px rgba(0,166,81,0.3)' }}
-                      >
-                        <CheckCircle size={32} className="text-white" strokeWidth={2.5} />
-                      </motion.div>
-                      <h3 className="text-xl font-black text-gray-900 tracking-tight mb-2">You are in!</h3>
-                      <p className="text-sm text-gray-500 font-medium">
-                        Welcome to the Batteriq community. Expect exclusive deals and new arrivals first.
-                      </p>
-                    </div>
-                  )
-                  : (
-                    /* ── Subscribe form ── */
-                    <form onSubmit={handleSubmit}>
-                      {/* Badge */}
-                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
-                        style={{ background: 'linear-gradient(135deg, #f0f2ff, #e8efff)', border: '1px solid #dde5ff' }}>
-                        <Zap size={11} className="text-[#0000ff]" fill="#0000ff" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.18em] text-[#0000ff]">
-                          Exclusive Offers
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#0000ff] mb-3">You are in</p>
+                    <h3 className="text-2xl font-black text-gray-900 tracking-tight mb-3" style={{ letterSpacing: '-0.02em' }}>
+                      Welcome to Batteriq
+                    </h3>
+                    <p className="text-sm text-gray-500 font-medium leading-relaxed max-w-[260px] mx-auto">
+                      Expect exclusive deals and new arrivals before anyone else.
+                    </p>
+                  </motion.div>
+
+                  {/* Closing progress bar */}
+                  <div className="mt-7 h-[2px] rounded-full bg-gray-100 overflow-hidden mx-8">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ background: 'linear-gradient(90deg, #0000ff, #4d9fff)' }}
+                      initial={{ width: '0%' }}
+                      animate={{ width: '100%' }}
+                      transition={{ duration: 2.6, ease: 'linear' }}
+                    />
+                  </div>
+                </div>
+
+              ) : (
+                /* ══════════ FORM ══════════ */
+                <>
+                  {/* Top visual strip — product showcase */}
+                  <div
+                    className="relative h-[160px] overflow-hidden flex items-center justify-center"
+                    style={{ background: 'linear-gradient(135deg, #00002a 0%, #00004d 50%, #000066 100%)' }}
+                  >
+                    {/* Subtle grid */}
+                    <div className="absolute inset-0" style={{
+                      backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
+                      backgroundSize: '32px 32px',
+                    }} />
+
+                    {/* Glow orbs */}
+                    <div className="absolute w-48 h-48 rounded-full -top-16 -right-16"
+                      style={{ background: 'radial-gradient(circle, rgba(0,100,255,0.25), transparent 70%)' }} />
+                    <div className="absolute w-32 h-32 rounded-full -bottom-8 left-8"
+                      style={{ background: 'radial-gradient(circle, rgba(0,200,255,0.15), transparent 70%)' }} />
+
+                    {/* Content */}
+                    <div className="relative text-center px-6">
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3"
+                        style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)' }}>
+                        <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60">
+                          Kenya&apos;s Official EcoFlow Dealer
                         </span>
                       </div>
-
-                      <h3 className="text-[22px] font-black text-gray-900 tracking-tight leading-tight mb-2 pr-8">
-                        Get deals before everyone else
-                      </h3>
-                      <p className="text-sm text-gray-500 font-medium leading-relaxed mb-6">
-                        Sign up for new EcoFlow arrivals, flash sales, and power tips. Kenya&apos;s best prices — straight to your inbox.
+                      <p className="text-white font-black text-xl leading-tight tracking-tight" style={{ letterSpacing: '-0.02em' }}>
+                        Power deals.<br />
+                        <span style={{ color: 'rgba(180,210,255,0.85)' }}>Before they sell out.</span>
                       </p>
+                    </div>
+                  </div>
 
-                      {/* Offer pills */}
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {['New arrivals first', 'Flash sales', 'M-Pesa deals', 'No spam'].map(tag => (
-                          <span key={tag} className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-gray-100 text-gray-500">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+                  {/* Form body */}
+                  <div className="px-7 pt-6 pb-7">
+                    <h3
+                      className="font-black text-gray-900 mb-1.5"
+                      style={{ fontSize: '1.2rem', letterSpacing: '-0.025em', lineHeight: 1.25 }}
+                    >
+                      Get exclusive offers first
+                    </h3>
+                    <p className="text-[13px] text-gray-400 font-medium leading-relaxed mb-5">
+                      New EcoFlow arrivals, flash sales, and M-Pesa deals — straight to your inbox.
+                    </p>
 
+                    <form onSubmit={submit}>
                       {/* Email input */}
                       <div className="relative mb-3">
                         <input
                           type="email"
                           value={email}
-                          onChange={e => setEmail(e.target.value)}
+                          onChange={e => { setEmail(e.target.value); if (phase === 'error') { setPhase('form'); setErrMsg('') } }}
                           placeholder="your@email.com"
                           required
-                          autoFocus
-                          className="w-full h-13 px-5 py-4 rounded-2xl border-2 border-gray-200 text-sm font-medium text-gray-900 placeholder-gray-300 outline-none transition-all focus:border-[#0000ff] focus:ring-4 focus:ring-blue-50 bg-gray-50 focus:bg-white"
-                          style={{ fontSize: '16px' }}
+                          autoComplete="email"
+                          className="w-full px-5 py-4 rounded-[14px] text-gray-900 font-medium placeholder-gray-300 outline-none transition-all"
+                          onFocus={e => {
+                            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,0,255,0.12), 0 1px 2px rgba(0,0,0,0.06)'
+                            e.currentTarget.style.borderColor = '#0000ff'
+                          }}
+                          onBlur={e => {
+                            e.currentTarget.style.boxShadow = ''
+                            e.currentTarget.style.borderColor = '#e5e7eb'
+                          }}
+                          style={{
+                            fontSize: '16px',
+                            border: phase === 'error' ? '1.5px solid #ef4444' : '1.5px solid #e5e7eb',
+                            background: '#fafafa',
+                          } as React.CSSProperties}
                         />
                       </div>
 
-                      {errMsg && (
-                        <p className="text-xs font-bold text-red-500 mb-3 px-1">{errMsg}</p>
+                      {/* Error */}
+                      {phase === 'error' && errMsg && (
+                        <motion.p
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-[11px] font-bold text-red-500 mb-3 px-1"
+                        >
+                          {errMsg}
+                        </motion.p>
                       )}
 
+                      {/* Submit */}
                       <button
                         type="submit"
-                        disabled={status === 'loading'}
-                        className="w-full h-13 py-4 rounded-2xl text-white font-black text-sm tracking-wide flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
+                        disabled={phase === 'loading'}
+                        className="w-full py-[15px] text-white font-black text-sm rounded-[14px] transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2.5"
                         style={{
-                          background: 'linear-gradient(135deg, #0000ff 0%, #0000cc 100%)',
-                          boxShadow: '0 8px 24px rgba(0,0,255,0.28)',
+                          background: phase === 'loading'
+                            ? '#0000cc'
+                            : 'linear-gradient(135deg, #0000ff 0%, #0000cc 100%)',
+                          boxShadow: phase === 'loading' ? 'none' : '0 6px 24px rgba(0,0,255,0.32)',
+                          letterSpacing: '0.01em',
                         }}
                       >
-                        {status === 'loading'
-                          ? <><Loader2 size={16} className="animate-spin" /> Subscribing...</>
-                          : 'Get Exclusive Deals'
-                        }
+                        {phase === 'loading' ? (
+                          <>
+                            <svg className="animate-spin" width="15" height="15" fill="none" viewBox="0 0 24 24">
+                              <circle cx="12" cy="12" r="10" stroke="rgba(255,255,255,0.25)" strokeWidth="3" />
+                              <path d="M12 2a10 10 0 0 1 10 10" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                            </svg>
+                            Subscribing...
+                          </>
+                        ) : (
+                          'Get Exclusive Deals'
+                        )}
                       </button>
-
-                      <p className="text-[10px] text-center text-gray-300 font-medium mt-3">
-                        No spam · Unsubscribe anytime · Free
-                      </p>
                     </form>
-                  )
-                }
-              </div>
+
+                    {/* Trust line */}
+                    <div className="flex items-center justify-center gap-4 mt-4">
+                      {[
+                        { icon: '✓', text: 'No spam' },
+                        { icon: '✓', text: 'Unsubscribe anytime' },
+                        { icon: '✓', text: 'Free' },
+                      ].map(({ icon, text }) => (
+                        <span key={text} className="flex items-center gap-1 text-[10px] font-bold text-gray-300">
+                          <span className="text-[#0000ff]">{icon}</span> {text}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           </motion.div>
         </>
       )}
     </AnimatePresence>
   )
-
 }
