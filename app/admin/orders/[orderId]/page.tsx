@@ -5,6 +5,7 @@ import Link from 'next/link'
 // ── Client component — needs useState/fetch ──────────────────────────────────
 import { SendInvoiceButton } from './_SendInvoiceButton'
 import { PrintReceiptButton } from './_PrintReceiptButton'
+import { DownloadReceiptButton } from './_DownloadReceiptButton'
 
 import { ArrowLeft, CheckCircle, Clock, Truck, Package, CreditCard, MapPin, Phone, Mail, Printer, Send } from 'lucide-react'
 
@@ -54,6 +55,7 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <DownloadReceiptButton orderId={order.id} orderNumber={order.order_number} />
           <PrintReceiptButton orderId={order.id} orderNumber={order.order_number} />
           <SendInvoiceButton orderId={order.id} email={order.guest_email} />
         </div>
