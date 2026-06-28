@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Bell, Eye, Search, Download as DownloadIcon, CheckCircle, Clock, AlertCircle, FileText, Loader2 } from 'lucide-react'
+import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle, FileText, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminNotify } from '@/components/admin/AdminNotify'
 
@@ -367,7 +367,7 @@ export default function AdminOrdersPage() {
                           title="Download PDF receipt to share via WhatsApp"
                           className="w-9 h-9 rounded-xl flex items-center justify-center transition-all bg-gray-50 text-gray-400 hover:bg-green-600 hover:text-white hover:shadow-lg hover:shadow-green-200"
                         >
-                          <DownloadIcon size={15} />
+                          <Download size={15} />
                         </button>
                         {(order.payment_status === 'pending' || order.payment_status === 'failed') && (
                           <button
