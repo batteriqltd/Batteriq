@@ -167,6 +167,25 @@ export default function AdminOrdersPage() {
     }
   }
 
+  async function downloadReceipt(order: Order) {
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}/download-receipt`)
+      if (!res.ok) throw new Error('Failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `Batteriq-Receipt-${order.order_number ?? order.id}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      notify('success', 'Receipt Downloaded', 'PDF saved — share via WhatsApp')
+    } catch {
+      notify('error', 'Download Failed', 'Could not generate receipt. Try again.')
+    }
+  }
+
     const filtered = orders.filter(o => {
     const matchFilter =
       filter === 'all' ? true
