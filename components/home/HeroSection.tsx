@@ -29,7 +29,7 @@ const slides: Slide[] = [
     cta: { label: 'Shop Power Stations', href: '/ecoflow-kenya' },
     ctaSecondary: { label: 'View All Products', href: '/#power-stations' },
     bg: 'from-slate-900 via-blue-950 to-slate-900',
-    image: '/heroes/hero-power-stations-new.jpg',
+    image: '/heroes/hero-power-stations-new.png',
     product: 'EcoFlow DELTA Pro',
     startingPrice: 'From KES 27,259',
   },
