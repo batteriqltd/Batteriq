@@ -52,7 +52,7 @@ export default async function BluesttiCollectionPage() {
           { label: 'Home', href: '/' },
           { label: 'Bluetti', href: '/bluetti' },
         ]}
-        bgImage="/heroes/battery-hero.jpg"
+        bgImage="/heroes/hero-bluetti.jpg"
         productImage="/products/bluetti/bluetti-ac200pl.jpg"
         productAlt="BLUETTI AC200PL"
         badge="Official BLUETTI Authorised Dealer"
