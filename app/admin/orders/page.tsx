@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle, FileText, Loader2, Trash2 } from 'lucide-react'
+import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle, FileText, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminNotify } from '@/components/admin/AdminNotify'
 
@@ -33,7 +33,6 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [sendingInvoice, setSendingInvoice] = useState<string | null>(null)
-  const [deleting, setDeleting] = useState<string | null>(null)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const { notify } = useAdminNotify()
@@ -168,28 +167,6 @@ export default function AdminOrdersPage() {
     }
   }
 
-  async function deleteOrder(order: Order) {
-    const ok = window.confirm(
-      `Delete order ${order.order_number}?\n\nCustomer: ${order.guest_name ?? '—'}\nAmount: ${fmt(order.total_kes)}\n\nThis permanently removes it and cannot be undone.`
-    )
-    if (!ok) return
-    setDeleting(order.id)
-    try {
-      const res = await fetch(`/api/admin/orders/${order.id}`, { method: 'DELETE' })
-      const data = await res.json().catch(() => ({}))
-      if (res.ok) {
-        setOrders(prev => prev.filter(o => o.id !== order.id))
-        notify('success', 'Order Deleted', `${order.order_number} removed`)
-      } else {
-        notify('error', 'Delete Failed', data.error ?? 'Could not delete order')
-      }
-    } catch {
-      notify('error', 'Network Error', 'Could not delete order')
-    } finally {
-      setDeleting(null)
-    }
-  }
-
   async function downloadReceipt(order: Order) {
     try {
       const res = await fetch(`/api/admin/orders/${order.id}/download-receipt`)
@@ -251,56 +228,49 @@ export default function AdminOrdersPage() {
 
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-10">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2.5">Sales Operations</p>
-          <h1 className="text-[26px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">Order Management</h1>
-          <div className="flex items-center gap-4 mt-2">
-            <p className="text-gray-400 text-sm font-medium flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              Live Monitoring — {orders.length} orders tracked
-            </p>
-            <span className="text-[10px] text-gray-400 font-bold flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
-              Live · Auto-refreshes every 10s
-              {lastRefresh && <span className="text-gray-300 font-normal ml-1">· Last: {lastRefresh.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>}
-            </span>
-          </div>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-10">
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2">Sales Operations</p>
+          <h1 className="text-[24px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">Order Management</h1>
+          <p className="text-[11px] sm:text-[10px] text-gray-400 font-bold flex items-center gap-1.5 mt-2">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
+            Live · {orders.length} orders · auto-refresh 10s
+            {lastRefresh && <span className="text-gray-300 font-normal hidden sm:inline ml-1">· Last: {lastRefresh.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>}
+          </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 flex-shrink-0">
           <a
             href="/api/admin/export?type=orders"
-            className="h-11 px-6 rounded-2xl bg-white border border-gray-100 text-sm font-black text-gray-900 flex items-center gap-2 transition-all hover:border-blue-500 hover:shadow-lg hover:-translate-y-0.5"
+            className="h-11 px-4 sm:px-6 rounded-2xl bg-white border border-gray-100 text-xs sm:text-sm font-black text-gray-900 flex items-center gap-2 transition-all hover:border-blue-500 hover:shadow-lg hover:-translate-y-0.5"
             style={{ boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}
           >
             <Download size={16} />
-            EXPORT TO CSV
+            <span className="hidden sm:inline">Export CSV</span>
+            <span className="sm:hidden">CSV</span>
           </a>
-          <div
-            className="h-11 px-6 rounded-2xl bg-[#0000ff] text-white flex items-center shadow-lg shadow-blue-200"
-          >
-            <p className="text-sm font-black tracking-widest uppercase">{filtered.length} ACTIVE VIEW</p>
+          <div className="h-11 px-4 sm:px-6 rounded-2xl bg-[#0000ff] text-white flex items-center shadow-lg shadow-blue-200">
+            <p className="text-xs sm:text-sm font-black tracking-widest uppercase whitespace-nowrap">{filtered.length}<span className="hidden sm:inline"> Active View</span></p>
           </div>
         </div>
       </div>
 
       {/* Search + filters */}
-      <div className="flex flex-wrap items-center gap-4 mb-8">
-        <div className="relative flex-1 min-w-[300px] max-w-md group">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+        <div className="relative flex-1 sm:min-w-[300px] sm:max-w-md group">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-blue-600 transition-colors" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search by order ID, name, or phone…"
+            placeholder="Search order, name or phone…"
             className="w-full pl-12 pr-6 h-12 rounded-[16px] border border-gray-100 text-[14px] font-medium outline-none bg-white shadow-sm transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-600/5"
           />
         </div>
-        <div className="flex p-1.5 bg-white rounded-[20px] border border-gray-100 shadow-sm gap-1">
+        <div className="flex p-1.5 bg-white rounded-[20px] border border-gray-100 shadow-sm gap-1 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-1.5">
           {(['all', 'today', 'pending', 'paid', 'cod'] as const).map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-5 py-2 rounded-[14px] text-[11px] font-black transition-all uppercase tracking-widest ${filter === f ? 'bg-[#0000ff] text-white shadow-lg shadow-blue-200' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
+              className={`px-4 sm:px-5 py-2 rounded-[14px] text-[11px] font-black transition-all uppercase tracking-widest whitespace-nowrap ${filter === f ? 'bg-[#0000ff] text-white shadow-lg shadow-blue-200' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}
             >
               {f === 'all' ? 'All' : f === 'cod' ? 'C.O.D' : f}
             </button>
@@ -308,9 +278,9 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table (desktop) */}
       <div
-        className="bg-white rounded-[32px] overflow-hidden"
+        className="hidden lg:block bg-white rounded-[32px] overflow-hidden"
         style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}
       >
         <div className="overflow-x-auto w-full" style={{WebkitOverflowScrolling:"touch"}}>
@@ -428,14 +398,6 @@ export default function AdminOrdersPage() {
                             CONFIRM CASH
                           </button>
                         )}
-                        <button
-                          onClick={() => deleteOrder(order)}
-                          disabled={deleting === order.id}
-                          title="Delete this order (permanent)"
-                          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all bg-gray-50 text-gray-400 hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {deleting === order.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
-                        </button>
                       </div>
                     </td>
                   </motion.tr>
@@ -467,6 +429,98 @@ export default function AdminOrdersPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Cards (mobile / tablet) */}
+      <div className="lg:hidden space-y-3">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100">
+            <div className="w-10 h-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin mb-3" />
+            <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest">Loading orders…</p>
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100">
+            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mb-3"><Search size={22} className="text-gray-300" /></div>
+            <p className="text-sm font-black text-gray-900">No orders found</p>
+            <p className="text-xs text-gray-400 mt-1">Adjust your search or filters.</p>
+          </div>
+        ) : (
+          filtered.map(order => {
+            const payCls =
+              order.payment_status === 'paid' ? 'bg-green-100 text-green-700'
+              : order.payment_status === 'failed' ? 'bg-red-100 text-red-700'
+              : 'bg-amber-100 text-amber-700'
+            return (
+              <div key={order.id} className="bg-white rounded-[22px] p-4 border border-gray-100" style={{ boxShadow: '0 2px 16px rgba(0,0,50,0.05)' }}>
+                {/* Top row */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[12px] font-black font-mono text-blue-600 leading-none">{order.order_number}</p>
+                    <p className="text-[15px] font-black text-gray-900 mt-1.5 truncate">{order.guest_name ?? '—'}</p>
+                    <p className="text-[11px] text-gray-400 font-bold mt-0.5">{order.guest_phone ?? '—'}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest inline-flex ${payCls}`}>{order.payment_status}</span>
+                    <p className="text-[10px] text-gray-400 font-bold mt-1.5">
+                      {new Date(order.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })} · {new Date(order.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Amount + items */}
+                <div className="flex items-end justify-between gap-3 mt-3 pt-3 border-t border-gray-50">
+                  <div className="min-w-0">
+                    <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-0.5">
+                      {order.items?.length ?? 0} items · {order.payment_method?.replace(/_/g, ' ')}
+                    </p>
+                    <p className="text-[11px] text-gray-400 truncate max-w-[190px]">
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {order.items?.slice(0, 2).map((it: any) => it.name).join(', ')}
+                    </p>
+                  </div>
+                  <p className="text-[20px] font-black font-mono text-gray-900 whitespace-nowrap">{fmt(order.total_kes)}</p>
+                </div>
+
+                {/* Fulfillment */}
+                <select
+                  value={order.fulfillment_status}
+                  onChange={e => updateFulfillment(order.id, e.target.value)}
+                  className="w-full text-[11px] font-black uppercase tracking-widest border-2 border-gray-100 rounded-xl px-3 h-11 bg-white outline-none text-gray-600 mt-3 focus:border-blue-500"
+                >
+                  {FULFILLMENT_OPTIONS.map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+                </select>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 mt-3">
+                  <Link href={`/admin/orders/${order.id}`} className="flex-1 h-11 rounded-xl flex items-center justify-center gap-2 bg-gray-50 text-gray-700 text-xs font-black active:scale-[0.98] transition-transform">
+                    <Eye size={15} /> View
+                  </Link>
+                  <button onClick={() => sendInvoice(order)} disabled={sendingInvoice === order.id}
+                    title={order.guest_email ? `Send invoice to ${order.guest_email}` : 'No email on this order'}
+                    className="w-11 h-11 rounded-xl flex items-center justify-center bg-purple-50 text-purple-600 active:scale-95 transition-transform disabled:opacity-50">
+                    {sendingInvoice === order.id ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+                  </button>
+                  <button onClick={() => downloadReceipt(order)} title="Download PDF receipt"
+                    className="w-11 h-11 rounded-xl flex items-center justify-center bg-green-50 text-green-600 active:scale-95 transition-transform">
+                    <Download size={16} />
+                  </button>
+                </div>
+
+                {(order.payment_status === 'pending' || order.payment_status === 'failed') && (
+                  <button onClick={() => sendStkPush(order)} className="w-full mt-2 h-11 rounded-xl bg-green-500 text-white text-xs font-black uppercase tracking-widest active:scale-[0.98] transition-transform">
+                    Send STK Push
+                  </button>
+                )}
+                {order.payment_method === 'cod_cash' && order.payment_status === 'pending' && (
+                  <button onClick={() => markCashPaid(order)} className="w-full mt-2 h-11 rounded-xl text-white text-xs font-black uppercase tracking-widest active:scale-[0.98] transition-transform"
+                    style={{ background: 'linear-gradient(135deg, #059669, #065f46)' }}>
+                    Confirm Cash Payment
+                  </button>
+                )}
+              </div>
+            )
+          })
+        )}
       </div>
     </div>
   )
