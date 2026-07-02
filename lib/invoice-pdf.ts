@@ -24,6 +24,7 @@ export interface InvoiceData {
   mpesaRef?: string
   totalPaid: number
   totalDue: number
+  notes?: string
 }
 
 function fmt(n: number): string {
@@ -272,8 +273,13 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<string> {
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8.5)
   doc.setTextColor(90, 90, 110)
-  doc.text('An official eTIMS KRA invoice will be issued within 24 hours of payment confirmation.', margin + 5, y + 14)
-  doc.text('For support: call +254 716 822 014 or email info@batteriq.com', margin + 5, y + 20)
+  if (data.notes && data.notes.trim()) {
+    const noteLines = doc.splitTextToSize(data.notes.trim(), W - margin * 2 - 10)
+    doc.text(noteLines.slice(0, 2), margin + 5, y + 14)
+  } else {
+    doc.text('An official eTIMS KRA invoice will be issued within 24 hours of payment confirmation.', margin + 5, y + 14)
+    doc.text('For support: call +254 716 822 014 or email info@batteriq.com', margin + 5, y + 20)
+  }
   y += 34
 
   // ─── FOOTER ─────────────────────────────────────────────────────

@@ -86,12 +86,33 @@ ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS created_at        TIMEST
 
 
 -- ----------------------------------------------------------------------------
+-- 6) MANUAL INVOICES (invoices created in Admin -> Create Invoice)
+--    Optional history/tracking. The invoice PDF + email still work without it,
+--    but running this lets "Recent Invoices" list what has been generated.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS manual_invoices (
+  id             UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  invoice_number TEXT        NOT NULL UNIQUE,
+  customer_name  TEXT        NOT NULL,
+  customer_email TEXT,
+  customer_phone TEXT,
+  items          JSONB       NOT NULL DEFAULT '[]',
+  subtotal_kes   NUMERIC(12,2) NOT NULL DEFAULT 0,
+  total_kes      NUMERIC(12,2) NOT NULL DEFAULT 0,
+  payment_status TEXT        NOT NULL DEFAULT 'pending',
+  notes          TEXT,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+
+-- ----------------------------------------------------------------------------
 -- SECURITY (Row Level Security)
 -- ----------------------------------------------------------------------------
 ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE newsletter_broadcasts  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE visitor_sessions       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE push_subscriptions     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE manual_invoices        ENABLE ROW LEVEL SECURITY;
 
 -- Done. You should now be able to:
 --   • Subscribe on the site  → appears in Admin → Newsletter → Subscribers
