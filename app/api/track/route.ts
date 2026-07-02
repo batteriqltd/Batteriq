@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-// Public heartbeat endpoint. The site's VisitorTracker calls this every ~15s
+// Public heartbeat endpoint. The site's VisitorTracker calls this every ~12s
 // (and on every page change) so the admin Live Visitors page can show who is
 // currently browsing and on which page. Writes go through the service-role
 // client, so RLS on visitor_sessions stays locked to the server only.
@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
     device?: string
     referrer?: string
     enteredAt?: string
+    leave?: boolean
   }
 
   try {
@@ -28,6 +29,14 @@ export async function POST(request: NextRequest) {
 
   try {
     const supabase = createAdminClient()
+
+    // Tab closed / navigated away — remove the session so it disappears fast.
+    if (body.leave) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('visitor_sessions') as any).delete().eq('visitor_id', visitorId)
+      return NextResponse.json({ ok: true })
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase.from('visitor_sessions') as any).upsert(
       {

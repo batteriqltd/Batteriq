@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
-import { createClient } from '@supabase/supabase-js'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Monitor, Smartphone, Tablet, Globe, ArrowUpRight,
-  Users, Activity, Clock, Eye
+  Users, Activity, Clock, Eye, Wifi, WifiOff
 } from 'lucide-react'
 
 interface Visitor {
@@ -15,11 +14,13 @@ interface Visitor {
   device: string
   referrer: string
   enteredAt: string
-  updatedAt: string
+  lastSeen: string
 }
 
+const POLL_MS = 5000
+
 function timeOnSite(enteredAt: string): string {
-  const secs = Math.floor((Date.now() - new Date(enteredAt).getTime()) / 1000)
+  const secs = Math.max(0, Math.floor((Date.now() - new Date(enteredAt).getTime()) / 1000))
   if (secs < 60) return `${secs}s`
   const mins = Math.floor(secs / 60)
   if (mins < 60) return `${mins}m ${secs % 60}s`
@@ -36,93 +37,53 @@ function DeviceIcon({ device }: { device: string }) {
 const PAGE_COLORS: Record<string, string> = {
   'Homepage': '#0000ff',
   'EcoFlow Kenya': '#00a651',
+  'EcoFlow Collection': '#0000ff',
+  'BLUETTI Collection': '#7c3aed',
+  'Product — EcoFlow': '#2563eb',
+  'Product — BLUETTI': '#7c3aed',
+  'Power Stations': '#0ea5e9',
+  'Solar Panels': '#f59e0b',
+  'Accessories': '#64748b',
   'Cart': '#f59e0b',
   'Checkout': '#ef4444',
   'Order Confirmed': '#22c55e',
+  'Support': '#64748b',
+  'Contact': '#64748b',
 }
 
 export default function VisitorsPage() {
-  const supabase = useMemo(() => createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    { realtime: { params: { eventsPerSecond: 2 } }, auth: { persistSession: false, autoRefreshToken: false } }
-  ), [])
-
   const [visitors, setVisitors] = useState<Visitor[]>([])
   const [totalToday, setTotalToday] = useState(0)
   const [tick, setTick] = useState(0)
-  const [, setIsConnected] = useState(false)
+  const [connected, setConnected] = useState(true)
+  const [loaded, setLoaded] = useState(false)
 
-  // Update time-on-site every second
+  const fetchVisitors = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/visitors', { cache: 'no-store' })
+      if (!res.ok) { setConnected(false); return }
+      const data = await res.json()
+      setVisitors(data.visitors ?? [])
+      setTotalToday(data.ordersToday ?? 0)
+      setConnected(true)
+      setLoaded(true)
+    } catch {
+      setConnected(false)
+    }
+  }, [])
+
+  // Poll every 5s
+  useEffect(() => {
+    fetchVisitors()
+    const t = setInterval(fetchVisitors, POLL_MS)
+    return () => clearInterval(t)
+  }, [fetchVisitors])
+
+  // Re-tick every second so time-on-site counts up smoothly
   useEffect(() => {
     const t = setInterval(() => setTick(p => p + 1), 1000)
     return () => clearInterval(t)
   }, [])
-
-  // Count unique visitors from orders today (real data)
-  useEffect(() => {
-    async function loadToday() {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { count } = await (supabase.from('orders') as any)
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', today.toISOString())
-      setTotalToday(count ?? 0)
-    }
-    loadToday()
-  }, [supabase])
-
-  // Subscribe to presence channel
-  useEffect(() => {
-    const channel = supabase.channel('bq_visitors')
-
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState()
-        const all: Visitor[] = []
-        Object.values(state).forEach((presences) => {
-          const arr = (presences as unknown) as Visitor[]
-          if (arr.length > 0) all.push(arr[arr.length - 1])
-        })
-        setVisitors(all)
-      })
-      .on('presence', { event: 'join' }, () => {
-        const state = channel.presenceState()
-        const all: Visitor[] = []
-        Object.values(state).forEach((presences) => {
-          const arr = (presences as unknown) as Visitor[]
-          if (arr.length > 0) all.push(arr[arr.length - 1])
-        })
-        setVisitors(all)
-      })
-      .on('presence', { event: 'leave' }, () => {
-        const state = channel.presenceState()
-        const all: Visitor[] = []
-        Object.values(state).forEach((presences) => {
-          const arr = (presences as unknown) as Visitor[]
-          if (arr.length > 0) all.push(arr[arr.length - 1])
-        })
-        setVisitors(all)
-      })
-      .subscribe(async (status) => {
-        setIsConnected(status === 'SUBSCRIBED')
-        if (status === 'SUBSCRIBED') {
-          // Track the admin as an active session too
-          await channel.track({
-            visitorId: `admin_${Math.random().toString(36).slice(2)}`,
-            page: '/admin/visitors',
-            pageLabel: 'Admin Dashboard',
-            device: window.innerWidth < 768 ? 'Mobile' : 'Desktop',
-            referrer: 'Direct',
-            enteredAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          })
-        }
-      })
-
-    return () => { supabase.removeChannel(channel) }
-  }, [supabase])
 
   // Page breakdown
   const pageBreakdown = useMemo(() => {
@@ -169,16 +130,25 @@ export default function VisitorsPage() {
             Live Visitors
           </h1>
           <p className="text-gray-400 text-sm font-medium mt-2 flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
-            </span>
-            Updating in real time · Supabase Presence
+            {connected ? (
+              <>
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                </span>
+                Updating every 5 seconds · Live from batteriq.com
+              </>
+            ) : (
+              <>
+                <WifiOff size={13} className="text-amber-500" />
+                Reconnecting…
+              </>
+            )}
           </p>
         </div>
         <div className="h-11 px-5 rounded-2xl flex items-center gap-2 font-black text-[13px]"
           style={{ background: liveCount > 0 ? 'linear-gradient(135deg, #00004d, #0000cc)' : '#f3f4f6', color: liveCount > 0 ? 'white' : '#9ca3af' }}>
-          <Activity size={15} />
+          {connected ? <Activity size={15} /> : <Wifi size={15} />}
           {liveCount === 0 ? 'No one online now' : `${liveCount} online right now`}
         </div>
       </div>
@@ -235,13 +205,18 @@ export default function VisitorsPage() {
 
           <div className="overflow-y-auto" style={{ maxHeight: '440px' }}>
             <AnimatePresence>
-              {visitors.length === 0 ? (
+              {!loaded ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <div className="w-8 h-8 rounded-full border-2 border-gray-100 border-t-[#0000ff] animate-spin" />
+                  <p className="text-sm font-bold text-gray-300">Loading live sessions…</p>
+                </div>
+              ) : visitors.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 gap-3">
                   <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center">
                     <Users size={22} className="text-gray-200" />
                   </div>
                   <p className="text-sm font-bold text-gray-400">No visitors online right now</p>
-                  <p className="text-xs text-gray-300 font-medium">When someone visits batteriq.com, they will appear here</p>
+                  <p className="text-xs text-gray-300 font-medium">When someone visits batteriq.com, they will appear here within seconds</p>
                 </div>
               ) : (
                 visitors.map((v, i) => (

@@ -1,24 +1,22 @@
 'use client'
 
+/**
+ * VisitorTracker — invisible presence heartbeat for the storefront.
+ *
+ * Every browser session POSTs a heartbeat to /api/track:
+ *   - immediately on load
+ *   - on every page navigation
+ *   - every 12s while the tab stays open
+ *   - a final "leave" beacon when the tab closes / is hidden
+ *
+ * The admin "Live Visitors" page polls /api/admin/visitors and shows every
+ * session seen in the last 60s. Admin pages are NOT tracked as visitors.
+ */
+
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
-import { createClient } from '@supabase/supabase-js'
 
-// Singleton Supabase client for realtime — created once for the browser session
-let _realtimeClient: ReturnType<typeof createClient> | null = null
-function getRealtimeClient() {
-  if (!_realtimeClient) {
-    _realtimeClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        realtime: { params: { eventsPerSecond: 2 } },
-        auth: { persistSession: false, autoRefreshToken: false },
-      }
-    )
-  }
-  return _realtimeClient
-}
+const HEARTBEAT_MS = 12000
 
 function getOrCreateVisitorId(): string {
   try {
@@ -50,6 +48,8 @@ function getReferrer(): string {
     if (r.includes('tiktok')) return 'TikTok'
     if (r.includes('whatsapp')) return 'WhatsApp'
     if (r.includes('twitter') || r.includes('x.com')) return 'Twitter/X'
+    // Same-origin navigations shouldn't count as external referrals
+    if (r.includes(window.location.host)) return 'Direct'
     return 'Referral'
   } catch { return 'Direct' }
 }
@@ -70,72 +70,99 @@ function getPageLabel(path: string): string {
   if (path.startsWith('/compare')) return 'Compare'
   if (path.startsWith('/contact')) return 'Contact'
   if (path.startsWith('/support')) return 'Support'
-  if (path.startsWith('/admin')) return 'Admin'
+  if (path.startsWith('/track-order')) return 'Track Order'
+  if (path.startsWith('/about')) return 'About'
   return 'Other'
 }
 
 export function VisitorTracker() {
   const pathname = usePathname()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const channelRef = useRef<any>(null)
-  const subscribedRef = useRef(false)
   const visitorIdRef = useRef('')
-  const enteredAtRef = useRef(new Date().toISOString())
+  const enteredAtRef = useRef('')
   const referrerRef = useRef('')
+  const pathRef = useRef(pathname)
 
-  // Mount once — create channel and subscribe
+  // Keep latest path available to the heartbeat interval without re-subscribing
+  pathRef.current = pathname
+
+  // Never track admins as storefront visitors
+  const isAdmin = pathname?.startsWith('/admin')
+
+  // Heartbeat lifecycle
   useEffect(() => {
-    visitorIdRef.current = getOrCreateVisitorId()
-    referrerRef.current = getReferrer()
-    enteredAtRef.current = new Date().toISOString()
+    if (isAdmin) return
+    if (!visitorIdRef.current) {
+      visitorIdRef.current = getOrCreateVisitorId()
+      referrerRef.current = getReferrer()
+      enteredAtRef.current = new Date().toISOString()
+    }
 
-    const supabase = getRealtimeClient()
+    function beat() {
+      const path = pathRef.current || '/'
+      const payload = JSON.stringify({
+        visitorId: visitorIdRef.current,
+        page: path,
+        pageLabel: getPageLabel(path),
+        device: getDevice(),
+        referrer: referrerRef.current || 'Direct',
+        enteredAt: enteredAtRef.current,
+      })
+      fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      }).catch(() => { /* tracking must never break browsing */ })
+    }
 
-    const channel = supabase.channel('bq_visitors', {
-      config: {
-        presence: { key: visitorIdRef.current },
-      },
-    })
+    function leave() {
+      const body = JSON.stringify({ visitorId: visitorIdRef.current, leave: true })
+      try {
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))
+          return
+        }
+      } catch { /* fall through */ }
+      fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }).catch(() => {})
+    }
 
-    channelRef.current = channel
+    // Fire immediately, then on an interval
+    beat()
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') beat()
+    }, HEARTBEAT_MS)
 
-    channel.subscribe((status: string) => {
-      if (status === 'SUBSCRIBED') {
-        subscribedRef.current = true
-        channel.track({
-          visitorId: visitorIdRef.current,
-          page: pathname,
-          pageLabel: getPageLabel(pathname),
-          device: getDevice(),
-          referrer: referrerRef.current,
-          enteredAt: enteredAtRef.current,
-          updatedAt: new Date().toISOString(),
-        })
-      }
-    })
+    // Re-beat when the tab becomes visible again
+    function onVisible() { if (document.visibilityState === 'visible') beat() }
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('pagehide', leave)
 
     return () => {
-      subscribedRef.current = false
-      try { supabase.removeChannel(channel) } catch { /* ignore */ }
+      clearInterval(interval)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('pagehide', leave)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin])
 
-  // Update presence on page navigation
+  // Beat on navigation (page label changes)
   useEffect(() => {
-    if (!subscribedRef.current || !channelRef.current) return
-    try {
-      channelRef.current.track({
+    if (isAdmin || !visitorIdRef.current) return
+    const path = pathname || '/'
+    fetch('/api/track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         visitorId: visitorIdRef.current,
-        page: pathname,
-        pageLabel: getPageLabel(pathname),
+        page: path,
+        pageLabel: getPageLabel(path),
         device: getDevice(),
-        referrer: referrerRef.current,
+        referrer: referrerRef.current || 'Direct',
         enteredAt: enteredAtRef.current,
-        updatedAt: new Date().toISOString(),
-      })
-    } catch { /* ignore */ }
-  }, [pathname])
+      }),
+      keepalive: true,
+    }).catch(() => {})
+  }, [pathname, isAdmin])
 
   return null
 }
