@@ -17,6 +17,7 @@ type Slide = {
   image: string
   product: string
   startingPrice: string
+  heavyScrim?: boolean // stronger overlay for bright/light images
 }
 
 const slides: Slide[] = [
@@ -35,16 +36,17 @@ const slides: Slide[] = [
   },
   {
     id: 1,
-    badge: 'EcoFlow Solar Panels Kenya',
-    headline: 'Harvest the',
-    headlineAccent: 'African Sun',
-    subline: 'From 45W portable panels to 400W powerhouses. IP68 waterproof. Works with all EcoFlow stations.',
-    cta: { label: 'Shop Solar Panels', href: '/solar' },
-    ctaSecondary: { label: 'Learn More', href: '/#solar-panels' },
-    bg: 'from-amber-900 via-orange-950 to-slate-900',
-    image: '/heroes/hero-solar.jpg',
-    product: 'EcoFlow Solar Panels',
-    startingPrice: 'From KES 7,599',
+    badge: 'New · EcoFlow DELTA Series',
+    headline: 'Meet the',
+    headlineAccent: 'DELTA Series',
+    subline: 'Compact, reliable home backup from 1kWh to 11kWh. Keep the lights, fridge and Wi-Fi on through any blackout.',
+    cta: { label: 'Shop DELTA Series', href: '/power-stations' },
+    ctaSecondary: { label: 'Learn More', href: '/#power-stations' },
+    bg: 'from-slate-900 via-blue-950 to-slate-900',
+    image: '/heroes/delta-series-hero.png',
+    product: 'EcoFlow DELTA Series',
+    startingPrice: 'From KES 27,259',
+    heavyScrim: true,
   },
   {
     id: 2,
@@ -112,6 +114,17 @@ export function HeroSection() {
           <div className="absolute inset-0 hidden lg:block" style={{
             background: 'linear-gradient(to right, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 40%, transparent 65%)'
           }} />
+          {/* Extra scrim for bright/light hero images (e.g. DELTA lineup) so white text stays readable */}
+          {slide.heavyScrim && (
+            <>
+              <div className="absolute inset-0" style={{
+                background: 'linear-gradient(105deg, rgba(0,0,15,0.82) 0%, rgba(0,0,15,0.6) 34%, rgba(0,0,15,0.2) 58%, transparent 80%)'
+              }} />
+              <div className="absolute inset-0" style={{
+                background: 'linear-gradient(to bottom, transparent 40%, rgba(0,0,15,0.55) 78%, rgba(0,0,15,0.9) 100%)'
+              }} />
+            </>
+          )}
         </motion.div>
       </AnimatePresence>
 

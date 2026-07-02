@@ -838,6 +838,29 @@ section, .section, [data-section] {
   background: rgba(0, 0, 255, 0.12);
 }
 
+/* ── Mobile: keep scrollbars visible so users know a region scrolls ── */
+.admin-shell,
+.admin-shell * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 80, 0.22) transparent;
+}
+/* Horizontal scroll strips (tables, chip rows) inside admin — always show a slim bar */
+.admin-shell .overflow-x-auto::-webkit-scrollbar,
+.admin-shell [style*="overflow-x"]::-webkit-scrollbar {
+  height: 6px;
+  -webkit-appearance: none;
+}
+.admin-shell .overflow-x-auto::-webkit-scrollbar-thumb,
+.admin-shell [style*="overflow-x"]::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 80, 0.2);
+  border-radius: 99px;
+}
+/* Smooth momentum scrolling on touch devices */
+.admin-shell .overflow-x-auto,
+.admin-shell .overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
 /* ── Hero 3D product float ── */
 @keyframes heroFloat {
   0%, 100% { transform: translateY(0px); }

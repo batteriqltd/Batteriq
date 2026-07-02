@@ -107,8 +107,9 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
         </div>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-4 py-6 space-y-1" style={{overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.15) transparent"}}>
+      {/* Nav (scrollable, with a bottom fade so it's clear there's more) */}
+      <div className="relative flex-1 min-h-0">
+      <nav className="absolute inset-0 px-4 py-6 space-y-1" style={{overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.25) transparent"}}>
         <p className="text-[10px] font-black uppercase tracking-[0.2em] px-3 mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>Management</p>
         {NAV.map(item => {
           const active = isActive(item)
@@ -133,6 +134,9 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
           )
         })}
       </nav>
+        {/* Scroll hint fade */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8" style={{ background: 'linear-gradient(to top, rgba(0,0,45,0.95), transparent)' }} />
+      </div>
 
       {/* Export */}
       <div className="px-4 pb-4 border-t pt-6" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
@@ -232,25 +236,27 @@ export function AdminTopBar() {
       <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 100%)' }} />
 
       {/* Left — offset on mobile to avoid hamburger overlap */}
-      <div className="relative pl-14 lg:pl-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>Operations Console</p>
-        <h2 className="text-base sm:text-xl font-black text-white" style={{ letterSpacing: '-0.02em', textShadow: '0 1px 6px rgba(0,0,0,0.25)' }}>
-          Welcome back, Admin
+      <div className="relative pl-14 lg:pl-0 min-w-0">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-0.5 hidden sm:block" style={{ color: 'rgba(255,255,255,0.55)' }}>Operations Console</p>
+        <h2 className="text-[15px] sm:text-xl font-black text-white truncate" style={{ letterSpacing: '-0.02em', textShadow: '0 1px 6px rgba(0,0,0,0.25)' }}>
+          <span className="hidden sm:inline">Welcome back, Admin</span>
+          <span className="sm:hidden">Batteriq Admin</span>
         </h2>
       </div>
 
       {/* Right */}
-      <div className="relative flex items-center gap-3 sm:gap-5">
+      <div className="relative flex items-center gap-2 sm:gap-5 flex-shrink-0">
         <AdminPwaControls />
         <div className="w-px h-10 hidden lg:block" style={{ background: 'rgba(255,255,255,0.2)' }} />
-        <LiveClock />
-        <div className="w-px h-10 hidden sm:block" style={{ background: 'rgba(255,255,255,0.2)' }} />
-        <div className="flex items-center gap-2.5">
+        {/* Clock + account — desktop only, keeps the mobile bar clean */}
+        <div className="hidden md:block"><LiveClock /></div>
+        <div className="w-px h-10 hidden md:block" style={{ background: 'rgba(255,255,255,0.2)' }} />
+        <div className="hidden md:flex items-center gap-2.5">
           <div
             className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0"
             style={{ background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)', color: '#ffffff', backdropFilter: 'blur(4px)' }}
           >B</div>
-          <div className="hidden sm:block">
+          <div className="hidden lg:block">
             <p className="text-xs font-black text-white">Batteriq Admin</p>
             <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.55)' }}>info@batteriq.com</p>
           </div>
