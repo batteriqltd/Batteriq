@@ -1,5 +1,6 @@
 import { AdminSidebar, AdminTopBar } from '@/components/admin/Sidebar'
 import { AutoLogoutProvider } from '@/components/admin/AutoLogoutProvider'
+import { AdminSessionGuard } from '@/components/admin/AdminSessionGuard'
 import { AdminNotifyProvider } from '@/components/admin/AdminNotify'
 import { getAdminSession } from '@/lib/admin-auth'
 import type { Metadata } from 'next'
@@ -14,6 +15,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="admin-shell" style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: 'linear-gradient(135deg, #f8f9fb 0%, #f3f5f9 60%, #eef1f7 100%)' }}>
+
+      {/* Forces password re-entry on every fresh app launch */}
+      <AdminSessionGuard />
 
       {/* Sidebar */}
       <AdminSidebar adminName={session.email} adminRole={session.role} />

@@ -61,7 +61,10 @@ export async function POST(req: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 8 * 60 * 60,
+      // No maxAge/expires → this is a SESSION cookie. It is cleared when the
+      // app/browser session ends, so re-opening the installed PWA requires the
+      // password again. The token still carries an 8h absolute expiry as a
+      // server-side safety net (see exp above).
       path: '/',
     })
 

@@ -52,6 +52,11 @@ function LoginForm() {
         return
       }
 
+      // Mark THIS app session as freshly authenticated. The cold-launch guard
+      // reads this; it is wiped when the installed app is fully closed, so the
+      // next launch forces the password again.
+      try { sessionStorage.setItem('bq_admin_live', '1') } catch { /* ignore */ }
+
       // Start the cinematic loading sequence — 6 seconds total
       setLoadingPhase('phase1')
       await new Promise(r => setTimeout(r, 1500)) // Phase 1: 1.5s
