@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle, FileText, Loader2 } from 'lucide-react'
+import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle, FileText, Loader2, Trash2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminNotify } from '@/components/admin/AdminNotify'
 
@@ -33,6 +33,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [sendingInvoice, setSendingInvoice] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const { notify } = useAdminNotify()
@@ -164,6 +165,28 @@ export default function AdminOrdersPage() {
       notify('error', 'Network Error', 'Failed to send invoice')
     } finally {
       setSendingInvoice(null)
+    }
+  }
+
+  async function deleteOrder(order: Order) {
+    const ok = window.confirm(
+      `Delete order ${order.order_number}?\n\nCustomer: ${order.guest_name ?? '—'}\nAmount: ${fmt(order.total_kes)}\n\nThis permanently removes it and cannot be undone.`
+    )
+    if (!ok) return
+    setDeleting(order.id)
+    try {
+      const res = await fetch(`/api/admin/orders/${order.id}`, { method: 'DELETE' })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok) {
+        setOrders(prev => prev.filter(o => o.id !== order.id))
+        notify('success', 'Order Deleted', `${order.order_number} removed`)
+      } else {
+        notify('error', 'Delete Failed', data.error ?? 'Could not delete order')
+      }
+    } catch {
+      notify('error', 'Network Error', 'Could not delete order')
+    } finally {
+      setDeleting(null)
     }
   }
 
@@ -405,6 +428,14 @@ export default function AdminOrdersPage() {
                             CONFIRM CASH
                           </button>
                         )}
+                        <button
+                          onClick={() => deleteOrder(order)}
+                          disabled={deleting === order.id}
+                          title="Delete this order (permanent)"
+                          className="w-9 h-9 rounded-xl flex items-center justify-center transition-all bg-gray-50 text-gray-400 hover:bg-red-600 hover:text-white hover:shadow-lg hover:shadow-red-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deleting === order.id ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+                        </button>
                       </div>
                     </td>
                   </motion.tr>
