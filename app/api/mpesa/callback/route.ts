@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { extractMpesaReceiptNumber } from '@/lib/mpesa'
 import { emailPaymentConfirmed } from '@/lib/email'
+import { sendAdminPush } from '@/lib/push'
 import type { STKCallbackBody } from '@/lib/mpesa'
 
 export async function POST(request: NextRequest) {
@@ -50,6 +51,14 @@ export async function POST(request: NextRequest) {
         mpesa_transaction_code: receiptNumber,
       })
       .eq('id', order.id)
+
+    // Instant push alert to admin devices — fire-and-forget
+    sendAdminPush({
+      title: '💰 Payment Received',
+      body: `KES ${Number(order.total_kes).toLocaleString('en-KE')} · ${order.guest_name ?? 'Customer'}`,
+      tag: 'payment',
+      url: `/admin/orders/${order.id}`,
+    }).catch(() => {})
 
     // Send payment confirmation emails — non-blocking
     emailPaymentConfirmed({

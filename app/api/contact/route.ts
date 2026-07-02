@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { emailContactFormSubmission } from '@/lib/email'
+import { sendAdminPush } from '@/lib/push'
 
 export async function POST(req: Request) {
   try {
@@ -21,6 +22,14 @@ export async function POST(req: Request) {
       inquiry_type: inquiryType || null,
       message: message.trim(),
     })
+
+    // Instant push alert to admin devices — fire-and-forget
+    sendAdminPush({
+      title: `💬 New Question from ${firstName} ${lastName}`.trim(),
+      body: String(message).trim().slice(0, 60),
+      tag: 'message',
+      url: '/admin/messages',
+    }).catch(() => {})
 
     // Fire-and-forget emails — don't fail the submission if email fails
     emailContactFormSubmission({ firstName, lastName, email, phone, inquiryType, message }).catch((e) =>

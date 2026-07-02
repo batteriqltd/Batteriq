@@ -63,10 +63,37 @@ CREATE INDEX IF NOT EXISTS idx_visitor_sessions_last_seen
 --    public policies means nobody can read or write these tables directly from
 --    a browser — only your server can. This is the secure default.
 -- ----------------------------------------------------------------------------
+-- ----------------------------------------------------------------------------
+-- 5) PUSH SUBSCRIPTIONS (Web Push / PWA notifications)
+--    One row per admin device that has enabled notifications. The server sends
+--    Web Push messages to every row here when an order, payment, or customer
+--    message arrives. `endpoint` is unique so re-enabling on the same device
+--    just refreshes the existing row instead of duplicating it.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id                UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  admin_user_id     TEXT,
+  endpoint          TEXT        NOT NULL UNIQUE,
+  subscription_json JSONB       NOT NULL,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- If the table already existed, make sure the columns exist:
+ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS admin_user_id     TEXT;
+ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS endpoint          TEXT;
+ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS subscription_json JSONB;
+ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+
+-- ----------------------------------------------------------------------------
+-- SECURITY (Row Level Security)
+-- ----------------------------------------------------------------------------
 ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE newsletter_broadcasts  ENABLE ROW LEVEL SECURITY;
 ALTER TABLE visitor_sessions       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE push_subscriptions     ENABLE ROW LEVEL SECURITY;
 
 -- Done. You should now be able to:
 --   • Subscribe on the site  → appears in Admin → Newsletter → Subscribers
 --   • See people live         → Admin → Live Visitors
+--   • Enable notifications    → Admin top bar → get push alerts on your phone

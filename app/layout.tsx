@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { ChatWidget } from '@/components/chat/ChatWidget'
 import { VisitorTracker } from '@/components/analytics/VisitorTracker'
+import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister'
 import { NewsletterPopup } from '@/components/home/NewsletterPopup'
 import { GSAPProvider } from '@/components/animations/GSAPProvider'
 import { AOSProvider } from '@/components/animations/AOSProvider'
@@ -15,6 +16,12 @@ const jetbrainsMono = { variable: '--font-mono' }
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://batteriq.com'),
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'Batteriq Admin',
+    statusBarStyle: 'black-translucent',
+  },
   verification: {
     google: 'MGguyZgmNkfN_Ike_yZbWDRBIkhL-6GsU1yvHltKXQQ',
   },
@@ -178,6 +185,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main id="main-content" className="pt-16 lg:pt-[72px]">{children}</main>
         <GSAPProvider />
         <AOSProvider />
+        <ServiceWorkerRegister />
         <VisitorTracker />
         <NewsletterPopup />
         <ChatWidget />

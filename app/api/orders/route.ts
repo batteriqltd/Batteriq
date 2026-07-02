@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { emailOrderConfirmation, emailAdminNewOrder } from '@/lib/email'
 import { rateLimit } from '@/lib/rateLimit'
 import { sanitizeString, sanitizeEmail, sanitizePhone } from '@/lib/sanitize'
+import { sendAdminPush } from '@/lib/push'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function insertWithRetry(supabase: any, data: any, maxRetries = 3) {
@@ -154,6 +155,14 @@ export async function POST(req: Request) {
     }
 
     console.log('[ORDER] ✅ Order created:', order.order_number)
+
+    // Instant push alert to admin devices — fire-and-forget
+    sendAdminPush({
+      title: '🛒 New Order Received',
+      body: `${name} · KES ${Number(total).toLocaleString('en-KE')}`,
+      tag: 'order',
+      url: `/admin/orders/${order.id}`,
+    }).catch(() => {})
 
     // Send emails in background — never block the response
     const emailPayload = {

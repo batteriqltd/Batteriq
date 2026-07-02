@@ -7,6 +7,7 @@ import {
   Users, BarChart3, Download, Star, ImageIcon, Menu, X, Radio
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { AdminPwaControls } from '@/components/admin/AdminPwaControls'
 
 function LiveClock() {
   const [time, setTime] = useState('')
@@ -239,7 +240,9 @@ export function AdminTopBar() {
       </div>
 
       {/* Right */}
-      <div className="relative flex items-center gap-3 sm:gap-6">
+      <div className="relative flex items-center gap-3 sm:gap-5">
+        <AdminPwaControls />
+        <div className="w-px h-10 hidden lg:block" style={{ background: 'rgba(255,255,255,0.2)' }} />
         <LiveClock />
         <div className="w-px h-10 hidden sm:block" style={{ background: 'rgba(255,255,255,0.2)' }} />
         <div className="flex items-center gap-2.5">
