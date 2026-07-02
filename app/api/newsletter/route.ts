@@ -17,20 +17,31 @@ export async function POST(request: NextRequest) {
   }
 
   const { email, name } = parsed.data
-  const supabase = createAdminClient()
 
-  const { error } = await supabase
-    .from('newsletter_subscribers')
-    .insert({ email, name: name ?? null })
+  try {
+    const supabase = createAdminClient()
 
-  if (error) {
-    if (error.code === '23505') {
-      return NextResponse.json({ message: 'Already subscribed' })
+    const { error } = await supabase
+      .from('newsletter_subscribers')
+      .insert({ email, name: name ?? null })
+
+    if (error) {
+      // Duplicate email — already on the list, treat as a friendly success
+      if (error.code === '23505') {
+        return NextResponse.json({ message: 'Already subscribed' })
+      }
+      // Surface the real reason in the server logs so it can be diagnosed
+      // (e.g. missing newsletter_subscribers table → run DATABASE_SETUP.sql)
+      console.error('[newsletter] insert failed:', error.code, error.message)
+      return NextResponse.json({ error: 'Subscription failed' }, { status: 500 })
     }
+
+    sendNewsletterWelcomeEmail(email, name).catch(() => {})
+
+    return NextResponse.json({ message: 'Subscribed successfully' })
+  } catch (err) {
+    // Usually a missing SUPABASE_SERVICE_ROLE_KEY / NEXT_PUBLIC_SUPABASE_URL env var
+    console.error('[newsletter] fatal error:', err)
     return NextResponse.json({ error: 'Subscription failed' }, { status: 500 })
   }
-
-  sendNewsletterWelcomeEmail(email, name).catch(() => {})
-
-  return NextResponse.json({ message: 'Subscribed successfully' })
 }

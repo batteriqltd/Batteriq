@@ -2,9 +2,10 @@
 
 /**
  * NewsletterPopup — Apple-grade signup modal
- * - Appears 9s after page load on storefront pages only
+ * - Appears 8s after landing on storefront pages only
  * - Perfectly centered on every screen size (mobile + desktop)
- * - Dismissed forever via localStorage
+ * - Shows once per browsing session for non-subscribers; hidden forever once
+ *   the visitor actually subscribes
  * - Submits to /api/newsletter → saves to newsletter_subscribers table
  * - Admin sees all subscribers in Admin → Newsletter → Subscribers
  */
@@ -14,7 +15,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
-const STORAGE_KEY = 'bq_nl_v2'
+// Permanent flag (localStorage) — set only after a real subscribe
+const SUBSCRIBED_KEY = 'bq_nl_subscribed'
+// Per-session flag (sessionStorage) — set once shown/closed this visit
+const SESSION_KEY = 'bq_nl_seen'
 const SHOW_AFTER_MS = 8000
 
 // Pages where popup should NEVER appear
@@ -30,18 +34,21 @@ export function NewsletterPopup() {
   useEffect(() => {
     // Block on certain routes
     if (BLOCKED.some(b => pathname?.startsWith(b))) return
-    // Block if already dismissed
-    try { if (localStorage.getItem(STORAGE_KEY)) return } catch { /* ignore */ }
+    // Already subscribed → never show again
+    try { if (localStorage.getItem(SUBSCRIBED_KEY)) return } catch { /* ignore */ }
+    // Already shown this session → don't nag again until a new visit
+    try { if (sessionStorage.getItem(SESSION_KEY)) return } catch { /* ignore */ }
 
-    const t = setTimeout(() => setShow(true), SHOW_AFTER_MS)
+    const t = setTimeout(() => {
+      setShow(true)
+      try { sessionStorage.setItem(SESSION_KEY, '1') } catch { /* ignore */ }
+    }, SHOW_AFTER_MS)
     return () => clearTimeout(t)
   }, [pathname])
 
-  const dismiss = useCallback((permanent = true) => {
+  const dismiss = useCallback(() => {
     setShow(false)
-    if (permanent) {
-      try { localStorage.setItem(STORAGE_KEY, '1') } catch { /* ignore */ }
-    }
+    try { sessionStorage.setItem(SESSION_KEY, '1') } catch { /* ignore */ }
   }, [])
 
   // Lock body scroll while open + ESC to close
@@ -70,13 +77,14 @@ export function NewsletterPopup() {
       })
       if (res.ok) {
         setPhase('success')
-        try { localStorage.setItem(STORAGE_KEY, '1') } catch { /* ignore */ }
+        try { localStorage.setItem(SUBSCRIBED_KEY, '1') } catch { /* ignore */ }
         setTimeout(() => setShow(false), 3000)
       } else {
         const d = await res.json().catch(() => ({}))
         // If already subscribed — treat as success
         if (d.message?.includes('Already')) {
           setPhase('success')
+          try { localStorage.setItem(SUBSCRIBED_KEY, '1') } catch { /* ignore */ }
           setTimeout(() => setShow(false), 3000)
         } else {
           setErrMsg(d.error ?? 'Something went wrong.')

@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { formatKES, getProductImageUrl } from '@/lib/utils'
 import type { Product } from '@/lib/supabase/types'
-import { Send, Users, Mail, CheckCircle, Search, X, Eye, Loader, Upload, ImageIcon } from 'lucide-react'
+import { Send, Users, Mail, CheckCircle, Search, X, Eye, Loader, Upload, ImageIcon, RefreshCw } from 'lucide-react'
 import Image from 'next/image'
 
 interface Subscriber { id: string; email: string; name: string | null; created_at: string; status: string }
@@ -27,13 +27,22 @@ export default function NewsletterPage() {
   const [search, setSearch] = useState('')
   const [tab, setTab] = useState<'compose'|'subscribers'|'history'>('compose')
   const [productSearch, setProductSearch] = useState('')
+  const [refreshing, setRefreshing] = useState(false)
 
-  useEffect(() => {
-    async function load() {
-      const res = await fetch('/api/admin/newsletter')
+  // Pull the latest subscribers + broadcasts (used on mount, on a timer, and on demand)
+  const loadSubscribers = useCallback(async () => {
+    try {
+      const res = await fetch('/api/admin/newsletter', { cache: 'no-store' })
       const data = await res.json()
       setSubscribers(data.subscribers ?? [])
       setBroadcasts(data.broadcasts ?? [])
+    } catch { /* keep last known list */ }
+  }, [])
+
+  // Initial load — subscribers + products
+  useEffect(() => {
+    async function load() {
+      await loadSubscribers()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: prods } = await (supabase.from('products') as any)
         .select('*').order('created_at', { ascending: false })
@@ -41,7 +50,19 @@ export default function NewsletterPage() {
       setLoading(false)
     }
     load()
-  }, [supabase])
+  }, [supabase, loadSubscribers])
+
+  // Auto-refresh subscribers every 10s so new signups appear on their own
+  useEffect(() => {
+    const t = setInterval(loadSubscribers, 10000)
+    return () => clearInterval(t)
+  }, [loadSubscribers])
+
+  async function manualRefresh() {
+    setRefreshing(true)
+    await loadSubscribers()
+    setTimeout(() => setRefreshing(false), 400)
+  }
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 4000) }
 
@@ -308,6 +329,19 @@ export default function NewsletterPage() {
       {tab === 'subscribers' && (
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="p-5 border-b border-gray-50">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs font-black text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                </span>
+                Live · auto-updates every 10s
+              </p>
+              <button onClick={manualRefresh}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-black transition-colors">
+                <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} /> Refresh
+              </button>
+            </div>
             <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-2.5">
               <Search size={14} className="text-gray-400" />
               <input value={search} onChange={e => setSearch(e.target.value)}
