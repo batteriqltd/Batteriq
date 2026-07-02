@@ -75,12 +75,34 @@ async function getProductsByCategory(brand?: string, category?: string, limit = 
   }
 }
 
+async function getDeltaSeries(limit = 8) {
+  try {
+    const supabase = createAdminClient()
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('brand', 'EcoFlow')
+      .eq('subcategory', 'DELTA Series')
+      .order('sort_order', { ascending: true })
+      .limit(limit)
+    if (error) {
+      console.error('Supabase error:', error.message)
+      return []
+    }
+    return data ?? []
+  } catch (e) {
+    console.error('Fetch failed:', e)
+    return []
+  }
+}
+
 const DIVIDER = (
   <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,0,255,0.12), rgba(0,0,255,0.12), transparent)' }} />
 )
 
 export default async function HomePage() {
   const [
+    deltaSeries,
     ecoflowPowerStations,
     ecoflowSolar,
     ecoflowSolarHomeSystems,
@@ -89,6 +111,7 @@ export default async function HomePage() {
     powerBanks,
     accessories,
   ] = await Promise.all([
+    getDeltaSeries(8),
     getProductsByCategory('EcoFlow', 'Power Stations', 8),
     getProductsByCategory('EcoFlow', 'Solar Panels', 8),
     getProductsByCategory('EcoFlow', 'Solar Home Systems', 3),
@@ -113,7 +136,7 @@ export default async function HomePage() {
       <OffersSection />
 
       {/* DELTA Series — new EcoFlow lineup, placed above Shop by Category */}
-      <DeltaSeriesShowcase />
+      <DeltaSeriesShowcase products={deltaSeries} />
 
       <CategoryNav />
 
