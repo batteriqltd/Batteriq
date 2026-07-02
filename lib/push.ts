@@ -34,7 +34,7 @@ export async function sendAdminPush(payload: AdminPushPayload): Promise<void> {
   }
 
   const mod = await import('web-push')
-  const webpush = (mod as unknown as { default?: typeof mod }).default ?? mod
+  const webpush = mod.default ?? mod
 
   if (!configured) {
     webpush.setVapidDetails(subject, publicKey, privateKey)
