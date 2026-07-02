@@ -49,19 +49,19 @@ export default async function CustomersPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 pb-12 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between mb-10">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-10">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2.5">Relationship Management</p>
-          <h1 className="text-[26px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">Customer Database</h1>
-          <p className="text-gray-400 text-sm font-medium mt-2 flex items-center gap-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2">Relationship Management</p>
+          <h1 className="text-[24px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">Customer Database</h1>
+          <p className="text-gray-400 text-[11px] sm:text-sm font-medium mt-2 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-            Analyzing {totalCustomers} unique buyer profiles
+            {totalCustomers} unique buyer profiles
           </p>
         </div>
         <div className="flex items-center gap-4">
           <div className="h-11 px-5 rounded-2xl bg-white border border-gray-100 flex items-center gap-2 shadow-sm">
             <UserCheck size={16} className="text-green-500" />
-            <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">{repeatBuyers} REPEAT CUSTOMERS</span>
+            <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">{repeatBuyers} Repeat</span>
           </div>
         </div>
       </div>
@@ -89,8 +89,8 @@ export default async function CustomersPage() {
         ))}
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-[32px] overflow-hidden"
+      {/* Table (desktop) */}
+      <div className="hidden lg:block bg-white rounded-[32px] overflow-hidden"
         style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}>
         <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between">
           <h2 className="text-lg font-black text-gray-900">Operator Directory</h2>
@@ -177,6 +177,55 @@ export default async function CustomersPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Cards (mobile / tablet) */}
+      <div className="lg:hidden space-y-3">
+        {customers.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100">
+            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mb-3"><Users size={22} className="text-gray-300" /></div>
+            <p className="text-sm font-black text-gray-900">No customers found</p>
+            <p className="text-xs text-gray-400 mt-1">They appear here once orders are placed.</p>
+          </div>
+        ) : customers.map((c, i) => (
+          <div key={c.email || c.phone} className="bg-white rounded-[22px] p-4 border border-gray-100" style={{ boxShadow: '0 2px 16px rgba(0,0,50,0.05)' }}>
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center font-black text-white flex-shrink-0"
+                style={{ background: `linear-gradient(135deg, hsl(${(i * 47) % 360}, 70%, 50%), hsl(${(i * 47) % 360}, 70%, 30%))` }}>
+                {c.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-black text-gray-900 truncate leading-none">{c.name}</p>
+                <p className="text-[11px] text-gray-400 font-bold mt-1 flex items-center gap-1.5">
+                  <MapPin size={11} className="text-gray-300" /> {c.county || 'Unknown'}
+                </p>
+              </div>
+              <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest inline-flex flex-shrink-0 ${c.orderCount > 1 ? 'bg-blue-50 text-blue-600' : 'bg-gray-50 text-gray-400'}`}>
+                {c.orderCount > 1 ? '★ VIP' : 'New'}
+              </span>
+            </div>
+
+            <div className="mt-3 space-y-1">
+              {c.email && <p className="text-[12px] font-bold text-gray-600 flex items-center gap-2 truncate"><Mail size={12} className="text-gray-300 flex-shrink-0" /> {c.email}</p>}
+              {c.phone && <p className="text-[12px] font-bold text-gray-600 flex items-center gap-2"><Phone size={12} className="text-gray-300 flex-shrink-0" /> {c.phone}</p>}
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-gray-50 text-center">
+              <div>
+                <p className="text-[16px] font-black text-blue-600 leading-none">{c.orderCount}</p>
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Orders</p>
+              </div>
+              <div>
+                <p className="text-[13px] font-black font-mono text-gray-900 leading-none">{fmt(c.totalSpent)}</p>
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Spent</p>
+              </div>
+              <div>
+                <p className="text-[13px] font-black text-gray-900 leading-none uppercase">{new Date(c.lastOrder).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })}</p>
+                <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1">Last seen</p>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

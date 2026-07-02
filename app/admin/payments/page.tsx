@@ -23,19 +23,19 @@ export default async function AdminPaymentsPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 pb-12 min-h-screen">
       {/* Header */}
-      <div className="flex items-center justify-between mb-10">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-10">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2.5">Payments & Reconciliation</p>
-          <h1 className="text-[26px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">Financial Console</h1>
-          <p className="text-gray-400 text-sm font-medium mt-2 flex items-center gap-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0000ff] mb-2">Payments & Reconciliation</p>
+          <h1 className="text-[24px] sm:text-[32px] font-black text-gray-900 tracking-tight leading-none">Financial Console</h1>
+          <p className="text-gray-400 text-[11px] sm:text-sm font-medium mt-2 flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            Live Payment Monitoring — {all.length} transactions synced
+            Live monitoring — {all.length} transactions
           </p>
         </div>
         <div className="flex items-center gap-4">
           <div className="h-11 px-5 rounded-2xl bg-white border border-gray-100 flex items-center gap-2 shadow-sm">
             <ShieldCheck size={16} className="text-blue-600" />
-            <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">SECURE SETTLEMENTS</span>
+            <span className="text-[11px] font-black text-gray-900 uppercase tracking-widest">Secure Settlements</span>
           </div>
         </div>
       </div>
@@ -63,8 +63,8 @@ export default async function AdminPaymentsPage() {
         ))}
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-[32px] overflow-hidden"
+      {/* Table (desktop) */}
+      <div className="hidden lg:block bg-white rounded-[32px] overflow-hidden"
         style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}>
         <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between">
           <h2 className="text-lg font-black text-gray-900">Transaction Audit Log</h2>
@@ -153,6 +153,57 @@ export default async function AdminPaymentsPage() {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Cards (mobile / tablet) */}
+      <div className="lg:hidden space-y-3">
+        <div className="flex items-center justify-between px-1 mb-1">
+          <h2 className="text-sm font-black text-gray-900">Transaction Audit Log</h2>
+          <span className="text-[9px] font-black text-gray-300 uppercase tracking-[0.2em]">Latest 200</span>
+        </div>
+        {all.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100">
+            <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mb-3"><Receipt size={22} className="text-gray-300" /></div>
+            <p className="text-sm font-black text-gray-900">No transactions logged</p>
+          </div>
+        ) : all.map(order => {
+          const statusLabel = order.payment_status === 'paid' ? 'Settled' : order.payment_status === 'failed' ? 'Declined' : 'Pending'
+          const statusCls = order.payment_status === 'paid' ? 'bg-green-100 text-green-700' : order.payment_status === 'failed' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+          const modeLabel = order.payment_method === 'mpesa_now' ? 'M-Pesa Instant' : order.payment_method === 'cod_cash' ? 'Cash on Delivery' : 'M-Pesa at Door'
+          return (
+            <div key={order.id} className="bg-white rounded-[22px] p-4 border border-gray-100" style={{ boxShadow: '0 2px 16px rgba(0,0,50,0.05)' }}>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[12px] font-black font-mono text-blue-600 leading-none">{order.order_number}</p>
+                  <p className="text-[15px] font-black text-gray-900 mt-1.5 truncate">{order.guest_name ?? '—'}</p>
+                  <p className="text-[11px] text-gray-400 font-bold font-mono mt-0.5">{order.guest_phone ?? '—'}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <span className={`text-[9px] font-black px-2 py-1 rounded-lg uppercase tracking-widest inline-flex ${statusCls}`}>{statusLabel}</span>
+                  <p className="text-[10px] text-gray-400 font-bold mt-1.5">
+                    {new Date(order.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short' })} · {new Date(order.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-end justify-between gap-3 mt-3 pt-3 border-t border-gray-50">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center border border-gray-100">
+                    {order.payment_method === 'mpesa_now' && <Smartphone size={14} className="text-green-600" />}
+                    {order.payment_method === 'cod_cash' && <Banknote size={14} className="text-blue-600" />}
+                    {order.payment_method === 'cod_mpesa' && <Truck size={14} className="text-purple-600" />}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none">{modeLabel}</p>
+                    {order.mpesa_transaction_code
+                      ? <p className="text-[11px] font-mono font-black text-blue-600 mt-1">{order.mpesa_transaction_code}</p>
+                      : <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mt-1">Awaiting code</p>}
+                  </div>
+                </div>
+                <p className="text-[20px] font-black font-mono text-gray-900 whitespace-nowrap">{fmt(order.total_kes)}</p>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
