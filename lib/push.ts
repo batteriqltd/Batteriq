@@ -1,21 +1,8 @@
-import webpush from 'web-push'
+import type { PushSubscription } from 'web-push'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // Configure VAPID once per server instance
 let configured = false
-function configure(): boolean {
-  if (configured) return true
-  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-  const privateKey = process.env.VAPID_PRIVATE_KEY
-  const subject = process.env.VAPID_SUBJECT || 'mailto:info@batteriq.com'
-  if (!publicKey || !privateKey) {
-    console.error('[push] VAPID keys missing — set NEXT_PUBLIC_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY')
-    return false
-  }
-  webpush.setVapidDetails(subject, publicKey, privateKey)
-  configured = true
-  return true
-}
 
 export interface AdminPushPayload {
   title: string
@@ -26,16 +13,33 @@ export interface AdminPushPayload {
 
 interface SubRow {
   endpoint: string
-  subscription_json: webpush.PushSubscription
+  subscription_json: PushSubscription
 }
 
 /**
  * Fan a push notification out to every registered admin device.
  * Fire-and-forget: never throws, so callers can `.catch(() => {})` safely.
  * Expired subscriptions (404/410) are pruned automatically.
+ *
+ * web-push is imported dynamically (matching the codebase's `await import('resend')`
+ * pattern) so it is never pulled into the build-time bundle.
  */
 export async function sendAdminPush(payload: AdminPushPayload): Promise<void> {
-  if (!configure()) return
+  const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+  const privateKey = process.env.VAPID_PRIVATE_KEY
+  const subject = process.env.VAPID_SUBJECT || 'mailto:info@batteriq.com'
+  if (!publicKey || !privateKey) {
+    console.error('[push] VAPID keys missing — set NEXT_PUBLIC_VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY')
+    return
+  }
+
+  const mod = await import('web-push')
+  const webpush = (mod as unknown as { default?: typeof mod }).default ?? mod
+
+  if (!configured) {
+    webpush.setVapidDetails(subject, publicKey, privateKey)
+    configured = true
+  }
 
   const supabase = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
