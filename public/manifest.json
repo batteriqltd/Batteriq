@@ -1,13 +1,18 @@
 {
+  "id": "/admin",
   "name": "Batteriq Admin",
   "short_name": "Batteriq",
   "description": "Batteriq Admin — live orders, payments and customer messages with instant push alerts.",
   "start_url": "/admin",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "background_color": "#00004d",
   "theme_color": "#00004d",
+  "lang": "en",
+  "dir": "ltr",
+  "prefer_related_applications": false,
   "categories": ["business", "productivity"],
   "icons": [
     {
