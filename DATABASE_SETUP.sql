@@ -1,0 +1,72 @@
+-- ============================================================================
+--  BATTERIQ — Newsletter + Live Visitors database setup
+--  Run this ENTIRE script once in:  Supabase → SQL Editor → New query → Run
+--  It is safe to run multiple times (idempotent — nothing is dropped/deleted).
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1) NEWSLETTER SUBSCRIBERS
+--    Every person who subscribes on batteriq.com lands here.
+--    Admin → Newsletter shows this list.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+  id         UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  email      TEXT        NOT NULL UNIQUE,
+  name       TEXT,
+  status     TEXT        NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- If the table already existed from before, make sure the columns exist:
+ALTER TABLE newsletter_subscribers ADD COLUMN IF NOT EXISTS name       TEXT;
+ALTER TABLE newsletter_subscribers ADD COLUMN IF NOT EXISTS status     TEXT        NOT NULL DEFAULT 'active';
+ALTER TABLE newsletter_subscribers ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
+
+
+-- ----------------------------------------------------------------------------
+-- 2) NEWSLETTER BROADCAST HISTORY
+--    Each time you email subscribers about new products, a row is saved here.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS newsletter_broadcasts (
+  id          UUID        DEFAULT gen_random_uuid() PRIMARY KEY,
+  subject     TEXT        NOT NULL,
+  intro_text  TEXT,
+  product_ids UUID[],
+  sent_count  INTEGER     DEFAULT 0,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+-- ----------------------------------------------------------------------------
+-- 3) LIVE VISITOR SESSIONS
+--    One row per active browser session. Updated every ~15s while a visitor is
+--    on the site. Admin → Live Visitors shows rows seen in the last 60 seconds.
+-- ----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS visitor_sessions (
+  visitor_id TEXT        PRIMARY KEY,
+  page       TEXT,
+  page_label TEXT,
+  device     TEXT,
+  referrer   TEXT,
+  entered_at TIMESTAMPTZ DEFAULT NOW(),
+  last_seen  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_visitor_sessions_last_seen
+  ON visitor_sessions (last_seen DESC);
+
+
+-- ----------------------------------------------------------------------------
+-- 4) SECURITY (Row Level Security)
+--    All reads/writes go through Batteriq's own server API routes using the
+--    Supabase SERVICE-ROLE key, which bypasses RLS. Turning RLS on with NO
+--    public policies means nobody can read or write these tables directly from
+--    a browser — only your server can. This is the secure default.
+-- ----------------------------------------------------------------------------
+ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE newsletter_broadcasts  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE visitor_sessions       ENABLE ROW LEVEL SECURITY;
+
+-- Done. You should now be able to:
+--   • Subscribe on the site  → appears in Admin → Newsletter → Subscribers
+--   • See people live         → Admin → Live Visitors
