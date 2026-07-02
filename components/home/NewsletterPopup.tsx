@@ -15,7 +15,7 @@ import { X } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 
 const STORAGE_KEY = 'bq_nl_v2'
-const SHOW_AFTER_MS = 9000
+const SHOW_AFTER_MS = 8000
 
 // Pages where popup should NEVER appear
 const BLOCKED = ['/admin', '/checkout', '/order-confirmation', '/cart', '/privacy', '/terms']
@@ -200,43 +200,37 @@ export function NewsletterPopup() {
                   ) : (
                     /* ══════════ FORM ══════════ */
                     <>
-                      {/* Top visual strip — product showcase */}
-                      <div
-                        className="relative h-[186px] overflow-hidden flex items-center justify-center"
-                        style={{ background: 'linear-gradient(135deg, #00002a 0%, #00004d 50%, #000070 100%)' }}
-                      >
-                        {/* Subtle grid */}
-                        <div className="absolute inset-0" style={{
-                          backgroundImage: 'linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px)',
-                          backgroundSize: '30px 30px',
-                        }} />
-
-                        {/* Animated glow orbs */}
-                        <motion.div
-                          className="absolute w-52 h-52 rounded-full -top-16 -right-16"
-                          style={{ background: 'radial-gradient(circle, rgba(0,110,255,0.32), transparent 70%)' }}
-                          animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
-                          transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+                      {/* Top visual — real EcoFlow product lineup photo */}
+                      <div className="relative h-[210px] overflow-hidden flex items-end justify-center">
+                        {/* Product photo */}
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            backgroundImage: 'url(/newsletter-bg.png)',
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center 40%',
+                          }}
                         />
-                        <motion.div
-                          className="absolute w-36 h-36 rounded-full -bottom-10 left-6"
-                          style={{ background: 'radial-gradient(circle, rgba(0,210,255,0.2), transparent 70%)' }}
-                          animate={{ scale: [1, 1.2, 1], opacity: [0.6, 0.9, 0.6] }}
-                          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                        {/* Legibility gradient — keeps white text crisp over the photo */}
+                        <div
+                          className="absolute inset-0"
+                          style={{
+                            background: 'linear-gradient(180deg, rgba(0,0,20,0.30) 0%, rgba(0,0,25,0.06) 40%, rgba(0,0,30,0.55) 78%, rgba(0,0,35,0.85) 100%)',
+                          }}
                         />
 
-                        {/* Content */}
-                        <div className="relative text-center px-6">
-                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-3.5"
-                            style={{ background: 'rgba(255,255,255,0.09)', border: '1px solid rgba(255,255,255,0.14)' }}>
+                        {/* Content pinned to bottom */}
+                        <div className="relative text-center px-6 pb-5">
+                          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-2.5"
+                            style={{ background: 'rgba(0,0,0,0.38)', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)' }}>
                             <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/70">
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/90">
                               Kenya&apos;s Official EcoFlow Dealer
                             </span>
                           </div>
-                          <p className="text-white font-black text-[22px] leading-tight tracking-tight" style={{ letterSpacing: '-0.025em' }}>
-                            Power deals.<br />
-                            <span style={{ color: 'rgba(180,210,255,0.9)' }}>Before they sell out.</span>
+                          <p className="text-white font-black text-[22px] leading-tight tracking-tight" style={{ letterSpacing: '-0.025em', textShadow: '0 2px 14px rgba(0,0,0,0.55)' }}>
+                            Power deals.{' '}
+                            <span style={{ color: 'rgba(195,218,255,0.98)' }}>Before they sell out.</span>
                           </p>
                         </div>
                       </div>
