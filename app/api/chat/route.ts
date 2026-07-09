@@ -25,12 +25,12 @@ const PRODUCTS = [
   { id: 'solar-60w', brand: 'EcoFlow', name: '60W Portable Solar Panel', category: 'Solar Panel', price: 9699, specs: { power: '60W', efficiency: '21-22%', weight: '2kg', ip: 'IP68' }, slug: 'solar/60w-portable', inStock: true },
   { id: 'solar-45w', brand: 'EcoFlow', name: '45W Portable Solar Panel', category: 'Solar Panel', price: 7599, specs: { power: '45W', efficiency: '25%', weight: '1.4kg', ip: 'IP65' }, slug: 'solar/45w-portable', inStock: true },
   // Bluetti
-  { id: 'bluetti-ac200pl', brand: 'Bluetti', name: 'AC200PL', category: 'Power Station', price: 115499, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac200pl', inStock: true },
+  { id: 'bluetti-ac200pl', brand: 'Bluetti', name: 'AC200PL', category: 'Power Station', price: 127500, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac200pl', inStock: true },
   { id: 'bluetti-ac500', brand: 'Bluetti', name: 'AC500', category: 'Power Station', price: 84499, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac500', inStock: true },
   { id: 'bluetti-ac300', brand: 'Bluetti', name: 'AC300', category: 'Power Station', price: 68499, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac300', inStock: true },
   { id: 'bluetti-eb3a', brand: 'Bluetti', name: 'EB3A', category: 'Power Station', price: 24999, specs: { capacity: 'Compact', output: 'AC Output' }, slug: 'bluetti/eb3a', inStock: true },
-  { id: 'bluetti-ac70p', brand: 'Bluetti', name: 'AC70P', category: 'Power Station', price: 52999, specs: { capacity: 'Mid range', output: 'AC Output' }, slug: 'bluetti/ac70p', inStock: true },
-  { id: 'bluetti-ac180p', brand: 'Bluetti', name: 'AC180P', category: 'Power Station', price: 71499, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac180p', inStock: true },
+  { id: 'bluetti-ac70p', brand: 'Bluetti', name: 'AC70P', category: 'Power Station', price: 60000, specs: { capacity: 'Mid range', output: 'AC Output' }, slug: 'bluetti/ac70p', inStock: true },
+  { id: 'bluetti-ac180p', brand: 'Bluetti', name: 'AC180P', category: 'Power Station', price: 76000, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac180p', inStock: true },
 ]
 
 // ============================================================

@@ -38,7 +38,7 @@ function getRuleBasedResponse(message: string): string | null {
   }
 
   if (/bluetti/.test(m) && /price|cost|how much|bei/.test(m)) {
-    return 'Bluetti AC180P (1152Wh, 1800W) is KES 71,499, and the AC200PL (2048Wh, 2400W) is KES 115,499. Great alternatives to EcoFlow for home backup. Want a comparison with EcoFlow models?'
+    return 'Bluetti AC180P (1440Wh, 1800W) is KES 76,000, and the AC200PL (2304Wh, 2400W) is KES 127,500. Great alternatives to EcoFlow for home backup. Want a comparison with EcoFlow models?'
   }
 
   if (/recommend|best|which one|suggest|advise|help me choose/.test(m)) {

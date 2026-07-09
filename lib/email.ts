@@ -10,8 +10,8 @@ function resolveEmail(email: string): string {
 const FROM_ORDERS = 'Batteriq Orders <sales@batteriq.com>'
 const FROM_SUPPORT = 'Batteriq Support <info@batteriq.com>'
 
-const ORDER_EMAILS = ['sales@batteriq.com']
-const SUPPORT_EMAILS = ['info@batteriq.com']
+const ORDER_EMAILS = ['sales@batteriq.com', 'info@batteriq.com']
+const SUPPORT_EMAILS = ['info@batteriq.com', 'sales@batteriq.com']
 
 function fmt(n: number | string): string {
   return `KES ${Number(n || 0).toLocaleString('en-KE')}`
