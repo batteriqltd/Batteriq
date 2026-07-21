@@ -509,10 +509,10 @@ export default async function HomePage() {
                 <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,34,51,0.6) 0%, transparent 50%)' }} />
                 <div className="absolute top-0 left-0 w-64 h-full opacity-15 pointer-events-none" style={{ background: 'radial-gradient(ellipse at left center, #0099ff, transparent)' }} />
                 <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12 lg:px-14" style={{ maxWidth: '480px' }}>
-                  <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#66ccff' }}>EcoFlow Accessories &middot; Official</p>
-                  <h3 className="font-black text-white mb-3 leading-tight" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.03em' }}>Accessories & Add-ons</h3>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#66ccff' }}>Anker Accessories &middot; Official</p>
+                  <h3 className="font-black text-white mb-3 leading-tight" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.03em' }}>Anker Accessories &amp; Add-ons</h3>
                   <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
-                    Complete your EcoFlow ecosystem. Cables, mounts, adapters and more.
+                    Explore Anker cables, chargers, hubs and more.
                   </p>
                   <div className="flex items-center gap-3">
                     <a
@@ -535,9 +535,9 @@ export default async function HomePage() {
               <BrandAnchor
                 brand="EcoFlow"
                 category="Accessories"
-                h2="EcoFlow Accessories & Add-ons"
+                h2="Anker Accessories & Add-ons"
                 seeAllHref="/accessories"
-                subtitle="Complete your EcoFlow system with official accessories."
+                subtitle="Explore Anker accessories, chargers, cables and more."
               />
               <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
                 {accessories.map((product) => (
