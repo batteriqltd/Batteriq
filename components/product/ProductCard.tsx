@@ -29,6 +29,11 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
 
   const displayName = showKenyaContext ? `${product.name} — Kenya` : product.name
   const hasImage = !imgError && imageUrl !== '/placeholder-product.jpg'
+  const productHref = product.brand === 'EcoFlow'
+    ? `/ecoflow/${product.slug}`
+    : product.brand === 'Bluetti'
+      ? `/bluetti/${product.slug}`
+      : `/accessories/${product.slug}`
 
   function handleAddToCart(e: React.MouseEvent) {
     e.preventDefault()
@@ -55,7 +60,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
       data-aos-once="true"
     >
       <Link
-        href={`/${product.brand.toLowerCase()}/${product.slug}`}
+        href={productHref}
         className="flex flex-col flex-1"
         aria-label={`View ${product.name} details`}
       >

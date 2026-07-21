@@ -118,7 +118,9 @@ export default async function HomePage() {
     getProductsByCategory('EcoFlow', 'Appliances', 2),
     getProductsByCategory('Bluetti', 'Power Stations', 8),
     getProductsByCategory('EcoFlow', 'Power Banks', 6),
-    getProductsByCategory('EcoFlow', 'Accessories', 6),
+    // The Accessories collection includes the wider catalogue imported through
+    // the admin database, not only the original EcoFlow accessories.
+    getProductsByCategory(undefined, 'Accessories', 8),
   ])
 
   return (

@@ -159,7 +159,7 @@ function ProductEditRow({ product, onSave }: { product: any; onSave: () => void 
 
 // ─── Add New Product Form ────────────────────────────────────────────────────
 
-const BRANDS = ['EcoFlow', 'Bluetti'] as const
+const BRANDS = ['EcoFlow', 'Bluetti', 'Anker', 'Eufy', 'Soundcore', 'Nebula'] as const
 const CATEGORIES = ['Power Stations', 'Solar Panels', 'Accessories', 'Batteries', 'Appliances', 'Solar Home Systems', 'Power Banks'] as const
 
 interface SpecRow { key: string; value: string }

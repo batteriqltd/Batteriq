@@ -62,7 +62,7 @@ export const aiChatSchema = z.object({
 })
 
 export const adminPricingSchema = z.object({
-  brand: z.enum(['EcoFlow', 'Bluetti']).optional(),
+  brand: z.enum(['EcoFlow', 'Bluetti', 'Anker', 'Eufy', 'Soundcore', 'Nebula']).optional(),
   productId: z.string().uuid().optional(),
   adjustmentType: z.enum(['percent', 'fixed']),
   adjustmentValue: z.number(),

@@ -7,7 +7,7 @@ export type Database = {
         Row: {
           id: string
           sku: string
-          brand: 'EcoFlow' | 'Bluetti'
+          brand: 'EcoFlow' | 'Bluetti' | 'Anker' | 'Eufy' | 'Soundcore' | 'Nebula'
           category: 'Power Stations' | 'Solar Panels' | 'Accessories' | 'Batteries' | 'Appliances' | 'Solar Home Systems' | 'Power Banks'
           subcategory: string | null
           name: string
