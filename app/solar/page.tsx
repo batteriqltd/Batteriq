@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer'
 import { FilteredProductGrid } from '@/components/product/FilteredProductGrid'
 import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
+import { SolarSelectionGuide } from '@/components/solar/SolarSelectionGuide'
 
 export const revalidate = 60
 
@@ -128,8 +129,17 @@ export default async function SolarPanelsPage() {
         />
       </section>
 
-      <div id="products" />
-      <div className="max-w-8xl mx-auto px-4 lg:px-8 py-12">
+      <SolarSelectionGuide />
+
+      <div id="products" className="scroll-mt-20" />
+      <div className="max-w-8xl mx-auto px-4 lg:px-8 py-12 sm:py-16">
+        <div className="mb-8 flex flex-col gap-3 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-bq-blue">Shop the collection</p>
+            <h2 className="mt-2 font-display text-3xl font-bold tracking-[-0.04em] text-slate-950 sm:text-4xl">Solar panels for every setup.</h2>
+          </div>
+          <p className="max-w-sm text-sm leading-6 text-slate-500">Choose by format, output, or the setup you have in mind.</p>
+        </div>
         <FilteredProductGrid products={products} filterType="solar" />
       </div>
       <Footer />
