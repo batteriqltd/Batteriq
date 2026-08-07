@@ -2,6 +2,7 @@ import { AdminSidebar, AdminTopBar } from '@/components/admin/Sidebar'
 import { AutoLogoutProvider } from '@/components/admin/AutoLogoutProvider'
 import { AdminSessionGuard } from '@/components/admin/AdminSessionGuard'
 import { AdminNotifyProvider } from '@/components/admin/AdminNotify'
+import { AdminOrderAlerts } from '@/components/admin/AdminOrderAlerts'
 import { getAdminSession } from '@/lib/admin-auth'
 import type { Metadata } from 'next'
 
@@ -18,6 +19,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Forces password re-entry on every fresh app launch */}
       <AdminSessionGuard />
+
+      {/* Live order/message popup — sits above the shell so it fires on every admin page */}
+      <AdminOrderAlerts />
 
       {/* Sidebar */}
       <AdminSidebar adminName={session.email} adminRole={session.role} />

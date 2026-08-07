@@ -1,12 +1,87 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Tag, Save, AlertTriangle, Loader2, Zap, X, Clock, Trash2, TrendingUp, TrendingDown, Percent, Settings2, CheckCircle, RotateCcw } from 'lucide-react'
+import { Tag, Save, AlertTriangle, Loader2, Zap, X, Clock, Trash2, TrendingUp, TrendingDown, Percent, Settings2, CheckCircle, RotateCcw, Search, Layers, SearchX } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminNotify } from '@/components/admin/AdminNotify'
 
 function fmt(n: number) { return `KES ${Number(n || 0).toLocaleString('en-KE')}` }
+
+/* ── Search engine ──────────────────────────────────────────────
+ * Lowercases and collapses every non-alphanumeric run to a single space, so
+ * "DELTA 2 Max", "delta-2-max" and "delta2max" all reduce to comparable text.
+ */
+function normalize(value: unknown): string {
+  return String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
+function escapeRe(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildHaystack(p: any) {
+  const name = normalize(p.name)
+  const sku = normalize(p.sku)
+  const category = normalize(p.category)
+  const subcategory = normalize(p.subcategory)
+  const all = `${name} ${sku} ${normalize(p.brand)} ${category} ${subcategory} ${normalize(p.slug)}`
+  return { name, sku, category, subcategory, all, flat: all.replace(/ /g, '') }
+}
+
+type Haystack = ReturnType<typeof buildHaystack>
+
+/**
+ * Relevance score for one product against the search tokens.
+ * Every token must appear somewhere (AND semantics) — "delta max" will not
+ * return a RIVER unit just because it matched "max". Returns 0 for no match.
+ */
+function scoreMatch(hay: Haystack, tokens: string[], query: string): number {
+  if (tokens.length === 0) return 1
+
+  let score = 0
+  for (const t of tokens) {
+    if (!hay.all.includes(t) && !hay.flat.includes(t)) return 0
+
+    if (hay.name === t) score += 120
+    else if (hay.name.startsWith(t)) score += 60
+    else if (new RegExp(`\\b${escapeRe(t)}`).test(hay.name)) score += 34
+    else if (hay.name.includes(t)) score += 20
+    else if (hay.sku.includes(t)) score += 16
+    else if (hay.category.includes(t) || hay.subcategory.includes(t)) score += 9
+    else score += 4
+  }
+
+  // Reward phrase matches so "delta 2" outranks a product that merely
+  // contains "delta" and "2" in unrelated places.
+  if (hay.name.startsWith(query)) score += 80
+  else if (hay.name.includes(query)) score += 45
+  else if (hay.flat.includes(query.replace(/ /g, ''))) score += 20
+
+  return score
+}
+
+/** Wraps the matched search terms in the product name so hits are visible. */
+function Highlight({ text, tokens }: { text: string; tokens: string[] }) {
+  if (tokens.length === 0 || !text) return <>{text}</>
+  const pattern = tokens.slice().sort((a, b) => b.length - a.length).map(escapeRe).join('|')
+  let parts: string[]
+  try {
+    parts = text.split(new RegExp(`(${pattern})`, 'ig'))
+  } catch {
+    return <>{text}</>
+  }
+  return (
+    <>
+      {parts.map((part, i) =>
+        tokens.includes(part.toLowerCase())
+          ? <mark key={i} className="bg-yellow-200 text-gray-900 rounded px-0.5">{part}</mark>
+          : <span key={i}>{part}</span>
+      )}
+    </>
+  )
+}
 
 function DiscountCountdown({ end }: { end: string }) {
   const [label, setLabel] = useState('')
@@ -184,6 +259,9 @@ export default function PricingEnginePage() {
   const [loading, setLoading] = useState(true)
   const [adjustPct, setAdjustPct] = useState('')
   const [filterBrand, setFilterBrand] = useState('all')
+  const [filterCategory, setFilterCategory] = useState('all')
+  const [search, setSearch] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
   const [toast, setToast] = useState('')
   const { notify } = useAdminNotify()
   const [applying, setApplying] = useState(false)
@@ -211,6 +289,26 @@ export default function PricingEnginePage() {
     return () => { supabase.removeChannel(channel) }
   }, [supabase, load])
 
+  // Narrowing the filters must invalidate a pending simulation — otherwise you
+  // could commit a bulk change to rows that are no longer on screen.
+  useEffect(() => { setPreview([]) }, [filterBrand, filterCategory, search])
+
+  // "/" or Ctrl/Cmd+K jumps to search; Esc clears it
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const el = e.target as HTMLElement | null
+      const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable)
+      if ((e.key === '/' && !typing) || ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k')) {
+        e.preventDefault()
+        searchRef.current?.focus()
+        searchRef.current?.select()
+      }
+      if (e.key === 'Escape' && el === searchRef.current) setSearch('')
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   function showToast(msg: string) {
     notify('success', msg)
   }
@@ -218,8 +316,9 @@ export default function PricingEnginePage() {
   function generatePreview() {
     const pct = parseFloat(adjustPct)
     if (isNaN(pct) || pct === 0) return
-    const filtered = products.filter(p => filterBrand === 'all' || p.brand === filterBrand)
-    setPreview(filtered.map(p => ({
+    // Targets exactly what the ledger below is showing — brand, category and
+    // search all narrow the blast radius of a bulk change.
+    setPreview(filteredProducts.map(p => ({
       id: p.id,
       newPrice: Math.round(Number(p.price_kes) * (1 + pct / 100)),
     })))
@@ -293,8 +392,56 @@ export default function PricingEnginePage() {
     }
   }
 
-  const filteredProducts = products.filter(p => filterBrand === 'all' || p.brand === filterBrand)
   const activeDiscounts = products.filter(p => p.discount_percent && p.discount_percent > 0)
+
+  // Categories actually present in the catalog — never a hardcoded list, so a
+  // new category added in Products shows up here automatically.
+  const categories = useMemo(() => {
+    const seen = new Map<string, number>()
+    for (const p of products) {
+      const c = String(p.category ?? '').trim()
+      if (!c) continue
+      seen.set(c, (seen.get(c) ?? 0) + 1)
+    }
+    return Array.from(seen.entries()).sort((a, b) => a[0].localeCompare(b[0]))
+  }, [products])
+
+  const brands = useMemo(() => {
+    const seen = new Set<string>()
+    for (const p of products) {
+      const b = String(p.brand ?? '').trim()
+      if (b) seen.add(b)
+    }
+    return Array.from(seen).sort()
+  }, [products])
+
+  const query = normalize(search)
+  const tokens = query ? query.split(' ').filter(Boolean) : []
+
+  const filteredProducts = useMemo(() => {
+    const scored = products
+      .filter(p => filterBrand === 'all' || p.brand === filterBrand)
+      .filter(p => filterCategory === 'all' || p.category === filterCategory)
+      .map(p => ({ p, score: scoreMatch(buildHaystack(p), tokens, query) }))
+      .filter(x => x.score > 0)
+
+    // With no query keep the catalog's own sort_order; with one, rank by
+    // relevance and fall back to sort_order for ties.
+    if (tokens.length === 0) return scored.map(x => x.p)
+    return scored
+      .sort((a, b) => b.score - a.score || (Number(a.p.sort_order ?? 0) - Number(b.p.sort_order ?? 0)))
+      .map(x => x.p)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [products, filterBrand, filterCategory, query])
+
+  const filtersActive = filterBrand !== 'all' || filterCategory !== 'all' || search.trim() !== ''
+
+  function clearFilters() {
+    setFilterBrand('all')
+    setFilterCategory('all')
+    setSearch('')
+    setPreview([])
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 pb-12 min-h-screen">
@@ -346,24 +493,44 @@ export default function PricingEnginePage() {
 
       {/* Bulk price tool */}
       <div className="bg-white rounded-[32px] p-8 mb-8" style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}>
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
-            <Settings2 size={20} />
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+              <Settings2 size={20} />
+            </div>
+            <h2 className="text-[18px] font-black text-gray-900 tracking-tight">Bulk Adjustment Console</h2>
           </div>
-          <h2 className="text-[18px] font-black text-gray-900 tracking-tight">Bulk Adjustment Console</h2>
+          <div className="flex items-center gap-2 h-9 px-4 rounded-xl bg-blue-50 border border-blue-100 text-[11px] font-black uppercase tracking-widest text-blue-600">
+            <Layers size={14} />
+            {filteredProducts.length} SKU{filteredProducts.length === 1 ? '' : 's'} targeted
+          </div>
         </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-end">
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-end">
           <div className="space-y-2">
-            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">TARGET SEGMENT</label>
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">BRAND</label>
             <select
               value={filterBrand}
               onChange={e => setFilterBrand(e.target.value)}
               className="w-full px-5 h-14 rounded-2xl border border-gray-100 text-[14px] font-bold text-gray-900 bg-gray-50 outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all appearance-none shadow-sm"
             >
-              <option value="all">ALL BRANDS & CATEGORIES</option>
-              <option value="EcoFlow">ECOFLOW ECOSYSTEM</option>
-              <option value="Bluetti">BLUETTI ENERGY</option>
+              <option value="all">ALL BRANDS</option>
+              {brands.map(b => (
+                <option key={b} value={b}>{b.toUpperCase()}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-2">
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">CATEGORY</label>
+            <select
+              value={filterCategory}
+              onChange={e => setFilterCategory(e.target.value)}
+              className="w-full px-5 h-14 rounded-2xl border border-gray-100 text-[14px] font-bold text-gray-900 bg-gray-50 outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 transition-all appearance-none shadow-sm"
+            >
+              <option value="all">ALL CATEGORIES</option>
+              {categories.map(([c, count]) => (
+                <option key={c} value={c}>{c.toUpperCase()} ({count})</option>
+              ))}
             </select>
           </div>
           <div className="space-y-2">
@@ -415,6 +582,11 @@ export default function PricingEnginePage() {
                     <p className="text-[13px] font-medium text-gray-500 uppercase tracking-widest">
                       Applying <span className={`font-black ${parseFloat(adjustPct) > 0 ? 'text-red-600' : 'text-green-600'}`}>{adjustPct}%</span> variance across <span className="font-black text-blue-600">{preview.length} active SKUs</span>
                     </p>
+                    <p className="text-[11px] font-bold text-gray-400 mt-1.5">
+                      Scope: {filterBrand === 'all' ? 'All brands' : filterBrand}
+                      {' · '}{filterCategory === 'all' ? 'All categories' : filterCategory}
+                      {search.trim() && <> · matching &ldquo;{search.trim()}&rdquo;</>}
+                    </p>
                   </div>
                 </div>
                 <button
@@ -434,20 +606,97 @@ export default function PricingEnginePage() {
 
       {/* Products table */}
       <div className="bg-white rounded-[32px]" style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)', overflow: 'hidden' }}>
-        <div className="px-8 py-6 border-b border-gray-50 flex items-center justify-between">
-          <h2 className="text-lg font-black text-gray-900">SKU Pricing Ledger</h2>
-          <div className="flex gap-1.5 p-1 bg-gray-50 rounded-xl border border-gray-100">
-            {['all', 'EcoFlow', 'Bluetti'].map(b => (
+        <div className="px-4 sm:px-8 py-6 border-b border-gray-50 space-y-5">
+
+          {/* Title + brand tabs + search */}
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 flex-shrink-0">
+              <h2 className="text-lg font-black text-gray-900">SKU Pricing Ledger</h2>
+              <span className="text-[11px] font-black uppercase tracking-widest text-gray-300">
+                {filteredProducts.length} of {products.length}
+              </span>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              {/* Search */}
+              <div className="relative flex-1 sm:w-[320px]">
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" />
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                  placeholder="Search name, SKU, category…"
+                  aria-label="Search products"
+                  className="w-full h-11 pl-11 pr-20 rounded-xl border border-gray-100 bg-gray-50 text-[13px] font-bold text-gray-900 placeholder:text-gray-300 placeholder:font-medium outline-none focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600 focus:bg-white transition-all"
+                />
+                {search ? (
+                  <button
+                    onClick={() => { setSearch(''); searchRef.current?.focus() }}
+                    aria-label="Clear search"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-lg flex items-center justify-center text-gray-300 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                  >
+                    <X size={13} />
+                  </button>
+                ) : (
+                  <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center h-5 px-1.5 rounded-md bg-white border border-gray-200 text-[10px] font-black text-gray-300">
+                    /
+                  </kbd>
+                )}
+              </div>
+
+              {/* Brand tabs */}
+              <div className="flex gap-1.5 p-1 bg-gray-50 rounded-xl border border-gray-100 flex-shrink-0 overflow-x-auto">
+                {['all', ...brands].map(b => (
+                  <button
+                    key={b}
+                    onClick={() => setFilterBrand(b)}
+                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                      filterBrand === b ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                    }`}
+                  >
+                    {b}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Category chips */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setFilterCategory('all')}
+              className={`h-8 px-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border ${
+                filterCategory === 'all'
+                  ? 'bg-[#0000ff] text-white border-[#0000ff] shadow-md shadow-blue-100'
+                  : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200 hover:text-gray-600'
+              }`}
+            >
+              All Categories
+            </button>
+            {categories.map(([c, count]) => (
               <button
-                key={b}
-                onClick={() => setFilterBrand(b)}
-                className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
-                  filterBrand === b ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                key={c}
+                onClick={() => setFilterCategory(filterCategory === c ? 'all' : c)}
+                className={`h-8 px-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border flex items-center gap-1.5 ${
+                  filterCategory === c
+                    ? 'bg-[#0000ff] text-white border-[#0000ff] shadow-md shadow-blue-100'
+                    : 'bg-white text-gray-400 border-gray-100 hover:border-gray-200 hover:text-gray-600'
                 }`}
               >
-                {b}
+                {c}
+                <span className={filterCategory === c ? 'text-white/60' : 'text-gray-300'}>{count}</span>
               </button>
             ))}
+
+            {filtersActive && (
+              <button
+                onClick={clearFilters}
+                className="h-8 px-3.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-red-500 bg-red-50 border border-red-100 hover:bg-red-100 transition-all flex items-center gap-1.5 ml-auto"
+              >
+                <X size={12} /> Clear filters
+              </button>
+            )}
           </div>
         </div>
         <div style={{overflowX:"auto",overflowY:"visible",WebkitOverflowScrolling:"touch",width:"100%"}}>
@@ -468,6 +717,25 @@ export default function PricingEnginePage() {
                   </div>
                 </td></tr>
               )}
+              {!loading && filteredProducts.length === 0 && (
+                <tr><td colSpan={6} className="px-8 py-20 text-center">
+                  <div className="flex flex-col items-center justify-center">
+                    <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center mb-4">
+                      <SearchX size={24} className="text-gray-300" />
+                    </div>
+                    <p className="text-[15px] font-black text-gray-700 mb-1">No products match</p>
+                    <p className="text-[12px] font-medium text-gray-400 mb-5">
+                      {search ? <>Nothing found for &ldquo;<span className="font-black text-gray-600">{search}</span>&rdquo;</> : 'Try a different brand or category'}
+                    </p>
+                    <button
+                      onClick={clearFilters}
+                      className="h-10 px-5 rounded-xl bg-[#0000ff] text-white text-[11px] font-black uppercase tracking-widest hover:-translate-y-0.5 transition-transform shadow-lg shadow-blue-100"
+                    >
+                      Clear filters
+                    </button>
+                  </div>
+                </td></tr>
+              )}
               {filteredProducts.map(p => {
                 const previewItem = preview.find(pr => pr.id === p.id)
                 const editedVal = editedPrices[p.id]
@@ -476,8 +744,12 @@ export default function PricingEnginePage() {
                   <tr key={p.id} className={`hover:bg-blue-50/30 transition-all cursor-default ${hasDiscount ? 'bg-red-50/20' : ''}`}>
                     <td className="px-4 py-4">
                       <div className="min-w-0">
-                        <p className="text-[14px] font-black text-gray-900 tracking-tight leading-none mb-1 truncate max-w-[240px]">{p.name}</p>
-                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-2">{p.brand} · {p.category}</p>
+                        <p className="text-[14px] font-black text-gray-900 tracking-tight leading-none mb-1 truncate max-w-[240px]" title={p.name}>
+                          <Highlight text={String(p.name ?? '')} tokens={tokens} />
+                        </p>
+                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-2">
+                          {p.brand} · {p.category}{p.sku ? <span className="font-mono normal-case tracking-normal text-gray-300"> · {p.sku}</span> : null}
+                        </p>
                         {hasDiscount && p.discount_end && <DiscountCountdown end={p.discount_end} />}
                       </div>
                     </td>
