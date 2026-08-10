@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Mail, Phone, MessageSquare, MessageCircle, Check, Loader2 } from 'lucide-react'
+import { Mail, Phone, MessageSquare, MessageCircle, Check, Loader2, Trash2 } from 'lucide-react'
 import type { ContactSubmission } from '@/lib/supabase/types'
 
 // Messages saved by older form versions can arrive percent-encoded or with
@@ -28,6 +28,8 @@ function decodeText(raw: string | null | undefined): string {
 export function MessageCard({ message: m }: { message: ContactSubmission }) {
   const [status, setStatus] = useState(m.status)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleted, setDeleted] = useState(false)
 
   const firstName = decodeText(m.first_name)
   const lastName = decodeText(m.last_name)
@@ -50,11 +52,28 @@ export function MessageCard({ message: m }: { message: ContactSubmission }) {
     }
   }
 
+  async function deleteMessage() {
+    if (!window.confirm(`Delete this message from ${firstName} ${lastName}? This cannot be undone.`)) return
+    setDeleting(true)
+    try {
+      const res = await fetch('/api/admin/messages', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: m.id }),
+      })
+      if (res.ok) setDeleted(true)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const submittedAt = m.submitted_at
     ? new Date(m.submitted_at).toLocaleString('en-KE', {
         day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
       })
     : '—'
+
+  if (deleted) return null
 
   return (
     <div
@@ -163,6 +182,14 @@ export function MessageCard({ message: m }: { message: ContactSubmission }) {
             Mark as read
           </button>
         )}
+        <button
+          onClick={deleteMessage}
+          disabled={deleting}
+          className={`h-11 sm:h-12 px-5 rounded-2xl text-[11px] font-black text-red-500 uppercase tracking-widest bg-red-50 hover:bg-red-100 border border-red-100 transition-all flex items-center justify-center gap-2 disabled:opacity-50 w-full sm:w-auto ${status !== 'new' ? 'sm:ml-auto' : ''}`}
+        >
+          {deleting ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+          Delete
+        </button>
       </div>
     </div>
   )

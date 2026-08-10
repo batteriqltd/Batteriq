@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Phone, MapPin, Send, Lock, Shield, CheckCircle, Smartphone } from 'lucide-react'
@@ -30,6 +30,8 @@ export default function ContactPage() {
   const [inquiryType, setInquiryType] = useState('')
   const [message, setMessage] = useState('')
   const [status, setStatus] = useState<Status>('idle')
+  const [company, setCompany] = useState('') // honeypot — humans never see or fill this
+  const startedAt = useRef(Date.now())
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -38,7 +40,7 @@ export default function ContactPage() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email, phone, inquiryType, message }),
+        body: JSON.stringify({ firstName, lastName, email, phone, inquiryType, message, company, elapsedMs: Date.now() - startedAt.current }),
       })
       if (!res.ok) throw new Error('Failed')
       setStatus('success')
@@ -180,6 +182,12 @@ export default function ContactPage() {
                         </motion.div>
                       ) : (
                         <motion.form key="form" onSubmit={handleSubmit} className="space-y-6">
+                          {/* Honeypot — hidden from humans, bots auto-fill it */}
+                          <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }}>
+                            <label htmlFor="company-field">Company</label>
+                            <input id="company-field" type="text" name="company" tabIndex={-1} autoComplete="off"
+                              value={company} onChange={(e) => setCompany(e.target.value)} />
+                          </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-2">First Name</label>
