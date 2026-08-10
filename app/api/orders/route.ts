@@ -161,6 +161,7 @@ export async function POST(req: Request) {
       title: '🛒 New Order Received',
       body: `${name} · KES ${Number(total).toLocaleString('en-KE')}`,
       tag: 'order',
+      id: String(order.id),
       url: `/admin/orders/${order.id}`,
     }).catch(() => {})
 

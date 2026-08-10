@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       title: '💰 Payment Received',
       body: `KES ${Number(order.total_kes).toLocaleString('en-KE')} · ${order.guest_name ?? 'Customer'}`,
       tag: 'payment',
+      id: String(order.id),
       url: `/admin/orders/${order.id}`,
     }).catch(() => {})
 

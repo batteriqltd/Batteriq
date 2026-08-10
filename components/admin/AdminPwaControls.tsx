@@ -47,17 +47,91 @@ export function AdminPwaControls() {
     return () => mq?.removeEventListener?.('change', checkInstalled)
   }, [])
 
-  // Notification state
+  // Subscribe this device and persist the subscription server-side.
+  const subscribeDevice = useCallback(async (): Promise<boolean> => {
+    if (!vapidKey) return false
+    const reg = await navigator.serviceWorker.ready
+    let sub = await reg.pushManager.getSubscription()
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey) as BufferSource,
+      })
+    }
+    const res = await fetch('/api/admin/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sub),
+    })
+    return res.ok
+  }, [vapidKey])
+
+  // Ask the browser to wake our service worker when connectivity returns, and
+  // (where supported) to poll periodically. Both are best-effort: Chromium
+  // honours them, Safari ignores them and relies on push + in-app catch-up.
+  const registerCatchUp = useCallback(async () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const reg = await navigator.serviceWorker.ready as any
+      await reg.sync?.register('bq-catchup').catch(() => {})
+
+      const status = await navigator.permissions
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ?.query({ name: 'periodic-background-sync' as any })
+        .catch(() => null)
+      if (status?.state === 'granted') {
+        await reg.periodicSync?.register('bq-poll', { minInterval: 15 * 60 * 1000 }).catch(() => {})
+      }
+    } catch { /* unsupported — push TTL still covers the offline window */ }
+  }, [])
+
+  // Notification state — and silently repair a subscription the browser
+  // dropped, which is the usual reason alerts "just stop" after a while.
   useEffect(() => {
     const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
     if (!supported) { setState('unsupported'); return }
     if (Notification.permission === 'denied') { setState('denied'); return }
     if (Notification.permission === 'default') { setState('default'); return }
-    navigator.serviceWorker.ready
-      .then(reg => reg.pushManager.getSubscription())
-      .then(sub => setState(sub ? 'granted' : 'default'))
-      .catch(() => setState('default'))
-  }, [])
+
+    let cancelled = false
+    ;(async () => {
+      try {
+        const reg = await navigator.serviceWorker.ready
+        const sub = await reg.pushManager.getSubscription()
+        if (sub) {
+          // Re-save on every load so a wiped server row heals itself.
+          fetch('/api/admin/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(sub),
+          }).catch(() => {})
+          if (!cancelled) setState('granted')
+        } else {
+          // Permission is still granted, so re-subscribing needs no prompt.
+          const ok = await subscribeDevice().catch(() => false)
+          if (!cancelled) setState(ok ? 'granted' : 'default')
+        }
+        registerCatchUp()
+      } catch {
+        if (!cancelled) setState('default')
+      }
+    })()
+
+    return () => { cancelled = true }
+  }, [subscribeDevice, registerCatchUp])
+
+  // Nudge the service worker to catch up whenever we come back online or the
+  // window regains focus, so a missed push still surfaces.
+  useEffect(() => {
+    const ping = () => {
+      navigator.serviceWorker?.ready
+        .then(reg => reg.active?.postMessage({ type: 'BQ_CATCHUP' }))
+        .catch(() => {})
+      registerCatchUp()
+    }
+    window.addEventListener('online', ping)
+    return () => window.removeEventListener('online', ping)
+  }, [registerCatchUp])
 
   // Capture the native install prompt when the browser offers it
   useEffect(() => {
@@ -77,31 +151,28 @@ export function AdminPwaControls() {
     try {
       const permission = await Notification.requestPermission()
       if (permission !== 'granted') { setState(permission === 'denied' ? 'denied' : 'default'); return }
-      const reg = await navigator.serviceWorker.ready
-      let sub = await reg.pushManager.getSubscription()
-      if (!sub) {
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidKey) as BufferSource,
-        })
-      }
-      const res = await fetch('/api/admin/push/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sub),
-      })
-      if (!res.ok) throw new Error('save failed')
+      const ok = await subscribeDevice()
+      if (!ok) throw new Error('save failed')
       setState('granted')
+      registerCatchUp()
     } catch (err) {
       console.error('[push] enable failed:', err)
       setState('default')
       alert('Could not enable notifications. Please try again.')
     }
-  }, [vapidKey])
+  }, [vapidKey, subscribeDevice, registerCatchUp])
 
   const sendTest = useCallback(async () => {
     setTesting(true)
-    try { await fetch('/api/admin/push/test', { method: 'POST' }) } catch { /* ignore */ }
+    try {
+      const res = await fetch('/api/admin/push/test', { method: 'POST' })
+      const data = await res.json().catch(() => null)
+      if (data && data.success === false) {
+        // A silent failure here is exactly what makes push feel broken —
+        // say why instead of flashing a tick.
+        alert(data.error ?? 'Could not send the test notification.')
+      }
+    } catch { /* ignore */ }
     setTimeout(() => setTesting(false), 1200)
   }, [])
 

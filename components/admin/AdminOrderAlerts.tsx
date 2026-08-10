@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ShoppingBag, Phone, X, Volume2, VolumeX, MessageSquare, ArrowRight, Mail } from 'lucide-react'
+import { ShoppingBag, Phone, X, Volume2, VolumeX, MessageSquare, ArrowRight, Mail, BellRing } from 'lucide-react'
 
 interface AdminAlert {
   kind: 'order' | 'message'
@@ -27,8 +27,12 @@ const CURSOR_KEY = 'bq_admin_alert_cursor'
 const SEEN_KEY = 'bq_admin_alert_seen'
 const MUTE_KEY = 'bq_admin_alert_muted'
 const POLL_MS = 7000
-const MAX_VISIBLE = 6
+// Room for a full catch-up batch after time away, not just live arrivals.
+const MAX_VISIBLE = 20
 const MAX_SEEN = 300
+// Three or more landing together means this is a catch-up, not a live order —
+// show a digest of everything missed instead of one popup per record.
+const DIGEST_THRESHOLD = 3
 
 // ── Alert chime ───────────────────────────────────────────────
 // Synthesised with WebAudio so there is no audio file to ship or 404 on.
@@ -95,6 +99,117 @@ const PAYMENT_LABEL: Record<string, string> = {
   cod_mpesa: 'M-Pesa on delivery',
 }
 
+/**
+ * Shown when a batch lands at once — reconnecting after time away, rather than
+ * a single live order. Summarises what was missed instead of forcing the admin
+ * to dismiss one popup per record.
+ */
+function DigestCard({
+  alerts, muted, onToggleMute, onOpen, onOpenAll, onDismissAll,
+}: {
+  alerts: AdminAlert[]
+  muted: boolean
+  onToggleMute: () => void
+  onOpen: (a: AdminAlert) => void
+  onOpenAll: () => void
+  onDismissAll: () => void
+}) {
+  const orders = alerts.filter(a => a.kind === 'order')
+  const messages = alerts.filter(a => a.kind === 'message')
+  const revenue = orders.reduce((sum, o) => sum + (o.totalKes ?? 0), 0)
+  const newest = [...alerts].reverse()
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.88, y: 30 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+      className="w-full max-w-[440px] rounded-[28px] overflow-hidden bg-white flex flex-col max-h-[92vh]"
+      style={{ boxShadow: '0 40px 100px rgba(0,0,40,0.5)' }}
+      onClick={e => e.stopPropagation()}
+    >
+      <div className="relative px-6 pt-6 pb-5 flex-shrink-0" style={{ background: 'linear-gradient(135deg, #00004d 0%, #0000cc 100%)' }}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(255,255,255,0.22)', border: '1px solid rgba(255,255,255,0.35)' }}>
+              <BellRing size={22} className="text-white" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/75 mb-1">While you were away</p>
+              <p className="text-white font-black text-[19px] leading-tight tracking-tight">
+                {alerts.length} new alert{alerts.length === 1 ? '' : 's'}
+              </p>
+              <p className="text-white/70 text-[11px] font-bold mt-0.5">
+                {orders.length} order{orders.length === 1 ? '' : 's'} · {messages.length} message{messages.length === 1 ? '' : 's'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button onClick={onToggleMute} title={muted ? 'Unmute alert sound' : 'Mute alert sound'}
+              className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.16)' }}>
+              {muted ? <VolumeX size={16} className="text-white/70" /> : <Volume2 size={16} className="text-white" />}
+            </button>
+            <button onClick={onDismissAll} title="Dismiss all"
+              className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.16)' }}>
+              <X size={16} className="text-white" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1">
+        {orders.length > 0 && (
+          <div className="rounded-2xl px-5 py-4 text-center" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-green-600 mb-1">Total value missed</p>
+            <p className="text-[28px] font-black font-mono text-green-700 leading-none tracking-tight">{fmtKes(revenue)}</p>
+          </div>
+        )}
+
+        <div className="space-y-1.5">
+          {newest.map(a => (
+            <button
+              key={`${a.kind}:${a.id}`}
+              onClick={() => onOpen(a)}
+              className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-blue-200 hover:bg-blue-50/40 transition-colors text-left"
+            >
+              {a.kind === 'order'
+                ? <ShoppingBag size={15} className="text-green-500 flex-shrink-0" />
+                : <MessageSquare size={15} className="text-blue-500 flex-shrink-0" />}
+              <div className="flex-1 min-w-0">
+                <p className="text-[12.5px] font-black text-gray-700 truncate">{a.customerName ?? 'Customer'}</p>
+                <p className="text-[11px] font-medium text-gray-400 truncate">
+                  {a.kind === 'order' ? fmtKes(a.totalKes ?? 0) : a.subtitle}
+                </p>
+              </div>
+              <span className="text-[10px] font-bold text-gray-300 flex-shrink-0">{timeAgo(a.createdAt)}</span>
+              <ArrowRight size={13} className="text-gray-300 flex-shrink-0" />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-6 pb-6 pt-1 flex items-center gap-2.5 flex-shrink-0">
+        {orders.length > 0 && (
+          <button
+            onClick={onOpenAll}
+            className="flex-1 py-3.5 rounded-2xl text-white font-black text-[13px] uppercase tracking-wider flex items-center justify-center gap-2"
+            style={{ background: 'linear-gradient(135deg, #00A651, #007a3d)', boxShadow: '0 10px 30px rgba(0,166,81,0.32)' }}
+          >
+            All Orders <ArrowRight size={16} />
+          </button>
+        )}
+        <button
+          onClick={onDismissAll}
+          className="flex-1 py-3.5 rounded-2xl text-[13px] font-black text-gray-400 bg-gray-50 border border-gray-100 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+        >
+          Dismiss all
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
 export function AdminOrderAlerts() {
   const router = useRouter()
   const [queue, setQueue] = useState<AdminAlert[]>([])
@@ -132,6 +247,11 @@ export function AdminOrderAlerts() {
       if (data.serverTime) {
         cursorRef.current = data.serverTime
         try { localStorage.setItem(CURSOR_KEY, data.serverTime) } catch { /* quota */ }
+        // Keep the service worker's catch-up cursor in step, so anything already
+        // shown in the panel isn't repeated as an OS notification on reconnect.
+        navigator.serviceWorker?.ready
+          .then(reg => reg.active?.postMessage({ type: 'BQ_SET_CURSOR', cursor: data.serverTime }))
+          .catch(() => {})
       }
 
       const fresh = (data.alerts ?? []).filter(a => !seenRef.current.has(`${a.kind}:${a.id}`))
@@ -254,10 +374,14 @@ export function AdminOrderAlerts() {
     router.push(alert.url)
   }, [dismiss, router])
 
+  const dismissAll = useCallback(() => setQueue([]), [])
+
   // Newest alert takes the stage; anything older stacks underneath it
   const current = queue.length > 0 ? queue[queue.length - 1] : null
   const rest = queue.slice(0, -1).reverse()
   const isOrder = current?.kind === 'order'
+  // A batch this size means we are catching up, not reacting to one live order
+  const showDigest = queue.length >= DIGEST_THRESHOLD
 
   return (
     <AnimatePresence>
@@ -271,6 +395,16 @@ export function AdminOrderAlerts() {
         style={{ background: 'rgba(0,0,20,0.62)', backdropFilter: 'blur(6px)' }}
         onClick={e => { if (e.target === e.currentTarget) dismiss(`${current.kind}:${current.id}`) }}
       >
+        {showDigest ? (
+          <DigestCard
+            alerts={queue}
+            muted={muted}
+            onToggleMute={toggleMute}
+            onOpen={open}
+            onOpenAll={() => { dismissAll(); router.push('/admin/orders') }}
+            onDismissAll={dismissAll}
+          />
+        ) : (
         <motion.div
           key={`${current.kind}:${current.id}`}
           initial={{ opacity: 0, scale: 0.88, y: 30 }}
@@ -448,6 +582,7 @@ export function AdminOrderAlerts() {
             )}
           </div>
         </motion.div>
+        )}
       </motion.div>
       )}
     </AnimatePresence>

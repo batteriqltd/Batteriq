@@ -4,9 +4,11 @@ import { getAdminSession } from '@/lib/admin-auth'
 
 export const dynamic = 'force-dynamic'
 
-// How far back a stale cursor is allowed to reach. A laptop waking from sleep
-// should not dump a whole day of orders on screen at once.
-const MAX_LOOKBACK_MS = 6 * 60 * 60 * 1000
+// How far back a stale cursor is allowed to reach. Matched to the 48h push TTL
+// in lib/push.ts so that reopening the panel after a weekend surfaces the same
+// window the phone would have queued — the client groups a large batch into a
+// digest rather than stacking one popup per record.
+const MAX_LOOKBACK_MS = 48 * 60 * 60 * 1000
 
 export interface AdminAlert {
   kind: 'order' | 'message'
