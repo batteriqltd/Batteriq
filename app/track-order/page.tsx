@@ -5,8 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
-
 interface TrackedOrder {
   orderNumber: string
   fulfillmentStatus: string
@@ -327,7 +325,6 @@ export default function TrackOrderPage() {
         </div>
       </div>
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

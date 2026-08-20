@@ -8,7 +8,6 @@ import { useCartStore } from '@/store/cartStore'
 import { formatKES } from '@/lib/utils'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { MpesaIcon, DeliveryIcon } from '@/components/ui/ContactIcons'
 
@@ -215,7 +214,6 @@ export default function CartPage() {
         </div>
       </div>
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

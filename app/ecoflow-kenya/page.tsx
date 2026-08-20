@@ -4,7 +4,6 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
 import { ProductGrid } from '@/components/product/ProductGrid'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { Shield } from 'lucide-react'
 import Script from 'next/script'
@@ -461,7 +460,6 @@ export default async function EcoFlowKenyaPage() {
       </section>
 
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

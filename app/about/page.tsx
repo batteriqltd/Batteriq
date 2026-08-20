@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { Zap, Shield, Globe, Users } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -71,7 +70,6 @@ export default function AboutPage() {
         </div>
       </div>
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

@@ -8,7 +8,6 @@ import { WhatsAppIcon, EmailIcon, InstagramIcon, FacebookIcon, TikTokIcon, Linke
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { ToastContainer } from '@/components/ui/Toast'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { motion, AnimatePresence } from 'framer-motion'
 
 type Status = 'idle' | 'loading' | 'success' | 'error'
@@ -371,7 +370,6 @@ export default function ContactPage() {
       </main>
 
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

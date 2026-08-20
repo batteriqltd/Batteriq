@@ -5,7 +5,6 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { ProductDetail } from '@/components/product/ProductDetail'
 import { ProductGrid } from '@/components/product/ProductGrid'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import type { Product } from '@/lib/supabase/types'
 
@@ -139,7 +138,6 @@ export default async function EcoFlowProductPage({ params }: PageProps) {
         )}
       </div>
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

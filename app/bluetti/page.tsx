@@ -6,7 +6,6 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
 import { FilteredProductGrid } from '@/components/product/FilteredProductGrid'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 
 export const revalidate = 60
@@ -126,7 +125,6 @@ export default async function BluettiCollectionPage() {
         </section>
       </div>
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

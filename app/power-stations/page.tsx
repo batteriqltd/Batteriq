@@ -3,7 +3,6 @@ import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { PowerStationsClient } from '@/components/power-stations/PowerStationsClient'
 import { PageWrapper } from '@/components/animations/PageWrapper'
@@ -257,7 +256,6 @@ export default async function PowerStationsPage() {
       </section>
 
       <Footer />
-      <GeminiChatWidget />
       <PowerStationsAnimation />
     </PageWrapper>
   )

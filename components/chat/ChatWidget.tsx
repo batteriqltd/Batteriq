@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useUIStore } from '@/store/uiStore'
 import { usePathname } from 'next/navigation'
 import { WhatsAppIcon } from '@/components/ui/ContactIcons'
@@ -16,18 +16,6 @@ const QUICK_MESSAGES = [
 export function ChatWidget() {
   const { cartOpen, mobileNavOpen } = useUIStore()
   const [open, setOpen] = useState(false)
-  const [showTooltip, setShowTooltip] = useState(false)
-
-  // Show tooltip after 4 seconds to grab attention
-  useEffect(() => {
-    const t = setTimeout(() => setShowTooltip(true), 4000)
-    return () => clearTimeout(t)
-  }, [])
-
-  // Hide tooltip when panel opens
-  useEffect(() => {
-    if (open) setShowTooltip(false)
-  }, [open])
 
   function waLink(msg: string) {
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`
@@ -126,23 +114,9 @@ export function ChatWidget() {
         </div>
       )}
 
-      {/* Tooltip bubble */}
-      {showTooltip && !open && (
-        <div className="fixed bottom-24 right-20 z-50">
-          <div className="bg-white rounded-2xl px-4 py-3 shadow-xl border border-gray-100 max-w-[200px]"
-            style={{ boxShadow: '0 8px 30px rgba(0,0,0,0.12)' }}>
-            <p className="text-xs font-black text-gray-900 leading-snug">👋 Need help choosing?</p>
-            <p className="text-[11px] text-gray-500 mt-0.5">Chat with us on WhatsApp</p>
-            {/* Tail */}
-            <div className="absolute right-[-8px] top-1/2 -translate-y-1/2 w-0 h-0"
-              style={{ borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderLeft: '8px solid white' }} />
-          </div>
-        </div>
-      )}
-
       {/* Floating button */}
       <button
-        onClick={() => { setOpen(!open); setShowTooltip(false) }}
+        onClick={() => setOpen(!open)}
         className="fixed bottom-5 right-5 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300"
         style={{
           background: open ? 'linear-gradient(135deg, #00004d, #0000ff)' : '#25D366',

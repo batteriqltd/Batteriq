@@ -4,7 +4,6 @@ import { Header } from '@/components/layout/Header'
 import { Hero3DProduct } from '@/components/layout/Hero3DProduct'
 import { Footer } from '@/components/layout/Footer'
 import { FilteredProductGrid } from '@/components/product/FilteredProductGrid'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { SolarSelectionGuide } from '@/components/solar/SolarSelectionGuide'
 
@@ -143,7 +142,6 @@ export default async function SolarPanelsPage() {
         <FilteredProductGrid products={products} filterType="solar" />
       </div>
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

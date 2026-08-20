@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { FaqAccordion } from '@/components/support/FaqAccordion'
 
@@ -228,7 +227,6 @@ export default function FaqPage() {
       </section>
 
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

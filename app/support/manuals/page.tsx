@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { ExternalLink, FileText } from 'lucide-react'
 
@@ -163,7 +162,6 @@ export default function ManualsPage() {
       </section>
 
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { Shield, CheckCircle, Loader2, AlertCircle } from 'lucide-react'
 
@@ -211,7 +210,6 @@ export default function WarrantyPage() {
           </div>
         </section>
         <Footer />
-        <GeminiChatWidget />
       </>
     )
   }
@@ -455,7 +453,6 @@ export default function WarrantyPage() {
       </section>
 
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

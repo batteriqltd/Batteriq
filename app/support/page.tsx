@@ -3,7 +3,6 @@ import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { HelpCircle, BookOpen, Shield, MessageCircle, Phone, Mail, ChevronRight } from 'lucide-react'
 import { WhatsAppIcon, EmailIcon } from '@/components/ui/ContactIcons'
@@ -125,7 +124,6 @@ export default function SupportPage() {
       </section>
 
       <Footer />
-      <GeminiChatWidget />
     </>
   )
 }

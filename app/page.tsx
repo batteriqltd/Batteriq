@@ -7,7 +7,6 @@ import { BrandAnchor } from '@/components/home/BrandAnchor'
 import { CategoryNav } from '@/components/home/CategoryNav'
 import { DeltaSeriesShowcase } from '@/components/home/DeltaSeriesShowcase'
 import { ProductCard } from '@/components/product/ProductCard'
-import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { ToastContainer } from '@/components/ui/Toast'
 import { HomepageNewsletter } from '@/components/home/HomepageNewsletter'
 import { ReviewsSection } from '@/components/home/ReviewsSection'
@@ -639,7 +638,6 @@ export default async function HomePage() {
       </section>
 
       <Footer />
-      <GeminiChatWidget />
       <HomeAnimations />
       <SectionObserver />
     </PageWrapper>
