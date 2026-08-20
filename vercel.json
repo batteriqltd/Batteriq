@@ -18,6 +18,9 @@
     },
     "app/api/pesapal/ipn/route.ts": {
       "maxDuration": 30
+    },
+    "app/api/pesapal/reconcile/route.ts": {
+      "maxDuration": 60
     }
   },
   "headers": [

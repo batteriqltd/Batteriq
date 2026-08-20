@@ -90,6 +90,31 @@ async function getAccessToken(config: PesapalConfig): Promise<string> {
   return cachedToken.token
 }
 
+/**
+ * Pesapal returns an `error` envelope on EVERY response, including successful
+ * ones, where all its fields are null:
+ *
+ *   "error": { "error_type": null, "code": null, "message": null }
+ *
+ * A truthiness check on `data.error` therefore treats every success as a
+ * failure. Only a populated envelope is a real error.
+ */
+export function extractApiError(
+  data: unknown
+): { code: string | null; message: string | null; type: string | null } | null {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return null
+  const raw = (data as { error?: unknown }).error
+  if (!raw || typeof raw !== 'object') return null
+
+  const e = raw as { code?: unknown; message?: unknown; error_type?: unknown }
+  const code = typeof e.code === 'string' && e.code ? e.code : null
+  const message = typeof e.message === 'string' && e.message ? e.message : null
+  const type = typeof e.error_type === 'string' && e.error_type ? e.error_type : null
+
+  if (!code && !message && !type) return null
+  return { code, message, type }
+}
+
 async function pesapalRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
   const config = getPesapalConfig()
   const token = await getAccessToken(config)
@@ -106,11 +131,12 @@ async function pesapalRequest<T>(path: string, init: RequestInit = {}): Promise<
   })
 
   const data = await res.json().catch(() => null)
+  const apiError = extractApiError(data)
 
-  if (!res.ok || (data && !Array.isArray(data) && data.error)) {
+  if (!res.ok || apiError) {
     throw new PesapalError(
-      data?.error?.message || data?.message || `Pesapal request failed (HTTP ${res.status}).`,
-      data?.error?.code
+      apiError?.message || data?.message || `Pesapal request failed (HTTP ${res.status}).`,
+      apiError?.code ?? undefined
     )
   }
   return data as T
@@ -222,10 +248,20 @@ export type PesapalTransactionStatus = {
 }
 
 export async function getTransactionStatus(orderTrackingId: string): Promise<PesapalTransactionStatus> {
-  return pesapalRequest<PesapalTransactionStatus>(
-    `/Transactions/GetTransactionStatus?orderTrackingId=${encodeURIComponent(orderTrackingId)}`,
-    { method: 'GET' }
-  )
+  try {
+    return await pesapalRequest<PesapalTransactionStatus>(
+      `/Transactions/GetTransactionStatus?orderTrackingId=${encodeURIComponent(orderTrackingId)}`,
+      { method: 'GET' }
+    )
+  } catch (err) {
+    // Pesapal answers a not-yet-completed payment with an error envelope rather
+    // than a status. That is a legitimate "still pending", not a fault — if we
+    // threw, the IPN would return 500 and Pesapal would retry it forever.
+    if (err instanceof PesapalError && err.code === 'payment_details_not_found') {
+      return { status_code: 0, payment_status_description: 'Pending Payment' }
+    }
+    throw err
+  }
 }
 
 /**
