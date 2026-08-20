@@ -7,6 +7,17 @@ import { ProductDetail } from '@/components/product/ProductDetail'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
 import type { Product } from '@/lib/supabase/types'
+import { ProductFaq } from '@/components/product/ProductFaq'
+import {
+  buildTitle, buildDescription, productJsonLd, breadcrumbJsonLd,
+  buildProductFaqs, faqJsonLd, productUrl,
+} from '@/lib/seo'
+
+// These pages are statically generated from generateStaticParams, so without
+// ISR a price or meta change in the database stays invisible until the next
+// deploy — including in the Product JSON-LD, where a stale price can trip
+// Google's merchant price-mismatch checks.
+export const revalidate = 3600
 
 type PageProps = {
   params: { slug: string }
@@ -51,78 +62,46 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const product = await getProduct(params.slug)
   if (!product) return {}
 
-  const title = `${product.name} Price in Kenya — KES ${product.price_kes.toLocaleString()} | Batteriq`
-  const description = product.meta_description ??
-    `Buy the EcoFlow ${product.name} in Kenya for KES ${product.price_kes.toLocaleString()}. Authorised EcoFlow dealer. Instant M-Pesa payment. Fast Nairobi delivery. Batteriq.`
+  const title = buildTitle(product)
+  const description = buildDescription(product)
 
   return {
-    title,
+    // absolute: the root layout appends "| Batteriq" via a title template, and
+    // our stored meta_titles already carry their own branding. Without this the
+    // suffix is applied twice and the title blows past 60 characters.
+    title: { absolute: title },
     description,
-    alternates: {
-      canonical: `https://batteriq.com/ecoflow/${product.slug}`,
-    },
+    alternates: { canonical: productUrl('ecoflow', product.slug) },
     openGraph: {
       title,
       description,
+      url: productUrl('ecoflow', product.slug),
+      type: 'website',
       images: product.images?.[0] ? [{ url: product.images[0] }] : [],
     },
   }
 }
-
-const breadcrumbSchema = (product: Product) => ({
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://batteriq.com' },
-    { '@type': 'ListItem', position: 2, name: 'EcoFlow Kenya', item: 'https://batteriq.com/ecoflow-kenya' },
-    { '@type': 'ListItem', position: 3, name: product.name, item: `https://batteriq.com/ecoflow/${product.slug}` },
-  ],
-})
-
-const productSchema = (product: Product) => ({
-  '@context': 'https://schema.org',
-  '@type': 'Product',
-  name: product.name,
-  image: product.images ?? [],
-  description: product.description,
-  brand: { '@type': 'Brand', name: product.brand },
-  sku: product.sku,
-  offers: {
-    '@type': 'Offer',
-    url: `https://batteriq.com/ecoflow/${product.slug}`,
-    priceCurrency: 'KES',
-    price: product.price_kes,
-    availability: product.in_stock
-      ? 'https://schema.org/InStock'
-      : 'https://schema.org/OutOfStock',
-    seller: { '@type': 'Organization', name: 'Batteriq' },
-  },
-  ...(product.schema_rating && product.schema_review_count && product.schema_review_count > 0 ? {
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: product.schema_rating,
-      reviewCount: product.schema_review_count,
-      bestRating: 5,
-      worstRating: 1,
-    }
-  } : {}),
-})
 
 export default async function EcoFlowProductPage({ params }: PageProps) {
   const product = await getProduct(params.slug)
   if (!product) notFound()
 
   const related = await getRelatedProducts(product)
+  const faqs = buildProductFaqs(product)
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema(product)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(product, 'ecoflow')) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema(product)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(product, 'ecoflow')) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }}
       />
       <Header />
       <ToastContainer />
@@ -136,6 +115,7 @@ export default async function EcoFlowProductPage({ params }: PageProps) {
             <ProductGrid products={related} />
           </section>
         )}
+        <ProductFaq faqs={faqs} productName={product.name} />
       </div>
       <Footer />
     </>

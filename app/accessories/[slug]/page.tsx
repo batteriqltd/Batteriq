@@ -6,7 +6,18 @@ import { Footer } from '@/components/layout/Footer'
 import { ProductDetail } from '@/components/product/ProductDetail'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
+import { ProductFaq } from '@/components/product/ProductFaq'
+import {
+  buildTitle, buildDescription, productJsonLd, breadcrumbJsonLd,
+  buildProductFaqs, faqJsonLd, productUrl,
+} from '@/lib/seo'
 import type { Product } from '@/lib/supabase/types'
+
+// These pages are statically generated from generateStaticParams, so without
+// ISR a price or meta change in the database stays invisible until the next
+// deploy — including in the Product JSON-LD, where a stale price can trip
+// Google's merchant price-mismatch checks.
+export const revalidate = 3600
 
 type PageProps = { params: { slug: string } }
 
@@ -39,13 +50,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const product = await getProduct(params.slug)
   if (!product) return {}
 
-  const title = `${product.name} Price in Kenya — KES ${product.price_kes.toLocaleString()} | Batteriq`
-  const description = product.meta_description ?? `Buy ${product.name} in Kenya for KES ${product.price_kes.toLocaleString()} from Batteriq.`
+  const title = buildTitle(product)
+  const description = buildDescription(product)
   return {
-    title,
+    // absolute: the root layout appends "| Batteriq" via a title template, and
+    // our stored meta_titles already carry their own branding. Without this the
+    // suffix is applied twice and the title blows past 60 characters.
+    title: { absolute: title },
     description,
-    alternates: { canonical: `https://batteriq.com/accessories/${product.slug}` },
-    openGraph: { title, description, images: product.images?.[0] ? [{ url: product.images[0] }] : [] },
+    alternates: { canonical: productUrl('accessories', product.slug) },
+    openGraph: {
+      title,
+      description,
+      url: productUrl('accessories', product.slug),
+      type: 'website',
+      images: product.images?.[0] ? [{ url: product.images[0] }] : [],
+    },
   }
 }
 
@@ -53,9 +73,22 @@ export default async function AccessoryProductPage({ params }: PageProps) {
   const product = await getProduct(params.slug)
   if (!product) notFound()
   const related = await getRelatedProducts(product)
+  const faqs = buildProductFaqs(product)
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd(product, 'accessories')) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd(product, 'accessories')) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd(faqs)) }}
+      />
       <Header />
       <ToastContainer />
       <div className="pt-[72px] min-h-screen">
@@ -66,6 +99,7 @@ export default async function AccessoryProductPage({ params }: PageProps) {
             <ProductGrid products={related} />
           </section>
         )}
+        <ProductFaq faqs={faqs} productName={product.name} />
       </div>
       <Footer />
     </>
