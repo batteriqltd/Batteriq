@@ -23,6 +23,7 @@ function paymentLabel(m: string): string {
     cod_cash: 'Cash on Delivery',
     cod_mpesa: 'M-Pesa at Doorstep',
     sales_confirmation: 'Reserve Order — Pay After Confirmation',
+    pesapal_card: 'Visa / Mastercard (Pesapal)',
     mpesa: 'M-Pesa',
     cash: 'Cash',
   }
@@ -309,11 +310,37 @@ export async function emailPaymentConfirmed(order: {
   total_kes: number
   payment_method: string
   mpesa_transaction_code?: string
+  /** Card orders only — the 2% Pesapal fee the customer paid on top. */
+  card_fee_kes?: number
+  /** Card orders only — total_kes + card_fee_kes, i.e. what was actually charged. */
+  total_charged_kes?: number
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   delivery_address: any
   created_at: string
 }) {
   const total = Number(order.total_kes) || 0
+
+  // Card orders carry a pass-through processing fee and a different provider
+  // reference. M-Pesa orders leave these undefined and render exactly as before.
+  const isCard = order.payment_method === 'pesapal_card'
+  const cardFee = Number(order.card_fee_kes) || 0
+  const charged = Number(order.total_charged_kes) || total
+  const refLabel = isCard ? 'Card Payment Reference' : 'M-Pesa Reference'
+  const paidIntro = isCard
+    ? 'Your card payment has been verified and confirmed by Pesapal. Your order is now being prepared!'
+    : 'Your M-Pesa payment has been automatically verified and confirmed. Your order is now being prepared!'
+  const proofLine = isCard
+    ? 'Your card payment reference above serves as payment proof.'
+    : 'Your M-Pesa receipt above serves as payment proof.'
+  const feeRow = cardFee > 0 ? `
+      <div class="t-row" style="display:flex;justify-content:space-between;padding:4px 0">
+        <span>Order subtotal</span>
+        <span style="font-family:monospace">${fmt(total)}</span>
+      </div>
+      <div class="t-row" style="display:flex;justify-content:space-between;padding:4px 0;color:#666">
+        <span>Card processing fee</span>
+        <span style="font-family:monospace">${fmt(cardFee)}</span>
+      </div>` : ''
 
   const itemRows2 = order.items.map((i: { brand?: string; name: string; quantity: number; price_kes: number | string }) => `
   <tr>
@@ -327,19 +354,19 @@ export async function emailPaymentConfirmed(order: {
 
   const content = `
     <p style="font-size:17px;font-weight:700;color:#111;margin-bottom:6px">Hi ${order.guest_name}!</p>
-    <p style="color:#555;line-height:1.6">Your M-Pesa payment has been automatically verified and confirmed. Your order is now being prepared!</p>
+    <p style="color:#555;line-height:1.6">${paidIntro}</p>
 
     <div style="background:#f0fdf4;border:2px solid #86efac;border-radius:12px;padding:16px 20px;margin:16px 0">
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.1em;margin-bottom:4px">Payment Confirmed</div>
       <div style="font-size:24px;font-weight:900;color:#059669;font-family:monospace">${order.order_number}</div>
       ${order.mpesa_transaction_code ? `
         <div style="margin-top:10px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.1em">M-Pesa Reference</div>
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.1em">${refLabel}</div>
           <div style="font-family:monospace;font-size:15px;font-weight:700;color:#065f46;margin-top:3px">${order.mpesa_transaction_code}</div>
         </div>` : ''}
       <div style="margin-top:10px">
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666;letter-spacing:.1em">Amount Paid</div>
-        <div style="font-size:22px;font-weight:900;color:#059669;font-family:monospace;margin-top:3px">${fmt(total)}</div>
+        <div style="font-size:22px;font-weight:900;color:#059669;font-family:monospace;margin-top:3px">${fmt(charged)}</div>
       </div>
     </div>
 
@@ -351,14 +378,15 @@ export async function emailPaymentConfirmed(order: {
       <tbody>${itemRows2}</tbody>
     </table>
     <div class="totals-box">
+      ${feeRow}
       <div class="t-total">
         <span>Total Paid</span>
-        <span style="font-family:monospace;color:#059669">${fmt(total)}</span>
+        <span style="font-family:monospace;color:#059669">${fmt(charged)}</span>
       </div>
     </div>
     <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;margin:16px 0">
       <div style="font-size:11px;font-weight:800;color:#059669;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">eTIMS KRA Invoice</div>
-      <div style="font-size:12px;color:#166534;line-height:1.5">An official eTIMS KRA invoice will be issued and sent to your email within 24 hours. Your M-Pesa receipt above serves as payment proof.</div>
+      <div style="font-size:12px;color:#166534;line-height:1.5">An official eTIMS KRA invoice will be issued and sent to your email within 24 hours. ${proofLine}</div>
     </div>
     <a href="https://batteriq.com/track-order" class="cta" style="background:linear-gradient(135deg,#059669,#065f46)">Track My Order</a>
   `
@@ -369,10 +397,11 @@ export async function emailPaymentConfirmed(order: {
     customerEmail: order.guest_email,
     customerPhone: order.guest_phone,
     items: order.items,
-    totalKes: total,
+    totalKes: charged,
     paymentMethod: order.payment_method,
     paymentStatus: 'paid',
     mpesaRef: order.mpesa_transaction_code,
+    refLabel: isCard ? 'Card Ref' : 'M-Pesa Ref',
     deliveryAddress: order.delivery_address ?? {},
     createdAt: order.created_at,
   }
@@ -396,7 +425,7 @@ export async function emailPaymentConfirmed(order: {
       from: FROM_ORDERS,
       to: resolveEmail(order.guest_email),
       subject: `Payment Confirmed ✅ — ${order.order_number} | Batteriq Kenya`,
-      html: wrapEmail(content, 'Payment Confirmed!', `M-Pesa payment verified for Order ${order.order_number}`, '#065f46'),
+      html: wrapEmail(content, 'Payment Confirmed!', `${isCard ? 'Card' : 'M-Pesa'} payment verified for Order ${order.order_number}`, '#065f46'),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(attachments.length ? { attachments } : {}) as any,
     }),
@@ -404,17 +433,18 @@ export async function emailPaymentConfirmed(order: {
       resend.emails.send({
         from: FROM_ORDERS,
         to: resolveEmail(email),
-        subject: `Payment Received — ${order.order_number} | ${fmt(total)}`,
+        subject: `Payment Received — ${order.order_number} | ${fmt(charged)}`,
         html: wrapEmail(`
-          <p style="font-size:16px;font-weight:700">M-Pesa payment auto-verified for order <strong>${order.order_number}</strong></p>
+          <p style="font-size:16px;font-weight:700">${isCard ? 'Card' : 'M-Pesa'} payment auto-verified for order <strong>${order.order_number}</strong></p>
           <div class="info-grid">
             <div class="info-box"><div class="info-label">Customer</div><div class="info-val">${order.guest_name}</div></div>
-            <div class="info-box"><div class="info-label">Amount</div><div class="info-val" style="color:#0000ff;font-size:18px;font-weight:900">${fmt(total)}</div></div>
-            <div class="info-box"><div class="info-label">M-Pesa Ref</div><div class="info-val" style="font-family:monospace">${order.mpesa_transaction_code ?? 'N/A'}</div></div>
+            <div class="info-box"><div class="info-label">Amount</div><div class="info-val" style="color:#0000ff;font-size:18px;font-weight:900">${fmt(charged)}</div></div>
+            <div class="info-box"><div class="info-label">${refLabel}</div><div class="info-val" style="font-family:monospace">${order.mpesa_transaction_code ?? 'N/A'}</div></div>
             <div class="info-box"><div class="info-label">Phone</div><div class="info-val" style="font-family:monospace">${order.guest_phone}</div></div>
           </div>
+          ${cardFee > 0 ? `<div class="tip-box">💳 Card order — customer paid ${fmt(charged)} (${fmt(total)} order value + ${fmt(cardFee)} pass-through Pesapal fee). Bank to Batteriq: ${fmt(total)} after Pesapal deducts its cut.</div>` : ''}
           <a href="https://batteriq.com/admin/orders" class="cta" style="background:linear-gradient(135deg,#00004d,#000080)">View in Admin</a>
-        `, `Payment Received — ${order.order_number}`, `${fmt(total)} via M-Pesa · Auto-verified`, '#065f46'),
+        `, `Payment Received — ${order.order_number}`, `${fmt(charged)} via ${isCard ? 'Visa / Mastercard' : 'M-Pesa'} · Auto-verified`, '#065f46'),
       })
     ),
   ])

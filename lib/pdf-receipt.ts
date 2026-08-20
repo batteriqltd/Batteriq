@@ -13,6 +13,8 @@ export interface ReceiptData {
   paymentMethod: string
   paymentStatus: string
   mpesaRef?: string
+  /** Label for the provider reference line. Defaults to 'M-Pesa Ref'. */
+  refLabel?: string
   deliveryAddress: {
     street?: string
     city?: string
@@ -33,6 +35,7 @@ function paymentLabel(method: string): string {
     cod_cash: 'Cash on Delivery',
     cod_mpesa: 'M-Pesa at Doorstep',
     sales_confirmation: 'Reserve Order — Pay After Confirmation',
+    pesapal_card: 'Visa / Mastercard (Pesapal)',
     mpesa: 'M-Pesa',
     cash: 'Cash',
   }
@@ -148,7 +151,7 @@ export async function generateReceiptPDF(data: ReceiptData): Promise<string> {
   doc.setTextColor(85, 85, 85)
   doc.text(`Status: ${data.paymentStatus === 'paid' ? 'Confirmed' : 'Pending'}`, col2x + 4, y + 18)
   if (data.mpesaRef) {
-    doc.text(`M-Pesa Ref: ${data.mpesaRef}`, col2x + 4, y + 24)
+    doc.text(`${data.refLabel ?? 'M-Pesa Ref'}: ${data.mpesaRef}`, col2x + 4, y + 24)
   }
 
   y += 46

@@ -12,11 +12,26 @@
     },
     "app/api/mpesa/stkpush/route.ts": {
       "maxDuration": 30
+    },
+    "app/api/pesapal/checkout/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/pesapal/ipn/route.ts": {
+      "maxDuration": 30
     }
   },
   "headers": [
     {
       "source": "/api/mpesa/callback",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/pesapal/ipn",
       "headers": [
         {
           "key": "Cache-Control",

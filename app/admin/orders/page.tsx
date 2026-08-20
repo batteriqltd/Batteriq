@@ -20,11 +20,34 @@ interface Order {
   created_at: string
   mpesa_transaction_code?: string | null
   mpesa_failure_reason?: string | null
+  // Pesapal card orders
+  pesapal_confirmation_code?: string | null
+  pesapal_status_description?: string | null
+  card_fee_kes?: number | string | null
+  total_charged_kes?: number | string | null
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   items: any[]
 }
 
 function fmt(n: number | string) { return `KES ${Number(n || 0).toLocaleString('en-KE')}` }
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  mpesa_now: 'M-Pesa Now',
+  cod_cash: 'Cash on Delivery',
+  cod_mpesa: 'M-Pesa at Door',
+  sales_confirmation: 'Sales Confirm',
+  pesapal_card: 'Visa / Mastercard',
+}
+
+function methodLabel(m: string) {
+  return PAYMENT_METHOD_LABELS[m] ?? m?.replace(/_/g, ' ')
+}
+
+/** Card orders were charged total_charged_kes (order value + passed-on fee);
+ *  every other order was charged its total. */
+function chargedAmount(o: Order) {
+  return Number(o.total_charged_kes) || Number(o.total_kes) || 0
+}
 
 const FULFILLMENT_OPTIONS = ['unfulfilled', 'processing', 'shipped', 'delivered', 'cancelled']
 
@@ -64,13 +87,18 @@ export default function AdminOrdersPage() {
         setOrders(prev => prev.map(o => o.id === updated.id ? updated : o))
 
         if (previous.payment_status !== 'paid' && updated.payment_status === 'paid') {
-          const amount = `KES ${Number(updated.total_kes).toLocaleString('en-KE')}`
-          notify('success', 'Payment Received', `${updated.guest_name} paid ${amount} via M-Pesa — Ref: ${updated.mpesa_transaction_code || 'N/A'}`)
+          const isCard = updated.payment_method === 'pesapal_card'
+          const amount = `KES ${chargedAmount(updated).toLocaleString('en-KE')}`
+          const ref = (isCard ? updated.pesapal_confirmation_code : updated.mpesa_transaction_code) || 'N/A'
+          notify('success', 'Payment Received', `${updated.guest_name} paid ${amount} via ${isCard ? 'Visa/Mastercard' : 'M-Pesa'} — Ref: ${ref}`)
           try { new Audio('/notification.mp3').play().catch(() => {}) } catch {}
         }
 
         if (previous.payment_status !== 'failed' && updated.payment_status === 'failed') {
-          notify('error', 'Payment Failed', `${updated.guest_name}: ${updated.mpesa_failure_reason || 'PIN error or cancelled'}`)
+          const reason = updated.payment_method === 'pesapal_card'
+            ? (updated.pesapal_status_description || 'Card payment declined or cancelled')
+            : (updated.mpesa_failure_reason || 'PIN error or cancelled')
+          notify('error', 'Payment Failed', `${updated.guest_name}: ${reason}`)
         }
       })
       .subscribe()
@@ -320,6 +348,11 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="px-6 py-5">
                       <p className="text-[14px] font-black font-mono text-gray-900">{fmt(order.total_kes)}</p>
+                      {Number(order.card_fee_kes) > 0 && (
+                        <p className="text-[10px] font-bold text-gray-400 font-mono mt-0.5">
+                          +{fmt(order.card_fee_kes ?? 0)} card fee · {fmt(chargedAmount(order))} charged
+                        </p>
+                      )}
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex flex-col gap-1.5">
@@ -332,7 +365,7 @@ export default function AdminOrdersPage() {
                         >
                           {order.payment_status}
                         </span>
-                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{order.payment_method?.replace(/_/g, ' ')}</p>
+                        <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest">{methodLabel(order.payment_method)}</p>
                       </div>
                     </td>
                     <td className="px-6 py-5">
@@ -471,7 +504,7 @@ export default function AdminOrdersPage() {
                 <div className="flex items-end justify-between gap-3 mt-3 pt-3 border-t border-gray-50">
                   <div className="min-w-0">
                     <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-0.5">
-                      {order.items?.length ?? 0} items · {order.payment_method?.replace(/_/g, ' ')}
+                      {order.items?.length ?? 0} items · {methodLabel(order.payment_method)}
                     </p>
                     <p className="text-[11px] text-gray-400 truncate max-w-[190px]">
                       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}

@@ -12,10 +12,11 @@ import {
 } from 'lucide-react'
 import { WhatsAppIcon, EmailIcon, MpesaIcon, DeliveryIcon, ContactSalesIcon } from '@/components/ui/ContactIcons'
 import { KENYAN_COUNTIES } from '@/lib/delivery'
+import { calculateCardFee, formatKesExact } from '@/lib/cardFee'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 
-type PaymentMethod = 'mpesa_now' | 'cod_mpesa' | 'sales_confirmation'
+type PaymentMethod = 'mpesa_now' | 'cod_mpesa' | 'sales_confirmation' | 'pesapal_card'
 
 function normalizePhone(raw: string): string {
   const p = raw.replace(/[\s\-\(\)]/g, '').trim()
@@ -42,6 +43,7 @@ export default function CheckoutPage() {
   const [checkoutRequestId, setCheckoutRequestId] = useState('')
   const checkoutRequestIdRef = useRef('')
   const [retryCount, setRetryCount] = useState(0)
+  const [cardRedirect, setCardRedirect] = useState(false)
   const PAYBILL_NUMBER = '303030'
   const PAYBILL_ACCOUNT = '3753#'
   const PAYBILL_NAME = 'BATTERIQ SOLUTIONS'
@@ -139,6 +141,13 @@ export default function CheckoutPage() {
   const subtotal = mounted ? items.reduce((s, i) => s + (Number(i.price_kes) || 0) * i.quantity, 0) : 0
   const grandTotal = subtotal // items only — delivery fee is communicated separately when delivery is arranged
   const totalQuantity = mounted ? items.reduce((sum, item) => sum + item.quantity, 0) : 0
+
+  // Card payments carry a pass-through Pesapal fee. M-Pesa totals are untouched:
+  // payableTotal only differs from grandTotal when the card option is selected.
+  // This is a preview only — the server recomputes the fee before charging.
+  const isCardPayment = paymentMethod === 'pesapal_card'
+  const cardFee = calculateCardFee(subtotal)
+  const payableTotal = isCardPayment ? cardFee.totalChargedKes : grandTotal
   const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
 
   const loading = step === 'processing'
@@ -184,6 +193,24 @@ export default function CheckoutPage() {
       const orderData = await orderRes.json()
       if (!orderRes.ok) throw new Error(orderData.error ?? 'Order creation failed')
       setOrderId(orderData.orderId)
+
+      // ── Visa / Mastercard via Pesapal's hosted page ──
+      // The cart is deliberately NOT cleared here: if the card payment fails the
+      // customer comes back to a full basket. It clears once payment confirms.
+      if (paymentMethod === 'pesapal_card') {
+        const pesapalRes = await fetch('/api/pesapal/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ orderId: orderData.orderId }),
+        })
+        const pesapalData = await pesapalRes.json()
+        if (!pesapalRes.ok || !pesapalData.redirectUrl) {
+          throw new Error(pesapalData.error ?? 'Could not open the secure card payment page. Please try again or use M-Pesa.')
+        }
+        setCardRedirect(true)
+        window.location.href = pesapalData.redirectUrl
+        return
+      }
 
       if (paymentMethod === 'mpesa_now') {
         const mpesaRes = await fetch('/api/mpesa/stkpush', {
@@ -262,6 +289,33 @@ export default function CheckoutPage() {
   }
 
   if (!mounted || (items.length === 0 && step === 'form')) return null
+
+  // ── HANDING OFF TO PESAPAL (card only) ──
+  if (cardRedirect) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 checkout-bg">
+        <div className="flex flex-col items-center gap-10 text-center max-w-sm">
+          <div className="relative">
+            <div className="absolute inset-0 rounded-full bg-[#0b3b8f]/10 animate-ping" style={{ transform: 'scale(1.8)' }} />
+            <div className="relative w-28 h-28 rounded-[32px] flex items-center justify-center bg-white shadow-2xl border border-[#e5e7eb] p-4">
+              <Image src="/payment-visa-mastercard.jpg" alt="Visa and Mastercard" width={92} height={33} className="object-contain" />
+            </div>
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-[#00004d] mb-3 tracking-tight">Secure Card Payment</h2>
+            <p className="text-gray-500 font-bold leading-relaxed px-4">
+              Taking you to Pesapal&apos;s secure payment page to pay {formatKesExact(payableTotal)}...
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <div className="w-2.5 h-2.5 rounded-full bg-[#0b3b8f] animate-bounce" style={{ animationDelay: '0s' }} />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#0b3b8f] animate-bounce" style={{ animationDelay: '0.2s' }} />
+            <div className="w-2.5 h-2.5 rounded-full bg-[#0b3b8f] animate-bounce" style={{ animationDelay: '0.4s' }} />
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // ── TRANSITIONING SCREEN ──
   if (step === 'transitioning') {
@@ -790,6 +844,47 @@ export default function CheckoutPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Option 4: Visa / Mastercard — Pesapal hosted checkout */}
+                <div onClick={() => setPaymentMethod('pesapal_card')} className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'pesapal_card' ? 'border-[#0b3b8f] bg-[#f4f8ff] shadow-[0_0_24px_rgba(11,59,143,0.08)]' : 'border-[#f0f0f0] bg-white hover:border-blue-200'}`}>
+                  <div className="flex items-center gap-5">
+                    <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0 p-2">
+                      <Image
+                        src="/payment-visa-mastercard.jpg"
+                        alt="Visa and Mastercard"
+                        width={64}
+                        height={23}
+                        className="object-contain"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-black text-gray-900 text-[15px]">Pay by Card — Visa or Mastercard</p>
+                      <p className="text-xs text-gray-500 mt-1">You will be taken to <strong>Pesapal&apos;s</strong> secure payment page. Batteriq never sees your card details.</p>
+                    </div>
+                    <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${paymentMethod === 'pesapal_card' ? 'border-[#0b3b8f] bg-[#0b3b8f]' : 'border-gray-200'}`}>
+                      {paymentMethod === 'pesapal_card' && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                  </div>
+                  {isCardPayment && (
+                    <div className="mt-4 bg-white border border-[#dbeafe] rounded-2xl p-4 space-y-2">
+                      <div className="flex justify-between text-[13px] font-bold text-gray-500">
+                        <span>Subtotal</span>
+                        <span className="font-mono text-gray-900">{formatKesExact(cardFee.subtotalKes)}</span>
+                      </div>
+                      <div className="flex justify-between text-[13px] font-bold text-gray-500">
+                        <span>Card processing fee ({cardFee.ratePercentLabel})</span>
+                        <span className="font-mono text-gray-900">{formatKesExact(cardFee.feeKes)}</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t border-[#e5e7eb] text-[14px] font-black text-[#00004d]">
+                        <span>Total to pay</span>
+                        <span className="font-mono">{formatKesExact(cardFee.totalChargedKes)}</span>
+                      </div>
+                      <p className="text-[11px] text-gray-400 font-bold leading-relaxed pt-1">
+                        Card networks charge {cardFee.ratePercentLabel} on card transactions and it is passed on at cost. Choose M-Pesa to pay {formatKesExact(cardFee.subtotalKes)} with no fee.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.section>
 
@@ -835,7 +930,7 @@ export default function CheckoutPage() {
                   </div>
                   <div>
                     <p className="text-sm font-black text-gray-900">Show Order Summary</p>
-                    <p className="text-xs text-gray-500 font-bold">{totalQuantity} items • {formatKES(grandTotal)}</p>
+                    <p className="text-xs text-gray-500 font-bold">{totalQuantity} items • {isCardPayment ? formatKesExact(payableTotal) : formatKES(grandTotal)}</p>
                   </div>
                 </div>
                 <ChevronRight className="text-gray-400 transition-transform group-open:rotate-90" size={20} />
@@ -855,6 +950,22 @@ export default function CheckoutPage() {
                     </div>
                   ))}
                 </div>
+                {isCardPayment && (
+                  <div className="border-t border-gray-100 pt-4 space-y-2">
+                    <div className="flex justify-between text-[13px] font-bold text-gray-500">
+                      <span>Subtotal</span>
+                      <span className="font-mono text-gray-900">{formatKesExact(cardFee.subtotalKes)}</span>
+                    </div>
+                    <div className="flex justify-between text-[13px] font-bold text-gray-500">
+                      <span>Card processing fee ({cardFee.ratePercentLabel})</span>
+                      <span className="font-mono text-gray-900">{formatKesExact(cardFee.feeKes)}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t border-gray-100 text-[14px] font-black text-[#00004d]">
+                      <span>Total to pay</span>
+                      <span className="font-mono">{formatKesExact(cardFee.totalChargedKes)}</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </details>
 
@@ -887,7 +998,7 @@ export default function CheckoutPage() {
               <div className="space-y-5">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Subtotal</span>
-                  <span className="text-[16px] font-black text-gray-900 font-mono tracking-tighter">{formatKES(subtotal)}</span>
+                  <span className="text-[16px] font-black text-gray-900 font-mono tracking-tighter">{isCardPayment ? formatKesExact(subtotal) : formatKES(subtotal)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Delivery</span>
@@ -899,11 +1010,17 @@ export default function CheckoutPage() {
                     <span className="text-[11px] font-bold text-gray-400">Delivery to {form.county}</span>
                   </div>
                 )}
+                {isCardPayment && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-bold text-gray-500 uppercase tracking-widest">Card fee ({cardFee.ratePercentLabel})</span>
+                    <span className="text-[16px] font-black text-gray-900 font-mono tracking-tighter">{formatKesExact(cardFee.feeKes)}</span>
+                  </div>
+                )}
                 <div className="pt-8 border-t border-gray-50 flex justify-between items-end">
-                  <span className="text-[20px] font-black text-gray-900 tracking-tight uppercase">Total Amount</span>
+                  <span className="text-[20px] font-black text-gray-900 tracking-tight uppercase">{isCardPayment ? 'Total To Pay' : 'Total Amount'}</span>
                   <div className="text-right">
-                    <span className="block text-[10px] font-black text-[#0000ff] uppercase tracking-[0.2em] mb-2">KES (Inc. VAT)</span>
-                    <span className="text-[32px] font-black text-[#00004d] font-mono leading-none tracking-tighter">{formatKES(grandTotal)}</span>
+                    <span className="block text-[10px] font-black text-[#0000ff] uppercase tracking-[0.2em] mb-2">{isCardPayment ? 'KES · Incl. card fee' : 'KES (Inc. VAT)'}</span>
+                    <span className="text-[32px] font-black text-[#00004d] font-mono leading-none tracking-tighter">{isCardPayment ? formatKesExact(payableTotal) : formatKES(grandTotal)}</span>
                   </div>
                 </div>
               </div>
@@ -933,6 +1050,8 @@ export default function CheckoutPage() {
                       <Lock size={20} className="transition-transform group-hover:scale-110" />
                       {paymentMethod === 'mpesa_now'
                         ? 'Send M-Pesa Payment Prompt'
+                        : paymentMethod === 'pesapal_card'
+                        ? `Pay ${formatKesExact(payableTotal)} by Card`
                         : paymentMethod === 'cod_mpesa'
                         ? 'Place Order — Pay on Delivery'
                         : 'Submit Order for Confirmation'}
@@ -943,6 +1062,12 @@ export default function CheckoutPage() {
                 {paymentMethod === 'mpesa_now' && (
                   <p className="text-center text-[11px] text-gray-400 font-bold mt-3 leading-relaxed">
                     No payment will be taken until you confirm the M-Pesa prompt on your phone.
+                  </p>
+                )}
+
+                {isCardPayment && (
+                  <p className="text-center text-[11px] text-gray-400 font-bold mt-3 leading-relaxed">
+                    Includes a {cardFee.ratePercentLabel} card processing fee ({formatKesExact(cardFee.feeKes)}) charged by the card networks and passed on at cost. Card details are entered on Pesapal&apos;s secure page.
                   </p>
                 )}
 
@@ -983,6 +1108,8 @@ export default function CheckoutPage() {
                   ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   : paymentMethod === 'mpesa_now'
                   ? 'Send M-Pesa Prompt'
+                  : paymentMethod === 'pesapal_card'
+                  ? `Pay ${formatKesExact(payableTotal)} by Card`
                   : paymentMethod === 'cod_mpesa'
                   ? 'Place Order — Pay on Delivery'
                   : 'Submit for Sales Confirmation'}

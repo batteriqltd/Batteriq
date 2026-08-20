@@ -255,7 +255,7 @@ Key types from `lib/supabase/types.ts`:
 category: 'Power Stations' | 'Solar Panels' | 'Accessories' | 'Batteries' | 'Appliances' | 'Solar Home Systems' | 'Power Banks'
 
 // Order payment methods:
-payment_method: 'mpesa_now' | 'cod_cash' | 'cod_mpesa'
+payment_method: 'mpesa_now' | 'cod_cash' | 'cod_mpesa' | 'sales_confirmation' | 'pesapal_card'
 
 // Order payment status:
 payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
@@ -319,6 +319,32 @@ if (ruleReply) return NextResponse.json({ reply: ruleReply })
 3. Callback updates `orders.payment_status` to `'paid'` and stores `mpesa_transaction_code`
 
 Rate limit on STK Push: 5 requests per IP per minute (in-memory map, reset to Redis in production).
+
+---
+
+## Pesapal Card Flow (Visa / Mastercard)
+
+Separate, additive rail — it does **not** share code with Daraja except the
+mark-as-paid helper. See `PESAPAL_SETUP.md` for env vars, IPN registration and
+testing.
+
+1. Checkout creates the order with `payment_method: 'pesapal_card'`
+2. `POST /api/pesapal/checkout` recomputes the 2% fee server-side, calls Pesapal
+   `SubmitOrderRequest`, stores `pesapal_order_tracking_id` + the fee breakdown,
+   returns `redirect_url`
+3. Customer pays on Pesapal's hosted page (Batteriq never sees card numbers)
+4. Pesapal calls `GET|POST /api/pesapal/ipn` → `syncPesapalTransaction()`
+   re-fetches the real status with `GetTransactionStatus` and marks the order
+5. Browser returns to `/checkout/pesapal/callback`, which re-checks server-side
+
+Key modules:
+- `lib/pesapal.ts` — API client (auth token cache, register IPN, submit, status)
+- `lib/pesapalSync.ts` — idempotent reconciliation of a transaction to an order
+- `lib/cardFee.ts` — the 2% pass-through fee, integer-cent maths
+- `lib/orderPayments.ts` — `markOrderPaid()`, shared by M-Pesa AND Pesapal
+
+**The 2% card fee is card-only.** `total_kes` stays the order value (identical
+to M-Pesa); `card_fee_kes` / `total_charged_kes` are separate columns.
 
 ---
 
@@ -400,6 +426,11 @@ Defined in `.env.example`. Copy to `.env.local`:
 | `NEXT_PUBLIC_SITE_URL` | `https://batteriq.com` |
 | `NEXT_PUBLIC_SITE_NAME` | `Batteriq` |
 | `ADMIN_EMAIL` | Admin login email |
+| `PESAPAL_ENVIRONMENT` | `sandbox` or `live` — selects the Pesapal base URL |
+| `PESAPAL_CONSUMER_KEY` | Pesapal API 3.0 consumer key |
+| `PESAPAL_CONSUMER_SECRET` | Pesapal API 3.0 consumer secret |
+| `PESAPAL_IPN_ID` | From `POST /api/pesapal/register-ipn` — one-time per env |
+| `NEXT_PUBLIC_PESAPAL_CARD_FEE_RATE` | Card fee passed to customer, `0.02` = 2% |
 
 ---
 
@@ -409,6 +440,8 @@ Defined in `.env.example`. Copy to `.env.local`:
 - `api/mpesa/callback` → 30s
 - `api/ai/chat` → 60s
 - `api/mpesa/stkpush` → 30s
+- `api/pesapal/checkout` → 30s
+- `api/pesapal/ipn` → 30s
 
 Regions: `fra1`, `iad1`. `www.batteriq.com` redirects to apex domain via `next.config.mjs`.
 
@@ -419,7 +452,7 @@ Regions: `fra1`, `iad1`. `www.batteriq.com` redirects to apex domain via `next.c
 | Table | Key columns |
 |---|---|
 | `products` | id, sku, brand, category, name, slug, price_kes, in_stock, featured |
-| `orders` | id, order_number, items (JSON), total_kes, payment_method, payment_status, fulfillment_status |
+| `orders` | id, order_number, items (JSON), total_kes, payment_method, payment_status, fulfillment_status, pesapal_order_tracking_id, card_fee_kes, total_charged_kes |
 | `ai_chat_sessions` | id, session_token, messages (JSON) |
 | `admin_users` | id (= auth.users.id), role, name |
 | `newsletter_subscribers` | id, email, name |
@@ -442,7 +475,8 @@ Regions: `fra1`, `iad1`. `www.batteriq.com` redirects to apex domain via `next.c
 /bluetti                    Bluetti brand hub
 /bluetti/[slug]             Bluetti product detail
 /cart                       Cart page
-/checkout                   Checkout + M-Pesa STK Push
+/checkout                   Checkout + M-Pesa STK Push + Pesapal card
+/checkout/pesapal/callback  Return page after Pesapal hosted payment
 /order-confirmation/[id]    4-step order status tracker
 /track-order                Track by order number + email
 /contact                    Contact form

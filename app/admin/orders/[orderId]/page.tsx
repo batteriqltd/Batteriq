@@ -13,6 +13,19 @@ export const dynamic = 'force-dynamic'
 
 function fmt(n: number | string) { return `KES ${Number(n || 0).toLocaleString('en-KE')}` }
 
+// Card orders carry cents (the pass-through fee), so they need an exact format.
+function fmtExact(n: number | string) {
+  return `KES ${(Number(n) || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  mpesa_now: 'M-Pesa (Pay Now)',
+  cod_cash: 'Cash on Delivery',
+  cod_mpesa: 'M-Pesa at Doorstep',
+  sales_confirmation: 'Reserve — Sales Confirmation',
+  pesapal_card: 'Visa / Mastercard (Pesapal)',
+}
+
 export default async function OrderDetailPage({ params }: { params: { orderId: string } }) {
   const supabase = createAdminClient()
 
@@ -33,6 +46,11 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
   ]
 
   const total = Number(order.total_kes) || 0
+  // Pesapal card orders store the 2% pass-through fee separately from the order
+  // value, so accounting can see what the customer paid vs. what we invoiced.
+  const isCardOrder = order.payment_method === 'pesapal_card'
+  const cardFee = Number(order.card_fee_kes) || 0
+  const totalCharged = Number(order.total_charged_kes) || total
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const items: any[] = order.items ?? []
   const delivery = order.delivery_address ?? {}
@@ -116,10 +134,32 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
               ))}
             </div>
             <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
-              <div className="flex justify-between items-center">
-                <span className="font-black text-gray-900">Total</span>
-                <span className="text-xl font-black font-mono" style={{ color: '#0000ff' }}>{fmt(total)}</span>
-              </div>
+              {isCardOrder && cardFee > 0 ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-bold text-gray-500">Order value (subtotal)</span>
+                    <span className="font-mono font-bold text-gray-900">{fmtExact(total)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-bold text-gray-500">
+                      Card processing fee{order.card_fee_rate ? ` (${Number((Number(order.card_fee_rate) * 100).toFixed(2))}%)` : ''}
+                    </span>
+                    <span className="font-mono font-bold text-gray-900">{fmtExact(cardFee)}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                    <span className="font-black text-gray-900">Total charged to card</span>
+                    <span className="text-xl font-black font-mono" style={{ color: '#0000ff' }}>{fmtExact(totalCharged)}</span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 font-bold pt-1">
+                    Fee is passed on to the customer at cost — Batteriq revenue on this order is {fmtExact(total)}.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center">
+                  <span className="font-black text-gray-900">Total</span>
+                  <span className="text-xl font-black font-mono" style={{ color: '#0000ff' }}>{fmt(total)}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -139,7 +179,13 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
                   {order.payment_status === 'paid' ? '✓ Paid' : '⏳ Pending'}
                 </span>
                 {order.mpesa_transaction_code && (
-                  <p className="text-xs font-mono text-green-700 mt-1">Ref: {order.mpesa_transaction_code}</p>
+                  <p className="text-xs font-mono text-green-700 mt-1">M-Pesa Ref: {order.mpesa_transaction_code}</p>
+                )}
+                {order.pesapal_confirmation_code && (
+                  <p className="text-xs font-mono text-green-700 mt-1">Card Ref: {order.pesapal_confirmation_code}</p>
+                )}
+                {order.pesapal_status_description && order.payment_status !== 'paid' && (
+                  <p className="text-xs text-orange-600 font-bold mt-1">Pesapal: {order.pesapal_status_description}</p>
                 )}
               </div>
               <div>
@@ -151,10 +197,16 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Payment Method</p>
                 <p className="text-sm font-bold text-gray-900">
-                  {order.payment_method === 'mpesa_now' ? 'M-Pesa (Pay Now)'
-                    : order.payment_method === 'cod_cash' ? 'Cash on Delivery'
-                    : 'M-Pesa at Doorstep'}
+                  {PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method}
                 </p>
+                {order.pesapal_payment_method && (
+                  <p className="text-xs text-gray-500 font-bold mt-1">Card type: {order.pesapal_payment_method}</p>
+                )}
+                {order.pesapal_order_tracking_id && (
+                  <p className="text-[10px] text-gray-400 font-mono mt-1 break-all">
+                    Pesapal ID: {order.pesapal_order_tracking_id}
+                  </p>
+                )}
               </div>
             </div>
           </div>
