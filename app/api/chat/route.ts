@@ -9,18 +9,18 @@ const PRODUCTS = [
   { id: 'delta-pro', brand: 'EcoFlow', name: 'DELTA Pro', category: 'Power Station', price: 291399, specs: { capacity: '3600Wh', output: '3600W (surge 7200W)', chemistry: 'LFP', weight: '45kg', ports: 13 }, slug: 'ecoflow/delta-pro', inStock: true },
   { id: 'delta-2-max', brand: 'EcoFlow', name: 'DELTA 2 Max', category: 'Power Station', price: 157799, specs: { capacity: '2048Wh', output: '2400W (surge 4800W)', chemistry: 'LFP', weight: '23kg', ports: 13 }, slug: 'ecoflow/delta-2-max', inStock: true },
   { id: 'delta-2', brand: 'EcoFlow', name: 'DELTA 2', category: 'Power Station', price: 85539, specs: { capacity: '1024Wh', output: '1800W (surge 2700W)', chemistry: 'LFP', weight: '12kg', ports: 13 }, slug: 'ecoflow/delta-2', inStock: true },
-  { id: 'delta-3-plus', brand: 'EcoFlow', name: 'DELTA 3 Plus', category: 'Power Station', price: 109399, specs: { capacity: '1024Wh', output: '1800W (surge 3600W)', chemistry: 'LFP', weight: '≤12.5kg', ports: 13 }, slug: 'ecoflow/delta-3-plus', inStock: true },
-  { id: 'delta-3', brand: 'EcoFlow', name: 'DELTA 3', category: 'Power Station', price: 97199, specs: { capacity: '1024Wh', output: '1800W (surge 3600W)', chemistry: 'LFP', weight: '≤12.5kg', ports: 13 }, slug: 'ecoflow/delta-3', inStock: true },
+  { id: 'delta-3-plus', brand: 'EcoFlow', name: 'DELTA 3 Plus', category: 'Power Station', price: 112475, specs: { capacity: '1024Wh', output: '1800W (surge 3600W)', chemistry: 'LFP', weight: '≤12.5kg', ports: 13 }, slug: 'ecoflow/delta-3-plus', inStock: true },
+  { id: 'delta-3', brand: 'EcoFlow', name: 'DELTA 3', category: 'Power Station', price: 99980, specs: { capacity: '1024Wh', output: '1800W (surge 3600W)', chemistry: 'LFP', weight: '≤12.5kg', ports: 13 }, slug: 'ecoflow/delta-3', inStock: true },
   // EcoFlow RIVER Series
   { id: 'river-2-pro', brand: 'EcoFlow', name: 'RIVER 2 Pro', category: 'Power Station', price: 59049, specs: { capacity: '768Wh', output: '800W (surge 1600W)', chemistry: 'LFP', weight: '7.8kg', ports: 10 }, slug: 'ecoflow/river-2-pro', inStock: true },
-  { id: 'river-2-max', brand: 'EcoFlow', name: 'RIVER 2 Max', category: 'Power Station', price: 41499, specs: { capacity: '512Wh', output: '500W (surge 1000W)', chemistry: 'LFP', weight: '6.1kg', ports: 9 }, slug: 'ecoflow/river-2-max', inStock: true },
+  { id: 'river-2-max', brand: 'EcoFlow', name: 'RIVER 2 Max', category: 'Power Station', price: 50490, specs: { capacity: '512Wh', output: '500W (surge 1000W)', chemistry: 'LFP', weight: '6.1kg', ports: 9 }, slug: 'ecoflow/river-2-max', inStock: true },
   { id: 'river-2', brand: 'EcoFlow', name: 'RIVER 2', category: 'Power Station', price: 27259, specs: { capacity: '256Wh', output: '300W (surge 600W)', chemistry: 'LFP', weight: '3.5kg', ports: 5 }, slug: 'ecoflow/river-2', inStock: true },
-  { id: 'river-3-plus', brand: 'EcoFlow', name: 'RIVER 3 Plus', category: 'Power Station', price: 40599, specs: { capacity: '286Wh', output: '600W (surge 1200W)', chemistry: 'LFP', weight: '4.7kg', ports: 7, ups: '<10ms' }, slug: 'ecoflow/river-3-plus', inStock: true },
-  { id: 'river-3', brand: 'EcoFlow', name: 'RIVER 3', category: 'Power Station', price: 31999, specs: { capacity: '245Wh', output: '300W (surge 600W)', chemistry: 'LFP', weight: '3.5kg', ports: 5, ups: '10ms' }, slug: 'ecoflow/river-3', inStock: true },
+  { id: 'river-3-plus', brand: 'EcoFlow', name: 'RIVER 3 Plus', category: 'Power Station', price: 41740, specs: { capacity: '286Wh', output: '600W (surge 1200W)', chemistry: 'LFP', weight: '4.7kg', ports: 7, ups: '<10ms' }, slug: 'ecoflow/river-3-plus', inStock: true },
+  { id: 'river-3', brand: 'EcoFlow', name: 'RIVER 3', category: 'Power Station', price: 32999, specs: { capacity: '245Wh', output: '300W (surge 600W)', chemistry: 'LFP', weight: '3.5kg', ports: 5, ups: '10ms' }, slug: 'ecoflow/river-3', inStock: true },
   // EcoFlow Solar Panels
-  { id: 'solar-400w', brand: 'EcoFlow', name: '400W Portable Solar Panel', category: 'Solar Panel', price: 67399, specs: { power: '400W', efficiency: '22.6%', weight: '16kg', ip: 'IP68' }, slug: 'solar/400w-portable', inStock: true },
-  { id: 'solar-220w', brand: 'EcoFlow', name: '220W Bifacial Solar Panel', category: 'Solar Panel', price: 31399, specs: { power: '220W Bifacial', efficiency: '22-23%', weight: '9.5kg', ip: 'IP68' }, slug: 'solar/220w-bifacial', inStock: true },
-  { id: 'solar-160w', brand: 'EcoFlow', name: '160W Portable Solar Panel', category: 'Solar Panel', price: 20999, specs: { power: '160W', efficiency: '21-22%', weight: '5.6kg', ip: 'IP68' }, slug: 'solar/160w-portable', inStock: true },
+  { id: 'solar-400w', brand: 'EcoFlow', name: '400W Portable Solar Panel', category: 'Solar Panel', price: 71240, specs: { power: '400W', efficiency: '22.6%', weight: '16kg', ip: 'IP68' }, slug: 'solar/400w-portable', inStock: true },
+  { id: 'solar-220w', brand: 'EcoFlow', name: '220W Bifacial Solar Panel', category: 'Solar Panel', price: 37499, specs: { power: '220W Bifacial', efficiency: '22-23%', weight: '9.5kg', ip: 'IP68' }, slug: 'solar/220w-bifacial', inStock: true },
+  { id: 'solar-160w', brand: 'EcoFlow', name: '160W Portable Solar Panel', category: 'Solar Panel', price: 27999, specs: { power: '160W', efficiency: '21-22%', weight: '5.6kg', ip: 'IP68' }, slug: 'solar/160w-portable', inStock: true },
   { id: 'solar-110w', brand: 'EcoFlow', name: '110W Portable Solar Panel', category: 'Solar Panel', price: 16399, specs: { power: '110W', efficiency: '22.8%', weight: '4kg', ip: 'IP68' }, slug: 'solar/110w-portable', inStock: true },
   { id: 'solar-60w', brand: 'EcoFlow', name: '60W Portable Solar Panel', category: 'Solar Panel', price: 9699, specs: { power: '60W', efficiency: '21-22%', weight: '2kg', ip: 'IP68' }, slug: 'solar/60w-portable', inStock: true },
   { id: 'solar-45w', brand: 'EcoFlow', name: '45W Portable Solar Panel', category: 'Solar Panel', price: 7599, specs: { power: '45W', efficiency: '25%', weight: '1.4kg', ip: 'IP65' }, slug: 'solar/45w-portable', inStock: true },
@@ -185,7 +185,7 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
   // MOST POPULAR / RECOMMEND
   if (/popular|best seller|most sold|recommend|suggest|which one|what should i|help me choose/.test(msg)) {
     return {
-      message: `Great question! Here are our top sellers in Kenya right now 🔥\n\n**Most popular for homes:**\n🥇 EcoFlow DELTA 2 — KES 85,539 (best value)\n🥈 EcoFlow DELTA Pro — KES 291,399 (heavy duty)\n\n**Most popular portable:**\n🥇 EcoFlow RIVER 3 — KES 31,999\n🥈 EcoFlow RIVER 2 — KES 27,259 (most affordable)\n\nThe **DELTA 2** is honestly what I'd recommend for most Kenyan homes — handles fridge, TV, lights and phone charging easily, and it's under KES 100K. Want me to tell you more about it?`,
+      message: `Great question! Here are our top sellers in Kenya right now 🔥\n\n**Most popular for homes:**\n🥇 EcoFlow DELTA 2 — KES 85,539 (best value)\n🥈 EcoFlow DELTA Pro — KES 291,399 (heavy duty)\n\n**Most popular portable:**\n🥇 EcoFlow RIVER 3 — KES 32,999\n🥈 EcoFlow RIVER 2 — KES 27,259 (most affordable)\n\nThe **DELTA 2** is honestly what I'd recommend for most Kenyan homes — handles fridge, TV, lights and phone charging easily, and it's under KES 100K. Want me to tell you more about it?`,
       type: 'text',
       quickReplies: ['Tell me about DELTA 2', 'I need something bigger', 'What about under KES 50K?'],
     }
@@ -357,7 +357,7 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
   // SOLAR PANELS
   if (/solar|panel|jua|photovoltaic|pv/.test(msg) && !msg.includes('station') && !msg.includes('power station')) {
     return {
-      message: `Solar panels! ☀️ Great choice — Kenya has incredible sunshine, so solar makes a lot of sense here.\n\nAll our EcoFlow panels are **monocrystalline** (most efficient), **foldable**, and pair perfectly with any EcoFlow power station.\n\nOur range goes from a tiny 45W panel (KES 7,599) all the way to a 400W beast (KES 67,399).\n\nWhat are you trying to do with solar?`,
+      message: `Solar panels! ☀️ Great choice — Kenya has incredible sunshine, so solar makes a lot of sense here.\n\nAll our EcoFlow panels are **monocrystalline** (most efficient), **foldable**, and pair perfectly with any EcoFlow power station.\n\nOur range goes from a tiny 45W panel (KES 7,599) all the way to a 400W beast (KES 71,240).\n\nWhat are you trying to do with solar?`,
       type: 'text',
       quickReplies: ['Charge my power station faster', 'I want to go off-grid', 'Camping/outdoor use', 'Show all panels with prices'],
     }

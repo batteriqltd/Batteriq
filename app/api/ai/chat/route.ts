@@ -10,15 +10,15 @@ function getRuleBasedResponse(message: string): string | null {
   }
 
   if (/delta pro\b/.test(m) && /price|cost|how much|bei/.test(m)) {
-    return 'The EcoFlow DELTA Pro (3600Wh, 3600W) is KES 199,999, and the DELTA Pro 3 (4096Wh, 4000W) is KES 249,999. Both include the official 24-month EcoFlow warranty. Would you like more specs or to add one to your cart?'
+    return 'The EcoFlow DELTA Pro (3600Wh, 3600W) is KES 291,399, and the DELTA Pro 3 (4096Wh, 4000W) is KES 461,799. Both include the official 24-month EcoFlow warranty. Would you like more specs or to add one to your cart?'
   }
 
   if (/delta 2\b/.test(m) && /price|cost|how much|bei/.test(m)) {
-    return 'The EcoFlow DELTA 2 (1024Wh, 1800W) starts from KES 85,539, and the DELTA 2 Max (2048Wh, 2400W) is KES 139,999. Both support fast solar charging. Want me to compare them for you?'
+    return 'The EcoFlow DELTA 2 (1024Wh, 1800W) starts from KES 85,539, and the DELTA 2 Max (2048Wh, 2400W) is KES 157,799. Both support fast solar charging. Want me to compare them for you?'
   }
 
   if (/river\b/.test(m) && /price|cost|how much|bei/.test(m)) {
-    return 'EcoFlow RIVER 2 starts from KES 27,259 — perfect for laptops, phones, and small appliances. The RIVER 2 Pro (768Wh) is KES 49,999. Great for camping or as a laptop power bank. Want the full RIVER range?'
+    return 'EcoFlow RIVER 2 starts from KES 27,259 — perfect for laptops, phones, and small appliances. The RIVER 2 Pro (768Wh) is KES 59,049. Great for camping or as a laptop power bank. Want the full RIVER range?'
   }
 
   if (/mpesa|m-pesa|mpesa|pay|payment|checkout/.test(m)) {
@@ -34,7 +34,7 @@ function getRuleBasedResponse(message: string): string | null {
   }
 
   if (/solar panel|solar/.test(m) && /price|cost|how much|bei/.test(m)) {
-    return 'EcoFlow solar panels start from KES 7,599 for the 45W portable panel, up to KES 39,999 for the 400W portable panel. All panels are IP68 waterproof and compatible with any EcoFlow power station. Want a recommendation based on your power needs?'
+    return 'EcoFlow solar panels start from KES 7,599 for the 45W portable panel, up to KES 71,240 for the 400W portable panel. All panels are IP68 waterproof and compatible with any EcoFlow power station. Want a recommendation based on your power needs?'
   }
 
   if (/bluetti/.test(m) && /price|cost|how much|bei/.test(m)) {
