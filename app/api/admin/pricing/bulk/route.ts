@@ -1,8 +1,10 @@
 import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAdminSession } from '@/lib/admin-auth'
 
 export async function POST(req: Request) {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const { productIds, adjustPct } = await req.json()
     if (!Array.isArray(productIds) || productIds.length === 0 || typeof adjustPct !== 'number') {

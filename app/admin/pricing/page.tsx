@@ -5,83 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { Tag, Save, AlertTriangle, Loader2, Zap, X, Clock, Trash2, TrendingUp, TrendingDown, Percent, Settings2, CheckCircle, RotateCcw, Search, Layers, SearchX } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminNotify } from '@/components/admin/AdminNotify'
+import { normalize, tokenize, buildHaystack, scoreMatch } from '@/lib/productSearch'
+import { Highlight } from '@/components/admin/Highlight'
 
 function fmt(n: number) { return `KES ${Number(n || 0).toLocaleString('en-KE')}` }
-
-/* ── Search engine ──────────────────────────────────────────────
- * Lowercases and collapses every non-alphanumeric run to a single space, so
- * "DELTA 2 Max", "delta-2-max" and "delta2max" all reduce to comparable text.
- */
-function normalize(value: unknown): string {
-  return String(value ?? '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
-}
-
-function escapeRe(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function buildHaystack(p: any) {
-  const name = normalize(p.name)
-  const sku = normalize(p.sku)
-  const category = normalize(p.category)
-  const subcategory = normalize(p.subcategory)
-  const all = `${name} ${sku} ${normalize(p.brand)} ${category} ${subcategory} ${normalize(p.slug)}`
-  return { name, sku, category, subcategory, all, flat: all.replace(/ /g, '') }
-}
-
-type Haystack = ReturnType<typeof buildHaystack>
-
-/**
- * Relevance score for one product against the search tokens.
- * Every token must appear somewhere (AND semantics) — "delta max" will not
- * return a RIVER unit just because it matched "max". Returns 0 for no match.
- */
-function scoreMatch(hay: Haystack, tokens: string[], query: string): number {
-  if (tokens.length === 0) return 1
-
-  let score = 0
-  for (const t of tokens) {
-    if (!hay.all.includes(t) && !hay.flat.includes(t)) return 0
-
-    if (hay.name === t) score += 120
-    else if (hay.name.startsWith(t)) score += 60
-    else if (new RegExp(`\\b${escapeRe(t)}`).test(hay.name)) score += 34
-    else if (hay.name.includes(t)) score += 20
-    else if (hay.sku.includes(t)) score += 16
-    else if (hay.category.includes(t) || hay.subcategory.includes(t)) score += 9
-    else score += 4
-  }
-
-  // Reward phrase matches so "delta 2" outranks a product that merely
-  // contains "delta" and "2" in unrelated places.
-  if (hay.name.startsWith(query)) score += 80
-  else if (hay.name.includes(query)) score += 45
-  else if (hay.flat.includes(query.replace(/ /g, ''))) score += 20
-
-  return score
-}
-
-/** Wraps the matched search terms in the product name so hits are visible. */
-function Highlight({ text, tokens }: { text: string; tokens: string[] }) {
-  if (tokens.length === 0 || !text) return <>{text}</>
-  const pattern = tokens.slice().sort((a, b) => b.length - a.length).map(escapeRe).join('|')
-  let parts: string[]
-  try {
-    parts = text.split(new RegExp(`(${pattern})`, 'ig'))
-  } catch {
-    return <>{text}</>
-  }
-  return (
-    <>
-      {parts.map((part, i) =>
-        tokens.includes(part.toLowerCase())
-          ? <mark key={i} className="bg-yellow-200 text-gray-900 rounded px-0.5">{part}</mark>
-          : <span key={i}>{part}</span>
-      )}
-    </>
-  )
-}
 
 function DiscountCountdown({ end }: { end: string }) {
   const [label, setLabel] = useState('')
@@ -416,7 +343,7 @@ export default function PricingEnginePage() {
   }, [products])
 
   const query = normalize(search)
-  const tokens = query ? query.split(' ').filter(Boolean) : []
+  const tokens = tokenize(query)
 
   const filteredProducts = useMemo(() => {
     const scored = products

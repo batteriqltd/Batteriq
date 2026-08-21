@@ -40,7 +40,7 @@ const NAV = [
   { href: '/admin/invoices', label: 'Invoices', icon: FileText },
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/images', label: 'Images', icon: ImageIcon },
-  { href: '/admin/stock', label: 'Stock', icon: BarChart3 },
+  { href: '/admin/stock', label: 'Stock & Prices', icon: BarChart3 },
   { href: '/admin/pricing', label: 'Pricing Engine', icon: Tag },
   { href: '/admin/ai-chat', label: 'Chat Monitor', icon: MessageSquare },
   { href: '/admin/broadcast', label: 'Broadcast', icon: Send },

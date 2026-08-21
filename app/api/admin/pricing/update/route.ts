@@ -1,8 +1,10 @@
 import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getAdminSession } from '@/lib/admin-auth'
 
 export async function PATCH(req: Request) {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   try {
     const { productId, newPrice } = await req.json()
     if (!productId || typeof newPrice !== 'number' || newPrice <= 0) {
