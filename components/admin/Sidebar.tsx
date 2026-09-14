@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingBag, Tag,
   MessageSquare, Mail, LogOut, CreditCard, Send, Newspaper,
-  Users, BarChart3, Download, Star, ImageIcon, Menu, X, Radio, FileText
+  Users, BarChart3, Download, Star, ImageIcon, Menu, X, Radio, FileText, Smartphone
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { AdminPwaControls } from '@/components/admin/AdminPwaControls'
@@ -35,6 +35,7 @@ const NAV = [
   { href: '/admin/visitors', label: 'Live Visitors', icon: Radio, badge: 'live' as const },
   { href: '/admin/new-order', label: 'New Order', icon: ShoppingBag },
   { href: '/admin/orders', label: 'Orders', icon: ShoppingBag, badge: 'live' as const },
+  { href: '/admin/prompt', label: 'Prompt Client', icon: Smartphone },
   { href: '/admin/customers', label: 'Customers', icon: Users },
   { href: '/admin/payments', label: 'Payments', icon: CreditCard },
   { href: '/admin/invoices', label: 'Invoices', icon: FileText },

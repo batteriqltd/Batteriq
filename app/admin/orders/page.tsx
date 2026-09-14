@@ -154,6 +154,27 @@ export default function AdminOrdersPage() {
     }
   }
 
+  async function markOfflinePaid(order: Order) {
+    if (!confirm(`Mark order ${order.order_number} as PAID (offline)? This will update invoices, receipts & timeline.`)) return
+    const res = await fetch('/api/admin/orders/list', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ orderId: order.id, payment_status: 'paid', fulfillment_status: 'processing' }),
+    })
+    if (res.ok) {
+      setOrders(prev => prev.map(o => o.id === order.id ? { ...o, payment_status: 'paid', fulfillment_status: 'processing' } : o))
+      fetch(`/api/admin/orders/${order.id}/update`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ payment_status: 'paid', fulfillment_status: 'processing' }),
+      }).catch(console.error)
+      notify('success', 'Payment Marked as Paid', `${order.guest_name ?? 'Customer'} — offline payment confirmed. Invoice & receipt now show PAID.`)
+    } else {
+      const data = await res.json().catch(() => ({}))
+      notify('error', 'Update Failed', data.error ?? 'Could not mark as paid')
+    }
+  }
+
   async function sendStkPush(order: Order) {
     notify('info', 'Sending STK Push', `Prompt going to ${order.guest_phone}...`)
     try {
@@ -431,6 +452,16 @@ export default function AdminOrdersPage() {
                             CONFIRM CASH
                           </button>
                         )}
+                        {order.payment_status !== 'paid' && order.payment_method !== 'cod_cash' && (
+                          <button
+                            onClick={() => markOfflinePaid(order)}
+                            className="h-9 px-4 rounded-xl text-[10px] font-black text-white uppercase tracking-widest whitespace-nowrap transition-all shadow-lg shadow-emerald-100 hover:scale-105"
+                            style={{ background: 'linear-gradient(135deg, #059669, #047857)' }}
+                            title="Client paid offline (Paybill/Till/Cash) — mark as paid so invoice & receipt show PAID"
+                          >
+                            MARK PAID
+                          </button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>
@@ -548,6 +579,12 @@ export default function AdminOrdersPage() {
                   <button onClick={() => markCashPaid(order)} className="w-full mt-2 h-11 rounded-xl text-white text-xs font-black uppercase tracking-widest active:scale-[0.98] transition-transform"
                     style={{ background: 'linear-gradient(135deg, #059669, #065f46)' }}>
                     Confirm Cash Payment
+                  </button>
+                )}
+                {order.payment_status !== 'paid' && order.payment_method !== 'cod_cash' && (
+                  <button onClick={() => markOfflinePaid(order)} className="w-full mt-2 h-11 rounded-xl text-white text-xs font-black uppercase tracking-widest active:scale-[0.98] transition-transform"
+                    style={{ background: 'linear-gradient(135deg, #059669, #047857)' }}>
+                    Mark as Paid — Offline
                   </button>
                 )}
               </div>

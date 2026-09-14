@@ -169,7 +169,12 @@ export async function generateReceiptPDF(data: ReceiptData): Promise<string> {
   y += 9
 
   data.items.forEach((item, i) => {
-    const rowH = 14
+    // Show full product name — wrap to 2-3 lines instead of truncating
+    const maxNameW = 92
+    const nameLines: string[] = doc.splitTextToSize(item.name, maxNameW) as string[]
+    const lines = Math.max(1, nameLines.length)
+    const rowH = Math.max(14, 10 + lines * 4.2 + (item.brand ? 2.5 : 0))
+
     if (i % 2 === 0) {
       doc.setFillColor(248, 250, 255)
       doc.rect(margin, y, W - margin * 2, rowH, 'F')
@@ -183,20 +188,21 @@ export async function generateReceiptPDF(data: ReceiptData): Promise<string> {
     doc.setTextColor(17, 17, 17)
     doc.setFontSize(8)
     doc.setFont('helvetica', 'normal')
-    const name = item.name.length > 45 ? item.name.slice(0, 42) + '...' : item.name
-    doc.text(name, margin + 3, y + 10)
+    // Full name, wrapped — e.g. BLUETTI AC200L stays intact, not cut to "BLUETTI"
+    doc.text(nameLines, margin + 3, y + 10)
 
+    const centerY = y + rowH / 2 + 2
     doc.setFontSize(8)
     doc.setFont('helvetica', 'bold')
     doc.setTextColor(85, 85, 85)
-    doc.text(String(item.quantity), W - margin - 46, y + 9, { align: 'right' })
+    doc.text(String(item.quantity), W - margin - 46, centerY, { align: 'right' })
 
     doc.setTextColor(85, 85, 85)
-    doc.text(fmt(item.price_kes), W - margin - 24, y + 9, { align: 'right' })
+    doc.text(fmt(item.price_kes), W - margin - 24, centerY, { align: 'right' })
 
     doc.setTextColor(0, 0, 77)
     doc.setFontSize(8.5)
-    doc.text(fmt(Number(item.price_kes) * item.quantity), W - margin - 2, y + 9, { align: 'right' })
+    doc.text(fmt(Number(item.price_kes) * item.quantity), W - margin - 2, centerY, { align: 'right' })
 
     y += rowH
   })

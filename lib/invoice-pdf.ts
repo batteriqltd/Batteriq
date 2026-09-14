@@ -174,7 +174,10 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<string> {
 
   // ─── ITEM ROWS ──────────────────────────────────────────────────
   data.items.forEach((item, idx) => {
-    const rowH = 14
+    doc.setFont('helvetica', 'bold')
+    doc.setFontSize(8.5)
+    const nameLines = doc.splitTextToSize(item.name, 78)
+    const rowH = 14 + Math.max(0, nameLines.length - 1) * 4.5
     const bg: [number, number, number] = idx % 2 === 0 ? [255, 255, 255] : [248, 249, 253]
     doc.setFillColor(...bg)
     doc.rect(margin, y, W - margin * 2, rowH, 'F')
@@ -195,8 +198,7 @@ export async function generateInvoicePDF(data: InvoiceData): Promise<string> {
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(8.5)
     doc.setTextColor(...BLACK as [number, number, number])
-    const nameStr = doc.splitTextToSize(item.name, 78)
-    doc.text(nameStr[0], margin + 12, y + item.brand ? 11 : 9)
+    doc.text(nameLines, margin + 12, y + (item.brand ? 11 : 9))
 
     // Qty
     doc.setFont('helvetica', 'bold')

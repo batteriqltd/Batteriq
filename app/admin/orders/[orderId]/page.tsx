@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { SendInvoiceButton } from './_SendInvoiceButton'
 import { PrintReceiptButton } from './_PrintReceiptButton'
 import { DownloadReceiptButton } from './_DownloadReceiptButton'
+import { DeleteOrderButton } from './_DeleteOrderButton'
+import { MarkPaidButton } from './_MarkPaidButton'
 
 import { ArrowLeft, CheckCircle, Clock, Truck, Package, CreditCard, MapPin, Phone, Mail, Printer, Send } from 'lucide-react'
 
@@ -187,6 +189,9 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
                 {order.pesapal_status_description && order.payment_status !== 'paid' && (
                   <p className="text-xs text-orange-600 font-bold mt-1">Pesapal: {order.pesapal_status_description}</p>
                 )}
+                {order.payment_status !== 'paid' && (
+                  <MarkPaidButton orderId={order.id} paymentMethod={order.payment_method} />
+                )}
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1.5">Fulfillment</p>
@@ -267,6 +272,9 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
               </Link>
             </div>
           </div>
+
+          {/* Delete — only this order, only on full detail view */}
+          <DeleteOrderButton orderId={order.id} orderNumber={order.order_number} />
 
         </div>
       </div>
