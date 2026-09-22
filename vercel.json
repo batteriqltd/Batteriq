@@ -7,8 +7,8 @@
     "app/api/mpesa/callback/route.ts": {
       "maxDuration": 30
     },
-    "app/api/ai/chat/route.ts": {
-      "maxDuration": 60
+    "app/api/whatsapp/webhook/route.ts": {
+      "maxDuration": 30
     },
     "app/api/mpesa/stkpush/route.ts": {
       "maxDuration": 30
@@ -26,6 +26,15 @@
   "headers": [
     {
       "source": "/api/mpesa/callback",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/whatsapp/webhook",
       "headers": [
         {
           "key": "Cache-Control",
