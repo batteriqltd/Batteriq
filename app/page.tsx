@@ -12,6 +12,7 @@ import { HomepageNewsletter } from '@/components/home/HomepageNewsletter'
 import { ReviewsSection } from '@/components/home/ReviewsSection'
 import { StatsSection } from '@/components/home/StatsSection'
 import { OffersSection } from '@/components/home/OffersSection'
+import { NewProductsSpotlight } from '@/components/home/NewProductsSpotlight'
 import { PageWrapper } from '@/components/animations/PageWrapper'
 import { HomeAnimations } from '@/components/animations/HomeAnimations'
 import { SectionTransition } from '@/components/animations/SectionTransition'
@@ -135,6 +136,8 @@ export default async function HomePage() {
       <StatsSection />
 
       <OffersSection />
+
+      <NewProductsSpotlight />
 
       {/* DELTA Series — new EcoFlow lineup, placed above Shop by Category */}
       <DeltaSeriesShowcase products={deltaSeries} />
