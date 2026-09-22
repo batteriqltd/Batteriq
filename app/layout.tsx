@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
-import { ChatWidget } from '@/components/chat/ChatWidget'
 import { GeminiChatWidget } from '@/components/ai/GeminiChatWidget'
 import { VisitorTracker } from '@/components/analytics/VisitorTracker'
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister'
@@ -187,7 +186,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AOSProvider />
         <ServiceWorkerRegister />
         <VisitorTracker />
-        <ChatWidget />
         <GeminiChatWidget />
         <Analytics />
         <SpeedInsights />
