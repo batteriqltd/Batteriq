@@ -13,11 +13,10 @@ import {
   buildProductFaqs, faqJsonLd, productUrl,
 } from '@/lib/seo'
 
-// These pages are statically generated from generateStaticParams, so without
-// ISR a price or meta change in the database stays invisible until the next
-// deploy — including in the Product JSON-LD, where a stale price can trip
-// Google's merchant price-mismatch checks.
-export const revalidate = 3600
+// Product availability is managed in Supabase. Render this route per request
+// so a newly published product cannot retain a previously cached 404 while the
+// homepage already links to it.
+export const dynamic = 'force-dynamic'
 
 type PageProps = {
   params: { slug: string }
