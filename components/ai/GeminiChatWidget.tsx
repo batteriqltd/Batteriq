@@ -39,8 +39,14 @@ export function GeminiChatWidget() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
 
-  async function sendMessage() {
-    const msg = input.trim()
+  const quickReplies = [
+    'Where is my order?',
+    'How do I pay with M-Pesa?',
+    'Do you offer bulk pricing?',
+  ]
+
+  async function sendMessage(preset?: string) {
+    const msg = (preset ?? input).trim()
     if (!msg || loading) return
 
     setInput('')
@@ -209,6 +215,21 @@ export function GeminiChatWidget() {
                 <div ref={bottomRef} />
               </div>
 
+              {/* Quick replies */}
+              {messages.length <= 1 && !loading && (
+                <div className="flex gap-2 overflow-x-auto px-4 pb-1 pt-3 shrink-0">
+                  {quickReplies.map((q) => (
+                    <button
+                      key={q}
+                      onClick={() => sendMessage(q)}
+                      className="shrink-0 rounded-full border border-bq-blue/50 bg-bq-blue/10 px-3 py-1.5 text-xs font-bold text-blue-200 transition-colors hover:bg-bq-blue/25 hover:text-white"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
+
               {/* Input */}
               <div className="p-3 border-t border-bq-gray-600 shrink-0">
                 <div className="flex gap-2">
@@ -223,7 +244,7 @@ export function GeminiChatWidget() {
                     disabled={loading}
                   />
                   <button
-                    onClick={sendMessage}
+                    onClick={() => sendMessage()}
                     disabled={!input.trim() || loading}
                     className="p-2.5 bg-bq-blue text-white rounded-[8px] hover:bg-bq-blue-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Send message"
@@ -241,24 +262,31 @@ export function GeminiChatWidget() {
   )
 }
 
+function linkify(html: string) {
+  return html.replace(
+    /(https?:\/\/[^\s<]+)/g,
+    '<a href="$1" target="_blank" rel="noopener noreferrer" class="underline text-blue-300 hover:text-white">$1</a>'
+  )
+}
+
 function MarkdownText({ text }: { text: string }) {
-  // Basic markdown: bold, bullet points, line breaks
+  // Basic markdown: bold, bullet points, line breaks, links
   const lines = text.split('\n')
   return (
     <>
       {lines.map((line, i) => {
-        const boldLine = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        const richLine = linkify(line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>'))
         if (line.startsWith('- ') || line.startsWith('• ')) {
           return (
             <div key={i} className="flex gap-1.5 my-0.5">
               <span className="text-bq-blue mt-0.5 shrink-0">•</span>
-              <span dangerouslySetInnerHTML={{ __html: boldLine.replace(/^[-•]\s/, '') }} />
+              <span dangerouslySetInnerHTML={{ __html: richLine.replace(/^[-•]\s/, '') }} />
             </div>
           )
         }
         return (
           <span key={i}>
-            <span dangerouslySetInnerHTML={{ __html: boldLine }} />
+            <span dangerouslySetInnerHTML={{ __html: richLine }} />
             {i < lines.length - 1 && line && <br />}
           </span>
         )

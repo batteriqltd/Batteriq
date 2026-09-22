@@ -12,6 +12,7 @@ import { HomepageNewsletter } from '@/components/home/HomepageNewsletter'
 import { ReviewsSection } from '@/components/home/ReviewsSection'
 import { StatsSection } from '@/components/home/StatsSection'
 import { OffersSection } from '@/components/home/OffersSection'
+import { BulkPricingBanner } from '@/components/home/BulkPricingBanner'
 import { NewProductsSpotlight } from '@/components/home/NewProductsSpotlight'
 import { PageWrapper } from '@/components/animations/PageWrapper'
 import { HomeAnimations } from '@/components/animations/HomeAnimations'
@@ -132,6 +133,8 @@ export default async function HomePage() {
       <HeroParallax>
         <HeroSection />
       </HeroParallax>
+
+      <BulkPricingBanner />
 
       <StatsSection />
 

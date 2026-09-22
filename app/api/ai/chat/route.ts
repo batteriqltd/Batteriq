@@ -41,6 +41,10 @@ function getRuleBasedResponse(message: string): string | null {
     return 'Bluetti AC180P (1440Wh, 1800W) is KES 76,000, and the AC200PL (2304Wh, 2400W) is KES 127,500. Great alternatives to EcoFlow for home backup. Want a comparison with EcoFlow models?'
   }
 
+  if (/bulk|wholesale|reseller|dealer price|retail price|best price|quotation|quote/.test(m)) {
+    return 'Yes! For bulk, wholesale, or reseller pricing, chat to us directly on WhatsApp and we\'ll send our best quote: https://wa.me/254716822014 — just send the models and quantities you need. We reply within business hours (Mon–Sat, 8am–6pm EAT).'
+  }
+
   if (/recommend|best|which one|suggest|advise|help me choose/.test(m)) {
     return 'Happy to help! Could you tell me: (1) what you want to power (fridge, TV, laptop?), (2) how many hours of backup you need, and (3) your rough budget? That way I can recommend the perfect power station for you.'
   }
