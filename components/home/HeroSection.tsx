@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ChevronLeft, ChevronRight, Instagram } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Instagram } from 'lucide-react'
 
 type Slide = {
   id: number
@@ -190,13 +190,20 @@ export function HeroSection() {
                   href="https://instagram.com/batteriqkenya"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Follow Batteriq on Instagram"
-                  className="inline-flex shrink-0 items-center gap-1.5 text-white/55 transition-colors hover:text-white"
+                  aria-label="See Batteriq setups on Instagram"
+                  className="inline-flex shrink-0 items-center gap-2.5 rounded-full border border-white/25 bg-white/10 py-1.5 pl-1.5 pr-3.5 shadow-lg backdrop-blur-md transition-all duration-200 hover:-translate-y-px hover:border-white/45 hover:bg-white/20 sm:pr-4"
                 >
-                  <Instagram size={13} />
-                  <span className="text-[11px] font-bold tracking-wide">@batteriqkenya</span>
-                  <span className="h-1 w-1 rounded-full bg-white/30" aria-hidden="true" />
-                  <span className="text-[11px] text-white/40">649 followers</span>
+                  <span
+                    className="flex h-7 w-7 items-center justify-center rounded-full sm:h-8 sm:w-8"
+                    style={{ background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)' }}
+                  >
+                    <Instagram size={14} className="text-white" />
+                  </span>
+                  <span className="text-left leading-tight">
+                    <span className="block text-xs font-black text-white sm:text-[13px]">@batteriqkenya</span>
+                    <span className="block text-[10px] font-semibold text-white/70">649 followers · See real setups</span>
+                  </span>
+                  <ArrowUpRight size={14} className="text-white/80" />
                 </a>
               </div>
             </motion.div>
