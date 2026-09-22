@@ -121,10 +121,10 @@ export function NewProductsSpotlight() {
 
                 <Link
                   href={product.href}
-                  className="inline-flex w-fit items-center gap-2 rounded-xl px-6 py-3 font-black text-sm text-white transition-all duration-200 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(0,0,255,0.55)]"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 font-black text-sm text-white transition-all duration-200 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(0,0,255,0.55)] sm:w-fit"
                   style={{ background: 'linear-gradient(135deg, #0000ff, #00004d)', boxShadow: '0 4px 20px rgba(0,0,255,0.35)' }}
                 >
-                  View product <ArrowUpRight size={16} />
+                  Shop Now <ArrowUpRight size={16} />
                 </Link>
               </div>
             </article>
