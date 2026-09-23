@@ -107,7 +107,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
           {/* Price */}
           <div>
             <p className="font-mono font-bold text-4xl text-bq-blue">{formatKES(product.price_kes)}</p>
-            {product.compare_price_kes && product.compare_price_kes > product.price_kes && (
+            {discount > 0 && product.compare_price_kes && (
               <p className="font-mono text-lg text-gray-400 line-through mt-1">
                 {formatKES(product.compare_price_kes)}
               </p>

@@ -177,7 +177,7 @@ export function HeroSection() {
               </div>
 
               {/* Dots + Instagram trust link */}
-              <div className="flex items-center justify-between gap-4 mt-0">
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 mt-0">
                 <div className="flex items-center gap-2" role="tablist" aria-label="Slide navigation">
                   {slides.map((s, i) => (
                     <button key={s.id} role="tab" aria-selected={i === current} aria-label={`Go to slide ${i + 1}`}

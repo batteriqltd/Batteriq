@@ -160,7 +160,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
               <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tracking-tighter">
                 {formatKES(product.price_kes)}
               </span>
-              {product.compare_price_kes && product.compare_price_kes > product.price_kes && (
+              {discount > 0 && product.compare_price_kes && (
                 <span className="text-sm text-slate-400 line-through font-mono tracking-tighter opacity-70">
                   {formatKES(product.compare_price_kes)}
                 </span>
