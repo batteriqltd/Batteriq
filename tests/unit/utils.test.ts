@@ -37,4 +37,10 @@ describe('getDiscountPercent', () => {
     expect(getDiscountPercent(85539, 100000)).toBe(14)
     expect(getDiscountPercent(100000, null)).toBe(0)
   })
+
+  it('hides absurd badges from bad catalogue data', () => {
+    expect(getDiscountPercent(1, 248)).toBe(0)
+    expect(getDiscountPercent(0, 248)).toBe(0)
+    expect(getDiscountPercent(100000, 90000)).toBe(0)
+  })
 })

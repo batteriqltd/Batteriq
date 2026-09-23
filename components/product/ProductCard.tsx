@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useCartStore } from '@/store/cartStore'
 import { useUIStore } from '@/store/uiStore'
-import { formatKES, getProductImageUrl, getPrimarySpecs, formatSpecLabel } from '@/lib/utils'
+import { formatKES, getProductImageUrl, getPrimarySpecs, formatSpecLabel, getDiscountPercent } from '@/lib/utils'
 import { showToast } from '@/components/ui/Toast'
 import type { Product } from '@/lib/supabase/types'
 import { DiscountTimer } from '@/components/product/DiscountTimer'
@@ -23,9 +23,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
 
   const imageUrl = getProductImageUrl(product)
   const specs = getPrimarySpecs(product.specs as Record<string, string>, 3)
-  const discount = product.compare_price_kes
-    ? Math.round(((product.compare_price_kes - product.price_kes) / product.compare_price_kes) * 100)
-    : 0
+  const discount = getDiscountPercent(product.price_kes, product.compare_price_kes)
 
   const displayName = showKenyaContext ? `${product.name} — Kenya` : product.name
   const hasImage = !imgError && imageUrl !== '/placeholder-product.jpg'

@@ -30,8 +30,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('slug, brand, updated_at, in_stock')
       .eq('in_stock', true)
 
+    // Route prefix must mirror ProductCard: EcoFlow → /ecoflow, Bluetti →
+    // /bluetti, everything else → /accessories. A naive toLowerCase() here
+    // used to emit /anker/…, /eufy/… and /soundcore/… URLs that 404.
     const productPages: MetadataRoute.Sitemap = (products ?? []).map((p: { slug: string; brand: string; updated_at: string }) => ({
-      url: `${baseUrl}/${p.brand.toLowerCase()}/${p.slug}`,
+      url: `${baseUrl}/${p.brand === 'EcoFlow' ? 'ecoflow' : p.brand === 'Bluetti' ? 'bluetti' : 'accessories'}/${p.slug}`,
       lastModified: new Date(p.updated_at || now),
       changeFrequency: 'weekly' as const,
       priority: p.brand === 'EcoFlow' ? 0.9 : 0.8,

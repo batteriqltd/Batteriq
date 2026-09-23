@@ -7,7 +7,7 @@ import { motion } from 'framer-motion'
 import { ShoppingCart, ChevronRight, ZoomIn } from 'lucide-react'
 import { useCartStore } from '@/store/cartStore'
 import { useUIStore } from '@/store/uiStore'
-import { formatKES, getProductImageUrl, formatSpecLabel } from '@/lib/utils'
+import { formatKES, getProductImageUrl, formatSpecLabel, getDiscountPercent } from '@/lib/utils'
 import { showToast } from '@/components/ui/Toast'
 import { SpecBadge } from './SpecBadge'
 import { Modal } from '@/components/ui/Modal'
@@ -26,9 +26,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
 
   const images = product.images?.length > 0 ? product.images : ['/placeholder-product.jpg']
   const specs = product.specs as Record<string, string>
-  const discount = product.compare_price_kes
-    ? Math.round(((product.compare_price_kes - product.price_kes) / product.compare_price_kes) * 100)
-    : 0
+  const discount = getDiscountPercent(product.price_kes, product.compare_price_kes)
 
   function handleAddToCart() {
     addItem({

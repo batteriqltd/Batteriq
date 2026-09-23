@@ -34,7 +34,11 @@ export function getProductImageUrl(product: Product): string {
 
 export function getDiscountPercent(price: number, comparePrice: number | null): number {
   if (!comparePrice || comparePrice <= price) return 0
-  return Math.round(((comparePrice - price) / comparePrice) * 100)
+  const percent = Math.round(((comparePrice - price) / comparePrice) * 100)
+  // Bad catalogue data (e.g. price KES 1 vs compare KES 248) must never
+  // render an absurd "-100%" badge — treat it as no discount.
+  if (percent < 0 || percent >= 100) return 0
+  return percent
 }
 
 export function getPrimarySpecs(specs: Record<string, string>, maxCount = 3): Array<[string, string]> {

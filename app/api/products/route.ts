@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
   const q = searchParams.get('q')
   const featured = searchParams.get('featured')
   const limit = Math.min(parseInt(searchParams.get('limit') ?? '50'), 100)
+  const offset = Math.max(parseInt(searchParams.get('offset') ?? '0'), 0)
 
   const supabase = createAdminClient()
   let query = supabase
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
     .select('*')
     .eq('in_stock', true)
     .order('sort_order', { ascending: true })
-    .limit(limit)
+    .range(offset, offset + limit - 1)
 
   if (brand) query = query.eq('brand', brand)
   if (category) query = query.eq('category', category)

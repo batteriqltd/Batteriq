@@ -1,6 +1,6 @@
 'use client'
 import { useState, useCallback, useEffect } from 'react'
-import { CheckCircle, XCircle, Edit3, Save, X, ImageIcon, Zap, Plus, Minus, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle, XCircle, Edit3, Save, X, ImageIcon, Zap, Plus, Minus, ChevronDown, ChevronUp, Search } from 'lucide-react'
 
 // ─── Product Edit Row (existing) ────────────────────────────────────────────
 
@@ -380,18 +380,24 @@ export default function AdminProductsPage() {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
+  const [query, setQuery] = useState('')
 
-  const loadProducts = useCallback(async () => {
+  const loadProducts = useCallback(async (q = '') => {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/products')
+      const res = await fetch(`/api/admin/products${q ? `?q=${encodeURIComponent(q)}` : ''}`)
       const data = await res.json()
       setProducts(data.products ?? [])
     } catch { /* ignore */ }
     setLoading(false)
   }, [])
 
-  useEffect(() => { loadProducts() }, [loadProducts])
+  // Debounced live search — partial match on name, SKU or brand.
+  // Runs once on mount too (empty query loads the full catalogue).
+  useEffect(() => {
+    const id = setTimeout(() => loadProducts(query.trim()), query ? 350 : 0)
+    return () => clearTimeout(id)
+  }, [query, loadProducts])
 
   const ecoflowCount = products.filter(p => p.brand === 'EcoFlow').length
   const bluettiCount = products.filter(p => p.brand === 'Bluetti').length
@@ -430,7 +436,27 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {showForm && <AddProductForm onSuccess={loadProducts} />}
+      <div className="relative mb-6">
+        <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+        <input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          placeholder="Search by name, SKU or brand — e.g. mc4, delta, anker…"
+          className="w-full h-12 pl-12 pr-11 rounded-2xl border border-gray-100 bg-white text-sm font-medium text-gray-900 placeholder:text-gray-400 shadow-sm outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10 transition-all"
+          aria-label="Search products"
+        />
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition-colors"
+            aria-label="Clear search"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
+      {showForm && <AddProductForm onSuccess={() => loadProducts(query.trim())} />}
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32">
@@ -442,7 +468,7 @@ export default function AdminProductsPage() {
           {products.map(p => (
             <div key={p.id} className="bg-white rounded-[24px] border border-gray-100 overflow-hidden px-6 py-5 transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/5 group"
               style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}>
-              <ProductEditRow product={p} onSave={loadProducts} />
+              <ProductEditRow product={p} onSave={() => loadProducts(query.trim())} />
             </div>
           ))}
           {products.length === 0 && (
