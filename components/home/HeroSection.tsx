@@ -81,13 +81,14 @@ export function HeroSection() {
 
   return (
     <section
-      className="relative w-full overflow-hidden hero-section"
+      className="relative w-full overflow-hidden hero-section bg-[#060a18]"
       style={{ minHeight: 'clamp(520px, 90vh, 800px)' }}
       aria-label="Hero banner"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* Background */}
+      {/* Background — 16:9 video-style media on phones, full-bleed on larger screens */}
+      <div className="relative aspect-video sm:absolute sm:inset-0 sm:aspect-auto sm:h-full">
       <AnimatePresence initial={false}>
         <motion.div
           key={slide.id}
@@ -127,10 +128,11 @@ export function HeroSection() {
           )}
         </motion.div>
       </AnimatePresence>
+      </div>
 
-      {/* Content */}
-      <div className="absolute inset-0 z-20 flex items-end pb-12 sm:pb-16 lg:pb-20">
-        <div className="max-w-7xl mx-auto px-6 sm:px-10 w-full text-left lg:max-w-2xl lg:ml-16">
+      {/* Content — flows below the video on phones, overlays it on larger screens */}
+      <div className="relative z-20 px-6 pt-6 pb-10 sm:absolute sm:inset-0 sm:flex sm:items-end sm:px-0 sm:pt-0 sm:pb-16 lg:pb-20">
+        <div className="max-w-7xl mx-auto px-0 sm:px-10 w-full text-left lg:max-w-2xl lg:ml-16">
           <AnimatePresence mode="wait">
             <motion.div
               key={slide.id}
@@ -158,13 +160,13 @@ export function HeroSection() {
                 <span className="text-white font-black text-base">{slide.startingPrice}</span>
               </div>
 
-              <p className="text-white/75 mb-8 text-left leading-relaxed max-w-md"
+              <p className="text-white/75 mb-6 sm:mb-8 text-left leading-relaxed max-w-md"
                 style={{ fontSize: 'clamp(0.875rem, 1.8vw, 1.05rem)' }}>
                 {slide.subline}
               </p>
 
               {/* CTAs */}
-              <div className="flex flex-col sm:flex-row items-start gap-3 mb-10">
+              <div className="flex flex-col sm:flex-row items-start gap-3 mb-7 sm:mb-10">
                 <Link href={slide.cta.href}
                   className="inline-flex items-center justify-center gap-2 px-8 py-4 text-white font-black text-sm rounded-2xl transition-all duration-200 hover:-translate-y-0.5 min-h-[52px]"
                   style={{ background: '#0000ff', boxShadow: '0 8px 32px rgba(0,0,255,0.4)' }}>

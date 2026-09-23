@@ -683,10 +683,10 @@ section, .section, [data-section] {
 /* ── HERO RESPONSIVE HEIGHTS ── */
 @media (max-width: 640px) {
   .hero-section {
-    /* Never crop the text block: grow with content, at least a full screen. */
+    /* Phone hero is video-sized (16:9 media, text flows below) — never
+       full-screen and never cropped. */
     height: auto !important;
-    min-height: 620px !important;
-    min-height: 100svh !important;
+    min-height: 0 !important;
   }
 }
 

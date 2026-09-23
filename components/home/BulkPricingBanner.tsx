@@ -18,7 +18,7 @@ export function BulkPricingBanner() {
             'radial-gradient(circle at 85% 30%, rgba(0,194,255,0.18), transparent 40%)',
         }}
       />
-      <div className="relative mx-auto flex max-w-8xl flex-col items-center justify-between gap-4 px-4 py-6 text-center sm:py-7 lg:flex-row lg:px-8 lg:text-left">
+      <div className="relative mx-auto flex max-w-8xl flex-col items-center justify-between gap-3 px-4 py-4 text-center sm:gap-4 sm:py-7 lg:flex-row lg:px-8 lg:text-left">
         <div className="flex flex-col items-center gap-3 sm:flex-row sm:gap-4 lg:items-center">
           <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
             <BadgePercent size={20} className="text-white" />

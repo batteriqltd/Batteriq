@@ -199,8 +199,8 @@ export function StatsSection() {
           style={{ background: 'radial-gradient(circle, #4f46e5, transparent)', filter: 'blur(60px)' }}
         />
 
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0 lg:divide-x lg:divide-white/10">
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-14">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-0 lg:divide-x lg:divide-white/10">
             {STATS.map((stat) => (
               <StatCard key={stat.label} stat={stat} started={started} />
             ))}
