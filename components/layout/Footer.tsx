@@ -29,7 +29,7 @@ const TRUST_BADGES = [
 ]
 
 const SOCIALS = [
-  { href: 'https://instagram.com/batteriqkenya', icon: <InstagramIcon size={20} />, label: 'Instagram' },
+  { href: 'https://www.instagram.com/batteriq?stkn=aXE2dmNieW5kdWtl', icon: <InstagramIcon size={20} />, label: 'Instagram' },
   { href: 'https://facebook.com/batteriqkenya', icon: <FacebookIcon size={20} />, label: 'Facebook' },
   { href: 'https://tiktok.com/@batteriqkenya', icon: <TikTokIcon size={20} />, label: 'TikTok' },
   { href: 'https://linkedin.com/company/batteriq', icon: <LinkedInIcon size={20} />, label: 'LinkedIn' },

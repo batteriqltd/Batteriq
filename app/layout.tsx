@@ -127,7 +127,7 @@ const organizationSchema = {
     availableLanguage: ['English', 'Swahili'],
   },
   sameAs: [
-    'https://instagram.com/batteriqkenya',
+    'https://www.instagram.com/batteriq?stkn=aXE2dmNieW5kdWtl',
     'https://facebook.com/batteriqkenya',
     'https://tiktok.com/@batteriqkenya',
     'https://linkedin.com/company/batteriq',

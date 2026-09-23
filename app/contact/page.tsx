@@ -51,7 +51,7 @@ export default function ContactPage() {
   const inputClass = 'w-full h-14 px-5 rounded-2xl text-gray-900 text-sm font-semibold bg-[#f8f9ff] border border-gray-100 placeholder-gray-300 focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08] outline-none transition-all'
 
   const SOCIAL_LINKS = [
-    { label: 'Instagram', href: 'https://instagram.com/batteriqkenya', icon: <InstagramIcon size={22} /> },
+    { label: 'Instagram', href: 'https://www.instagram.com/batteriq?stkn=aXE2dmNieW5kdWtl', icon: <InstagramIcon size={22} /> },
     { label: 'Facebook', href: 'https://facebook.com/batteriqkenya', icon: <FacebookIcon size={22} /> },
     { label: 'TikTok', href: 'https://tiktok.com/@batteriqkenya', icon: <TikTokIcon size={22} /> },
     { label: 'LinkedIn', href: 'https://linkedin.com/company/batteriq', icon: <LinkedInIcon size={22} /> },

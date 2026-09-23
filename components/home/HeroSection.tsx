@@ -187,7 +187,7 @@ export function HeroSection() {
                   ))}
                 </div>
                 <a
-                  href="https://instagram.com/batteriqkenya"
+                  href="https://www.instagram.com/batteriq?stkn=aXE2dmNieW5kdWtl"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="See Batteriq setups on Instagram"
@@ -200,7 +200,7 @@ export function HeroSection() {
                     <Instagram size={14} className="text-white" />
                   </span>
                   <span className="text-left leading-tight">
-                    <span className="block text-xs font-black text-white sm:text-[13px]">@batteriqkenya</span>
+                    <span className="block text-xs font-black text-white sm:text-[13px]">@batteriq</span>
                     <span className="block text-[10px] font-semibold text-white/70">649 followers · See real setups</span>
                   </span>
                   <ArrowUpRight size={14} className="text-white/80" />
