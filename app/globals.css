@@ -683,8 +683,10 @@ section, .section, [data-section] {
 /* ── HERO RESPONSIVE HEIGHTS ── */
 @media (max-width: 640px) {
   .hero-section {
-    height: clamp(360px, 85vw, 520px) !important;
-    min-height: 360px !important;
+    /* Never crop the text block: grow with content, at least a full screen. */
+    height: auto !important;
+    min-height: 620px !important;
+    min-height: 100svh !important;
   }
 }
 

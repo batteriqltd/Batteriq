@@ -140,14 +140,14 @@ export function HeroSection() {
               transition={{ duration: 0.5 }}
             >
               {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-5 border border-white/20 rounded-full bg-white/10 backdrop-blur-sm text-xs text-white font-bold uppercase tracking-widest">
+              <div className="inline-flex items-center gap-2 px-4 py-2 mb-5 border border-white/20 rounded-full bg-white/10 backdrop-blur-sm text-[10px] sm:text-xs text-white font-bold uppercase tracking-widest whitespace-nowrap max-w-full overflow-hidden">
                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
                 {slide.badge}
               </div>
 
               {/* Headline */}
               <h1 className="text-white mb-4 text-left"
-                style={{ fontSize: 'clamp(2.4rem, 6vw, 5rem)', letterSpacing: '-0.03em', lineHeight: 1.0, fontWeight: 900, textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
+                style={{ fontSize: 'clamp(2.1rem, 6vw, 5rem)', letterSpacing: '-0.03em', lineHeight: 1.0, fontWeight: 900, textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
                 {slide.headline}<br />
                 <span style={{ color: '#4d9fff' }}>{slide.headlineAccent}</span>
               </h1>
@@ -211,14 +211,14 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Arrows */}
+      {/* Arrows — desktop only so they never cover text/buttons on phones */}
       <button onClick={() => { prev(); setPaused(true) }}
-        className="absolute left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-all"
+        className="absolute left-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 hidden sm:flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-all"
         aria-label="Previous slide">
         <ChevronLeft size={20} />
       </button>
       <button onClick={() => { next(); setPaused(true) }}
-        className="absolute right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-all"
+        className="absolute right-5 top-1/2 -translate-y-1/2 z-20 w-11 h-11 hidden sm:flex items-center justify-center rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-all"
         aria-label="Next slide">
         <ChevronRight size={20} />
       </button>
