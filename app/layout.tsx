@@ -6,6 +6,7 @@ import { VisitorTracker } from '@/components/analytics/VisitorTracker'
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister'
 import { GSAPProvider } from '@/components/animations/GSAPProvider'
 import { AOSProvider } from '@/components/animations/AOSProvider'
+import { ScrollToTop } from '@/components/animations/ScrollToTop'
 import './globals.css'
 
 // Font variables — loaded via CSS globals to avoid build-time Google Fonts failures
@@ -168,6 +169,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <script dangerouslySetInnerHTML={{ __html: "try{if('scrollRestoration' in history)history.scrollRestoration='manual'}catch(e){}" }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
@@ -182,6 +184,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Skip to main content
         </a>
         <main id="main-content" className="pt-16 lg:pt-[72px]">{children}</main>
+        <ScrollToTop />
         <GSAPProvider />
         <AOSProvider />
         <ServiceWorkerRegister />
