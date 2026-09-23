@@ -4,30 +4,45 @@ import { createAdminClient } from '@/lib/supabase/admin'
 // No external AI services — every answer below comes from our own catalogue
 // (Supabase, with a built-in fallback) plus the rule-based intents above.
 type CatalogHit = {
+  id: string
   name: string
   brand: string
   slug: string
   category: string
   price_kes: number
   specs: Record<string, string>
+  images: string[]
+}
+
+export type CartAction = {
+  productId: string
+  name: string
+  brand: string
+  slug: string
+  price_kes: number
+  image: string
 }
 
 const FALLBACK_HITS: CatalogHit[] = [
   {
+    id: 'fallback-delta-3-max',
     name: 'EcoFlow DELTA 3 Max',
     brand: 'EcoFlow',
     slug: 'delta-3-max',
     category: 'Power Stations',
     price_kes: 148199,
     specs: { capacity: '2048Wh', ac_output: '2400W (Surge 5000W)', solar_input: '1000W Max' },
+    images: ['/products/ecoflow/delta-3-max.png'],
   },
   {
+    id: 'fallback-delta-3-2000-air',
     name: 'EcoFlow DELTA 3 2000 Air',
     brand: 'EcoFlow',
     slug: 'delta-3-2000-air',
     category: 'Power Stations',
     price_kes: 106725,
     specs: { capacity: '1920Wh', ac_output: '1000W (Surge 2000W)', ups_mode: '10ms switchover' },
+    images: ['/products/ecoflow/delta-3-2000-air.jpg'],
   },
 ]
 
@@ -54,31 +69,134 @@ function scoreHit(p: CatalogHit, tokens: string[]): number {
   return score
 }
 
-async function searchCatalogReply(message: string): Promise<string | null> {
-  let catalog: CatalogHit[]
+async function loadCatalog(): Promise<CatalogHit[]> {
   try {
     const supabase = createAdminClient()
     const { data } = await supabase
       .from('products')
-      .select('name, brand, slug, category, price_kes, specs')
+      .select('id, name, brand, slug, category, price_kes, specs, images')
       .eq('in_stock', true)
       .order('sort_order', { ascending: true })
-      .limit(100)
+      .limit(200)
     const live = (data ?? []) as unknown as CatalogHit[]
     const seen = new Set(live.map((p) => p.slug))
-    catalog = [...live, ...FALLBACK_HITS.filter((p) => !seen.has(p.slug))]
+    return [...live, ...FALLBACK_HITS.filter((p) => !seen.has(p.slug))]
   } catch {
-    catalog = FALLBACK_HITS
+    return FALLBACK_HITS
   }
+}
+
+function scoreCatalog(message: string, catalog: CatalogHit[]) {
+  const tokens = message.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/)
+  return catalog
+    .map((p) => ({ p, score: scoreHit(p, tokens) }))
+    .filter((s) => s.score >= 2)
+    .sort((a, b) => b.score - a.score)
+}
+
+function toCartAction(p: CatalogHit): CartAction {
+  return {
+    productId: p.id,
+    name: p.name,
+    brand: p.brand,
+    slug: p.slug,
+    price_kes: p.price_kes,
+    image: p.images?.[0] ?? '/placeholder-product.jpg',
+  }
+}
+
+// "I need a Bluetti AC200PL" / "BUY delta 3 max" → product straight to cart.
+async function tryBuyIntent(message: string): Promise<{ reply: string; cartItem: CartAction } | null> {
+  const m = message.toLowerCase()
+  if (!/\b(buy|need|want|add|order|take|get me|i'll take|i will take|purchase)\b/.test(m)) return null
+
+  const catalog = await loadCatalog()
+  const scored = scoreCatalog(message, catalog)
+  if (scored.length >= 1 && (scored.length === 1 || scored[0].score > scored[1].score + 1)) {
+    const p = scored[0].p
+    return {
+      reply: `Done — *${p.name}* (KES ${p.price_kes.toLocaleString('en-KE')}) is in your cart. 🛒 Your cart is now open — review it and head to checkout whenever you're ready (M-Pesa, card or cash on delivery). Anything else I can help with?`,
+      cartItem: toCartAction(p),
+    }
+  }
+  return null
+}
+
+function capacityWh(p: CatalogHit): number {
+  const raw = (p.specs?.capacity ?? '').toLowerCase().replace(/,/g, '')
+  const num = parseFloat(raw.replace(/[^0-9.]/g, ''))
+  if (Number.isNaN(num)) return 0
+  return /kwh/.test(raw) ? num * 1000 : num
+}
+
+function parseBudgetKes(message: string): number | null {
+  const m = message.toLowerCase().replace(/,/g, '')
+  const match = m.match(/(\d+(?:\.\d+)?)\s*(k\b|kes|ksh|bob|shillings?)?/)
+  if (!match) return null
+  let amount = parseFloat(match[1])
+  if ((match[2] === 'k' || !match[2]) && amount < 1000) amount *= 1000
+  return Math.round(amount)
+}
+
+// Need-based recommendations from our own catalogue — no external AI.
+async function recommendReply(message: string): Promise<string | null> {
+  const m = message.toLowerCase()
+  const wantsHelp =
+    /recommend|best|which one|suggest|advise|help me choose|for (my|our)|camping|safari|fridge|tv|television|wifi|router|laptop|home|house|blackout|kplc|office|shop|budget|under|below/.test(m)
+  if (!wantsHelp) return null
+
+  const catalog = await loadCatalog()
+  let pool = catalog.filter((p) => p.category === 'Power Stations')
+  if (pool.length === 0) pool = catalog
+
+  const bigHome = /fridge|tv|television|home|house|blackout|kplc|office|shop|salon|church|school/.test(m)
+  const portable = /camping|safari|outdoor|tent|portable|travel|laptop|phone|wifi|router|gate/.test(m)
+  const budget = parseBudgetKes(message)
+
+  // Vague "which is best?" with no need or budget — ask, don't guess.
+  if (!bigHome && !portable && budget == null) {
+    return 'Happy to help! Could you tell me: (1) what you want to power (fridge, TV, laptop?), (2) how many hours of backup you need, and (3) your rough budget? That way I can recommend the perfect power station for you.'
+  }
+
+  if (bigHome) {
+    const big = pool.filter((p) => capacityWh(p) >= 1000).sort((a, b) => a.price_kes - b.price_kes)
+    if (big.length > 0) pool = big
+    else pool = [...pool].sort((a, b) => capacityWh(b) - capacityWh(a))
+  } else if (portable) {
+    pool = [...pool].sort((a, b) => a.price_kes - b.price_kes)
+  }
+
+  let overNote = ''
+  if (budget) {
+    const fitting = pool.filter((p) => p.price_kes <= budget * 1.25)
+    if (fitting.length > 0) {
+      pool = fitting.sort((a, b) => b.price_kes - a.price_kes)
+    } else {
+      pool = [...pool].sort((a, b) => a.price_kes - b.price_kes)
+      overNote = ` (just over your KES ${budget.toLocaleString('en-KE')} budget — worth it for the extra capacity)`
+    }
+  }
+
+  if (pool.length === 0) return null
+  const pick = pool[0]
+  const alt = pool.find((p) => p.slug !== pick.slug)
+  const specs = ['capacity', 'ac_output'].map((k) => pick.specs?.[k]).filter(Boolean).join(', ')
+  let reply =
+    `For what you described, I'd go with the *${pick.name}* — ${specs ? `${specs}, ` : ''}KES ${pick.price_kes.toLocaleString('en-KE')}${overNote}.\nSee it here: ${productLink(pick)}`
+  if (alt) {
+    reply += `\nTighter budget? The *${alt.name}* at KES ${alt.price_kes.toLocaleString('en-KE')} is also worth a look: ${productLink(alt)}`
+  }
+  reply += `\nReply *BUY ${pick.name}* and I'll add it straight to your cart.`
+  return reply
+}
+
+async function searchCatalogReply(message: string): Promise<string | null> {
+  const catalog = await loadCatalog()
 
   if (catalog.length === 0) return null
 
   const m = message.toLowerCase()
-  const tokens = m.replace(/[^a-z0-9 ]/g, ' ').split(/\s+/)
-  const scored = catalog
-    .map((p) => ({ p, score: scoreHit(p, tokens) }))
-    .filter((s) => s.score >= 2)
-    .sort((a, b) => b.score - a.score)
+  const scored = scoreCatalog(message, catalog)
 
   if (scored.length >= 1 && (scored.length === 1 || scored[0].score > scored[1].score + 1)) {
     const p = scored[0].p
@@ -150,10 +268,6 @@ function getRuleBasedResponse(message: string): string | null {
     return 'Yes! For bulk, wholesale, or reseller pricing, chat to us directly on WhatsApp and we\'ll send our best quote: https://wa.me/254716822014 — just send the models and quantities you need. We reply within business hours (Mon–Sat, 8am–6pm EAT).'
   }
 
-  if (/recommend|best|which one|suggest|advise|help me choose/.test(m)) {
-    return 'Happy to help! Could you tell me: (1) what you want to power (fridge, TV, laptop?), (2) how many hours of backup you need, and (3) your rough budget? That way I can recommend the perfect power station for you.'
-  }
-
   if (/contact|whatsapp|call|phone|reach you/.test(m)) {
     return 'You can reach the Batteriq team via WhatsApp (0716822014), email (info@batteriq.com), or our contact page at batteriq.com/contact. We typically respond within a few hours during business hours (Mon–Sat, 8am–6pm EAT).'
   }
@@ -176,6 +290,26 @@ export async function POST(req: Request) {
     const ruleReply = getRuleBasedResponse(message)
     if (ruleReply) {
       return NextResponse.json({ reply: ruleReply })
+    }
+
+    const buy = await tryBuyIntent(message)
+    if (buy) {
+      return NextResponse.json(buy)
+    }
+
+    // Smart recommendations need the catalogue — if it fails, fall back to
+    // the clarifying question so the customer is never stuck.
+    try {
+      const recReply = await recommendReply(message)
+      if (recReply) {
+        return NextResponse.json({ reply: recReply })
+      }
+    } catch {
+      if (/recommend|best|which one|suggest|advise|help me choose/.test(message.toLowerCase())) {
+        return NextResponse.json({
+          reply: 'Happy to help! Could you tell me: (1) what you want to power (fridge, TV, laptop?), (2) how many hours of backup you need, and (3) your rough budget? That way I can recommend the perfect power station for you.',
+        })
+      }
     }
 
     const catalogReply = await searchCatalogReply(message)

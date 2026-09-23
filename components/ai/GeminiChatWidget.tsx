@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bot, X, Send, Loader2, MinimizeIcon } from 'lucide-react'
 import { useUIStore } from '@/store/uiStore'
+import { useCartStore } from '@/store/cartStore'
+import { showToast } from '@/components/ui/Toast'
 import { WhatsAppIcon } from '@/components/ui/ContactIcons'
 import { usePathname } from 'next/navigation'
 import { generateSessionToken } from '@/lib/utils'
@@ -16,7 +18,8 @@ type DisplayMessage = {
 }
 
 export function GeminiChatWidget() {
-  const { chatOpen, openChat, closeChat, cartOpen, mobileNavOpen } = useUIStore()
+  const { chatOpen, openChat, closeChat, cartOpen, mobileNavOpen, openCart } = useUIStore()
+  const addItem = useCartStore((s) => s.addItem)
   const [messages, setMessages] = useState<DisplayMessage[]>([
     {
       role: 'assistant',
@@ -77,6 +80,15 @@ export function GeminiChatWidget() {
       const reply = data.reply || "I didn't catch that — please try again."
 
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
+
+      // Server asked to put something in the cart (e.g. "I need a DELTA 3 Max").
+      // Pause before opening the cart so the confirmation is actually read —
+      // opening it instantly would unmount this dialog mid-sentence.
+      if (data.cartItem) {
+        addItem({ ...data.cartItem, quantity: 1 })
+        showToast(`${data.cartItem.name} added to cart`, 'success')
+        window.setTimeout(() => openCart(), 1600)
+      }
 
       setHistory((prev) => [
         ...prev,
