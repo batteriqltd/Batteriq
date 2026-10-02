@@ -12,7 +12,7 @@ import {
   buildTitle, buildDescription, productJsonLd, breadcrumbJsonLd,
   buildProductFaqs, faqJsonLd, productUrl,
 } from '@/lib/seo'
-import { APPROVED_DELTA_SLUGS, FALLBACK_DELTA_PRODUCTS, withDeltaFallback } from '@/lib/delta-series'
+import { CATALOG_DELTA_SLUGS, FALLBACK_DELTA_PRODUCTS, withDeltaFallback } from '@/lib/delta-series'
 
 // Product availability is managed in Supabase. Render this route per request
 // so a newly published product cannot retain a previously cached 404 while the
@@ -42,7 +42,7 @@ export async function generateStaticParams() {
 // price/stock win when the row exists; specs/descriptions/images always come
 // from the corrected code data.
 async function getProduct(slug: string): Promise<Product | null> {
-  const isApproved = (APPROVED_DELTA_SLUGS as readonly string[]).includes(slug)
+  const isApproved = (CATALOG_DELTA_SLUGS as readonly string[]).includes(slug)
   const fallback = (isApproved ? FALLBACK_DELTA_PRODUCTS[slug] : undefined) ?? null
   try {
     const supabase = createAdminClient()

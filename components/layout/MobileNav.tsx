@@ -13,6 +13,7 @@ const POWER_ITEMS = {
   delta: [
     { name: 'DELTA Pro 3', sub: '4096Wh · 4000W', href: '/ecoflow/delta-pro-3' },
     { name: 'DELTA Pro', sub: '3600Wh · 3600W', href: '/ecoflow/delta-pro' },
+    { name: 'DELTA 3 Max', sub: '2048Wh · 2400W', href: '/ecoflow/delta-3-max' },
     { name: 'DELTA 2 Max', sub: '2048Wh · 2400W', href: '/ecoflow/delta-2-max' },
     { name: 'DELTA 2', sub: '1024Wh · 1800W', href: '/ecoflow/delta-2' },
     { name: 'DELTA 3', sub: '1024Wh · 1800W', href: '/ecoflow/delta-3' },

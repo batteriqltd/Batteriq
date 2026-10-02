@@ -16,6 +16,9 @@ export const APPROVED_DELTA_SLUGS = [
   'delta-pro-3',
 ] as const
 
+/** Full DELTA catalogue incl. DELTA 3 Max (homepage heroes stay the 4 above). */
+export const CATALOG_DELTA_SLUGS = [...APPROVED_DELTA_SLUGS, 'delta-3-max'] as const
+
 const STAMP = '2026-10-02T00:00:00.000Z'
 
 export const FALLBACK_DELTA_PRODUCTS: Record<string, Product> = {
@@ -172,16 +175,62 @@ export const FALLBACK_DELTA_PRODUCTS: Record<string, Product> = {
     created_at: STAMP,
     updated_at: STAMP,
   },
+  'delta-3-max': {
+    id: 'fallback-delta-3-max',
+    sku: '5016501003',
+    brand: 'EcoFlow',
+    category: 'Power Stations',
+    subcategory: 'DELTA Series',
+    name: 'EcoFlow DELTA 3 Max',
+    slug: 'delta-3-max',
+    description:
+      'The EcoFlow DELTA 3 Max is the 2048Wh mid-range backup station for Kenyan homes and small businesses. With 2400W AC output (5000W surge, X-Boost to 3400W), 1000W solar input, fast 2000W AC charging (0–80% in about an hour), expandability to 6kWh and sub-30ms UPS switchover, it covers fridges, microwaves, TVs, Wi‑Fi and office loads through long outages.',
+    specs: {
+      capacity: '2048Wh',
+      ac_output: '2400W (Surge 5000W)',
+      x_boost: '3400W',
+      chemistry: 'LFP (LiFePO4)',
+      battery_life: '3500+ cycles to 80%',
+      solar_input: '1000W Max',
+      ac_charging: '2000W (0-80% in ~1.1 hrs)',
+      ups_mode: 'Yes (<30ms switchover)',
+      usb_c: '2 x USB-C 140W',
+      usb_a: '2 x USB-A 18W',
+      expandable: 'Yes — up to 6kWh',
+      weight: '22kg',
+      dimensions: '497 x 264 x 360mm',
+      warranty: '24 months',
+    },
+    images: ['/products/ecoflow/delta-3-max.png'],
+    price_kes: 148199,
+    compare_price_kes: null,
+    discount_percent: null,
+    discount_badge: null,
+    in_stock: true,
+    stock_qty: 10,
+    featured: false,
+    sort_order: 14,
+    meta_title: 'EcoFlow DELTA 3 Max Kenya — 2048Wh KES 148,199 | Batteriq',
+    meta_description:
+      'Buy the EcoFlow DELTA 3 Max in Kenya for KES 148,199. 2048Wh LFP, 2400W AC output, expandable to 6kWh. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
+    schema_rating: 0,
+    schema_review_count: 0,
+    created_at: STAMP,
+    updated_at: STAMP,
+  },
 }
 
 /**
  * Merge DB rows with the code fallbacks. Fallback specs/descriptions/images
  * always win (they are the corrected data); live DB price/stock win when the
- * row exists. Missing rows are filled from fallback so all 4 always render.
+ * row exists. Missing rows are filled from fallback so they always render.
  */
-export function withDeltaFallback(dbProducts: Product[]): Product[] {
+export function withDeltaFallback(
+  dbProducts: Product[],
+  slugs: readonly string[] = APPROVED_DELTA_SLUGS
+): Product[] {
   const bySlug = new Map((dbProducts ?? []).map((p) => [p.slug, p]))
-  return (APPROVED_DELTA_SLUGS as readonly string[]).map((slug) => {
+  return slugs.map((slug) => {
     const fallback = FALLBACK_DELTA_PRODUCTS[slug]
     const live = bySlug.get(slug)
     if (!live) return fallback
@@ -198,10 +247,24 @@ export function withDeltaFallback(dbProducts: Product[]): Product[] {
   })
 }
 
+/**
+ * Full collection listing (EcoFlow hub, power-stations): every catalogue
+ * product renders with corrected DELTA data, deprecated variants excluded,
+ * missing DELTA rows filled from fallback — ordered by sort_order.
+ */
+export function withCatalogFallback(dbProducts: Product[]): Product[] {
+  const list = withoutDeprecatedDelta(dbProducts ?? [])
+  const merged = withDeltaFallback(list, CATALOG_DELTA_SLUGS)
+  const rest = list.filter(
+    (p) => !(CATALOG_DELTA_SLUGS as readonly string[]).includes(p.slug)
+  )
+  return [...merged, ...rest].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+}
+
 /** Deprecated DELTA variants hidden from the storefront in code (DB untouched). */
 export function isDeprecatedDelta(product: Pick<Product, 'slug' | 'name' | 'brand'>): boolean {
   if (product.brand !== 'EcoFlow') return false
-  if ((APPROVED_DELTA_SLUGS as readonly string[]).includes(product.slug)) return false
+  if ((CATALOG_DELTA_SLUGS as readonly string[]).includes(product.slug)) return false
   const hay = `${product.slug} ${product.name}`.toLowerCase()
   return (
     hay.includes('100-air') ||

@@ -45,6 +45,16 @@ const FALLBACK_HITS: CatalogHit[] = [
     images: ['/products/ecoflow/delta-3-ultra-plus.png'],
   },
   {
+    id: 'fallback-delta-3-max',
+    name: 'EcoFlow DELTA 3 Max',
+    brand: 'EcoFlow',
+    slug: 'delta-3-max',
+    category: 'Power Stations',
+    price_kes: 148199,
+    specs: { capacity: '2048Wh', ac_output: '2400W (Surge 5000W)', battery: 'LFP' },
+    images: ['/products/ecoflow/delta-3-max.png'],
+  },
+  {
     id: 'fallback-delta-pro',
     name: 'EcoFlow DELTA Pro',
     brand: 'EcoFlow',

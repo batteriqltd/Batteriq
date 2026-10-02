@@ -49,6 +49,16 @@ INSERT INTO products (
   461799, true, 10, false, 13,
   'EcoFlow DELTA Pro 3 Kenya — 4096Wh KES 461,799 | Batteriq',
   'Buy the EcoFlow DELTA Pro 3 in Kenya for KES 461,799. 4096Wh LFP, 4000W AC output, 12 ports. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
+),
+(
+  '5016501003', 'EcoFlow', 'Power Stations', 'DELTA Series',
+  'EcoFlow DELTA 3 Max', 'delta-3-max',
+  'The EcoFlow DELTA 3 Max is the 2048Wh mid-range backup station for Kenyan homes and small businesses. With 2400W AC output (5000W surge, X-Boost to 3400W), 1000W solar input, fast 2000W AC charging (0–80% in about an hour), expandability to 6kWh and sub-30ms UPS switchover, it covers fridges, microwaves, TVs, Wi‑Fi and office loads through long outages.',
+  '{"capacity":"2048Wh","ac_output":"2400W (Surge 5000W)","x_boost":"3400W","chemistry":"LFP (LiFePO4)","battery_life":"3500+ cycles to 80%","solar_input":"1000W Max","ac_charging":"2000W (0-80% in ~1.1 hrs)","ups_mode":"Yes (<30ms switchover)","usb_c":"2 x USB-C 140W","usb_a":"2 x USB-A 18W","expandable":"Yes — up to 6kWh","weight":"22kg","dimensions":"497 x 264 x 360mm","warranty":"24 months"}'::jsonb,
+  ARRAY['/products/ecoflow/delta-3-max.png']::text[],
+  148199, true, 10, false, 14,
+  'EcoFlow DELTA 3 Max Kenya — 2048Wh KES 148,199 | Batteriq',
+  'Buy the EcoFlow DELTA 3 Max in Kenya for KES 148,199. 2048Wh LFP, 2400W AC output, expandable to 6kWh. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
 )
 ON CONFLICT (sku) DO UPDATE SET
   brand = EXCLUDED.brand,
@@ -83,11 +93,14 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM products WHERE slug = 'delta-pro-3') THEN
     RAISE EXCEPTION 'delta-pro-3 missing — SKU 5013701013 may be owned by another product; resolve manually before re-running.';
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM products WHERE slug = 'delta-3-max') THEN
+    RAISE EXCEPTION 'delta-3-max missing — SKU 5016501003 may be owned by another product; resolve manually before re-running.';
+  END IF;
 END $$;
 
 COMMIT;
 
 SELECT sku, slug, name, price_kes, in_stock, images
 FROM products
-WHERE slug IN ('delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3')
+WHERE slug IN ('delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3', 'delta-3-max')
 ORDER BY sort_order;

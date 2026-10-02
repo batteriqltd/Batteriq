@@ -420,7 +420,7 @@ export default function AdminProductsPage() {
 
   async function runDeltaSync() {
     if (syncing) return
-    if (!confirm('Apply DELTA catalog fix?\n\n• Upserts Classic / Ultra / Pro / Pro 3 with correct specs, images & prices\n• Deletes 100 Air, Max Plus, Ultra Plus')) return
+    if (!confirm('Apply DELTA catalog fix?\n\n• Upserts Classic / Ultra / Pro / Pro 3 / Max with correct specs, images & prices\n• Deletes 100 Air, Max Plus, Ultra Plus')) return
     setSyncing(true)
     setSyncMsg('')
     try {
@@ -501,7 +501,7 @@ export default function AdminProductsPage() {
         style={{ boxShadow: '0 2px 20px rgba(0,0,255,0.06)' }}>
         <div className="flex-1 min-w-0">
           <p className="text-[13px] font-black text-gray-900 tracking-tight">DELTA catalog fix</p>
-          <p className="text-xs text-gray-400 font-medium mt-0.5">Upserts Classic / Ultra / Pro / Pro 3 (correct specs, images, prices) · Deletes 100 Air, Max Plus, Ultra Plus</p>
+          <p className="text-xs text-gray-400 font-medium mt-0.5">Upserts Classic / Ultra / Pro / Pro 3 / Max (correct specs, images, prices) · Deletes 100 Air, Max Plus, Ultra Plus</p>
           {syncMsg && <p className="text-xs font-bold mt-1.5 text-blue-700">{syncMsg}</p>}
         </div>
         <div className="flex gap-2 shrink-0">

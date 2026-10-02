@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { withoutDeprecatedDelta } from '@/lib/delta-series'
+import { withCatalogFallback } from '@/lib/delta-series'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
@@ -37,8 +37,9 @@ async function getEcoFlowAll() {
 
 export default async function EcoFlowCollectionPage() {
   const raw = await getEcoFlowAll()
-  // Deprecated DELTA variants hidden in code (100 Air / Max Plus / Ultra Plus).
-  const products = withoutDeprecatedDelta(raw)
+  // Corrected DELTA data merged in code; deprecated variants excluded;
+  // missing rows (e.g. DELTA 3 Max) filled from fallback — no DB action needed.
+  const products = withCatalogFallback(raw)
 
   return (
     <>

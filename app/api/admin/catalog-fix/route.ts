@@ -133,6 +133,41 @@ const APPROVED = [
     meta_description:
       'Buy the EcoFlow DELTA Pro 3 in Kenya for KES 461,799. 4096Wh LFP, 4000W AC output, 12 ports. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
   },
+  {
+    sku: '5016501003',
+    brand: 'EcoFlow',
+    category: 'Power Stations',
+    subcategory: 'DELTA Series',
+    name: 'EcoFlow DELTA 3 Max',
+    slug: 'delta-3-max',
+    description:
+      'The EcoFlow DELTA 3 Max is the 2048Wh mid-range backup station for Kenyan homes and small businesses. With 2400W AC output (5000W surge, X-Boost to 3400W), 1000W solar input, fast 2000W AC charging (0–80% in about an hour), expandability to 6kWh and sub-30ms UPS switchover, it covers fridges, microwaves, TVs, Wi‑Fi and office loads through long outages.',
+    specs: {
+      capacity: '2048Wh',
+      ac_output: '2400W (Surge 5000W)',
+      x_boost: '3400W',
+      chemistry: 'LFP (LiFePO4)',
+      battery_life: '3500+ cycles to 80%',
+      solar_input: '1000W Max',
+      ac_charging: '2000W (0-80% in ~1.1 hrs)',
+      ups_mode: 'Yes (<30ms switchover)',
+      usb_c: '2 x USB-C 140W',
+      usb_a: '2 x USB-A 18W',
+      expandable: 'Yes — up to 6kWh',
+      weight: '22kg',
+      dimensions: '497 x 264 x 360mm',
+      warranty: '24 months',
+    },
+    images: ['/products/ecoflow/delta-3-max.png'],
+    price_kes: 148199,
+    in_stock: true,
+    stock_qty: 10,
+    featured: false,
+    sort_order: 14,
+    meta_title: 'EcoFlow DELTA 3 Max Kenya — 2048Wh KES 148,199 | Batteriq',
+    meta_description:
+      'Buy the EcoFlow DELTA 3 Max in Kenya for KES 148,199. 2048Wh LFP, 2400W AC output, expandable to 6kWh. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
+  },
 ]
 
 /** Read-only status: which EcoFlow power-station slugs are currently in the DB. */

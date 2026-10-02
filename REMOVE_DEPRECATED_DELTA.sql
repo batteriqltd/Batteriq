@@ -36,8 +36,8 @@ COMMIT;
 -- WHERE brand = 'EcoFlow'
 --   AND (slug ILIKE '%100-air%' OR slug ILIKE '%max-plus%' OR slug ILIKE '%ultra-plus%');
 
--- Verify: approved DELTA range still present (expect 4 rows)
+-- Verify: approved DELTA range still present (expect 5 rows)
 -- SELECT slug, name, price_kes, in_stock
 -- FROM products
--- WHERE slug IN ('delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3')
+-- WHERE slug IN ('delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3', 'delta-3-max')
 -- ORDER BY sort_order;

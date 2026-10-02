@@ -69,6 +69,13 @@ const HAND_WRITTEN = {
     description:
       'The EcoFlow DELTA Pro 3 is the premium DELTA model built for demanding backup applications. Its 4096Wh LiFePO4 battery and 4000W AC output make it a strong fit for heavy-duty household backup, offices and small commercial sites that need dependable power when the grid fails.',
   },
+  'delta-3-max': {
+    meta_title: 'EcoFlow DELTA 3 Max Kenya — 2048Wh KES 148,199 | Batteriq',
+    meta_description:
+      'EcoFlow DELTA 3 Max in Kenya for KES 148,199. 2048Wh LFP, 2400W AC output, expandable to 6kWh. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
+    description:
+      'The EcoFlow DELTA 3 Max is the 2048Wh mid-range backup station for Kenyan homes and small businesses. With 2400W AC output (5000W surge, X-Boost to 3400W), 1000W solar input, fast 2000W AC charging (0–80% in about an hour), expandability to 6kWh and sub-30ms UPS switchover, it covers fridges, microwaves, TVs, Wi‑Fi and office loads through long outages.',
+  },
 }
 
 // ── 2 & 3. Mechanical fixes ─────────────────────────────────────────────────
