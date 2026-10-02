@@ -46,14 +46,14 @@ const HAND_WRITTEN = {
     meta_description:
       'EcoFlow DELTA 3 Classic in Kenya for KES 84,379. 1024Wh LFP, 1800W AC output, 10ms UPS. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
     description:
-      'The EcoFlow DELTA 3 Classic is a compact backup station for homes and offices that need reliable power through everyday outages. With 1024Wh LiFePO4 capacity and 1800W AC output, it keeps lights, Wi‑Fi, TV and essential electronics running while the grid is down. The model supports fast charging, app control and UPS switchover for sensitive devices.',
+      'The EcoFlow DELTA 3 Classic is EcoFlow’s best-value 1kWh portable power station for Kenyan homes, outdoor work and everyday backup. With 1024Wh LiFePO4 capacity and 1800W AC output (3600W surge, X-Boost to 2400W), it powers essentials like lights, Wi‑Fi, TVs, fridges and power tools. Charges 0–80% in 45 mins via 1400W AC, 500W solar max, 10ms UPS switchover, 5 outlets, whisper-quiet 30dB operation.',
   },
   'delta-3-ultra': {
-    meta_title: 'EcoFlow DELTA 3 Ultra Kenya — 3600Wh KES 250,799 | Batteriq',
+    meta_title: 'EcoFlow DELTA 3 Ultra Kenya — 3072Wh KES 250,799 | Batteriq',
     meta_description:
-      'EcoFlow DELTA 3 Ultra in Kenya for KES 250,799. 3600Wh LFP, 3076W AC output, whole-home backup. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
+      'EcoFlow DELTA 3 Ultra in Kenya for KES 250,799. 3072Wh LFP, 3600W AC output, whole-home backup. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
     description:
-      'The EcoFlow DELTA 3 Ultra is the larger-capacity DELTA 3 model for whole-home or business backup. It delivers 3600Wh of LiFePO4 storage and 3076W AC output, giving you stronger support for high-demand loads while keeping the EcoFlow app, fast charging and modern battery management in place.',
+      'The EcoFlow DELTA 3 Ultra is the 3072Wh whole-home backup station for bigger Kenyan homes and businesses. With 3600W AC output (7200W surge, X-Boost to 4600W), 10ms UPS auto-switch, 4 charging methods (0-80% in 89 mins via AC), whisper-quiet 25dB operation and OASIS app control with Storm Guard, it keeps fridges, microwaves, office loads and essentials running through long outages.',
   },
   'delta-pro': {
     meta_title: 'EcoFlow DELTA Pro Kenya — 3600Wh KES 291,399 | Batteriq',

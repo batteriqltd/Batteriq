@@ -13,9 +13,9 @@ INSERT INTO products (
 (
   '5025901009', 'EcoFlow', 'Power Stations', 'DELTA Series',
   'EcoFlow DELTA 3 Classic', 'delta-3-classic',
-  'The EcoFlow DELTA 3 Classic is a compact backup station for homes and offices that need reliable power through everyday outages. With 1024Wh LiFePO4 capacity and 1800W AC output, it keeps lights, Wi‑Fi, TV and essential electronics running while the grid is down. The model supports fast charging, app control and UPS switchover for sensitive devices.',
-  '{"capacity":"1024Wh","ac_output":"1800W (Surge 3600W)","chemistry":"LFP (LiFePO4)","battery_life":"3500+ cycles","solar_input":"500W Max","ups_mode":"Yes (10ms switchover)","weight":"12.5kg","warranty":"24 months"}'::jsonb,
-  ARRAY[]::text[],
+  'The EcoFlow DELTA 3 Classic is EcoFlow’s best-value 1kWh portable power station for Kenyan homes, outdoor work and everyday backup. With 1024Wh LiFePO4 capacity and 1800W AC output (3600W surge, X-Boost to 2400W), it powers essentials like lights, Wi‑Fi, TVs, fridges and power tools. Charges 0–80% in 45 mins via 1400W AC, 500W solar max, 10ms UPS switchover, 5 outlets, whisper-quiet 30dB operation.',
+  '{"capacity":"1024Wh","ac_output":"1800W (Surge 3600W)","x_boost":"2400W","chemistry":"LFP (LiFePO4)","battery_life":"4000 cycles to 80%","solar_input":"500W Max","ac_charging":"1400W (0-80% in 45 mins)","ups_mode":"Yes (10ms switchover)","outlets":"5","weight":"12.1kg","dimensions":"398 x 200 x 283mm","expandable":"No","warranty":"24 months"}'::jsonb,
+  ARRAY['/products/ecoflow/delta-3-classic.png']::text[],
   84379, true, 10, false, 10,
   'EcoFlow DELTA 3 Classic Kenya — 1024Wh KES 84,379 | Batteriq',
   'Buy the EcoFlow DELTA 3 Classic in Kenya for KES 84,379. 1024Wh LFP, 1800W AC output, 10ms UPS. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
@@ -23,19 +23,19 @@ INSERT INTO products (
 (
   '5024201005', 'EcoFlow', 'Power Stations', 'DELTA Series',
   'EcoFlow DELTA 3 Ultra', 'delta-3-ultra',
-  'The EcoFlow DELTA 3 Ultra is the larger-capacity DELTA 3 model for whole-home or business backup. It delivers 3600Wh of LiFePO4 storage and 3076W AC output, giving you stronger support for high-demand loads while keeping the EcoFlow app, fast charging and modern battery management in place.',
-  '{"capacity":"3600Wh","ac_output":"3076W","chemistry":"LFP (LiFePO4)","solar_input":"Up to 5000W","battery_life":"3500+ cycles","weight":"36kg","ups_mode":"Yes","warranty":"24 months"}'::jsonb,
-  ARRAY[]::text[],
+  'The EcoFlow DELTA 3 Ultra is the 3072Wh whole-home backup station for bigger Kenyan homes and businesses. With 3600W AC output (7200W surge, X-Boost to 4600W), 10ms UPS auto-switch, 4 charging methods (0-80% in 89 mins via AC), whisper-quiet 25dB operation and OASIS app control with Storm Guard, it keeps fridges, microwaves, office loads and essentials running through long outages.',
+  '{"capacity":"3072Wh","ac_output":"3600W (Surge 7200W)","x_boost":"4600W","chemistry":"LFP (LiFePO4)","battery_life":"4000 cycles to 80%","solar_input":"1600W Max","ac_charging":"0-80% in 89 mins","ups_mode":"Yes (10ms switchover)","expandable":"No","warranty":"24 months"}'::jsonb,
+  ARRAY['/products/ecoflow/delta-3-ultra-plus.png']::text[],
   250799, true, 10, false, 11,
-  'EcoFlow DELTA 3 Ultra Kenya — 3600Wh KES 250,799 | Batteriq',
-  'Buy the EcoFlow DELTA 3 Ultra in Kenya for KES 250,799. 3600Wh LFP, 3076W AC output, whole-home backup. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
+  'EcoFlow DELTA 3 Ultra Kenya — 3072Wh KES 250,799 | Batteriq',
+  'Buy the EcoFlow DELTA 3 Ultra in Kenya for KES 250,799. 3072Wh LFP, 3600W AC output, whole-home backup. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
 ),
 (
   '5004501016', 'EcoFlow', 'Power Stations', 'DELTA Series',
   'EcoFlow DELTA Pro', 'delta-pro',
   'The EcoFlow DELTA Pro is a serious home backup battery for Kenyan homes, offices and light commercial setups. With 3600Wh of LiFePO4 storage and 3600W AC output, it runs major appliances during outages, recharges fast, and can be expanded with additional batteries for longer runtime.',
   '{"capacity":"3600Wh","ac_output":"3600W (Surge 7200W)","chemistry":"LFP (LiFePO4)","solar_input":"1600W Max","ports":"13","weight":"45kg","warranty":"24 months"}'::jsonb,
-  ARRAY[]::text[],
+  ARRAY['/products/ecoflow/delta-pro.jpg']::text[],
   291399, true, 10, false, 12,
   'EcoFlow DELTA Pro Kenya — 3600Wh KES 291,399 | Batteriq',
   'Buy the EcoFlow DELTA Pro in Kenya for KES 291,399. 3600Wh LFP, 3600W AC output, 13 ports. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
@@ -45,7 +45,7 @@ INSERT INTO products (
   'EcoFlow DELTA Pro 3', 'delta-pro-3',
   'The EcoFlow DELTA Pro 3 is the premium DELTA model built for demanding backup applications. Its 4096Wh LiFePO4 battery and 4000W AC output make it a strong fit for heavy-duty household backup, offices and small commercial sites that need dependable power when the grid fails.',
   '{"capacity":"4096Wh","ac_output":"4000W (Surge 8000W)","chemistry":"LFP (LiFePO4)","solar_input":"2000W Max","ports":"12","weight":"51.5kg","warranty":"24 months"}'::jsonb,
-  ARRAY[]::text[],
+  ARRAY['/products/ecoflow/delta-pro-3.jpg']::text[],
   461799, true, 10, false, 13,
   'EcoFlow DELTA Pro 3 Kenya — 4096Wh KES 461,799 | Batteriq',
   'Buy the EcoFlow DELTA Pro 3 in Kenya for KES 461,799. 4096Wh LFP, 4000W AC output, 12 ports. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'

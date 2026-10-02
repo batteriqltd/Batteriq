@@ -5,8 +5,8 @@ import { NextResponse } from 'next/server'
 // ============================================================
 const PRODUCTS = [
   // Approved EcoFlow products only
-  { id: 'delta-3-classic', brand: 'EcoFlow', name: 'DELTA 3 Classic', category: 'Power Station', price: 84379, specs: { capacity: '1024Wh', output: '1800W (surge 3600W)', chemistry: 'LFP', weight: '12.5kg', ports: 13 }, slug: 'ecoflow/delta-3-classic', inStock: true },
-  { id: 'delta-3-ultra', brand: 'EcoFlow', name: 'DELTA 3 Ultra', category: 'Power Station', price: 250799, specs: { capacity: '3600Wh', output: '3076W', chemistry: 'LFP', weight: '36kg', ports: 13 }, slug: 'ecoflow/delta-3-ultra', inStock: true },
+  { id: 'delta-3-classic', brand: 'EcoFlow', name: 'DELTA 3 Classic', category: 'Power Station', price: 84379, specs: { capacity: '1024Wh', output: '1800W (surge 3600W)', chemistry: 'LFP', weight: '12.1kg', ports: 5 }, slug: 'ecoflow/delta-3-classic', inStock: true },
+  { id: 'delta-3-ultra', brand: 'EcoFlow', name: 'DELTA 3 Ultra', category: 'Power Station', price: 250799, specs: { capacity: '3072Wh', output: '3600W (surge 7200W)', chemistry: 'LFP', weight: '33.7kg', ports: 12 }, slug: 'ecoflow/delta-3-ultra', inStock: true },
   { id: 'delta-pro', brand: 'EcoFlow', name: 'DELTA Pro', category: 'Power Station', price: 291399, specs: { capacity: '3600Wh', output: '3600W (surge 7200W)', chemistry: 'LFP', weight: '45kg', ports: 13 }, slug: 'ecoflow/delta-pro', inStock: true },
   { id: 'delta-pro-3', brand: 'EcoFlow', name: 'DELTA Pro 3', category: 'Power Station', price: 461799, specs: { capacity: '4096Wh', output: '4000W (surge 8000W)', chemistry: 'LFP', weight: '51.5kg', ports: 12 }, slug: 'ecoflow/delta-pro-3', inStock: true },
   // Bluetti

@@ -70,6 +70,8 @@ UPDATE products SET specs = '{
 }'::jsonb WHERE slug ILIKE '%delta-pro%' AND slug NOT ILIKE '%delta-pro-3%' AND slug NOT ILIKE '%ultra%' AND slug NOT ILIKE '%extra%';
 
 -- ── EcoFlow DELTA 3 Ultra Plus ───────────────────────────────
+-- NOTE: scoped to ultra-plus only. Do NOT run against delta-3-ultra
+-- (the approved DELTA 3 Ultra is 3072Wh/3600W via DELTA_3_NEW_ARRIVALS.sql).
 UPDATE products SET specs = '{
   "capacity": "3072Wh",
   "ac_output": "3600W (Surge 7200W)",
@@ -87,7 +89,7 @@ UPDATE products SET specs = '{
   "app_control": "Yes (Wi-Fi & Bluetooth)",
   "ups_mode": "Yes (<10ms switchover)",
   "warranty": "24 months"
-}'::jsonb WHERE (slug ILIKE '%delta-3-ultra%' OR name ILIKE '%Delta 3 Ultra%') AND brand = 'EcoFlow';
+}'::jsonb WHERE (slug ILIKE '%delta-3-ultra-plus%' OR name ILIKE '%Delta 3 Ultra Plus%') AND brand = 'EcoFlow';
 
 -- ── EcoFlow DELTA 3 Max Plus ─────────────────────────────────
 UPDATE products SET specs = '{

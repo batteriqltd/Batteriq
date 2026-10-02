@@ -4,7 +4,7 @@ import { ArrowUpRight, BatteryCharging } from 'lucide-react'
 import { formatKES, formatSpecLabel, getPrimarySpecs, getProductImageUrl } from '@/lib/utils'
 import type { Product } from '@/lib/supabase/types'
 
-const FEATURED_SLUGS = ['delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3']
+const FEATURED_SLUGS = ['delta-3-classic', 'delta-pro-3']
 
 export function NewProductsSpotlight({ products }: { products: Product[] }) {
   const featuredProducts = FEATURED_SLUGS

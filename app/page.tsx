@@ -83,7 +83,9 @@ async function getDeltaSeries() {
       .from('products')
       .select('*')
       .eq('brand', 'EcoFlow')
-      .in('slug', ['delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3'])
+      // Homepage main section features 1–2 heroes; the full approved
+      // DELTA range (classic, ultra, pro, pro-3) lives on /ecoflow.
+      .in('slug', ['delta-3-classic', 'delta-pro-3'])
       .order('sort_order', { ascending: true })
     if (error) {
       console.error('Supabase error:', error.message)

@@ -32,7 +32,7 @@ const FALLBACK_HITS: CatalogHit[] = [
     category: 'Power Stations',
     price_kes: 84379,
     specs: { capacity: '1024Wh', ac_output: '1800W (Surge 3600W)', ups_mode: '10ms switchover' },
-    images: ['/products/ecoflow/delta-pro-3.jpg'],
+    images: ['/products/ecoflow/delta-3-classic.png'],
   },
   {
     id: 'fallback-delta-3-ultra',
@@ -41,8 +41,8 @@ const FALLBACK_HITS: CatalogHit[] = [
     slug: 'delta-3-ultra',
     category: 'Power Stations',
     price_kes: 250799,
-    specs: { capacity: '3600Wh', ac_output: '3076W', battery: 'LFP' },
-    images: ['/products/ecoflow/delta-pro.jpg'],
+    specs: { capacity: '3072Wh', ac_output: '3600W (Surge 7200W)', battery: 'LFP' },
+    images: ['/products/ecoflow/delta-3-ultra-plus.png'],
   },
   {
     id: 'fallback-delta-pro',
