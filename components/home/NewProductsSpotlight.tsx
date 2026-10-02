@@ -35,7 +35,8 @@ export function NewProductsSpotlight({ products }: { products: Product[] }) {
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:gap-6">
+        {/* 2 across on phones/tablets, 4 in one line on laptop+; equal heights */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6 items-stretch">
           {featuredProducts.map((product) => {
             const image = getProductImageUrl(product)
             const specs = getPrimarySpecs(product.specs as Record<string, string>, 4)
@@ -46,7 +47,8 @@ export function NewProductsSpotlight({ products }: { products: Product[] }) {
               className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100/80 bg-white transition-all duration-300 hover:border-blue-600/20 hover:shadow-ambient"
             >
               <div className="p-2.5 pb-0 sm:p-6 sm:pb-0">
-                <div className="relative h-36 overflow-hidden rounded-xl bg-slate-50/80 transition-colors group-hover:bg-slate-100/50 sm:h-64 lg:h-72">
+                {/* Uniform square media on every screen — no card taller than another */}
+                <div className="relative aspect-square overflow-hidden rounded-xl bg-slate-50/80 transition-colors group-hover:bg-slate-100/50">
                   <span className="absolute left-2 top-2 z-10 rounded-full bg-bq-blue px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white shadow-blue-glow sm:left-3 sm:top-3 sm:px-3 sm:text-[10px]">
                     New
                   </span>
@@ -54,7 +56,7 @@ export function NewProductsSpotlight({ products }: { products: Product[] }) {
                     src={image}
                     alt={`${product.brand} ${product.name}`}
                     fill
-                    sizes="(max-width: 640px) 50vw, (min-width: 1024px) 45vw, 92vw"
+                    sizes="(max-width: 1024px) 50vw, 25vw"
                     className="object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.04] mix-blend-multiply sm:p-6"
                   />
                 </div>
@@ -64,10 +66,10 @@ export function NewProductsSpotlight({ products }: { products: Product[] }) {
                 <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-bq-blue sm:mb-1.5 sm:text-xs">
                   {product.brand} · DELTA Series
                 </p>
-                <h3 className="min-h-[40px] text-base font-black leading-snug text-slate-900 line-clamp-2 sm:min-h-0 sm:text-3xl" style={{ letterSpacing: '-0.02em' }}>
+                <h3 className="min-h-[2.6em] text-base font-black leading-snug text-slate-900 line-clamp-2 sm:text-xl lg:text-2xl" style={{ letterSpacing: '-0.02em' }}>
                   {product.name}
                 </h3>
-                <p className="mt-1 font-mono text-lg font-black text-slate-900 sm:mt-2 sm:text-2xl">{formatKES(product.price_kes)}</p>
+                <p className="mt-1 font-mono text-base font-black text-slate-900 sm:mt-2 sm:text-xl lg:text-2xl">{formatKES(product.price_kes)}</p>
 
                 <div className="mb-4 mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-slate-200/60 bg-slate-200/60 sm:mb-6 sm:mt-4">
                   {specs.map(([key, value]) => (
