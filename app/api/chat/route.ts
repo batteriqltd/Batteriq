@@ -4,26 +4,11 @@ import { NextResponse } from 'next/server'
 // PRODUCT KNOWLEDGE BASE
 // ============================================================
 const PRODUCTS = [
-  // EcoFlow DELTA Series
-  { id: 'delta-pro-3', brand: 'EcoFlow', name: 'DELTA Pro 3', category: 'Power Station', price: 461799, specs: { capacity: '4096Wh', output: '4000W (surge 8000W)', chemistry: 'LFP', weight: '51.5kg', ports: 12 }, slug: 'ecoflow/delta-pro-3', inStock: true },
+  // Approved EcoFlow products only
+  { id: 'delta-3-classic', brand: 'EcoFlow', name: 'DELTA 3 Classic', category: 'Power Station', price: 84379, specs: { capacity: '1024Wh', output: '1800W (surge 3600W)', chemistry: 'LFP', weight: '12.5kg', ports: 13 }, slug: 'ecoflow/delta-3-classic', inStock: true },
+  { id: 'delta-3-ultra', brand: 'EcoFlow', name: 'DELTA 3 Ultra', category: 'Power Station', price: 250799, specs: { capacity: '3600Wh', output: '3076W', chemistry: 'LFP', weight: '36kg', ports: 13 }, slug: 'ecoflow/delta-3-ultra', inStock: true },
   { id: 'delta-pro', brand: 'EcoFlow', name: 'DELTA Pro', category: 'Power Station', price: 291399, specs: { capacity: '3600Wh', output: '3600W (surge 7200W)', chemistry: 'LFP', weight: '45kg', ports: 13 }, slug: 'ecoflow/delta-pro', inStock: true },
-  { id: 'delta-2-max', brand: 'EcoFlow', name: 'DELTA 2 Max', category: 'Power Station', price: 157799, specs: { capacity: '2048Wh', output: '2400W (surge 4800W)', chemistry: 'LFP', weight: '23kg', ports: 13 }, slug: 'ecoflow/delta-2-max', inStock: true },
-  { id: 'delta-2', brand: 'EcoFlow', name: 'DELTA 2', category: 'Power Station', price: 85539, specs: { capacity: '1024Wh', output: '1800W (surge 2700W)', chemistry: 'LFP', weight: '12kg', ports: 13 }, slug: 'ecoflow/delta-2', inStock: true },
-  { id: 'delta-3-plus', brand: 'EcoFlow', name: 'DELTA 3 Plus', category: 'Power Station', price: 112475, specs: { capacity: '1024Wh', output: '1800W (surge 3600W)', chemistry: 'LFP', weight: '≤12.5kg', ports: 13 }, slug: 'ecoflow/delta-3-plus', inStock: true },
-  { id: 'delta-3', brand: 'EcoFlow', name: 'DELTA 3', category: 'Power Station', price: 99980, specs: { capacity: '1024Wh', output: '1800W (surge 3600W)', chemistry: 'LFP', weight: '≤12.5kg', ports: 13 }, slug: 'ecoflow/delta-3', inStock: true },
-  // EcoFlow RIVER Series
-  { id: 'river-2-pro', brand: 'EcoFlow', name: 'RIVER 2 Pro', category: 'Power Station', price: 59049, specs: { capacity: '768Wh', output: '800W (surge 1600W)', chemistry: 'LFP', weight: '7.8kg', ports: 10 }, slug: 'ecoflow/river-2-pro', inStock: true },
-  { id: 'river-2-max', brand: 'EcoFlow', name: 'RIVER 2 Max', category: 'Power Station', price: 50490, specs: { capacity: '512Wh', output: '500W (surge 1000W)', chemistry: 'LFP', weight: '6.1kg', ports: 9 }, slug: 'ecoflow/river-2-max', inStock: true },
-  { id: 'river-2', brand: 'EcoFlow', name: 'RIVER 2', category: 'Power Station', price: 27259, specs: { capacity: '256Wh', output: '300W (surge 600W)', chemistry: 'LFP', weight: '3.5kg', ports: 5 }, slug: 'ecoflow/river-2', inStock: true },
-  { id: 'river-3-plus', brand: 'EcoFlow', name: 'RIVER 3 Plus', category: 'Power Station', price: 41740, specs: { capacity: '286Wh', output: '600W (surge 1200W)', chemistry: 'LFP', weight: '4.7kg', ports: 7, ups: '<10ms' }, slug: 'ecoflow/river-3-plus', inStock: true },
-  { id: 'river-3', brand: 'EcoFlow', name: 'RIVER 3', category: 'Power Station', price: 32999, specs: { capacity: '245Wh', output: '300W (surge 600W)', chemistry: 'LFP', weight: '3.5kg', ports: 5, ups: '10ms' }, slug: 'ecoflow/river-3', inStock: true },
-  // EcoFlow Solar Panels
-  { id: 'solar-400w', brand: 'EcoFlow', name: '400W Portable Solar Panel', category: 'Solar Panel', price: 71240, specs: { power: '400W', efficiency: '22.6%', weight: '16kg', ip: 'IP68' }, slug: 'solar/400w-portable', inStock: true },
-  { id: 'solar-220w', brand: 'EcoFlow', name: '220W Bifacial Solar Panel', category: 'Solar Panel', price: 37499, specs: { power: '220W Bifacial', efficiency: '22-23%', weight: '9.5kg', ip: 'IP68' }, slug: 'solar/220w-bifacial', inStock: true },
-  { id: 'solar-160w', brand: 'EcoFlow', name: '160W Portable Solar Panel', category: 'Solar Panel', price: 27999, specs: { power: '160W', efficiency: '21-22%', weight: '5.6kg', ip: 'IP68' }, slug: 'solar/160w-portable', inStock: true },
-  { id: 'solar-110w', brand: 'EcoFlow', name: '110W Portable Solar Panel', category: 'Solar Panel', price: 16399, specs: { power: '110W', efficiency: '22.8%', weight: '4kg', ip: 'IP68' }, slug: 'solar/110w-portable', inStock: true },
-  { id: 'solar-60w', brand: 'EcoFlow', name: '60W Portable Solar Panel', category: 'Solar Panel', price: 9699, specs: { power: '60W', efficiency: '21-22%', weight: '2kg', ip: 'IP68' }, slug: 'solar/60w-portable', inStock: true },
-  { id: 'solar-45w', brand: 'EcoFlow', name: '45W Portable Solar Panel', category: 'Solar Panel', price: 7599, specs: { power: '45W', efficiency: '25%', weight: '1.4kg', ip: 'IP65' }, slug: 'solar/45w-portable', inStock: true },
+  { id: 'delta-pro-3', brand: 'EcoFlow', name: 'DELTA Pro 3', category: 'Power Station', price: 461799, specs: { capacity: '4096Wh', output: '4000W (surge 8000W)', chemistry: 'LFP', weight: '51.5kg', ports: 12 }, slug: 'ecoflow/delta-pro-3', inStock: true },
   // Bluetti
   { id: 'bluetti-ac200pl', brand: 'Bluetti', name: 'AC200PL', category: 'Power Station', price: 127500, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac200pl', inStock: true },
   { id: 'bluetti-ac500', brand: 'Bluetti', name: 'AC500', category: 'Power Station', price: 84499, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac500', inStock: true },
@@ -108,7 +93,7 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
         message: `Vizuri sana! 💪 Hizi ndizo power stations zetu maarufu zaidi kwa nyumba Kenya:\n\nZote zinauzwa na **M-Pesa** na tunapeleka **Nairobi** siku moja na **countis zote** ndani ya siku 2-5.`,
         type: 'products',
         products: PRODUCTS.filter(p => p.category === 'Power Station' && p.brand === 'EcoFlow').slice(0, 4),
-        quickReplies: ['DELTA Pro ni ngapi?', 'RIVER 2 ni ngapi?', 'Delivery inagharimu ngapi?'],
+        quickReplies: ['DELTA Pro ni ngapi?', 'DELTA 3 Classic ni ngapi?', 'Delivery inagharimu ngapi?'],
       }
     }
     if (msg.includes('solar') || msg.includes('jua')) {
@@ -137,7 +122,7 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
     return {
       message: `Sawa! Bei zinaanza KES 7,599 (solar panel ndogo) hadi KES 1,399,999 (PowerKit ya nyumba nzima).\n\nUnataka bei ya bidhaa gani hasa?`,
       type: 'text',
-      quickReplies: ['Bei ya DELTA Pro', 'Bei ya RIVER 2', 'Bei ya solar panels'],
+      quickReplies: ['Bei ya DELTA Pro', 'Bei ya DELTA 3 Classic', 'Bei ya solar panels'],
     }
   }
 
@@ -185,9 +170,9 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
   // MOST POPULAR / RECOMMEND
   if (/popular|best seller|most sold|recommend|suggest|which one|what should i|help me choose/.test(msg)) {
     return {
-      message: `Great question! Here are our top sellers in Kenya right now 🔥\n\n**Most popular for homes:**\n🥇 EcoFlow DELTA 2 — KES 85,539 (best value)\n🥈 EcoFlow DELTA Pro — KES 291,399 (heavy duty)\n\n**Most popular portable:**\n🥇 EcoFlow RIVER 3 — KES 32,999\n🥈 EcoFlow RIVER 2 — KES 27,259 (most affordable)\n\nThe **DELTA 2** is honestly what I'd recommend for most Kenyan homes — handles fridge, TV, lights and phone charging easily, and it's under KES 100K. Want me to tell you more about it?`,
+      message: `Great question! Here are the approved EcoFlow models we keep in stock right now 🔥\n\n**Recommended for homes:**\n🥇 EcoFlow DELTA Pro 3 — KES 461,799 (top tier whole-home backup)\n🥈 EcoFlow DELTA Pro — KES 291,399 (heavy-duty home use)\n\n**Compact-to-mid size options:**\n🥇 EcoFlow DELTA 3 Ultra — KES 250,799\n🥈 EcoFlow DELTA 3 Classic — KES 84,379\n\nThe **DELTA Pro 3** is the premium choice for bigger homes and business backup. Want to see the best fit for your load?`,
       type: 'text',
-      quickReplies: ['Tell me about DELTA 2', 'I need something bigger', 'What about under KES 50K?'],
+      quickReplies: ['Tell me about DELTA Pro 3', 'I need something bigger', 'Show DELTA 3 Classic'],
     }
   }
 
@@ -203,20 +188,20 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
   // USE CASE — home (fridge, lights, TV)
   if (/fridge|lights.*tv|tv.*lights|home appliance|whole house|nyumba|jokofu/.test(msg)) {
     return {
-      message: `Perfect — for fridge, lights, and TV the **DELTA series** is what you want. These are our home heroes 🏠\n\nHere's what each one can handle:\n• **DELTA 2** (KES 85K) — fridge + TV + lights + charging ~8 hours\n• **DELTA 2 Max** (KES 158K) — same but double the capacity, ~16 hours\n• **DELTA Pro** (KES 291K) — heavy-duty, can run everything all day\n\nWhich budget range works for you?`,
+      message: `Perfect — for fridge, lights, and TV the **approved DELTA range** is what you want. These are our home heroes 🏠\n\nHere's what each one can handle:\n• **DELTA 3 Classic** (KES 84K) — compact backup for essentials\n• **DELTA 3 Ultra** (KES 250K) — bigger home / business backup\n• **DELTA Pro** (KES 291K) — heavy-duty whole-home support\n• **DELTA Pro 3** (KES 462K) — premium all-round backup\n\nWhich budget range works for you?`,
       type: 'products',
-      products: PRODUCTS.filter(p => ['delta-2', 'delta-2-max', 'delta-pro'].includes(p.id)),
-      quickReplies: ['Tell me more about DELTA 2', 'Is DELTA 2 enough for my fridge?', 'I want the DELTA Pro'],
+      products: PRODUCTS.filter(p => ['delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3'].includes(p.id)),
+      quickReplies: ['Tell me more about DELTA 3 Classic', 'Is DELTA Pro enough for my fridge?', 'I want the DELTA Pro 3'],
     }
   }
 
   // USE CASE — portable / light devices
   if (/just.*phone|just.*laptop|phone.*laptop|laptop.*phone|router|light use|travel|camping|outdoor|safari|ndogo/.test(msg)) {
     return {
-      message: `Nice! For phones, laptops, and light devices, the **RIVER series** is perfect — compact, lightweight, and very affordable 💼\n\nThey're also great for camping, safaris, and taking power anywhere you go!`,
+      message: `Nice! For phones, laptops, and a home router, the **DELTA 3 Classic** and **DELTA Pro** are the smart EcoFlow choices in Kenya right now. They offer strong backup without the extra bulky kit.`,
       type: 'products',
-      products: PRODUCTS.filter(p => ['river-2', 'river-3', 'river-3-plus', 'river-2-max'].includes(p.id)),
-      quickReplies: ['Tell me about RIVER 3', 'Cheapest option?', 'Can it charge a laptop?', 'I need more than this'],
+      products: PRODUCTS.filter(p => ['delta-3-classic', 'delta-pro'].includes(p.id)),
+      quickReplies: ['Tell me about DELTA 3 Classic', 'Can it charge a laptop?', 'I need more than this'],
     }
   }
 
@@ -246,111 +231,27 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
     }
   }
 
-  // DELTA 2 Max
-  if (msg.includes('delta 2 max') || msg.includes('delta2max')) {
-    const p = PRODUCTS.find(x => x.id === 'delta-2-max')!
+  // DELTA 3 Classic
+  if (msg.includes('delta 3 classic') || msg.includes('delta-3-classic')) {
+    const p = PRODUCTS.find(x => x.id === 'delta-3-classic')!
     return {
-      message: `**EcoFlow DELTA 2 Max** — the sweet spot between price and power 🎯\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ ${p.specs.weight}\n\nWhat I love about this one: you can expand it to **4kWh** by adding an extra battery later. Start here and grow your system as your needs change.\n\nAdd it to cart?`,
+      message: `**EcoFlow DELTA 3 Classic** — compact, efficient home backup for the essentials 🏠\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ ${p.specs.weight}\n\nThis is the value-minded EcoFlow option for lights, Wi‑Fi, TVs, and key appliances during outages.\n\nAdd to cart?`,
       type: 'product_detail',
       product: p,
       action: { type: 'add_to_cart', productId: p.id, productName: `${p.brand} ${p.name}`, price: p.price, slug: p.slug },
-      quickReplies: ['Yes, add to cart', 'Compare with DELTA 2', 'Tell me about expansion'],
+      quickReplies: ['Yes, add to cart', 'Compare with DELTA 3 Ultra', 'Show DELTA Pro'],
     }
   }
 
-  // DELTA 2
-  if (msg.includes('delta 2') && !msg.includes('max')) {
-    const p = PRODUCTS.find(x => x.id === 'delta-2')!
+  // DELTA 3 Ultra
+  if (msg.includes('delta 3 ultra') || msg.includes('delta-3-ultra')) {
+    const p = PRODUCTS.find(x => x.id === 'delta-3-ultra')!
     return {
-      message: `The **EcoFlow DELTA 2** is honestly our best value power station, and it's our #1 seller for a reason 🏆\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ Only ${p.specs.weight} — you can move it around the house easily!\n\nIt'll keep your fridge running, charge all your devices, power your TV and lights — for most families in Kenya this is more than enough for a blackout day.\n\nWant one?`,
+      message: `**EcoFlow DELTA 3 Ultra** — bigger backup for homes and business loads ⚡\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ ${p.specs.weight}\n\nThis is the stronger EcoFlow option when you need more runtime and more power for the main loads on your property.\n\nAdd to cart?`,
       type: 'product_detail',
       product: p,
       action: { type: 'add_to_cart', productId: p.id, productName: `${p.brand} ${p.name}`, price: p.price, slug: p.slug },
-      quickReplies: ['Yes! Add to cart', 'Is it enough for my fridge?', 'Show me DELTA 2 Max'],
-    }
-  }
-
-  // DELTA 3 Plus
-  if (msg.includes('delta 3 plus')) {
-    const p = PRODUCTS.find(x => x.id === 'delta-3-plus')!
-    return {
-      message: `**EcoFlow DELTA 3 Plus** — the newest DELTA, and it charges incredibly fast ⚡\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ ${p.specs.weight}\n\nCharges to full in just 56 minutes! Fastest in its class. Great for when you need to top up quickly between outages.\n\nAdd to cart?`,
-      type: 'product_detail',
-      product: p,
-      action: { type: 'add_to_cart', productId: p.id, productName: `${p.brand} ${p.name}`, price: p.price, slug: p.slug },
-      quickReplies: ['Yes, add to cart', 'Compare with DELTA 3', 'How fast does it charge?'],
-    }
-  }
-
-  // DELTA 3
-  if (msg.includes('delta 3') && !msg.includes('plus')) {
-    const p = PRODUCTS.find(x => x.id === 'delta-3')!
-    return {
-      message: `**EcoFlow DELTA 3** — the new standard for home backup 🆕\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ ${p.specs.weight}\n\nLatest EcoFlow technology with improved charging speed and reliability. A great step up from the DELTA 2.\n\nAdd to cart?`,
-      type: 'product_detail',
-      product: p,
-      action: { type: 'add_to_cart', productId: p.id, productName: `${p.brand} ${p.name}`, price: p.price, slug: p.slug },
-      quickReplies: ['Yes, add to cart', 'Upgrade to DELTA 3 Plus?'],
-    }
-  }
-
-  // RIVER 2 Pro
-  if (msg.includes('river 2 pro')) {
-    const p = PRODUCTS.find(x => x.id === 'river-2-pro')!
-    return {
-      message: `**EcoFlow RIVER 2 Pro** — portable power with real muscle 💼\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ ${p.specs.weight}\n\nCharges 0–100% in just 70 minutes. Perfect for outdoor events, camping, or small office backup.\n\nAdd to cart?`,
-      type: 'product_detail',
-      product: p,
-      action: { type: 'add_to_cart', productId: p.id, productName: `${p.brand} ${p.name}`, price: p.price, slug: p.slug },
-      quickReplies: ['Yes, add to cart', 'Compare RIVER models'],
-    }
-  }
-
-  // RIVER 2 Max
-  if (msg.includes('river 2 max')) {
-    const p = PRODUCTS.find(x => x.id === 'river-2-max')!
-    return {
-      message: `**EcoFlow RIVER 2 Max** — a great mid-range portable 🔋\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ ${p.specs.weight}\n\nGreat balance of capacity and portability. Powers laptops, cameras, and small appliances.\n\nAdd to cart?`,
-      type: 'product_detail',
-      product: p,
-      action: { type: 'add_to_cart', productId: p.id, productName: `${p.brand} ${p.name}`, price: p.price, slug: p.slug },
-      quickReplies: ['Yes, add to cart', 'Compare with RIVER 2 Pro', 'Show RIVER 2'],
-    }
-  }
-
-  // RIVER 2
-  if (msg.includes('river 2') && !msg.includes('max') && !msg.includes('pro')) {
-    const p = PRODUCTS.find(x => x.id === 'river-2')!
-    return {
-      message: `**EcoFlow RIVER 2** — the most affordable way to get started with backup power! 💚\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ Just ${p.specs.weight} — lighter than your laptop bag!\n\nPerfect for: charging phones, tablets, laptops, running a WiFi router, LED lights, or small fans. Not for fridges or heavy appliances though.\n\nShall I add it to your cart?`,
-      type: 'product_detail',
-      product: p,
-      action: { type: 'add_to_cart', productId: p.id, productName: `${p.brand} ${p.name}`, price: p.price, slug: p.slug },
-      quickReplies: ['Yes, add to cart', 'I need to power a fridge too', 'Tell me about RIVER 3'],
-    }
-  }
-
-  // RIVER 3 Plus
-  if (msg.includes('river 3 plus') || msg.includes('river3plus')) {
-    const p = PRODUCTS.find(x => x.id === 'river-3-plus')!
-    return {
-      message: `**EcoFlow RIVER 3 Plus** — with UPS protection 🛡️\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ ${p.specs.weight}\n⚡ UPS: <10ms switchover\n\nProtects sensitive devices during power cuts — switches in under 10 milliseconds. Your router and PC won't even notice the power went out!\n\nAdd to cart?`,
-      type: 'product_detail',
-      product: p,
-      action: { type: 'add_to_cart', productId: p.id, productName: `${p.brand} ${p.name}`, price: p.price, slug: p.slug },
-      quickReplies: ['Yes, add to cart', 'What is UPS?', 'Compare RIVER 3 vs RIVER 3 Plus'],
-    }
-  }
-
-  // RIVER 3
-  if (msg.includes('river 3') && !msg.includes('plus') && !msg.includes('max')) {
-    const p = PRODUCTS.find(x => x.id === 'river-3')!
-    return {
-      message: `**EcoFlow RIVER 3** — new generation, and it's brilliant! 🌟\n\n💰 **${fmt(p.price)}**\n⚡ ${p.specs.output}\n🔋 ${p.specs.capacity}\n⚖️ ${p.specs.weight}\n⚡ UPS: 10ms switchover\n\nThe UPS feature is special — when power cuts, it switches in **10 milliseconds**. Your router and computers don't even notice the power went out! Great for working from home.\n\nWant to add it?`,
-      type: 'product_detail',
-      product: p,
-      action: { type: 'add_to_cart', productId: p.id, productName: `${p.brand} ${p.name}`, price: p.price, slug: p.slug },
-      quickReplies: ['Yes, add to cart', 'Tell me about RIVER 3 Plus', "What's UPS mean?"],
+      quickReplies: ['Yes, add to cart', 'Compare with DELTA Pro', 'Show DELTA Pro 3'],
     }
   }
 
@@ -389,7 +290,7 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
       message: `Under KES 50,000 — here's what we have for you! All great quality 👇`,
       type: 'products',
       products: affordable.slice(0, 4),
-      quickReplies: ['Tell me about RIVER 2', 'Tell me about RIVER 3', 'I have more budget actually'],
+      quickReplies: ['Tell me about DELTA 3 Classic', 'Tell me about DELTA Pro', 'I have more budget actually'],
     }
   }
 
@@ -400,7 +301,7 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
       message: `KES 50K–160K range — this is honestly the sweet spot for most Kenyan homes 🎯`,
       type: 'products',
       products: mid.slice(0, 4),
-      quickReplies: ['Tell me about DELTA 2', 'Tell me about DELTA 3 Plus', 'Help me choose between these'],
+      quickReplies: ['Tell me about DELTA 3 Classic', 'Tell me about DELTA Pro', 'Help me choose between these'],
     }
   }
 
@@ -481,9 +382,9 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
   // UPS
   if (/\bups\b|uninterruptible|protect sensitive|router.*power|cctv|nas drive/.test(msg)) {
     return {
-      message: `⚡ **UPS Function**\n\nYes! EcoFlow power stations double as UPS systems:\n\n🏆 **Best UPS models:**\n• **RIVER 3 / RIVER 3 Plus** — 10ms switchover\n• **DELTA 3 / DELTA 3 Plus** — 10ms switchover\n\n10ms means connected devices experience **zero interruption** during a power cut — faster than most dedicated UPS units.\n\nPerfect for: WiFi routers, NAS drives, CCTV, medical devices, and office computers.`,
+      message: `⚡ **UPS Function**\n\nYes! EcoFlow power stations double as UPS systems:\n\n🏆 **Best UPS models:**\n• **DELTA 3 Classic** — 10ms switchover\n• **DELTA 3 Ultra** — whole-home backup with UPS support\n• **DELTA Pro / DELTA Pro 3** — high-power continuity for major loads\n\n10ms means connected devices experience **zero interruption** during a power cut — faster than most dedicated UPS units.\n\nPerfect for: WiFi routers, NAS drives, CCTV, medical devices, and office computers.`,
       type: 'text',
-      quickReplies: ['Show RIVER 3 price', 'Show DELTA 3 price', 'I need more capacity'],
+      quickReplies: ['Show DELTA 3 Classic price', 'Show DELTA Pro price', 'I need more capacity'],
     }
   }
 

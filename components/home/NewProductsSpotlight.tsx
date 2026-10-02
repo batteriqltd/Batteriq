@@ -1,40 +1,18 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowUpRight, BatteryCharging } from 'lucide-react'
-import { formatKES } from '@/lib/utils'
+import { formatKES, formatSpecLabel, getPrimarySpecs, getProductImageUrl } from '@/lib/utils'
+import type { Product } from '@/lib/supabase/types'
 
-const products = [
-  {
-    name: 'DELTA 3 Max',
-    eyebrow: 'Maximum backup, still portable',
-    href: '/ecoflow/delta-3-max',
-    image: '/products/ecoflow/delta-3-max.png',
-    imageAlt: 'EcoFlow DELTA 3 Max portable power station — 2048Wh LFP, 2400W output',
-    price: 148199,
-    specs: [
-      ['2,048Wh', 'LFP capacity'],
-      ['2,400W', 'AC output'],
-      ['4,800W', 'Surge power'],
-      ['800W', 'Solar input'],
-    ],
-  },
-  {
-    name: 'DELTA 3 2000 Air',
-    eyebrow: 'Compact everyday backup',
-    href: '/ecoflow/delta-3-2000-air',
-    image: '/products/ecoflow/delta-3-2000-air.jpg',
-    imageAlt: 'EcoFlow DELTA 3 2000 Air portable power station — 1920Wh LFP, 1000W output',
-    price: 106725,
-    specs: [
-      ['1,920Wh', 'LFP capacity'],
-      ['1,000W', 'AC output'],
-      ['800W', 'Solar input'],
-      ['10ms', 'UPS switchover'],
-    ],
-  },
-]
+const FEATURED_SLUGS = ['delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3']
 
-export function NewProductsSpotlight() {
+export function NewProductsSpotlight({ products }: { products: Product[] }) {
+  const featuredProducts = FEATURED_SLUGS
+    .map((slug) => products.find((product) => product.slug === slug))
+    .filter((product): product is Product => Boolean(product))
+
+  if (featuredProducts.length === 0) return null
+
   return (
     <section className="bg-white py-10 sm:py-16 lg:py-20" aria-labelledby="new-products-heading">
       <div className="mx-auto max-w-8xl px-4 lg:px-8">
@@ -58,9 +36,13 @@ export function NewProductsSpotlight() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:gap-6">
-          {products.map((product) => (
+          {featuredProducts.map((product) => {
+            const image = getProductImageUrl(product)
+            const specs = getPrimarySpecs(product.specs as Record<string, string>, 4)
+
+            return (
             <article
-              key={product.name}
+              key={product.id}
               className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100/80 bg-white transition-all duration-300 hover:border-blue-600/20 hover:shadow-ambient"
             >
               <div className="p-2.5 pb-0 sm:p-6 sm:pb-0">
@@ -69,8 +51,8 @@ export function NewProductsSpotlight() {
                     New
                   </span>
                   <Image
-                    src={product.image}
-                    alt={product.imageAlt}
+                    src={image}
+                    alt={`${product.brand} ${product.name}`}
                     fill
                     sizes="(max-width: 640px) 50vw, (min-width: 1024px) 45vw, 92vw"
                     className="object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.04] mix-blend-multiply sm:p-6"
@@ -80,24 +62,24 @@ export function NewProductsSpotlight() {
 
               <div className="relative flex flex-1 flex-col p-3 sm:p-6">
                 <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-bq-blue sm:mb-1.5 sm:text-xs">
-                  {product.eyebrow}
+                  {product.brand} · DELTA Series
                 </p>
                 <h3 className="min-h-[40px] text-base font-black leading-snug text-slate-900 line-clamp-2 sm:min-h-0 sm:text-3xl" style={{ letterSpacing: '-0.02em' }}>
-                  EcoFlow {product.name}
+                  {product.name}
                 </h3>
-                <p className="mt-1 font-mono text-lg font-black text-slate-900 sm:mt-2 sm:text-2xl">{formatKES(product.price)}</p>
+                <p className="mt-1 font-mono text-lg font-black text-slate-900 sm:mt-2 sm:text-2xl">{formatKES(product.price_kes)}</p>
 
                 <div className="mb-4 mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-slate-200/60 bg-slate-200/60 sm:mb-6 sm:mt-4">
-                  {product.specs.map(([value, label]) => (
-                    <div key={label} className="bg-white px-2 py-2 sm:px-4 sm:py-3">
+                  {specs.map(([key, value]) => (
+                    <div key={key} className="bg-white px-2 py-2 sm:px-4 sm:py-3">
                       <p className="font-mono text-[13px] font-black text-slate-900 sm:text-lg">{value}</p>
-                      <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:mt-1 sm:text-[11px]">{label}</p>
+                      <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:mt-1 sm:text-[11px]">{formatSpecLabel(key)}</p>
                     </div>
                   ))}
                 </div>
 
                 <Link
-                  href={product.href}
+                  href={`/ecoflow/${product.slug}`}
                   className="mt-auto inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 font-black text-xs text-white transition-all duration-200 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(0,0,255,0.55)] sm:gap-2 sm:px-6 sm:py-3 sm:text-sm"
                   style={{ background: 'linear-gradient(135deg, #0000ff, #00004d)', boxShadow: '0 4px 20px rgba(0,0,255,0.35)' }}
                 >
@@ -105,7 +87,8 @@ export function NewProductsSpotlight() {
                 </Link>
               </div>
             </article>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>

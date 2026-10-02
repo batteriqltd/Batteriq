@@ -7,7 +7,6 @@ BEGIN;
 WITH price_updates(product_match, new_price) AS (
   VALUES
     ('delta-3-classic', 84379),
-    ('delta-3-max', 148199),
     ('delta-3-ultra', 250799)
 ), matched AS (
   SELECT p.id, p.price_kes, u.new_price
@@ -15,7 +14,6 @@ WITH price_updates(product_match, new_price) AS (
   JOIN price_updates u ON p.slug ILIKE '%' || u.product_match || '%'
   WHERE p.brand = 'EcoFlow'
     AND (u.product_match = 'delta-3-classic'
-      OR (u.product_match = 'delta-3-max' AND p.slug NOT ILIKE '%plus%')
       OR (u.product_match = 'delta-3-ultra' AND p.slug NOT ILIKE '%plus%'))
     AND p.price_kes IS DISTINCT FROM u.new_price
 )
@@ -28,20 +26,18 @@ SET price_kes = u.new_price,
     updated_at = NOW()
 FROM (VALUES
   ('delta-3-classic', 84379),
-  ('delta-3-max', 148199),
   ('delta-3-ultra', 250799)
 ) AS u(product_match, new_price)
 WHERE p.brand = 'EcoFlow'
   AND p.slug ILIKE '%' || u.product_match || '%'
   AND (u.product_match = 'delta-3-classic'
-    OR (u.product_match = 'delta-3-max' AND p.slug NOT ILIKE '%plus%')
     OR (u.product_match = 'delta-3-ultra' AND p.slug NOT ILIKE '%plus%'))
   AND p.price_kes IS DISTINCT FROM u.new_price;
 
 COMMIT;
 
--- Verify the three corrected prices:
+-- Verify the corrected Delta prices:
 -- SELECT slug, name, price_kes
 -- FROM products
 -- WHERE brand = 'EcoFlow'
---   AND (slug ILIKE '%delta-3-classic%' OR slug ILIKE '%delta-3-max%' OR slug ILIKE '%delta-3-ultra%');
+--   AND (slug ILIKE '%delta-3-classic%' OR slug ILIKE '%delta-3-ultra%');

@@ -41,42 +41,33 @@ function clamp(text, max) {
 // chemistry, 24-month warranty, and the stated use case. No capacity or output
 // figures are claimed, because those are not in the data.
 const HAND_WRITTEN = {
-  'delta-3-100-air': {
-    meta_title: 'EcoFlow DELTA 3 100 Air Kenya — Compact KES 99,999 Backup',
-    meta_description:
-      'EcoFlow DELTA 3 100 Air in Kenya for KES 99,999. The most compact DELTA 3 — grab-and-go blackout backup on an LFP battery. M-Pesa checkout, 24-month warranty.',
-    description:
-      "The EcoFlow DELTA 3 100 Air is the most compact power station in the DELTA 3 series, built for Kenyan homes that want reliable backup without a bulky setup. It runs on a LiFePO4 (LFP) battery — the same chemistry EcoFlow uses across the DELTA 3 line for long cycle life and safe daily charging. At KES 99,999 from Batteriq, Kenya's authorised EcoFlow dealer, it ships as genuine stock with a 24-month warranty and an official eTIMS KRA invoice. Pay instantly with M-Pesa or by Visa/Mastercard at checkout, with delivery across Nairobi and nationwide shipping to all 47 counties. When KPLC goes down mid-evening, this is the unit you grab to keep the lights, router and phones going — light enough to move between rooms, or to carry upcountry for the weekend.",
-  },
   'delta-3-classic': {
-    meta_title: 'EcoFlow DELTA 3 Classic Kenya — Family Backup KES 169,999',
+    meta_title: 'EcoFlow DELTA 3 Classic Kenya — 1024Wh KES 84,379 | Batteriq',
     meta_description:
-      'EcoFlow DELTA 3 Classic in Kenya for KES 169,999. Everyday home backup for lights, fridge and Wi-Fi when KPLC goes down. Pay by M-Pesa. 24-month warranty.',
+      'EcoFlow DELTA 3 Classic in Kenya for KES 84,379. 1024Wh LFP, 1800W AC output, 10ms UPS. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
     description:
-      "The EcoFlow DELTA 3 Classic is everyday home backup for the whole family, sized for Kenyan households that lose power often enough to want a proper solution rather than candles and a torch. Built on a LiFePO4 (LFP) battery for long service life, it is made to carry the essentials — lights, the fridge, Wi-Fi and phone charging — through a typical KPLC outage. Batteriq is Kenya's authorised EcoFlow dealer, so at KES 169,999 you get genuine stock backed by a 24-month warranty and an official eTIMS KRA invoice. Pay by M-Pesa or Visa/Mastercard, with Nairobi delivery and nationwide shipping. If your evenings keep getting interrupted just as the family sits down to eat, this is the DELTA 3 most Kenyan homes settle on.",
+      'The EcoFlow DELTA 3 Classic is a compact backup station for homes and offices that need reliable power through everyday outages. With 1024Wh LiFePO4 capacity and 1800W AC output, it keeps lights, Wi‑Fi, TV and essential electronics running while the grid is down. The model supports fast charging, app control and UPS switchover for sensitive devices.',
   },
-  'delta-3-max-plus': {
-    meta_title: 'EcoFlow DELTA 3 Max Plus Kenya — Expandable KES 329,999',
+  'delta-3-ultra': {
+    meta_title: 'EcoFlow DELTA 3 Ultra Kenya — 3600Wh KES 250,799 | Batteriq',
     meta_description:
-      'EcoFlow DELTA 3 Max Plus in Kenya for KES 329,999. Expandable LFP backup with fast recharge and app control. M-Pesa or card. 24-month warranty.',
+      'EcoFlow DELTA 3 Ultra in Kenya for KES 250,799. 3600Wh LFP, 3076W AC output, whole-home backup. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
     description:
-      "The EcoFlow DELTA 3 Max Plus is the expandable option in the DELTA 3 range, for Kenyan homes and small businesses that expect their power needs to grow. Start with the main unit and add capacity later rather than replacing the whole system. It uses a LiFePO4 (LFP) battery, supports fast recharge, and is controlled from the EcoFlow app so you can check the charge level from your phone. At KES 329,999 from Batteriq, Kenya's authorised EcoFlow dealer, it comes as genuine stock with a 24-month warranty and an official eTIMS KRA invoice. Pay by M-Pesa or card, with Nairobi delivery and nationwide shipping. A strong fit for a salon, cyber café or home office where a blackout means lost income, not just inconvenience.",
+      'The EcoFlow DELTA 3 Ultra is the larger-capacity DELTA 3 model for whole-home or business backup. It delivers 3600Wh of LiFePO4 storage and 3076W AC output, giving you stronger support for high-demand loads while keeping the EcoFlow app, fast charging and modern battery management in place.',
   },
-  'delta-3-ultra-plus': {
-    meta_title: 'EcoFlow DELTA 3 Ultra Plus Kenya — 11kWh Home Backup',
+  'delta-pro': {
+    meta_title: 'EcoFlow DELTA Pro Kenya — 3600Wh KES 291,399 | Batteriq',
     meta_description:
-      'EcoFlow DELTA 3 Ultra Plus in Kenya for KES 649,999. Whole-home backup with up to 11kWh of expandable LFP power. M-Pesa or card, 24-month warranty.',
+      'EcoFlow DELTA Pro in Kenya for KES 291,399. 3600Wh LFP, 3600W AC output, 13 ports. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
     description:
-      "The EcoFlow DELTA 3 Ultra Plus sits at the top of the DELTA 3 range, offering whole-home backup with up to 11kWh of expandable capacity. It is the choice for Kenyan households and businesses that want the grid to become the backup rather than the main supply. Built on a LiFePO4 (LFP) battery for long cycle life, capacity scales as your needs grow. At KES 649,999 from Batteriq, Kenya's authorised EcoFlow dealer, it ships as genuine stock with a 24-month warranty and an official eTIMS KRA invoice. Pay by M-Pesa or Visa/Mastercard, with delivery in Nairobi and nationwide shipping to all 47 counties. For a family home, guest house or clinic where an outage cannot be allowed to interrupt the day, this is the unit to size around.",
+      'The EcoFlow DELTA Pro is the flagship home backup option for Kenyan homes and offices that need serious power continuity. With 3600Wh LiFePO4 capacity and 3600W AC output, it covers major appliances during outages and supports expansion for longer backup windows.',
   },
-  // Deliberately spec-free: this row has no usable specs and no description in
-  // the database, so the copy stays to what we can actually stand behind.
-  'bluetti-premium-200': {
-    meta_title: 'Bluetti Premium 200 Kenya — KES 127,000 | Batteriq',
+  'delta-pro-3': {
+    meta_title: 'EcoFlow DELTA Pro 3 Kenya — 4096Wh KES 461,799 | Batteriq',
     meta_description:
-      'Bluetti Premium 200 in Kenya for KES 127,000 from Batteriq, an authorised Bluetti dealer. Pay by M-Pesa or card. Genuine stock with local warranty support.',
+      'EcoFlow DELTA Pro 3 in Kenya for KES 461,799. 4096Wh LFP, 4000W AC output, 12 ports. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.',
     description:
-      "The Bluetti Premium 200 is available in Kenya at KES 127,000 from Batteriq, an authorised Bluetti dealer. Every unit is genuine stock supported locally and ships with an official eTIMS KRA invoice. Pay instantly with M-Pesa or by Visa/Mastercard at checkout, with delivery across Nairobi and nationwide shipping to all 47 counties. To match this unit to the appliances you need running during a KPLC outage, message our team on WhatsApp and we will size it with you before you buy.",
+      'The EcoFlow DELTA Pro 3 is the premium DELTA model built for demanding backup applications. Its 4096Wh LiFePO4 battery and 4000W AC output make it a strong fit for heavy-duty household backup, offices and small commercial sites that need dependable power when the grid fails.',
   },
 }
 

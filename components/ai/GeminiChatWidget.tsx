@@ -81,7 +81,7 @@ export function GeminiChatWidget() {
 
       setMessages((prev) => [...prev, { role: 'assistant', content: reply }])
 
-      // Server asked to put something in the cart (e.g. "I need a DELTA 3 Max").
+      // Server asked to put something in the cart (e.g. "I need a DELTA 3 Classic").
       // Pause before opening the cart so the confirmation is actually read —
       // opening it instantly would unmount this dialog mid-sentence.
       if (data.cartItem) {

@@ -25,24 +25,44 @@ export type CartAction = {
 
 const FALLBACK_HITS: CatalogHit[] = [
   {
-    id: 'fallback-delta-3-max',
-    name: 'EcoFlow DELTA 3 Max',
+    id: 'fallback-delta-3-classic',
+    name: 'EcoFlow DELTA 3 Classic',
     brand: 'EcoFlow',
-    slug: 'delta-3-max',
+    slug: 'delta-3-classic',
     category: 'Power Stations',
-    price_kes: 148199,
-    specs: { capacity: '2048Wh', ac_output: '2400W (Surge 5000W)', solar_input: '1000W Max' },
-    images: ['/products/ecoflow/delta-3-max.png'],
+    price_kes: 84379,
+    specs: { capacity: '1024Wh', ac_output: '1800W (Surge 3600W)', ups_mode: '10ms switchover' },
+    images: ['/products/ecoflow/delta-pro-3.jpg'],
   },
   {
-    id: 'fallback-delta-3-2000-air',
-    name: 'EcoFlow DELTA 3 2000 Air',
+    id: 'fallback-delta-3-ultra',
+    name: 'EcoFlow DELTA 3 Ultra',
     brand: 'EcoFlow',
-    slug: 'delta-3-2000-air',
+    slug: 'delta-3-ultra',
     category: 'Power Stations',
-    price_kes: 106725,
-    specs: { capacity: '1920Wh', ac_output: '1000W (Surge 2000W)', ups_mode: '10ms switchover' },
-    images: ['/products/ecoflow/delta-3-2000-air.jpg'],
+    price_kes: 250799,
+    specs: { capacity: '3600Wh', ac_output: '3076W', battery: 'LFP' },
+    images: ['/products/ecoflow/delta-pro.jpg'],
+  },
+  {
+    id: 'fallback-delta-pro',
+    name: 'EcoFlow DELTA Pro',
+    brand: 'EcoFlow',
+    slug: 'delta-pro',
+    category: 'Power Stations',
+    price_kes: 291399,
+    specs: { capacity: '3600Wh', ac_output: '3600W (Surge 7200W)', battery: 'LFP' },
+    images: ['/products/ecoflow/delta-pro.jpg'],
+  },
+  {
+    id: 'fallback-delta-pro-3',
+    name: 'EcoFlow DELTA Pro 3',
+    brand: 'EcoFlow',
+    slug: 'delta-pro-3',
+    category: 'Power Stations',
+    price_kes: 461799,
+    specs: { capacity: '4096Wh', ac_output: '4000W (Surge 8000W)', battery: 'LFP' },
+    images: ['/products/ecoflow/delta-pro-3.jpg'],
   },
 ]
 
@@ -105,7 +125,7 @@ function toCartAction(p: CatalogHit): CartAction {
   }
 }
 
-// "I need a Bluetti AC200PL" / "BUY delta 3 max" → product straight to cart.
+// "I need a Bluetti AC200PL" / "BUY DELTA 3 Classic" → product straight to cart.
 async function tryBuyIntent(message: string): Promise<{ reply: string; cartItem: CartAction } | null> {
   const m = message.toLowerCase()
   if (!/\b(buy|need|want|add|order|take|get me|i'll take|i will take|purchase)\b/.test(m)) return null

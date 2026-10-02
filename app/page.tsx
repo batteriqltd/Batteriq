@@ -76,16 +76,15 @@ async function getProductsByCategory(brand?: string, category?: string, limit = 
   }
 }
 
-async function getDeltaSeries(limit = 8) {
+async function getDeltaSeries() {
   try {
     const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('brand', 'EcoFlow')
-      .eq('subcategory', 'DELTA Series')
+      .in('slug', ['delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3'])
       .order('sort_order', { ascending: true })
-      .limit(limit)
     if (error) {
       console.error('Supabase error:', error.message)
       return []
@@ -112,7 +111,7 @@ export default async function HomePage() {
     powerBanks,
     accessories,
   ] = await Promise.all([
-    getDeltaSeries(8),
+    getDeltaSeries(),
     getProductsByCategory('EcoFlow', 'Power Stations', 8),
     getProductsByCategory('EcoFlow', 'Solar Panels', 8),
     getProductsByCategory('EcoFlow', 'Solar Home Systems', 3),
@@ -140,7 +139,7 @@ export default async function HomePage() {
 
       <OffersSection />
 
-      <NewProductsSpotlight />
+      <NewProductsSpotlight products={deltaSeries} />
 
       {/* DELTA Series — new EcoFlow lineup, placed above Shop by Category */}
       <DeltaSeriesShowcase products={deltaSeries} />

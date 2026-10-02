@@ -1,11 +1,7 @@
--- BATTERIQ — DELTA 3 new arrivals (DELTA 3 Max + DELTA 3 2000 Air)
+-- BATTERIQ — EcoFlow DELTA approved replacements
 -- Source: ECOFLOW T2 NEW SEPT 2026 PRICE LIST.xlsx
--- Images: public/products/ecoflow/delta-3-max.png, public/products/ecoflow/delta-3-2000-air.jpg
--- Run this file in the Supabase SQL Editor:
---   https://supabase.com/dashboard/project/ueagjjdbbukdkktviyrv/editor
--- Scope: inserts the two products linked from the homepage NewProductsSpotlight
--- section so /ecoflow/delta-3-max and /ecoflow/delta-3-2000-air return 200.
--- Safe to re-run: matched on sku; unchanged rows are skipped.
+-- Scope: keep only the approved EcoFlow Delta range on the homepage and product routes.
+-- Safe to re-run: inserts/updates only the exact approved SKUs and matches on sku.
 
 BEGIN;
 
@@ -15,24 +11,44 @@ INSERT INTO products (
   meta_title, meta_description
 ) VALUES
 (
-  '5016501003', 'EcoFlow', 'Power Stations', 'DELTA Series',
-  'EcoFlow DELTA 3 Max', 'delta-3-max',
-  'The EcoFlow DELTA 3 Max delivers 2048Wh of LFP capacity and 2400W continuous AC output (5000W surge) with X-Boost to 3400W. Recharge to 80% in about 1.1 hours, add up to 6kWh with a smart extra battery, and monitor everything from the EcoFlow app. Built for Kenyan homes and businesses that need serious backup without a permanent installation.',
-  '{"capacity":"2048Wh","ac_output":"2400W (Surge 5000W)","chemistry":"LFP (LiFePO4)","x_boost":"3400W","cycle_life":"3500+ cycles to 80%","weight":"22kg","dimensions":"497 x 264 x 360mm","solar_input":"1000W Max (11-60V, 15A)","ac_charging":"2000W Max, 0-80% in 1.1 hrs","usb_c":"2 x USB-C 140W","usb_a":"2 x USB-A 18W","expandable":"Yes — up to 6kWh","app_control":"Yes (Wi-Fi & Bluetooth)","ups_mode":"Yes (<30ms switchover)","warranty":"24 months"}'::jsonb,
-  ARRAY['/products/ecoflow/delta-3-max.png']::text[],
-  148199, true, 10, false, 10,
-  'EcoFlow DELTA 3 Max Kenya — 2048Wh KES 148,199 | Batteriq',
-  'Buy the EcoFlow DELTA 3 Max in Kenya for KES 148,199. 2048Wh LFP, 2400W AC output, app control. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
+  '5025901009', 'EcoFlow', 'Power Stations', 'DELTA Series',
+  'EcoFlow DELTA 3 Classic', 'delta-3-classic',
+  'The EcoFlow DELTA 3 Classic is a compact backup station for homes and offices that need reliable power through everyday outages. With 1024Wh LiFePO4 capacity and 1800W AC output, it keeps lights, Wi‑Fi, TV and essential electronics running while the grid is down. The model supports fast charging, app control and UPS switchover for sensitive devices.',
+  '{"capacity":"1024Wh","ac_output":"1800W (Surge 3600W)","chemistry":"LFP (LiFePO4)","battery_life":"3500+ cycles","solar_input":"500W Max","ups_mode":"Yes (10ms switchover)","weight":"12.5kg","warranty":"24 months"}'::jsonb,
+  ARRAY[]::text[],
+  84379, true, 10, false, 10,
+  'EcoFlow DELTA 3 Classic Kenya — 1024Wh KES 84,379 | Batteriq',
+  'Buy the EcoFlow DELTA 3 Classic in Kenya for KES 84,379. 1024Wh LFP, 1800W AC output, 10ms UPS. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
 ),
 (
-  '5023701006', 'EcoFlow', 'Power Stations', 'DELTA Series',
-  'EcoFlow DELTA 3 2000 Air', 'delta-3-2000-air',
-  'The EcoFlow DELTA 3 2000 Air pairs 1920Wh of LFP capacity with 1000W of pure sine wave output in a compact, apartment-friendly frame. X-Stream charging reaches a full charge in about 2 hours, 800W solar input tops it up off-grid, and 10ms UPS switchover keeps fridge, router and lights on through outages. Quiet, portable backup for Kenyan homes.',
-  '{"capacity":"1920Wh","ac_output":"1000W (Surge 2000W)","chemistry":"LFP (LiFePO4)","cycle_life":"3000+ cycles to 80%","solar_input":"800W Max","ac_charging":"Up to 1600W, full in ~2 hrs","usb_c":"2 x USB-C 100W","usb_a":"2 x USB-A 18W","ups_mode":"Yes (10ms switchover)","noise":"Below 44 dB","app_control":"Yes (Wi-Fi & Bluetooth)","warranty":"24 months"}'::jsonb,
-  ARRAY['/products/ecoflow/delta-3-2000-air.jpg']::text[],
-  106725, true, 10, false, 11,
-  'EcoFlow DELTA 3 2000 Air Kenya — 1920Wh KES 106,725 | Batteriq',
-  'Buy the EcoFlow DELTA 3 2000 Air in Kenya for KES 106,725. 1920Wh LFP, 1000W AC output, 10ms UPS. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
+  '5024201005', 'EcoFlow', 'Power Stations', 'DELTA Series',
+  'EcoFlow DELTA 3 Ultra', 'delta-3-ultra',
+  'The EcoFlow DELTA 3 Ultra is the larger-capacity DELTA 3 model for whole-home or business backup. It delivers 3600Wh of LiFePO4 storage and 3076W AC output, giving you stronger support for high-demand loads while keeping the EcoFlow app, fast charging and modern battery management in place.',
+  '{"capacity":"3600Wh","ac_output":"3076W","chemistry":"LFP (LiFePO4)","solar_input":"Up to 5000W","battery_life":"3500+ cycles","weight":"36kg","ups_mode":"Yes","warranty":"24 months"}'::jsonb,
+  ARRAY[]::text[],
+  250799, true, 10, false, 11,
+  'EcoFlow DELTA 3 Ultra Kenya — 3600Wh KES 250,799 | Batteriq',
+  'Buy the EcoFlow DELTA 3 Ultra in Kenya for KES 250,799. 3600Wh LFP, 3076W AC output, whole-home backup. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
+),
+(
+  '5004501016', 'EcoFlow', 'Power Stations', 'DELTA Series',
+  'EcoFlow DELTA Pro', 'delta-pro',
+  'The EcoFlow DELTA Pro is a serious home backup battery for Kenyan homes, offices and light commercial setups. With 3600Wh of LiFePO4 storage and 3600W AC output, it runs major appliances during outages, recharges fast, and can be expanded with additional batteries for longer runtime.',
+  '{"capacity":"3600Wh","ac_output":"3600W (Surge 7200W)","chemistry":"LFP (LiFePO4)","solar_input":"1600W Max","ports":"13","weight":"45kg","warranty":"24 months"}'::jsonb,
+  ARRAY[]::text[],
+  291399, true, 10, false, 12,
+  'EcoFlow DELTA Pro Kenya — 3600Wh KES 291,399 | Batteriq',
+  'Buy the EcoFlow DELTA Pro in Kenya for KES 291,399. 3600Wh LFP, 3600W AC output, 13 ports. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
+),
+(
+  '5013701013', 'EcoFlow', 'Power Stations', 'DELTA Series',
+  'EcoFlow DELTA Pro 3', 'delta-pro-3',
+  'The EcoFlow DELTA Pro 3 is the premium DELTA model built for demanding backup applications. Its 4096Wh LiFePO4 battery and 4000W AC output make it a strong fit for heavy-duty household backup, offices and small commercial sites that need dependable power when the grid fails.',
+  '{"capacity":"4096Wh","ac_output":"4000W (Surge 8000W)","chemistry":"LFP (LiFePO4)","solar_input":"2000W Max","ports":"12","weight":"51.5kg","warranty":"24 months"}'::jsonb,
+  ARRAY[]::text[],
+  461799, true, 10, false, 13,
+  'EcoFlow DELTA Pro 3 Kenya — 4096Wh KES 461,799 | Batteriq',
+  'Buy the EcoFlow DELTA Pro 3 in Kenya for KES 461,799. 4096Wh LFP, 4000W AC output, 12 ports. Authorised EcoFlow dealer. M-Pesa checkout. 24-month warranty.'
 )
 ON CONFLICT (sku) DO UPDATE SET
   brand = EXCLUDED.brand,
@@ -53,22 +69,25 @@ ON CONFLICT (sku) DO UPDATE SET
 WHERE products.slug = EXCLUDED.slug
    OR products.name = EXCLUDED.name;
 
--- If the SKU already belonged to a different product, the conflict update above
--- is skipped (WHERE guard). Ensure the target slugs exist exactly once:
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM products WHERE slug = 'delta-3-max') THEN
-    RAISE EXCEPTION 'delta-3-max missing — SKU 5016501003 may be owned by another product; resolve manually before re-running.';
+  IF NOT EXISTS (SELECT 1 FROM products WHERE slug = 'delta-3-classic') THEN
+    RAISE EXCEPTION 'delta-3-classic missing — SKU 5025901009 may be owned by another product; resolve manually before re-running.';
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM products WHERE slug = 'delta-3-2000-air') THEN
-    RAISE EXCEPTION 'delta-3-2000-air missing — SKU 5023701006 may be owned by another product; resolve manually before re-running.';
+  IF NOT EXISTS (SELECT 1 FROM products WHERE slug = 'delta-3-ultra') THEN
+    RAISE EXCEPTION 'delta-3-ultra missing — SKU 5024201005 may be owned by another product; resolve manually before re-running.';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM products WHERE slug = 'delta-pro') THEN
+    RAISE EXCEPTION 'delta-pro missing — SKU 5004501016 may be owned by another product; resolve manually before re-running.';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM products WHERE slug = 'delta-pro-3') THEN
+    RAISE EXCEPTION 'delta-pro-3 missing — SKU 5013701013 may be owned by another product; resolve manually before re-running.';
   END IF;
 END $$;
 
 COMMIT;
 
--- Verification: both rows must return with in_stock = true and the new image paths.
-SELECT sku, slug, name, subcategory, price_kes, in_stock, images, meta_title
+SELECT sku, slug, name, price_kes, in_stock, images
 FROM products
-WHERE slug IN ('delta-3-max', 'delta-3-2000-air')
+WHERE slug IN ('delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3')
 ORDER BY sort_order;
