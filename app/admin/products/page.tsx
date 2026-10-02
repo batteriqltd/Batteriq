@@ -401,6 +401,23 @@ export default function AdminProductsPage() {
     return () => clearTimeout(id)
   }, [query, loadProducts])
 
+  async function checkDeltaStatus() {
+    if (syncing) return
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch('/api/admin/catalog-fix')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Status check failed')
+      const lines = (data.products ?? []).map((p: any) => `${p.slug} · KES ${Number(p.price_kes).toLocaleString('en-KE')} · ${p.in_stock ? `in stock (${p.stock_qty})` : 'OUT OF STOCK'}`)
+      setSyncMsg(`DB now has ${lines.length} EcoFlow power stations — ${lines.join(' | ')}`)
+    } catch (e) {
+      setSyncMsg(`✕ ${e instanceof Error ? e.message : 'Status check failed'}`)
+    } finally {
+      setSyncing(false)
+    }
+  }
+
   async function runDeltaSync() {
     if (syncing) return
     if (!confirm('Apply DELTA catalog fix?\n\n• Upserts Classic / Ultra / Pro / Pro 3 with correct specs, images & prices\n• Deletes 100 Air, Max Plus, Ultra Plus')) return
@@ -487,14 +504,24 @@ export default function AdminProductsPage() {
           <p className="text-xs text-gray-400 font-medium mt-0.5">Upserts Classic / Ultra / Pro / Pro 3 (correct specs, images, prices) · Deletes 100 Air, Max Plus, Ultra Plus</p>
           {syncMsg && <p className="text-xs font-bold mt-1.5 text-blue-700">{syncMsg}</p>}
         </div>
+        <div className="flex gap-2 shrink-0">
+        <button
+          onClick={checkDeltaStatus}
+          disabled={syncing}
+          className="h-11 px-5 rounded-2xl flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-60"
+          style={{ background: '#eef2ff', color: '#0000ff', border: '1.5px solid #dde5ff' }}
+        >
+          {syncing ? 'Working…' : 'Check DB status'}
+        </button>
         <button
           onClick={runDeltaSync}
           disabled={syncing}
-          className="h-11 px-6 rounded-2xl flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest text-white transition-all disabled:opacity-60 shrink-0"
+          className="h-11 px-6 rounded-2xl flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest text-white transition-all disabled:opacity-60"
           style={{ background: '#0000ff', boxShadow: '0 4px 16px rgba(0,0,255,0.3)' }}
         >
           <Zap size={14} />{syncing ? 'Applying…' : 'Apply DELTA fix'}
         </button>
+        </div>
       </div>
 
       {loading ? (

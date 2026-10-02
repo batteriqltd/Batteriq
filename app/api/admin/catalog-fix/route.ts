@@ -135,6 +135,25 @@ const APPROVED = [
   },
 ]
 
+/** Read-only status: which EcoFlow power-station slugs are currently in the DB. */
+export async function GET() {
+  if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  try {
+    const supabase = getSupabase()
+    const { data, error } = await supabase
+      .from('products')
+      .select('slug,name,price_kes,in_stock,stock_qty')
+      .eq('brand', 'EcoFlow')
+      .eq('category', 'Power Stations')
+      .order('sort_order', { ascending: true })
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ products: data ?? [] })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
 /** One-click fix: upsert the 4 approved DELTA products, delete the 3 deprecated variants. */
 export async function POST() {
   if (!getAdminSession()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -153,11 +172,16 @@ export async function POST() {
         .maybeSingle()
 
       if (existing) {
+        // Update everything EXCEPT sku (another row may own that sku value —
+        // changing it could violate the unique constraint; slug is the identity).
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { sku: _sku, ...updatable } = p
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error } = await (supabase.from('products') as any)
-          .update({ ...p, updated_at: new Date().toISOString() })
+        const { data: updated, error } = await (supabase.from('products') as any)
+          .update({ ...updatable, updated_at: new Date().toISOString() })
           .eq('id', (existing as { id: string }).id)
-        results.push({ slug: p.slug, action: error ? `update-failed: ${error.message}` : 'updated' })
+          .select('id')
+        results.push({ slug: p.slug, action: error ? `update-failed: ${error.message}` : (updated && updated.length > 0 ? 'updated' : 'update-no-row') })
         // Best-effort price audit
         try {
           if ((existing as { price_kes: number }).price_kes !== p.price_kes) {
@@ -176,19 +200,35 @@ export async function POST() {
       }
     }
 
-    // Delete deprecated variants — explicitly exclude the 4 approved slugs.
-    const { data: deleted, error: delError } = await supabase
+    // Delete deprecated variants in two steps (select ids, then delete by id —
+    // more reliable than a single filtered delete). Approved slugs are excluded.
+    const APPROVED_SLUGS = ['delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3']
+    const { data: candidates, error: findError } = await supabase
       .from('products')
-      .delete()
+      .select('id,slug,name')
       .eq('brand', 'EcoFlow')
-      .not('slug', 'in', '(delta-3-classic,delta-3-ultra,delta-pro,delta-pro-3)')
       .or('slug.ilike.%100-air%,slug.ilike.%max-plus%,slug.ilike.%ultra-plus%,name.ilike.%100 Air%,name.ilike.%Max Plus%,name.ilike.%Ultra Plus%')
-      .select('slug,name')
 
-    if (delError) {
-      results.push({ action: `delete-failed: ${delError.message}` })
+    if (findError) {
+      results.push({ action: `delete-failed: ${findError.message}` })
     } else {
-      results.push({ action: 'deleted-deprecated', count: (deleted ?? []).length, items: deleted ?? [] })
+      const toDelete = (candidates ?? []).filter(
+        (c) => !APPROVED_SLUGS.includes((c as { slug: string }).slug)
+      )
+      if (toDelete.length === 0) {
+        results.push({ action: 'deleted-deprecated', count: 0, items: [] })
+      } else {
+        const { data: deleted, error: delError } = await supabase
+          .from('products')
+          .delete()
+          .in('id', toDelete.map((c) => (c as { id: string }).id))
+          .select('slug,name')
+        if (delError) {
+          results.push({ action: `delete-failed: ${delError.message}` })
+        } else {
+          results.push({ action: 'deleted-deprecated', count: (deleted ?? []).length, items: deleted ?? [] })
+        }
+      }
     }
 
     revalidatePath('/', 'layout')
