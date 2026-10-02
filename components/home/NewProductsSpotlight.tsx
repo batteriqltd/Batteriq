@@ -1,11 +1,14 @@
-import Link from 'next/link'
-import Image from 'next/image'
-import { ArrowUpRight, BatteryCharging } from 'lucide-react'
-import { formatKES, formatSpecLabel, getPrimarySpecs, getProductImageUrl } from '@/lib/utils'
+import { BatteryCharging } from 'lucide-react'
+import { ProductCard } from '@/components/product/ProductCard'
 import type { Product } from '@/lib/supabase/types'
 
 const FEATURED_SLUGS = ['delta-3-classic', 'delta-3-ultra', 'delta-pro', 'delta-pro-3']
 
+/**
+ * New arrivals — uses the exact same ProductCard as every other homepage
+ * section, so all four sit at the same measure, four in a row on phones,
+ * tablets, laptops and desktops alike.
+ */
 export function NewProductsSpotlight({ products }: { products: Product[] }) {
   const featuredProducts = FEATURED_SLUGS
     .map((slug) => products.find((product) => product.slug === slug))
@@ -35,62 +38,13 @@ export function NewProductsSpotlight({ products }: { products: Product[] }) {
           </span>
         </div>
 
-        {/* 2 across on phones/tablets, 4 in one line on laptop+; equal heights */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6 items-stretch">
-          {featuredProducts.map((product) => {
-            const image = getProductImageUrl(product)
-            const specs = getPrimarySpecs(product.specs as Record<string, string>, 4)
-
-            return (
-            <article
-              key={product.id}
-              className="group flex h-full flex-col overflow-hidden rounded-2xl border border-slate-100/80 bg-white transition-all duration-300 hover:border-blue-600/20 hover:shadow-ambient"
-            >
-              <div className="p-2.5 pb-0 sm:p-6 sm:pb-0">
-                {/* Uniform square media on every screen — no card taller than another */}
-                <div className="relative aspect-square overflow-hidden rounded-xl bg-slate-50/80 transition-colors group-hover:bg-slate-100/50">
-                  <span className="absolute left-2 top-2 z-10 rounded-full bg-bq-blue px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.18em] text-white shadow-blue-glow sm:left-3 sm:top-3 sm:px-3 sm:text-[10px]">
-                    New
-                  </span>
-                  <Image
-                    src={image}
-                    alt={`${product.brand} ${product.name}`}
-                    fill
-                    sizes="(max-width: 1024px) 50vw, 25vw"
-                    className="object-contain p-3 transition-transform duration-700 ease-out group-hover:scale-[1.04] mix-blend-multiply sm:p-6"
-                  />
-                </div>
-              </div>
-
-              <div className="relative flex flex-1 flex-col p-3 sm:p-6">
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-bq-blue sm:mb-1.5 sm:text-xs">
-                  {product.brand} · DELTA Series
-                </p>
-                <h3 className="min-h-[2.6em] text-base font-black leading-snug text-slate-900 line-clamp-2 sm:text-xl lg:text-2xl" style={{ letterSpacing: '-0.02em' }}>
-                  {product.name}
-                </h3>
-                <p className="mt-1 font-mono text-base font-black text-slate-900 sm:mt-2 sm:text-xl lg:text-2xl">{formatKES(product.price_kes)}</p>
-
-                <div className="mb-4 mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-slate-200/60 bg-slate-200/60 sm:mb-6 sm:mt-4">
-                  {specs.map(([key, value]) => (
-                    <div key={key} className="bg-white px-2 py-2 sm:px-4 sm:py-3">
-                      <p className="font-mono text-[13px] font-black text-slate-900 sm:text-lg">{value}</p>
-                      <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-slate-400 sm:mt-1 sm:text-[11px]">{formatSpecLabel(key)}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <Link
-                  href={`/ecoflow/${product.slug}`}
-                  className="mt-auto inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-2.5 font-black text-xs text-white transition-all duration-200 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(0,0,255,0.55)] sm:gap-2 sm:px-6 sm:py-3 sm:text-sm"
-                  style={{ background: 'linear-gradient(135deg, #0000ff, #00004d)', boxShadow: '0 4px 20px rgba(0,0,255,0.35)' }}
-                >
-                  Shop Now <ArrowUpRight size={15} />
-                </Link>
-              </div>
-            </article>
-            )
-          })}
+        {/* Same card + same 4-in-a-row measure as every other section */}
+        <div className="grid grid-cols-4 gap-2 sm:gap-5 lg:gap-6 items-stretch">
+          {featuredProducts.map((product) => (
+            <div key={product.id} className="h-full min-w-0">
+              <ProductCard product={product} />
+            </div>
+          ))}
         </div>
       </div>
     </section>
