@@ -381,6 +381,8 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [query, setQuery] = useState('')
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState('')
 
   const loadProducts = useCallback(async (q = '') => {
     setLoading(true)
@@ -398,6 +400,25 @@ export default function AdminProductsPage() {
     const id = setTimeout(() => loadProducts(query.trim()), query ? 350 : 0)
     return () => clearTimeout(id)
   }, [query, loadProducts])
+
+  async function runDeltaSync() {
+    if (syncing) return
+    if (!confirm('Apply DELTA catalog fix?\n\n• Upserts Classic / Ultra / Pro / Pro 3 with correct specs, images & prices\n• Deletes 100 Air, Max Plus, Ultra Plus')) return
+    setSyncing(true)
+    setSyncMsg('')
+    try {
+      const res = await fetch('/api/admin/catalog-fix', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Sync failed')
+      const parts = (data.results ?? []).map((r: any) => r.slug ? `${r.slug}: ${r.action}` : `${r.action}${r.count != null ? ` (${r.count})` : ''}`)
+      setSyncMsg(`✓ Done — ${parts.join(' · ')}`)
+      loadProducts(query.trim())
+    } catch (e) {
+      setSyncMsg(`✕ ${e instanceof Error ? e.message : 'Sync failed'}`)
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const ecoflowCount = products.filter(p => p.brand === 'EcoFlow').length
   const bluettiCount = products.filter(p => p.brand === 'Bluetti').length
@@ -457,6 +478,24 @@ export default function AdminProductsPage() {
       </div>
 
       {showForm && <AddProductForm onSuccess={() => loadProducts(query.trim())} />}
+
+      {/* One-click DELTA catalog fix — no SQL Editor needed */}
+      <div className="mb-6 bg-white rounded-[24px] border border-blue-100 px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4"
+        style={{ boxShadow: '0 2px 20px rgba(0,0,255,0.06)' }}>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-black text-gray-900 tracking-tight">DELTA catalog fix</p>
+          <p className="text-xs text-gray-400 font-medium mt-0.5">Upserts Classic / Ultra / Pro / Pro 3 (correct specs, images, prices) · Deletes 100 Air, Max Plus, Ultra Plus</p>
+          {syncMsg && <p className="text-xs font-bold mt-1.5 text-blue-700">{syncMsg}</p>}
+        </div>
+        <button
+          onClick={runDeltaSync}
+          disabled={syncing}
+          className="h-11 px-6 rounded-2xl flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest text-white transition-all disabled:opacity-60 shrink-0"
+          style={{ background: '#0000ff', boxShadow: '0 4px 16px rgba(0,0,255,0.3)' }}
+        >
+          <Zap size={14} />{syncing ? 'Applying…' : 'Apply DELTA fix'}
+        </button>
+      </div>
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32">
