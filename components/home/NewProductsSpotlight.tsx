@@ -28,8 +28,8 @@ export function NewProductsSpotlight({ products }: { products: Product[] }) {
           subtitle="Meet the latest backup options from our authorised EcoFlow distributor, now available for Kenya."
         />
 
-        {/* Same card + same 4-in-a-row measure as every other section */}
-        <div className="grid grid-cols-4 gap-2 sm:gap-5 lg:gap-6 items-stretch">
+        {/* 2 in a row on phones/tablets, 4 in a row on laptops/desktops */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6 items-stretch">
           {featuredProducts.map((product) => (
             <div key={product.id} className="h-full min-w-0">
               <ProductCard product={product} />
