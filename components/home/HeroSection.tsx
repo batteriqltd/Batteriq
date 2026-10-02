@@ -50,16 +50,16 @@ const slides: Slide[] = [
   },
   {
     id: 2,
-    badge: 'Compact & Portable Power',
+    badge: 'Authorised Bluetti Dealer — Kenya',
     headline: 'Power Anywhere',
     headlineAccent: 'You Go',
-    subline: 'RIVER series from KES 27,259. Lightweight, powerful, M-Pesa ready. Perfect for home, camping & safari.',
-    cta: { label: 'Shop RIVER Series', href: '/ecoflow-kenya#power-stations' },
+    subline: 'Bluetti power stations from KES 24,999. Reliable LFP backup, M-Pesa ready. Perfect for home, camping & safari.',
+    cta: { label: 'Shop Bluetti', href: '/bluetti' },
     ctaSecondary: { label: 'Compare Models', href: '/compare' },
     bg: 'from-emerald-900 via-teal-950 to-slate-900',
-    image: '/heroes/hero-river-new.jpg',
-    product: 'EcoFlow RIVER 2',
-    startingPrice: 'From KES 27,259',
+    image: '/heroes/hero-bluetti.jpg',
+    product: 'Bluetti Power Stations',
+    startingPrice: 'From KES 24,999',
   },
 ]
 
