@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { APPROVED_DELTA_SLUGS, withDeltaFallback, withoutDeprecatedDelta } from '@/lib/delta-series'
+import { CATALOG_DELTA_SLUGS, withDeltaFallback, withoutDeprecatedDelta } from '@/lib/delta-series'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { HeroSection } from '@/components/home/HeroSection'
@@ -84,18 +84,19 @@ async function getDeltaSeries() {
       .from('products')
       .select('*')
       .eq('brand', 'EcoFlow')
-      // Full approved DELTA range renders in one line in the DELTA section.
-      // Code fallbacks fill any row missing from the DB so all 4 always show.
-      .in('slug', [...APPROVED_DELTA_SLUGS])
+      // Full latest DELTA range on the homepage; the rest of the catalogue
+      // lives on the inner pages. Code fallbacks fill any row missing
+      // from the DB so all 5 always show.
+      .in('slug', [...CATALOG_DELTA_SLUGS])
       .order('sort_order', { ascending: true })
     if (error) {
       console.error('Supabase error:', error.message)
-      return withDeltaFallback([])
+      return withDeltaFallback([], CATALOG_DELTA_SLUGS)
     }
-    return withDeltaFallback(data ?? [])
+    return withDeltaFallback(data ?? [], CATALOG_DELTA_SLUGS)
   } catch (e) {
     console.error('Fetch failed:', e)
-    return withDeltaFallback([])
+    return withDeltaFallback([], CATALOG_DELTA_SLUGS)
   }
 }
 

@@ -50,8 +50,8 @@ export function DeltaSeriesShowcase({ products }: { products: Product[] }) {
         </div>
       </div>
 
-      {/* Product grid — 2 across on phones/tablets, 4 in one line on laptop+; equal heights */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 items-stretch">
+      {/* Product grid — 2 across on phones/tablets, 5 in one line on laptop+; equal heights */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6 items-stretch">
         {products.map((product) => (
           <div key={product.id} className="h-full min-w-0">
             <ProductCard product={product} />
