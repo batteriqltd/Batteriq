@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { APPROVED_DELTA_SLUGS, withDeltaFallback, withoutDeprecatedDelta } from '@/lib/delta-series'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { HeroSection } from '@/components/home/HeroSection'
@@ -83,18 +84,18 @@ async function getDeltaSeries() {
       .from('products')
       .select('*')
       .eq('brand', 'EcoFlow')
-      // Homepage main section features 1–2 heroes; the full approved
-      // DELTA range (classic, ultra, pro, pro-3) lives on /ecoflow.
-      .in('slug', ['delta-3-classic', 'delta-pro-3'])
+      // Full approved DELTA range renders in one line in the DELTA section.
+      // Code fallbacks fill any row missing from the DB so all 4 always show.
+      .in('slug', [...APPROVED_DELTA_SLUGS])
       .order('sort_order', { ascending: true })
     if (error) {
       console.error('Supabase error:', error.message)
-      return []
+      return withDeltaFallback([])
     }
-    return data ?? []
+    return withDeltaFallback(data ?? [])
   } catch (e) {
     console.error('Fetch failed:', e)
-    return []
+    return withDeltaFallback([])
   }
 }
 
@@ -105,7 +106,7 @@ const DIVIDER = (
 export default async function HomePage() {
   const [
     deltaSeries,
-    ecoflowPowerStations,
+    ecoflowPowerStationsRaw,
     ecoflowSolar,
     ecoflowSolarHomeSystems,
     ecoflowAppliances,
@@ -124,6 +125,9 @@ export default async function HomePage() {
     // the admin database, not only the original EcoFlow accessories.
     getProductsByCategory(undefined, 'Accessories', 8),
   ])
+  // Deprecated DELTA variants (100 Air / Max Plus / Ultra Plus) are hidden
+  // in code so they never render on the homepage.
+  const ecoflowPowerStations = withoutDeprecatedDelta(ecoflowPowerStationsRaw)
 
   return (
     <PageWrapper>

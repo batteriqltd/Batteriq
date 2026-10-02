@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withoutDeprecatedDelta } from '@/lib/delta-series'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
@@ -35,7 +36,9 @@ async function getEcoFlowAll() {
 }
 
 export default async function EcoFlowCollectionPage() {
-  const products = await getEcoFlowAll()
+  const raw = await getEcoFlowAll()
+  // Deprecated DELTA variants hidden in code (100 Air / Max Plus / Ultra Plus).
+  const products = withoutDeprecatedDelta(raw)
 
   return (
     <>

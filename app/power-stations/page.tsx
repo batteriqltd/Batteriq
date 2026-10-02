@@ -7,6 +7,7 @@ import { ToastContainer } from '@/components/ui/Toast'
 import { PowerStationsClient } from '@/components/power-stations/PowerStationsClient'
 import { PageWrapper } from '@/components/animations/PageWrapper'
 import { PowerStationsAnimation } from '@/components/animations/PowerStationsAnimation'
+import { withoutDeprecatedDelta } from '@/lib/delta-series'
 import type { Product } from '@/lib/supabase/types'
 
 export const revalidate = 60
@@ -53,7 +54,9 @@ function GridSkeleton() {
 }
 
 export default async function PowerStationsPage() {
-  const products = await getProducts()
+  const raw = await getProducts()
+  // Deprecated DELTA variants hidden in code (100 Air / Max Plus / Ultra Plus).
+  const products = withoutDeprecatedDelta(raw)
   const totalCount = products.length
 
   return (
