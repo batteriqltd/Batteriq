@@ -12,7 +12,7 @@ import {
   buildTitle, buildDescription, productJsonLd, breadcrumbJsonLd,
   buildProductFaqs, faqJsonLd, productUrl,
 } from '@/lib/seo'
-import { CATALOG_DELTA_SLUGS, FALLBACK_DELTA_PRODUCTS, withDeltaFallback } from '@/lib/delta-series'
+import { CATALOG_DELTA_SLUGS, FALLBACK_DELTA_PRODUCTS, isDeprecatedDelta, withDeltaFallback, withoutDeprecatedDelta } from '@/lib/delta-series'
 
 // Product availability is managed in Supabase. Render this route per request
 // so a newly published product cannot retain a previously cached 404 while the
@@ -31,7 +31,9 @@ export async function generateStaticParams() {
       .select('slug')
       .eq('brand', 'EcoFlow')
 
-    return (data ?? []).map((p) => ({ slug: p.slug }))
+    return (data ?? [])
+      .filter((p) => !isDeprecatedDelta({ slug: p.slug, name: p.slug, brand: 'EcoFlow' }))
+      .map((p) => ({ slug: p.slug }))
   } catch {
     return []
   }
@@ -42,6 +44,9 @@ export async function generateStaticParams() {
 // price/stock win when the row exists; specs/descriptions/images always come
 // from the corrected code data.
 async function getProduct(slug: string): Promise<Product | null> {
+  // Permanently removed: DELTA 3 Max Plus / Ultra Plus (and 100 Air) always 404,
+  // even if a stale row still exists in Supabase.
+  if (isDeprecatedDelta({ slug, name: slug, brand: 'EcoFlow' })) return null
   const isApproved = (CATALOG_DELTA_SLUGS as readonly string[]).includes(slug)
   const fallback = (isApproved ? FALLBACK_DELTA_PRODUCTS[slug] : undefined) ?? null
   try {
@@ -76,7 +81,7 @@ async function getRelatedProducts(product: Product): Promise<Product[]> {
       .eq('in_stock', true)
       .order('sort_order')
       .limit(4)
-    return data ?? []
+    return withoutDeprecatedDelta(data ?? [])
   } catch {
     return []
   }

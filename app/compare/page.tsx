@@ -1,4 +1,5 @@
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withoutDeprecatedDelta } from '@/lib/delta-series'
 import { CompareClient } from './CompareClient'
 import type { Product } from '@/lib/supabase/types'
 import type { Metadata } from 'next'
@@ -17,5 +18,5 @@ export default async function ComparePage() {
     .eq('in_stock', true)
     .order('price_kes', { ascending: true })
 
-  return <CompareClient products={(data ?? []) as Product[]} />
+  return <CompareClient products={withoutDeprecatedDelta((data ?? []) as Product[])} />
 }

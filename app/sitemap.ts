@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isDeprecatedDelta } from '@/lib/delta-series'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = 'https://batteriq.com'
@@ -27,13 +28,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createAdminClient()
     const { data: products } = await supabase
       .from('products')
-      .select('slug, brand, updated_at, in_stock')
+      .select('slug, brand, name, updated_at, in_stock')
       .eq('in_stock', true)
 
     // Route prefix must mirror ProductCard: EcoFlow → /ecoflow, Bluetti →
     // /bluetti, everything else → /accessories. A naive toLowerCase() here
     // used to emit /anker/…, /eufy/… and /soundcore/… URLs that 404.
-    const productPages: MetadataRoute.Sitemap = (products ?? []).map((p: { slug: string; brand: string; updated_at: string }) => ({
+    const productPages: MetadataRoute.Sitemap = (products ?? [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((p: { slug: string; brand: string; name?: string }) => !isDeprecatedDelta({ slug: p.slug, name: p.name ?? p.slug, brand: p.brand as any }))
+      .map((p: { slug: string; brand: string; updated_at: string }) => ({
       url: `${baseUrl}/${p.brand === 'EcoFlow' ? 'ecoflow' : p.brand === 'Bluetti' ? 'bluetti' : 'accessories'}/${p.slug}`,
       lastModified: new Date(p.updated_at || now),
       changeFrequency: 'weekly' as const,

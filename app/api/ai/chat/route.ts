@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isDeprecatedDelta } from '@/lib/delta-series'
 
 // No external AI services — every answer below comes from our own catalogue
 // (Supabase, with a built-in fallback) plus the rule-based intents above.
@@ -108,7 +109,10 @@ async function loadCatalog(): Promise<CatalogHit[]> {
       .eq('in_stock', true)
       .order('sort_order', { ascending: true })
       .limit(200)
-    const live = (data ?? []) as unknown as CatalogHit[]
+    const live = ((data ?? []) as unknown as CatalogHit[]).filter(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (p) => !isDeprecatedDelta({ slug: p.slug, name: p.name, brand: p.brand as any })
+    )
     const seen = new Set(live.map((p) => p.slug))
     return [...live, ...FALLBACK_HITS.filter((p) => !seen.has(p.slug))]
   } catch {

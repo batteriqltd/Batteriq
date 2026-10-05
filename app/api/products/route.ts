@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withoutDeprecatedDelta } from '@/lib/delta-series'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,5 +35,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch products', detail: error.message }, { status: 500 })
   }
 
-  return NextResponse.json({ products: data ?? [] })
+  return NextResponse.json({ products: withoutDeprecatedDelta(data ?? []) })
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withoutDeprecatedDelta } from '@/lib/delta-series'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
@@ -164,7 +165,7 @@ async function getEcoFlowProducts() {
 }
 
 export default async function EcoFlowKenyaPage() {
-  const allEcoFlow = await getEcoFlowProducts()
+  const allEcoFlow = withoutDeprecatedDelta(await getEcoFlowProducts())
 
   const powerStations = allEcoFlow.filter((p) => p.category === 'Power Stations')
   const solarPanels = allEcoFlow.filter((p) => p.category === 'Solar Panels')
