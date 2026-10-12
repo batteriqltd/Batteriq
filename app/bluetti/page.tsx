@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Script from 'next/script'
 import { Shield } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { withBluettiFallbacks } from '@/lib/bluetti-residential'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
@@ -12,8 +13,8 @@ export const revalidate = 60
 
 export const metadata: Metadata = {
   title: 'Bluetti Kenya | Official Bluetti Dealer & Power Stations',
-  description: 'Buy genuine Bluetti power stations, solar panels and batteries in Kenya from Batteriq. Official authorised dealer, M-Pesa payments, Nairobi delivery and manufacturer warranty.',
-  keywords: ['Bluetti Kenya', 'buy Bluetti Kenya', 'Bluetti dealer Kenya', 'official Bluetti dealer Kenya', 'Bluetti power station Kenya', 'Bluetti solar generator Kenya', 'Bluetti Nairobi', 'Bluetti AC200PL Kenya', 'Bluetti AC300 Kenya', 'Bluetti AC500 Kenya'],
+  description: 'Buy genuine Bluetti power stations, residential backup systems, solar panels and batteries in Kenya from Batteriq. New Homestar 3, HV6K, HV10K and HB500 in stock. Official authorised dealer, M-Pesa payments, Nairobi delivery and manufacturer warranty.',
+  keywords: ['Bluetti Kenya', 'buy Bluetti Kenya', 'Bluetti dealer Kenya', 'official Bluetti dealer Kenya', 'Bluetti power station Kenya', 'Bluetti solar generator Kenya', 'Bluetti Nairobi', 'Bluetti AC200PL Kenya', 'Bluetti AC300 Kenya', 'Bluetti AC500 Kenya', 'Bluetti Homestar 3 Kenya', 'Bluetti HV6K Kenya', 'Bluetti HV10K Kenya', 'Bluetti HB500 Kenya'],
   alternates: { canonical: 'https://batteriq.com/bluetti' },
   openGraph: {
     title: 'Bluetti Kenya | Official Bluetti Dealer | Batteriq',
@@ -64,7 +65,8 @@ async function getBluettiData() {
 }
 
 export default async function BluettiCollectionPage() {
-  const products = await getBluettiData()
+  // Code fallbacks fill any residential row missing from the DB, newest first.
+  const products = withBluettiFallbacks(await getBluettiData())
 
   return (
     <>
@@ -91,7 +93,7 @@ export default async function BluettiCollectionPage() {
               <Shield className="w-4 h-4" /> Official authorised dealer
             </div>
             <h1 id="bluetti-kenya-heading" className="text-3xl lg:text-4xl font-black mb-3">Bluetti Power Stations in Kenya</h1>
-            <p className="text-violet-100 text-lg max-w-3xl">Shop genuine Bluetti portable power stations, solar panels and expansion batteries from Batteriq. Pay with M-Pesa, get Nairobi delivery, and receive local support for your backup-power setup.</p>
+            <p className="text-violet-100 text-lg max-w-3xl">Shop genuine Bluetti portable power stations, new residential backup systems (Homestar 3, HV6K, HV10K, HB500), solar panels and expansion batteries from Batteriq. Pay with M-Pesa, get Nairobi delivery, and receive local support for your backup-power setup.</p>
           </section>
         </div>
 

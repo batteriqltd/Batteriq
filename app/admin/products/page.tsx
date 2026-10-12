@@ -383,6 +383,8 @@ export default function AdminProductsPage() {
   const [query, setQuery] = useState('')
   const [syncing, setSyncing] = useState(false)
   const [syncMsg, setSyncMsg] = useState('')
+  const [bsyncing, setBsyncing] = useState(false)
+  const [bsyncMsg, setBsyncMsg] = useState('')
 
   const loadProducts = useCallback(async (q = '') => {
     setLoading(true)
@@ -439,6 +441,42 @@ export default function AdminProductsPage() {
 
   const ecoflowCount = products.filter(p => p.brand === 'EcoFlow').length
   const bluettiCount = products.filter(p => p.brand === 'Bluetti').length
+
+  async function checkBluettiStatus() {
+    if (bsyncing) return
+    setBsyncing(true)
+    setBsyncMsg('')
+    try {
+      const res = await fetch('/api/admin/bluetti-sync')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Status check failed')
+      const missing = (data.missing ?? []).join(', ') || 'none missing'
+      setBsyncMsg(`DB has ${(data.products ?? []).length} Bluetti rows — missing: ${missing}`)
+    } catch (e) {
+      setBsyncMsg(`✕ ${e instanceof Error ? e.message : 'Status check failed'}`)
+    } finally {
+      setBsyncing(false)
+    }
+  }
+
+  async function runBluettiSync() {
+    if (bsyncing) return
+    if (!confirm('Apply Bluetti Sept-2026 sync?\n\n• Adds Homestar 3, HV6K, HV10K, HB500, PV100, Base, Meter, EMS\n• Corrects AC300 / AC500 / B300K / EP760 / B500 prices (B300K → out of stock)')) return
+    setBsyncing(true)
+    setBsyncMsg('')
+    try {
+      const res = await fetch('/api/admin/bluetti-sync', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Sync failed')
+      const parts = (data.results ?? []).map((r: any) => r.slug ? `${r.slug}: ${r.action}` : `${r.action}`)
+      setBsyncMsg(`✓ Done — ${parts.join(' · ')}`)
+      loadProducts(query.trim())
+    } catch (e) {
+      setBsyncMsg(`✕ ${e instanceof Error ? e.message : 'Sync failed'}`)
+    } finally {
+      setBsyncing(false)
+    }
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 pb-12 bg-[#f8f9fa] min-h-full">
@@ -520,6 +558,34 @@ export default function AdminProductsPage() {
           style={{ background: '#0000ff', boxShadow: '0 4px 16px rgba(0,0,255,0.3)' }}
         >
           <Zap size={14} />{syncing ? 'Applying…' : 'Apply DELTA fix'}
+        </button>
+        </div>
+      </div>
+
+      {/* One-click Bluetti Sept-2026 sync — no SQL Editor needed */}
+      <div className="mb-6 bg-white rounded-[24px] border border-violet-100 px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4"
+        style={{ boxShadow: '0 2px 20px rgba(124,58,237,0.06)' }}>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-black text-gray-900 tracking-tight">Bluetti residential sync <span className="ml-1 text-[10px] font-black uppercase tracking-widest text-white bg-green-600 rounded-full px-2 py-0.5 align-middle">New</span></p>
+          <p className="text-xs text-gray-400 font-medium mt-0.5">Adds Homestar 3, HV6K, HV10K, HB500, PV100, Base, Meter, EMS · Corrects AC300 / AC500 / B300K / EP760 / B500 prices</p>
+          {bsyncMsg && <p className="text-xs font-bold mt-1.5 text-violet-700">{bsyncMsg}</p>}
+        </div>
+        <div className="flex gap-2 shrink-0">
+        <button
+          onClick={checkBluettiStatus}
+          disabled={bsyncing}
+          className="h-11 px-5 rounded-2xl flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest transition-all disabled:opacity-60"
+          style={{ background: '#f5f3ff', color: '#6d28d9', border: '1.5px solid #e9e5ff' }}
+        >
+          {bsyncing ? 'Working…' : 'Check Bluetti status'}
+        </button>
+        <button
+          onClick={runBluettiSync}
+          disabled={bsyncing}
+          className="h-11 px-6 rounded-2xl flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest text-white transition-all disabled:opacity-60"
+          style={{ background: '#7c3aed', boxShadow: '0 4px 16px rgba(124,58,237,0.3)' }}
+        >
+          <Zap size={14} />{bsyncing ? 'Applying…' : 'Apply Bluetti sync'}
         </button>
         </div>
       </div>

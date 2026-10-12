@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { CATALOG_DELTA_SLUGS, withDeltaFallback, withoutDeprecatedDelta } from '@/lib/delta-series'
+import { withBluettiFallbacks } from '@/lib/bluetti-residential'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { HeroSection } from '@/components/home/HeroSection'
@@ -111,7 +112,7 @@ export default async function HomePage() {
     ecoflowSolar,
     ecoflowSolarHomeSystems,
     ecoflowAppliances,
-    bluettiStations,
+    bluettiDb,
     powerBanks,
     accessories,
   ] = await Promise.all([
@@ -120,7 +121,9 @@ export default async function HomePage() {
     getProductsByCategory('EcoFlow', 'Solar Panels', 8),
     getProductsByCategory('EcoFlow', 'Solar Home Systems', 3),
     getProductsByCategory('EcoFlow', 'Appliances', 2),
-    getProductsByCategory('Bluetti', 'Power Stations', 8),
+    // Bluetti rail shows the full Bluetti range with code fallbacks merged in,
+    // so the latest Residential Backup systems lead even before any DB sync.
+    getProductsByCategory('Bluetti', undefined, 40),
     getProductsByCategory('EcoFlow', 'Power Banks', 6),
     // The Accessories collection includes the wider catalogue imported through
     // the admin database, not only the original EcoFlow accessories.
@@ -129,6 +132,8 @@ export default async function HomePage() {
   // Deprecated DELTA variants (100 Air / Max Plus / Ultra Plus) are hidden
   // in code so they never render on the homepage.
   const ecoflowPowerStations = withoutDeprecatedDelta(ecoflowPowerStationsRaw)
+  // New Bluetti residential items always lead this rail (homepage shows top 8).
+  const bluettiStations = withBluettiFallbacks(bluettiDb).slice(0, 8)
 
   return (
     <PageWrapper>
@@ -439,7 +444,7 @@ export default async function HomePage() {
                   <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#9999ff' }}>Bluetti Kenya &middot; Authorised Dealer</p>
                   <h3 className="font-black text-white mb-3 leading-tight" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.03em' }}>Bluetti Power Stations</h3>
                   <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
-                    Quality LFP power backup. AC series for home, EB series for outdoor adventures.
+                    New residential backup systems in — Homestar 3, HV6K, HV10K & HB500. Plus AC & EB series.
                   </p>
                   <div className="flex items-center gap-3">
                     <a

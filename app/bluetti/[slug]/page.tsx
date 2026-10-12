@@ -7,6 +7,7 @@ import { ProductDetail } from '@/components/product/ProductDetail'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
 import type { Product } from '@/lib/supabase/types'
+import { BLUETTI_NEW_SLUGS, FALLBACK_BLUETTI_PRODUCTS, withBluettiFallbacks } from '@/lib/bluetti-residential'
 import { ProductFaq } from '@/components/product/ProductFaq'
 import {
   buildTitle, buildDescription, productJsonLd, breadcrumbJsonLd,
@@ -24,23 +25,39 @@ type PageProps = {
 }
 
 export async function generateStaticParams() {
-  const supabase = createAdminClient()
-  const { data } = await supabase
-    .from('products')
-    .select('slug')
-    .eq('brand', 'Bluetti')
-  return (data ?? []).map((p) => ({ slug: p.slug }))
+  // New residential rows resolve from code fallback even before any DB sync
+  // (or when Supabase env is unreachable at build time).
+  try {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('products')
+      .select('slug')
+      .eq('brand', 'Bluetti')
+    const slugs = new Set((data ?? []).map((p) => p.slug))
+    for (const s of BLUETTI_NEW_SLUGS) slugs.add(s as string)
+    return Array.from(slugs).map((slug) => ({ slug }))
+  } catch {
+    return (BLUETTI_NEW_SLUGS as readonly string[]).map((slug) => ({ slug }))
+  }
 }
 
 async function getProduct(slug: string): Promise<Product | null> {
-  const supabase = createAdminClient()
-  const { data } = await supabase
-    .from('products')
-    .select('*')
-    .eq('slug', slug)
-    .eq('brand', 'Bluetti')
-    .single()
-  return data ?? null
+  try {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('products')
+      .select('*')
+      .eq('slug', slug)
+      .eq('brand', 'Bluetti')
+      .single()
+    if (data) {
+      const merged = withBluettiFallbacks([data])
+      return merged[0] ?? (data as Product)
+    }
+  } catch {
+    // No DB reach (or no row) — fall through to the code fallback below.
+  }
+  return FALLBACK_BLUETTI_PRODUCTS[slug] ?? null
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -71,15 +88,24 @@ export default async function BluesttiProductPage({ params }: PageProps) {
   const product = await getProduct(params.slug)
   if (!product) notFound()
 
-  const supabase = createAdminClient()
-  const { data: related } = await supabase
-    .from('products')
-    .select('*')
-    .eq('brand', 'Bluetti')
-    .neq('id', product.id)
-    .eq('in_stock', true)
-    .order('sort_order')
-    .limit(4)
+  // Related items resolve from code fallback when the DB is unreachable.
+  let related: Product[] = []
+  try {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('products')
+      .select('*')
+      .eq('brand', 'Bluetti')
+      .neq('id', product.id)
+      .eq('in_stock', true)
+      .order('sort_order')
+      .limit(12)
+    related = withBluettiFallbacks((data ?? []) as Product[])
+      .filter((p) => p.id !== product.id)
+      .slice(0, 4)
+  } catch {
+    related = []
+  }
 
   const faqs = buildProductFaqs(product)
 

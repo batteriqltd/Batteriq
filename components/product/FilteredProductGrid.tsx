@@ -44,6 +44,7 @@ function matchesFilter(product: Product, filterValue: string, filterType: string
   }
 
   if (filterType === 'bluetti') {
+    if (filterValue === 'residential') return product.subcategory === 'Residential Backup' || /homestar|hv6k|hv10k|hb500/i.test(product.name) || /homestar|hv6k|hv10k|hb500/i.test(product.slug)
     if (filterValue === 'ac') return name.startsWith('ac') || name.includes(' ac')
     if (filterValue === 'eb') return name.startsWith('eb') || name.includes(' eb')
     if (filterValue === 'batteries') return product.category === 'Batteries'
@@ -79,6 +80,7 @@ const FILTER_SETS: Record<string, FilterDef[]> = {
   ],
   bluetti: [
     { label: 'All', value: 'all' },
+    { label: 'Residential Backup', value: 'residential' },
     { label: 'AC Series', value: 'ac' },
     { label: 'EB Series', value: 'eb' },
     { label: 'Battery Modules', value: 'batteries' },
