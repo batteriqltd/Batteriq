@@ -16,6 +16,7 @@ import { StatsSection } from '@/components/home/StatsSection'
 import { OffersSection } from '@/components/home/OffersSection'
 import { BulkPricingBanner } from '@/components/home/BulkPricingBanner'
 import { NewProductsSpotlight } from '@/components/home/NewProductsSpotlight'
+import { NewArrivalsPopup } from '@/components/home/NewArrivalsPopup'
 import { PageWrapper } from '@/components/animations/PageWrapper'
 import { HomeAnimations } from '@/components/animations/HomeAnimations'
 import { SectionTransition } from '@/components/animations/SectionTransition'
@@ -134,6 +135,12 @@ export default async function HomePage() {
   const ecoflowPowerStations = withoutDeprecatedDelta(ecoflowPowerStationsRaw)
   // New Bluetti residential items always lead this rail (homepage shows top 8).
   const bluettiStations = withBluettiFallbacks(bluettiDb).slice(0, 8)
+  // The 4 newest Bluetti systems, featured in the first-visit popup.
+  const bluettiNewArrivals = (
+    ['bluetti-homestar-3', 'bluetti-hv6k', 'bluetti-hv10k', 'bluetti-hb500'] as const
+  )
+    .map((slug) => bluettiStations.find((p) => p.slug === slug))
+    .filter((p): p is (typeof bluettiStations)[number] => Boolean(p))
 
   return (
     <PageWrapper>
@@ -655,6 +662,7 @@ export default async function HomePage() {
       </section>
 
       <Footer />
+      <NewArrivalsPopup products={bluettiNewArrivals} />
       <HomeAnimations />
       <SectionObserver />
     </PageWrapper>
