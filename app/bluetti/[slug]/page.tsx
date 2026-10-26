@@ -51,8 +51,11 @@ async function getProduct(slug: string): Promise<Product | null> {
       .eq('brand', 'Bluetti')
       .single()
     if (data) {
+      // Merge only this row: withBluettiFallbacks also appends every missing
+      // new-arrival fallback and sorts them first, so taking merged[0] would
+      // resolve every older Bluetti product to Homestar 3.
       const merged = withBluettiFallbacks([data])
-      return merged[0] ?? (data as Product)
+      return merged.find((p) => p.slug === slug) ?? (data as Product)
     }
   } catch {
     // No DB reach (or no row) — fall through to the code fallback below.

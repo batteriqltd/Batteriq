@@ -15,7 +15,7 @@ import { ReviewsSection } from '@/components/home/ReviewsSection'
 import { StatsSection } from '@/components/home/StatsSection'
 import { OffersSection } from '@/components/home/OffersSection'
 import { BulkPricingBanner } from '@/components/home/BulkPricingBanner'
-import { NewProductsSpotlight } from '@/components/home/NewProductsSpotlight'
+import { BluettiSpotlight } from '@/components/home/BluettiSpotlight'
 import { NewArrivalsPopup } from '@/components/home/NewArrivalsPopup'
 import { PageWrapper } from '@/components/animations/PageWrapper'
 import { HomeAnimations } from '@/components/animations/HomeAnimations'
@@ -158,7 +158,7 @@ export default async function HomePage() {
 
       <OffersSection />
 
-      <NewProductsSpotlight products={deltaSeries} />
+      <BluettiSpotlight products={bluettiNewArrivals} />
 
       {/* DELTA Series — new EcoFlow lineup, placed above Shop by Category */}
       <DeltaSeriesShowcase products={deltaSeries} />
