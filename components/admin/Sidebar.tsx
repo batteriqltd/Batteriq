@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingBag, Tag,
   MessageSquare, Mail, LogOut, CreditCard, Send, Newspaper,
-  Users, BarChart3, Download, Star, ImageIcon, Menu, X, Radio, FileText, Smartphone
+  Users, BarChart3, Download, Star, ImageIcon, Menu, X, Radio, FileText, Smartphone, Bot
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { AdminPwaControls } from '@/components/admin/AdminPwaControls'
@@ -44,6 +44,7 @@ const NAV = [
   { href: '/admin/stock', label: 'Stock & Prices', icon: BarChart3 },
   { href: '/admin/pricing', label: 'Pricing Engine', icon: Tag },
   { href: '/admin/ai-chat', label: 'Chat Monitor', icon: MessageSquare },
+  { href: '/admin/outreach', label: 'Outreach Agent', icon: Bot, badge: 'live' as const },
   { href: '/admin/broadcast', label: 'Broadcast', icon: Send },
   { href: '/admin/newsletter', label: 'Newsletter', icon: Newspaper },
   { href: '/admin/messages', label: 'Messages', icon: Mail },
@@ -77,8 +78,12 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
 
   async function handleSignOut() {
     await fetch('/api/admin/auth', { method: 'DELETE' })
-    window.location.href = '/admin/secure-bq9x2026'
+    window.location.href = adminRole === 'outreach_admin' ? '/outreach-admin/login' : '/admin/secure-bq9x2026'
   }
+
+  const visibleNav = adminRole === 'outreach_admin'
+    ? NAV.filter(item => item.href === '/admin/outreach')
+    : NAV
 
   function isActive(item: typeof NAV[0]) {
     if (item.exact) return pathname === item.href
@@ -113,7 +118,7 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
       <div className="relative flex-1 min-h-0">
       <nav className="absolute inset-0 px-4 py-6 space-y-1" style={{overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.25) transparent"}}>
         <p className="text-[10px] font-black uppercase tracking-[0.2em] px-3 mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>Management</p>
-        {NAV.map(item => {
+        {visibleNav.map(item => {
           const active = isActive(item)
           return (
             <Link

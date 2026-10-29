@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { rateLimit } from '@/lib/rateLimit'
@@ -5,6 +6,13 @@ import { createSessionToken } from '@/lib/admin-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const SESSION_COOKIE = 'batteriq_admin_session'
+
+function safeEqualString(a: string, b: string): boolean {
+  const bufA = Buffer.from(a, 'utf8')
+  const bufB = Buffer.from(b, 'utf8')
+  if (bufA.length !== bufB.length) return false
+  return crypto.timingSafeEqual(bufA, bufB)
+}
 
 export async function POST(req: Request) {
   const ip = req.headers.get('x-forwarded-for') || 'unknown'
@@ -23,6 +31,40 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 })
     }
 
+    const normalizedEmail = String(email).toLowerCase().trim()
+
+    // Dedicated Outreach Agent Admin login (configured via environment variables — never hardcoded)
+    const outreachEnvEmail = process.env.OUTREACH_ADMIN_EMAIL?.toLowerCase().trim()
+    const outreachEnvPassword = process.env.OUTREACH_ADMIN_PASSWORD
+    if (
+      outreachEnvEmail &&
+      outreachEnvPassword &&
+      outreachEnvPassword !== 'replace_me' &&
+      safeEqualString(normalizedEmail, outreachEnvEmail) &&
+      safeEqualString(String(password), outreachEnvPassword)
+    ) {
+      const sessionToken = createSessionToken({
+        id: 'outreach-admin',
+        email: outreachEnvEmail,
+        role: 'outreach_admin',
+        exp: Date.now() + 8 * 60 * 60 * 1000,
+      })
+
+      const response = NextResponse.json({
+        success: true,
+        role: 'outreach_admin',
+        defaultRedirect: '/outreach-admin',
+      })
+      response.cookies.set(SESSION_COOKIE, sessionToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+      })
+      console.log(`[ADMIN AUTH] ✅ Outreach Admin Login: ${outreachEnvEmail}`)
+      return response
+    }
+
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -31,7 +73,7 @@ export async function POST(req: Request) {
     const { data, error } = await supabase
       .from('admin_users')
       .select('id, email, role, password_hash')
-      .eq('email', email.toLowerCase().trim())
+      .eq('email', normalizedEmail)
       .single()
 
     if (error || !data) {

@@ -18,8 +18,34 @@
     },
     "app/api/pesapal/reconcile/route.ts": {
       "maxDuration": 60
+    },
+    "app/api/cron/outreach-leads/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/cron/outreach-emails/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/cron/outreach-followups/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/whatsapp/webhook/route.ts": {
+      "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/outreach-leads",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/outreach-emails",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/outreach-followups",
+      "schedule": "30 7 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/api/mpesa/callback",
@@ -32,6 +58,15 @@
     },
     {
       "source": "/api/pesapal/ipn",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/whatsapp/webhook",
       "headers": [
         {
           "key": "Cache-Control",

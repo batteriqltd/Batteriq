@@ -28,6 +28,7 @@ export default function ContactPage() {
   const [phone, setPhone] = useState('')
   const [inquiryType, setInquiryType] = useState('')
   const [message, setMessage] = useState('')
+  const [whatsappConsent, setWhatsappConsent] = useState(false)
   const [status, setStatus] = useState<Status>('idle')
   const [company, setCompany] = useState('') // honeypot — humans never see or fill this
   const startedAt = useRef(Date.now())
@@ -39,7 +40,17 @@ export default function ContactPage() {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName, lastName, email, phone, inquiryType, message, company, elapsedMs: Date.now() - startedAt.current }),
+        body: JSON.stringify({
+          firstName,
+          lastName,
+          email,
+          phone,
+          inquiryType,
+          message,
+          whatsappConsent,
+          company,
+          elapsedMs: Date.now() - startedAt.current,
+        }),
       })
       if (!res.ok) throw new Error('Failed')
       setStatus('success')
@@ -173,6 +184,7 @@ export default function ContactPage() {
                               setStatus('idle')
                               setFirstName(''); setLastName(''); setEmail('')
                               setPhone(''); setInquiryType(''); setMessage('')
+                              setWhatsappConsent(false)
                             }}
                             className="text-[#0000ff] font-black text-xs uppercase tracking-widest hover:text-blue-800 transition-colors"
                           >
@@ -237,6 +249,18 @@ export default function ContactPage() {
                               placeholder="Tell us how we can help you..."
                               className="w-full p-5 rounded-2xl text-gray-900 text-sm font-semibold bg-[#f8f9ff] border border-gray-100 placeholder-gray-300 focus:bg-white focus:border-[#0000ff] focus:ring-4 focus:ring-[#0000ff08] outline-none transition-all resize-none" />
                           </div>
+
+                          <label className="flex items-start gap-3 p-4 rounded-2xl bg-[#f8f9ff] border border-gray-100 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={whatsappConsent}
+                              onChange={(e) => setWhatsappConsent(e.target.checked)}
+                              className="mt-0.5 w-4 h-4 rounded border-gray-300 text-[#0000ff] focus:ring-[#0000ff]"
+                            />
+                            <span className="text-xs text-gray-600 font-medium leading-relaxed">
+                              I consent to receive follow-up messages from Batteriq Kenya via WhatsApp regarding my inquiry (you can reply STOP anytime to opt out).
+                            </span>
+                          </label>
 
                           {status === 'error' && (
                             <p className="text-red-500 text-xs font-bold uppercase tracking-wider bg-red-50 px-4 py-3 rounded-xl">

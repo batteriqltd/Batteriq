@@ -108,6 +108,35 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Dedicated Outreach Agent Admin portal (/outreach-admin/*)
+  if (pathname.startsWith('/outreach-admin')) {
+    if (pathname === '/outreach-admin/login') {
+      const existing = request.cookies.get(SESSION_COOKIE)?.value
+      if (existing && (await verifyHmacToken(existing))) {
+        return NextResponse.redirect(new URL('/outreach-admin', request.url))
+      }
+      return NextResponse.next()
+    }
+
+    const outreachSession = request.cookies.get(SESSION_COOKIE)?.value
+    if (!outreachSession) {
+      const loginUrl = new URL('/outreach-admin/login', request.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    const outreachDecoded = await verifyHmacToken(outreachSession)
+    if (!outreachDecoded) {
+      const loginUrl = new URL('/outreach-admin/login', request.url)
+      loginUrl.searchParams.set('reason', 'session_expired')
+      const response = NextResponse.redirect(loginUrl)
+      response.cookies.set('batteriq_admin_session', '', { maxAge: 0, path: '/' })
+      return response
+    }
+
+    return NextResponse.next()
+  }
+
   if (!pathname.startsWith('/admin')) return NextResponse.next()
 
   // Task 1: Allow the secret login page through without session check
@@ -136,9 +165,14 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
+  // Scope outreach_admin accounts solely to the Outreach Agent section
+  if (decoded.role === 'outreach_admin' && !pathname.startsWith('/admin/outreach')) {
+    return NextResponse.redirect(new URL('/admin/outreach', request.url))
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*', '/api/orders/:path*', '/api/orders', '/api/mpesa/:path*', '/api/contact'],
+  matcher: ['/admin/:path*', '/outreach-admin/:path*', '/outreach-admin', '/api/admin/:path*', '/api/orders/:path*', '/api/orders', '/api/mpesa/:path*', '/api/contact'],
 }
