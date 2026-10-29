@@ -1,3 +1,4 @@
+import { callClaudeMessages } from './claude'
 import {
   checkInSuppressionSets,
   getOutreachSettings,
@@ -157,11 +158,100 @@ function buildFreeKenyanSearchQuery(category: LeadCategory, city: string, rawQue
  * filtering out social media (Facebook, etc.) and directory/OTA aggregators so only
  * authentic first-party business websites are scraped for public corporate contacts.
  */
+export async function discoverKenyanBusinessWebsitesViaAi(params: {
+  category: LeadCategory
+  city: string
+  maxResults: number
+  excludeDomains?: Set<string>
+  fetchImpl?: typeof fetch
+}): Promise<GooglePlaceRaw[]> {
+  const excludedSample = params.excludeDomains
+    ? Array.from(params.excludeDomains).slice(-60).join(', ')
+    : ''
+
+  const categoryLabel =
+    params.category === 'hotel'
+      ? 'hotels, resorts, lodges, and conference hotels'
+      : params.category === 'school'
+        ? 'private schools, international schools, colleges, and universities'
+        : params.category === 'organization'
+          ? 'private hospitals, medical clinics, NGOs, Saccos, logistics companies, and corporate offices'
+          : 'supermarket chains, electronics retailers, solar/hardware stores, pharmacies, and commercial shops'
+
+  const systemPrompt = `You are a Kenyan B2B business directory researcher.
+Return STRICT JSON ONLY listing real, currently operating Kenyan businesses in the requested category and city that have their OWN official corporate website (e.g. .co.ke, .ac.ke, .sc.ke, .or.ke, .com, .org).
+NEVER include Facebook, Instagram, LinkedIn, Booking.com, TripAdvisor, directories, or government (.go.ke) websites.
+NEVER invent fake domains — only list real, established Kenyan institutions and companies whose official domain you know with high confidence.
+JSON schema:
+{
+  "businesses": [
+    { "name": "Official Business Name", "website": "https://example.co.ke", "address": "Area/Street, City, Kenya" }
+  ]
+}`
+
+  const userPrompt = `List up to ${Math.min(18, params.maxResults + 4)} real ${categoryLabel} in or serving ${params.city}, Kenya with their official website URLs.${
+    excludedSample ? `\nExclude these domains already in our directory: ${excludedSample}` : ''
+  }`
+
+  try {
+    const { text } = await callClaudeMessages({
+      systemPrompt,
+      userPrompt,
+      maxTokens: 900,
+      temperature: 0.3,
+      fetchImpl: params.fetchImpl,
+    })
+
+    const cleaned = text
+      .trim()
+      .replace(/^```(?:json)?\s*/i, '')
+      .replace(/\s*```$/i, '')
+    const firstBrace = cleaned.indexOf('{')
+    const lastBrace = cleaned.lastIndexOf('}')
+    if (firstBrace === -1 || lastBrace <= firstBrace) return []
+
+    const parsed = JSON.parse(cleaned.slice(firstBrace, lastBrace + 1)) as {
+      businesses?: Array<{ name?: string; website?: string; address?: string }>
+    }
+
+    const out: GooglePlaceRaw[] = []
+    const seen = new Set<string>()
+
+    for (const item of parsed.businesses ?? []) {
+      const rawUrl = String(item.website || '').trim()
+      const name = String(item.name || '').trim()
+      if (!name || !/^https?:\/\//i.test(rawUrl)) continue
+      if (isDirectoryOrAggregatorUrl(rawUrl)) continue
+
+      const domain = extractDomain(rawUrl)
+      if (!domain || seen.has(domain) || params.excludeDomains?.has(domain)) continue
+      seen.add(domain)
+
+      out.push({
+        placeId: `web:${domain}`,
+        name,
+        address: String(item.address || `${params.city}, Kenya`).trim(),
+        phone: null, // Strictly verified by live website scraper only — never AI-guessed!
+        websiteUrl: rawUrl,
+        rating: null,
+        primaryType: params.category,
+      })
+
+      if (out.length >= params.maxResults) break
+    }
+
+    return out
+  } catch {
+    return []
+  }
+}
+
 export async function searchFreeKenyanWebDirectory(params: {
   query: string
   category: LeadCategory
   city: string
   maxResults?: number
+  excludeDomains?: Set<string>
   fetchImpl?: typeof fetch
 }): Promise<GooglePlaceRaw[]> {
   const fetchFn = params.fetchImpl ?? fetch
@@ -185,7 +275,7 @@ export async function searchFreeKenyanWebDirectory(params: {
       cache: 'no-store',
     })
 
-    if (res.ok) {
+    if (res.status === 200) {
       html = await res.text()
     }
   } catch {
@@ -194,7 +284,7 @@ export async function searchFreeKenyanWebDirectory(params: {
     clearTimeout(timer)
   }
 
-  if (!html) {
+  if (!html || !/result__a/i.test(html)) {
     const controller2 = new AbortController()
     const timer2 = setTimeout(() => controller2.abort(), 8000)
     try {
@@ -208,65 +298,80 @@ export async function searchFreeKenyanWebDirectory(params: {
         body: `q=${encodeURIComponent(searchQuery)}&kl=ke-en`,
         cache: 'no-store',
       })
-      if (res2.ok) {
-        html = await res2.text()
+      if (res2.status === 200) {
+        const liteHtml = await res2.text()
+        if (/result-link/i.test(liteHtml)) {
+          html = liteHtml
+        }
       }
     } catch {
-      return []
+      // Fall through to AI directory discovery when search engine blocks datacenter IPs
     } finally {
       clearTimeout(timer2)
     }
   }
 
-  if (!html) return []
-
   const results: GooglePlaceRaw[] = []
   const seenDomains = new Set<string>()
 
-  // Match DuckDuckGo HTML result blocks (anchors + optional snippet)
-  const anchorRegex =
-    /<a[^>]*class="[^"]*(?:result__a|result-link)[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi
+  if (html) {
+    // Match DuckDuckGo HTML result blocks (anchors + optional snippet)
+    const anchorRegex =
+      /<a[^>]*class="[^"]*(?:result__a|result-link)[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi
 
-  let match: RegExpExecArray | null
-  while ((match = anchorRegex.exec(html)) !== null && results.length < maxResults) {
-    let href = match[1].replace(/&amp;/g, '&').trim()
-    const uddg = href.match(/[?&]uddg=([^&]+)/)
-    if (uddg) {
-      try {
-        href = decodeURIComponent(uddg[1])
-      } catch {
-        continue
+    let match: RegExpExecArray | null
+    while ((match = anchorRegex.exec(html)) !== null && results.length < maxResults) {
+      let href = match[1].replace(/&amp;/g, '&').trim()
+      const uddg = href.match(/[?&]uddg=([^&]+)/)
+      if (uddg) {
+        try {
+          href = decodeURIComponent(uddg[1])
+        } catch {
+          continue
+        }
       }
+
+      if (!/^https?:\/\//i.test(href)) continue
+      if (href.toLowerCase().endsWith('.pdf') || href.toLowerCase().endsWith('.doc')) continue
+      if (isDirectoryOrAggregatorUrl(href) || isForbiddenContactSubpage(href)) continue
+
+      const domain = extractDomain(href)
+      if (!domain || seenDomains.has(domain) || params.excludeDomains?.has(domain)) continue
+      seenDomains.add(domain)
+
+      const rawTitle = match[2] || ''
+      const businessName = cleanDiscoveredBusinessTitle(rawTitle, domain)
+
+      // Check nearby snippet text (next 500 chars) for a public +254 business phone
+      const nearbyWindow = html
+        .slice(match.index, Math.min(html.length, match.index + 700))
+        .replace(/<[^>]+>/g, ' ')
+      const phoneMatch = nearbyWindow.match(/(?:\+254|0)[\s\-()]*[127]\d(?:[\s\-()]*\d){7}/)
+      const snippetPhone = phoneMatch
+        ? normalizeKenyanPhone(phoneMatch[0], { source: 'google_places' })
+        : null
+
+      results.push({
+        placeId: `web:${domain}`,
+        name: businessName,
+        address: `${params.city}, Kenya`,
+        phone: snippetPhone,
+        websiteUrl: href,
+        rating: null,
+        primaryType: params.category,
+      })
     }
+  }
 
-    if (!/^https?:\/\//i.test(href)) continue
-    if (href.toLowerCase().endsWith('.pdf') || href.toLowerCase().endsWith('.doc')) continue
-    if (isDirectoryOrAggregatorUrl(href) || isForbiddenContactSubpage(href)) continue
-
-    const domain = extractDomain(href)
-    if (!domain || seenDomains.has(domain)) continue
-    seenDomains.add(domain)
-
-    const rawTitle = match[2] || ''
-    const businessName = cleanDiscoveredBusinessTitle(rawTitle, domain)
-
-    // Check nearby snippet text (next 500 chars) for a public +254 business phone
-    const nearbyWindow = html
-      .slice(match.index, Math.min(html.length, match.index + 700))
-      .replace(/<[^>]+>/g, ' ')
-    const phoneMatch = nearbyWindow.match(/(?:\+254|0)[\s\-()]*[127]\d(?:[\s\-()]*\d){7}/)
-    const snippetPhone = phoneMatch
-      ? normalizeKenyanPhone(phoneMatch[0], { source: 'google_places' })
-      : null
-
-    results.push({
-      placeId: `web:${domain}`,
-      name: businessName,
-      address: `${params.city}, Kenya`,
-      phone: snippetPhone,
-      websiteUrl: href,
-      rating: null,
-      primaryType: params.category,
+  // Cloud/Vercel Datacenter Fallback: When DDG blocks serverless IPs (HTTP 202), discover real Kenyan
+  // business domains via Gemini/Claude and verify 100% of contacts live via HTTP website scraping!
+  if (results.length === 0) {
+    return discoverKenyanBusinessWebsitesViaAi({
+      category: params.category,
+      city: params.city,
+      maxResults,
+      excludeDomains: params.excludeDomains,
+      fetchImpl: params.fetchImpl,
     })
   }
 
@@ -700,6 +805,7 @@ export async function runLeadFinderJob(
             category: task.category,
             city: task.city,
             maxResults: options.maxPlacesPerQuery ?? 10,
+            excludeDomains: existingKeys.domains,
             fetchImpl: options.fetchImpl,
           })
 
