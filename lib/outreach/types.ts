@@ -11,8 +11,12 @@ export const LEAD_STATUSES = [
 export type LeadStatus = (typeof LEAD_STATUSES)[number]
 
 export const LEAD_CATEGORIES = [
-  'hotel',
   'school',
+  'ngo',
+  'government',
+  'hospital',
+  'retail',
+  'hotel',
   'organization',
   'shop',
   'website_inquiry',
@@ -39,6 +43,8 @@ export type OutreachModule =
   | 'followups'
   | 'calling'
   | 'compliance'
+  | 'autopilot'
+  | 'proforma'
 
 export interface OutreachSettings {
   id: string
@@ -54,7 +60,13 @@ export interface OutreachSettings {
   followup_days: number
   whatsapp_followup_template: string
   whatsapp_default_template: string
+  whatsapp_cold_template: string
   calling_enabled: boolean
+  auto_attach_proforma: boolean
+  autopilot_enabled: boolean
+  autopilot_interval_minutes: number
+  auto_cold_whatsapp: boolean
+  last_autopilot_at: string | null
   updated_at: string
 }
 
@@ -111,6 +123,8 @@ export interface OutreachEmail {
   reviewed_at: string | null
   sent_at: string | null
   unsubscribed_at: string | null
+  proforma_number?: string | null
+  proforma_total_kes?: number | null
   created_at: string
   outreach_leads?: Partial<OutreachLead> | null
 }
@@ -180,9 +194,20 @@ export const DEFAULT_OUTREACH_SETTINGS: OutreachSettings = {
   review_before_send: false,
   daily_email_limit: 50,
   sender_name: 'Batteriq Kenya Business Solutions',
-  sender_email: process.env.RESEND_OUTREACH_FROM_EMAIL || process.env.RESEND_FROM_EMAIL || 'sales@batteriq.com',
+  sender_email:
+    process.env.RESEND_OUTREACH_FROM_EMAIL ||
+    process.env.RESEND_FROM_EMAIL ||
+    'sales@batteriq.com',
   reply_to_email: process.env.OUTREACH_REPLY_TO_EMAIL || 'sale@batteriq.com',
-  target_categories: ['hotels', 'schools', 'organizations', 'shops'],
+  target_categories: [
+    'schools & universities',
+    'ngos & foundations',
+    'government parastatals',
+    'retail & baby shops',
+    'hospitals & clinics',
+    'hotels & lodges',
+    'organizations & saccos',
+  ],
   target_cities: [
     'Nairobi',
     'Mombasa',
@@ -199,6 +224,12 @@ export const DEFAULT_OUTREACH_SETTINGS: OutreachSettings = {
   followup_days: 7,
   whatsapp_followup_template: 'batteriq_inquiry_followup',
   whatsapp_default_template: 'batteriq_business_reply',
+  whatsapp_cold_template: 'batteriq_quote_ready',
   calling_enabled: false,
+  auto_attach_proforma: true,
+  autopilot_enabled: true,
+  autopilot_interval_minutes: 30,
+  auto_cold_whatsapp: false,
+  last_autopilot_at: null,
   updated_at: new Date(0).toISOString(),
 }

@@ -4,12 +4,12 @@ import { LEAD_STATUSES, type LeadStatus, type OutreachLead, type OutreachMessage
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 const DEFAULT_CLAUDE_MODEL = 'claude-sonnet-4-6'
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
-const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
+const DEFAULT_GEMINI_MODEL = 'gemini-3.5-flash'
 const FALLBACK_GEMINI_MODELS = [
+  'gemini-3.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.8-flash',
   'gemini-2.5-flash',
-  'gemini-flash-latest',
-  'gemini-2.5-flash-lite',
-  'gemini-2.0-flash',
 ]
 const REQUEST_TIMEOUT_MS = 35_000
 
@@ -19,6 +19,12 @@ export interface CatalogProductSummary {
   category: string
   price_kes: number
   slug?: string
+}
+
+export interface ProformaPromptContext {
+  proformaNumber: string
+  systemTitle: string
+  totalKes: number
 }
 
 export interface GeneratedOutreachEmail {
@@ -77,7 +83,7 @@ export function resolveOutreachAiConfig(): ActiveAiConfig {
   }
 
   throw new Error(
-    'Neither ANTHROPIC_API_KEY nor GEMINI_API_KEY is configured in environment variables'
+    'Neither ANTHROPIC_API_KEY nor OUTREACH_GEMINI_API_KEY / GEMINI_API_KEY is configured in environment variables'
   )
 }
 
@@ -96,7 +102,7 @@ function extractJsonObject(raw: string): Record<string, unknown> {
     if (firstBrace !== -1 && lastBrace > firstBrace) {
       return JSON.parse(withoutFence.slice(firstBrace, lastBrace + 1)) as Record<string, unknown>
     }
-    throw new Error('Claude did not return valid JSON output')
+    throw new Error('AI model did not return valid JSON output')
   }
 }
 
@@ -131,6 +137,9 @@ async function callGeminiGenerateContent(params: {
         const controller = new AbortController()
         const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
 
+        const supportsZeroThinkingBudget =
+          /^gemini-3/i.test(activeModel) && !activeModel.toLowerCase().includes('lite')
+
         try {
           const url = `${GEMINI_API_BASE}/${encodeURIComponent(activeModel)}:generateContent?key=${encodeURIComponent(params.apiKey)}`
           const res = await fetchFn(url, {
@@ -149,14 +158,17 @@ async function callGeminiGenerateContent(params: {
               ],
               generationConfig: {
                 temperature: params.temperature ?? 0.5,
-                maxOutputTokens: params.maxTokens ?? 900,
+                maxOutputTokens: Math.max(1200, params.maxTokens ?? 1200),
                 ...(wantsJson ? { responseMimeType: 'application/json' } : {}),
+                ...(supportsZeroThinkingBudget
+                  ? { thinkingConfig: { thinkingBudget: 0 } }
+                  : {}),
               },
             }),
             cache: 'no-store',
           })
 
-          if (res.status === 404 && i < modelsToTry.length - 1) {
+          if ((res.status === 404 || res.status === 400) && i < modelsToTry.length - 1) {
             continue
           }
 
@@ -171,11 +183,12 @@ async function callGeminiGenerateContent(params: {
 
           const data = (await res.json()) as {
             candidates?: Array<{
-              content?: { parts?: Array<{ text?: string }> }
+              content?: { parts?: Array<{ text?: string; thought?: boolean }> }
             }>
           }
           const textBlock = data.candidates?.[0]?.content?.parts
-            ?.map((p) => p.text || '')
+            ?.filter((p) => !p.thought)
+            .map((p) => p.text || '')
             .join('')
             .trim()
 
@@ -292,10 +305,10 @@ export async function callClaudeMessages(params: {
 function buildBatteriqCatalogSnippet(products: CatalogProductSummary[]): string {
   if (!products.length) {
     return [
-      '- EcoFlow DELTA 2 (1024Wh LiFePO4, 1800W AC): Silent instant UPS backup for offices, Wi-Fi, POS, lighting & computers',
-      '- EcoFlow DELTA 2 Max (2048Wh expandable to 6kWh, 2400W AC): Ideal for hotels, clinics, schools & server rooms',
-      '- EcoFlow DELTA Pro (3600Wh expandable to 25kWh, 3600W AC): Commercial whole-facility backup & solar hybrid',
-      '- BLUETTI AC200L / Commercial Backup Series: Heavy-duty lithium power stations + foldable/rooftop solar panels',
+      '- EcoFlow RIVER 2 Pro / DELTA 2 (1024Wh LiFePO4, 1800W AC): Silent instant <20ms UPS backup for retail shops, baby shops, POS tills, Wi-Fi, lighting & CCTV',
+      '- EcoFlow DELTA 2 Max (2048Wh expandable to 6kWh, 2400W AC): Ideal for schools, NGO offices, clinics, pharmacies & server rooms',
+      '- EcoFlow DELTA Pro (3600Wh expandable to 25kWh, 3600W AC): Institutional whole-facility backup & solar hybrid for hospitals, parastatals, universities & hotels',
+      '- BLUETTI AC200L / Commercial Backup Series + Solar Panels: Heavy-duty lithium power stations with official Kenya warranty & KRA eTIMS VAT invoicing',
     ].join('\n')
   }
 
@@ -315,39 +328,74 @@ function buildSmartTailoredOutreachEmail(params: {
   >
   products?: CatalogProductSummary[]
   senderName: string
+  proforma?: ProformaPromptContext | null
 }): GeneratedOutreachEmail {
-  const { lead, products = [], senderName } = params
+  const { lead, products = [], senderName, proforma } = params
   const city = lead.city || 'Kenya'
   const featured =
     products.find((p) => /delta\s*(pro|3\s*max|3\s*ultra|2\s*max)|ac200/i.test(p.name)) ||
     products[0]
   const featuredLine = featured
     ? `${featured.name} (KES ${Number(featured.price_kes).toLocaleString('en-KE')})`
-    : 'EcoFlow DELTA Pro & BLUETTI AC200PL commercial LiFePO4 backup series'
+    : 'EcoFlow DELTA & BLUETTI commercial LiFePO4 backup series'
 
-  const categoryPitch =
-    lead.category === 'hotel'
-      ? `keep guest rooms, reception, Wi-Fi, security, and conference spaces running silently during KPLC outages — with zero diesel fumes, zero generator noise, and <20ms automatic switchover`
-      : lead.category === 'school'
-        ? `keep ICT labs, smart classrooms, administration servers, Wi-Fi, and CCTV online continuously during KPLC outages — silently and with zero fuel maintenance`
-        : lead.category === 'shop'
-          ? `keep your POS terminals, M-Pesa tills, lighting, CCTV, and refrigeration online without interruption whenever KPLC power drops`
-          : `protect your servers, routers, workstations, and critical facility equipment with silent <20ms automatic UPS switchover and zero diesel maintenance`
+  const sectorInfo: Record<string, { noun: string; benefit: string }> = {
+    hotel: {
+      noun: 'hotels, lodges, and conference venues',
+      benefit:
+        'keep guest rooms, reception, Wi-Fi, security, and conference halls running silently during KPLC outages — with zero diesel fumes, zero generator noise, and <20ms automatic switchover',
+    },
+    school: {
+      noun: 'schools, colleges, and universities',
+      benefit:
+        'keep ICT labs, smart classrooms, administration servers, Wi-Fi, and CCTV online continuously during KPLC outages — silently and with zero fuel maintenance',
+    },
+    ngo: {
+      noun: 'NGOs, foundations, and humanitarian programmes',
+      benefit:
+        'keep field offices, communications routers, laptops, cold-chain units, and operations running reliably with portable solar-ready LiFePO4 backup and zero diesel logistics',
+    },
+    government: {
+      noun: 'government agencies, county offices, and parastatals',
+      benefit:
+        'maintain uninterrupted public service delivery across ICT registries, servers, customer desks, and security systems with <20ms UPS switchover, LPO/procurement documentation, and KRA eTIMS VAT compliance',
+    },
+    hospital: {
+      noun: 'hospitals, medical clinics, and pharmacies',
+      benefit:
+        'protect vaccine and medicine cold-chain fridges, diagnostic lab equipment, patient monitors, lighting, and HMIS computers with instant zero-fume lithium backup',
+    },
+    retail: {
+      noun: 'retail stores, baby shops, boutiques, and commercial outlets',
+      benefit:
+        'keep your POS terminals, M-Pesa tills, warm store lighting, barcode scanners, and CCTV online without interruption so customers continue shopping comfortably even during KPLC blackouts',
+    },
+    shop: {
+      noun: 'retailers, stores, and commercial shops',
+      benefit:
+        'keep your POS terminals, M-Pesa tills, store lighting, CCTV, and display equipment online seamlessly whenever KPLC power drops',
+    },
+  }
 
-  const subject = `Silent backup power for ${lead.business_name}`.slice(0, 65)
+  const chosen = sectorInfo[lead.category] || {
+    noun: 'Kenyan organizations and institutions',
+    benefit:
+      'protect servers, routers, workstations, and critical facility equipment with silent <20ms automatic UPS switchover and zero diesel maintenance',
+  }
+
+  const subject = proforma
+    ? `Backup Power Proposal & Proforma (${proforma.proformaNumber}) — ${lead.business_name}`.slice(0, 78)
+    : `Silent backup power for ${lead.business_name}`.slice(0, 68)
+
+  const proformaParagraph = proforma
+    ? `For your convenience, we have attached a tailored Proforma Invoice (${proforma.proformaNumber}) for our recommended ${proforma.systemTitle} package (KES ${proforma.totalKes.toLocaleString('en-KE')} inclusive of 24-month local warranty and KRA eTIMS VAT invoice), which we can adjust to match your exact load requirements.`
+    : `Many Kenyan institutions start with our ${featuredLine}, backed by an official 24-month local manufacturer warranty, full KRA eTIMS VAT tax invoicing, and fast nationwide delivery.`
+
   const paragraphs = [
     `Hello ${lead.business_name} Team,`,
-    `We noticed your operations in ${city} and wanted to share how Batteriq Kenya — Kenya's official authorised EcoFlow & BLUETTI commercial distributor — helps ${
-      lead.category === 'hotel'
-        ? 'hotels and lodges'
-        : lead.category === 'school'
-          ? 'schools and universities'
-          : lead.category === 'shop'
-            ? 'retailers and commercial stores'
-            : 'Kenyan organizations and facilities'
-    } ${categoryPitch}.`,
-    `Many Kenyan institutions start with our ${featuredLine}, backed by an official 24-month local manufacturer warranty, full KRA eTIMS VAT tax invoicing, and fast nationwide delivery.`,
-    `Would you be open to a quick load-sizing recommendation or a tailored B2B proforma quote for ${lead.business_name}? Simply reply directly to this email and our commercial team will be glad to assist.`,
+    `We noticed your work in ${city} and wanted to share how Batteriq Kenya — Kenya's official authorised EcoFlow & BLUETTI commercial power partner — helps ${chosen.noun} ${chosen.benefit}.`,
+    proformaParagraph,
+    `Would you like us to customize the unit quantities, arrange a quick load-sizing check, or process an LPO / corporate order for ${lead.business_name}? Simply reply directly to this email and our commercial team will assist right away.`,
     `Warm regards,\n${senderName}`,
   ]
 
@@ -360,8 +408,9 @@ function buildSmartTailoredOutreachEmail(params: {
 }
 
 /**
- * Uses Claude or Google Gemini to write a bespoke B2B outreach email for a Kenyan business lead,
- * with resilient smart B2B copywriter fallback if an external AI key is rotated or quota-limited.
+ * Uses Google Gemini 3.5 Flash (or Claude) to write a bespoke outreach email for any Kenyan
+ * institution or business — schools, NGOs, government parastatals, hospitals, retail/baby shops,
+ * hotels, and corporate organizations — optionally referencing an attached KES Proforma Invoice.
  */
 export async function generateOutreachEmailWithClaude(params: {
   lead: Pick<
@@ -370,52 +419,63 @@ export async function generateOutreachEmailWithClaude(params: {
   >
   products?: CatalogProductSummary[]
   senderName: string
+  proforma?: ProformaPromptContext | null
   fetchImpl?: typeof fetch
 }): Promise<GeneratedOutreachEmail> {
-  const { lead, products = [], senderName, fetchImpl } = params
+  const { lead, products = [], senderName, proforma, fetchImpl } = params
   const catalogText = buildBatteriqCatalogSnippet(products)
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com'
 
-  const systemPrompt = `You are a senior B2B energy consultant at Batteriq Kenya (${siteUrl}) — Kenya's official authorised EcoFlow & BLUETTI commercial power backup and solar distributor based in Nairobi.
+  const systemPrompt = `You are a senior B2B & Institutional Energy Consultant at Batteriq Kenya (${siteUrl}) — Kenya's official authorised EcoFlow & BLUETTI commercial power backup and solar distributor based in Nairobi.
 Tagline: "Guarantee your Uptime."
 
-WHAT BATTERIQ DOES FOR KENYAN BUSINESSES:
-- Eliminates KPLC blackout downtime silently, with zero diesel fumes, zero fuel theft, and <20ms automatic EPS/UPS switchover.
-- Official 24-month to 5-year manufacturer warranty in Kenya, full KRA eTIMS VAT tax invoices for businesses, corporate M-Pesa / bank / card payment, and fast delivery across Nairobi, Mombasa, Kisumu, Nakuru, Eldoret & nationwide.
-- Category value propositions:
-  * Hotels / Lodges / Resorts: Keep guest room power, Wi-Fi, reception, security & conference halls running silently without disturbing guests with noisy generators.
-  * Schools / Colleges: Keep computer labs, smart boards, administration servers, CCTV & exam prep uninterrupted.
-  * Organizations / Clinics / Offices / NGOs: Protect routers, servers, cold-chain equipment & workstations with instant switchover.
-  * Shops / Supermarkets / Pharmacies: Keep POS systems, M-Pesa tills, lighting, CCTV & chillers online so you never lose a customer during an outage.
+WHAT BATTERIQ DOES FOR KENYAN ORGANIZATIONS & SHOPS:
+- Eliminates KPLC blackout downtime silently, with zero diesel fumes, zero generator noise, zero fuel theft, and <20ms automatic EPS/UPS switchover.
+- Official 24-month to 5-year manufacturer warranty in Kenya, full KRA eTIMS VAT tax invoices, LPO / institutional procurement support, M-Pesa / bank / card payment, and fast delivery across Nairobi, Mombasa, Kisumu, Nakuru, Eldoret & nationwide.
+- Sector-specific value propositions:
+  * Schools / Colleges / Universities: Keep ICT labs, smart classrooms, administration servers, Wi-Fi, CCTV & exam preparation uninterrupted.
+  * NGOs / Foundations / Humanitarian Agencies: Reliable clean LiFePO4 + solar backup for headquarters & field offices, routers, laptops & cold-chain without diesel logistics.
+  * Government Ministries / Parastatals (.go.ke) / County Offices: Keep citizen service desks, ICT registries, servers & security systems running with full KRA eTIMS tax compliance and formal proforma/LPO documentation.
+  * Hospitals / Clinics / Pharmacies: Protect vaccine & medicine cold-chain fridges, lab diagnostics, patient monitors & HMIS workstations with zero fumes.
+  * Retail & Everyday Shops (e.g. Baby Shops like Nila Baby Shop, Boutiques, Supermarkets, Electronics, Hardware): Keep POS tills, M-Pesa payments, warm inviting shop lighting, barcode scanners & CCTV running so parents and shoppers never walk out during a blackout.
+  * Hotels / Lodges / Resorts: Keep guest rooms, Wi-Fi, reception & conference halls powered silently without noisy generators.
 
 FEATURED IN-STOCK SOLUTIONS:
 ${catalogText}
 
 WRITING RULES:
-1. Write a warm, respectful, non-spammy B2B email specifically tailored to this Kenyan business's name, city, category, and website summary.
-2. Keep it concise: 110–170 words total across 3–4 short paragraphs.
-3. Recommend 1 or 2 relevant EcoFlow/BLUETTI models for their specific use case.
-4. Invite them to reply directly to this email or ask for a tailored B2B quote / free load sizing call.
+1. Write a warm, respectful, executive outreach email specifically tailored to this Kenyan entity's name, sector, city, and website summary.
+2. Keep it concise: 115–175 words total across 3–4 short paragraphs.
+3. ${
+    proforma
+      ? `Explicitly mention that we have attached a tailored Batteriq Proforma Quotation (${proforma.proformaNumber}) for the ${proforma.systemTitle} (KES ${proforma.totalKes.toLocaleString('en-KE')}) matched to their operations, and let them know we can adjust quantities or capacity anytime.`
+      : 'Recommend 1 or 2 relevant EcoFlow/BLUETTI models for their specific sector use case.'
+  }
+4. Invite them to reply directly to confirm, request adjustments to the proforma/LPO, or book a free 5-minute load-sizing check.
 5. Sign off with "${senderName}". Do NOT add an unsubscribe link yourself (the system appends the compliant footer & one-click unsubscribe link automatically).
 6. Return STRICT JSON ONLY with keys:
 {
-  "subject": "clear, natural B2B subject line under 65 chars (no ALL CAPS or spam emojis)",
-  "paragraphs": ["Greeting + personalized opener...", "Specific backup value + model...", "CTA...", "Sign-off"]
+  "subject": "clear, natural B2B subject line under 72 chars (no ALL CAPS or spam emojis)",
+  "paragraphs": ["Greeting + personalized opener...", "Specific backup value + proforma/model...", "CTA...", "Sign-off"]
 }`
 
-  const userPrompt = `Write a personalized outreach email for this Kenyan business:
-- Business Name: ${lead.business_name}
-- Category: ${lead.category}
+  const userPrompt = `Write a personalized outreach email for this Kenyan client:
+- Entity Name: ${lead.business_name}
+- Sector / Category: ${lead.category}
 - City / Location: ${lead.city || lead.address || 'Kenya'}
 - Website: ${lead.website_url || 'N/A'}
-- Website Summary: ${lead.business_summary || 'Kenyan business operating locally'}`
+- Website Summary: ${lead.business_summary || 'Operating in Kenya'}${
+    proforma
+      ? `\n- Attached Proforma Invoice: #${proforma.proformaNumber} — ${proforma.systemTitle} — Total KES ${proforma.totalKes.toLocaleString('en-KE')}`
+      : ''
+  }`
 
   try {
     const { text, model } = await callClaudeMessages({
       systemPrompt,
       userPrompt,
-      maxTokens: 700,
-      temperature: 0.6,
+      maxTokens: 1200,
+      temperature: 0.55,
       fetchImpl,
     })
 
@@ -429,7 +489,7 @@ WRITING RULES:
           .filter(Boolean)
 
     if (!subject || rawParagraphs.length === 0) {
-      throw new Error('Claude returned incomplete email subject or paragraphs')
+      throw new Error('AI returned incomplete email subject or paragraphs')
     }
 
     return {
@@ -448,7 +508,7 @@ WRITING RULES:
         err instanceof Error ? err.message : String(err)
       }`,
     }).catch(() => {})
-    return buildSmartTailoredOutreachEmail({ lead, products, senderName })
+    return buildSmartTailoredOutreachEmail({ lead, products, senderName, proforma })
   }
 }
 
@@ -473,7 +533,7 @@ export function detectDeterministicHumanRequest(message: string): boolean {
 }
 
 /**
- * Uses Claude to reply to an inbound WhatsApp message in AI Takeover mode,
+ * Uses Gemini 3.5 Flash / Claude to reply to an inbound WhatsApp message in AI Takeover mode,
  * classify updated lead status, and detect hot leads / human handoff requests.
  */
 export async function generateWhatsAppAiReplyWithClaude(params: {
@@ -510,13 +570,13 @@ export async function generateWhatsAppAiReplyWithClaude(params: {
     })
     .join('\n')
 
-  const systemPrompt = `You are Batteriq Kenya's AI WhatsApp Sales & Support Specialist (batteriq.com — authorised EcoFlow & BLUETTI distributor in Nairobi, Kenya).
+  const systemPrompt = `You are Batteriq Kenya's AI WhatsApp Sales & Institutional Specialist (batteriq.com — authorised EcoFlow & BLUETTI distributor in Nairobi, Kenya).
 
 AVAILABLE PRODUCTS & PRICING (KES):
 ${catalogText}
 
 KEY FACTS:
-- KRA eTIMS VAT invoices provided for all business & personal purchases.
+- Official KRA eTIMS VAT invoices & Proforma Invoices / LPO support provided for all businesses, schools, NGOs, parastatals, clinics & retail shops.
 - Payment via M-Pesa, Visa/Mastercard, or corporate invoice/bank transfer.
 - Same-day delivery in Nairobi; 24–48hr insured delivery across Kenya.
 - Official 24-month+ manufacturer warranty.
@@ -526,7 +586,7 @@ LEAD STATUS DEFINITIONS (pick the most accurate status based on the conversation
 - "contacted": Outreach sent, no real reply yet
 - "replied": Customer replied with general acknowledgment or basic question
 - "interested": Customer is asking about products, specs, sizing, or use-case fit
-- "hot": High buying intent — asking for formal quote/proforma invoice, bulk pricing, payment steps, site visit, delivery timeline to buy, or ready to order!
+- "hot": High buying intent — asking for formal quote/proforma invoice, LPO, bulk pricing, payment steps, site visit, delivery timeline to buy, or ready to order!
 - "customer": Already confirmed purchase
 - "opted_out": Asked to stop messages / unsubscribe / not be contacted again
 
@@ -561,7 +621,7 @@ Customer: ${inboundMessage}`
     const { text, model } = await callClaudeMessages({
       systemPrompt,
       userPrompt,
-      maxTokens: 550,
+      maxTokens: 1200,
       temperature: 0.4,
       fetchImpl,
     })
@@ -583,7 +643,6 @@ Customer: ${inboundMessage}`
     if (isOptOut) {
       newStatus = 'opted_out'
     } else if (lead?.status === 'customer') {
-      // Never downgrade an existing paying customer
       newStatus = 'customer'
     }
 
@@ -601,7 +660,7 @@ Customer: ${inboundMessage}`
     if (fetchImpl) throw err
 
     const isHotIntent =
-      /\b(quote|quotation|proforma|invoice|buy|order|purchase|bulk|units?|price\s+list|pay|mpesa|m-pesa|site\s+visit|deliver)\b/i.test(
+      /\b(quote|quotation|proforma|invoice|lpo|buy|order|purchase|bulk|units?|price\s+list|pay|mpesa|m-pesa|site\s+visit|deliver)\b/i.test(
         inboundMessage
       )
     const isProductQuestion =

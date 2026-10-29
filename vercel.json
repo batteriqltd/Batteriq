@@ -28,6 +28,12 @@
     "app/api/cron/outreach-followups/route.ts": {
       "maxDuration": 60
     },
+    "app/api/cron/outreach-autopilot/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/admin/outreach/proforma/route.ts": {
+      "maxDuration": 60
+    },
     "app/api/whatsapp/webhook/route.ts": {
       "maxDuration": 30
     }

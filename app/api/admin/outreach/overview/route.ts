@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     if (searchQ) {
       const safe = searchQ.replace(/[%_]/g, '')
       leadsQuery = leadsQuery.or(
-        `business_name.ilike.%${safe}%,email.ilike.%${safe}%,city.ilike.%${safe}%,phone_e164.ilike.%${safe}%`
+        `business_name.ilike.%${safe}%,email.ilike.%${safe}%,city.ilike.%${safe}%,phone_e164.ilike.%${safe}%,domain.ilike.%${safe}%`
       )
     }
 
@@ -54,6 +54,7 @@ export async function GET(req: NextRequest) {
       suppressionRes,
       errorsTodayRes,
       pendingHumanRes,
+      proformasSentRes,
       leadsRes,
       emailsRes,
       logsRes,
@@ -92,6 +93,11 @@ export async function GET(req: NextRequest) {
       (supabase.from('outreach_conversations') as any)
         .select('id', { count: 'exact', head: true })
         .eq('status', 'pending_human'),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.from('outreach_emails') as any)
+        .select('id', { count: 'exact', head: true })
+        .eq('status', 'sent')
+        .not('proforma_number', 'is', null),
       leadsQuery,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (supabase.from('outreach_emails') as any)
@@ -110,6 +116,25 @@ export async function GET(req: NextRequest) {
         .limit(40),
     ])
 
+    const emailRows = (emailsRes.data ?? []) as Array<{
+      status?: string
+      proforma_total_kes?: number | null
+    }>
+    const quotedKes = emailRows
+      .filter((e) => e.status === 'sent' || e.status === 'pending_review' || e.status === 'approved')
+      .reduce((sum, e) => sum + (Number(e.proforma_total_kes) || 0), 0)
+
+    const estimatedActiveLeadKes = ((leadsRes.data ?? []) as Array<{ status?: string; category?: string }>)
+      .filter((l) => l.status !== 'opted_out')
+      .reduce((sum, l) => {
+        if (l.category === 'government' || l.category === 'hospital') return sum + 685000
+        if (l.category === 'school' || l.category === 'hotel') return sum + 545000
+        if (l.category === 'ngo' || l.category === 'organization') return sum + 380000
+        return sum + 223000
+      }, 0)
+
+    const pipelineValueKes = Math.max(quotedKes, estimatedActiveLeadKes)
+
     return NextResponse.json({
       admin: { email: session.email, role: session.role },
       settings,
@@ -123,6 +148,8 @@ export async function GET(req: NextRequest) {
         optOutsCount: suppressionRes.count ?? 0,
         errorsTodayCount: errorsTodayRes.count ?? 0,
         pendingHumanCount: pendingHumanRes.count ?? 0,
+        proformasSentCount: proformasSentRes.count ?? 0,
+        pipelineValueKes,
       },
       leads: leadsRes.data ?? [],
       emails: emailsRes.data ?? [],

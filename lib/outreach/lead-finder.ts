@@ -93,7 +93,8 @@ export function isDirectoryOrAggregatorUrl(rawUrl: string): boolean {
   const domain = extractDomain(rawUrl)
   if (!domain) return true
   const lower = domain.toLowerCase()
-  if (lower.endsWith('.gov') || lower.endsWith('.go.ke') || lower.endsWith('.mil')) {
+  // Allow Kenyan government & parastatal domains (.go.ke); only skip foreign .gov / .mil
+  if (lower.endsWith('.gov') || lower.endsWith('.mil')) {
     return true
   }
   return AGGREGATOR_AND_DIRECTORY_DOMAINS.some((blocked) => lower.includes(blocked))
@@ -117,7 +118,7 @@ function cleanDiscoveredBusinessTitle(rawTitle: string, domain: string): string 
       if (!p || p.length < 3) return false
       if (/^\+?\d[\d\s\-()]{6,}$/.test(p)) return false
       if (
-        /^(contact(\s+us|\s+&\s+\w+|\s+info|\s+details)?|about(\s+us)?|home(\s+page)?|book(\s+now|\s+online|\s+a\s+room)?|call\s+us|reach\s+us|find\s+us|locations?|welcome(\s+to)?|official\s+website|get\s+in\s+touch|enquiries|inquiries|admissions|reservations|customer\s+(care|service|support)|support)$/i.test(
+        /^(contact(\s+us|\s+&\s+\w+|\s+info|\s+details)?|about(\s+us)?|home(\s+page)?|book(\s+now|\s+online|\s+a\s+room)?|call\s+us|reach\s+us|find\s+us|locations?|welcome(\s+to)?|official\s+website|get\s+in\s+touch|enquiries|inquiries|admissions|reservations|tenders|procurement|customer\s+(care|service|support)|support)$/i.test(
           p
         )
       ) {
@@ -131,40 +132,53 @@ function cleanDiscoveredBusinessTitle(rawTitle: string, domain: string): string 
     return best.replace(/^welcome\s+to\s+/i, '').trim()
   }
 
-  // Fallback: humanize domain root (e.g. "hotelboulevard.co.ke" -> "Hotelboulevard")
+  // Fallback: humanize domain root (e.g. "nilababyshop.com" -> "Nilababyshop")
   const base = domain.split('.')[0].replace(/[-_]+/g, ' ')
   return base.charAt(0).toUpperCase() + base.slice(1)
 }
 
+function isSpecificCustomQuery(rawQuery?: string): boolean {
+  if (!rawQuery) return false
+  // Auto-generated rotating queries follow the exact pattern "<target_category> in <city>, Kenya"
+  return !/\s+in\s+[a-z\s]+,\s*kenya$/i.test(rawQuery.trim())
+}
+
 function buildFreeKenyanSearchQuery(category: LeadCategory, city: string, rawQuery?: string): string {
-  if (rawQuery && !rawQuery.toLowerCase().includes(' in ')) {
-    return `${rawQuery} Kenya contact "+254" -facebook -tripadvisor -booking`
+  if (rawQuery && isSpecificCustomQuery(rawQuery)) {
+    return `${rawQuery} Kenya contact "+254" -facebook -tripadvisor -booking -jiji`
   }
 
   switch (category) {
+    case 'government':
+      return `(parastatal OR authority OR ministry OR commission OR corporation) "${city}" Kenya "contact" "+254" (site:.go.ke OR site:.co.ke OR site:.or.ke)`
+    case 'ngo':
+      return `(ngo OR foundation OR humanitarian OR trust OR charity OR society) "${city}" Kenya "contact" "+254" (site:.or.ke OR site:.org)`
+    case 'hospital':
+      return `(hospital OR clinic OR medical OR healthcare OR maternity) "${city}" Kenya "contact" "+254" (site:.org OR site:.co.ke OR site:.or.ke)`
+    case 'school':
+      return `(school OR college OR university OR academy OR institute) "${city}" Kenya "contact" "+254" (site:.ac.ke OR site:.sc.ke OR site:.co.ke OR site:.org)`
+    case 'retail':
+    case 'shop':
+      return `("baby shop" OR boutique OR pharmacy OR supermarket OR electronics OR hardware OR store) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.com) -jiji -jumia`
     case 'hotel':
       return `(hotel OR resort OR lodge) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.com) -booking -tripadvisor -expedia`
-    case 'school':
-      return `(school OR college OR academy OR institute) "${city}" Kenya "contact" "+254" (site:.ac.ke OR site:.sc.ke OR site:.co.ke OR site:.org)`
     case 'organization':
-      return `(hospital OR clinic OR foundation OR organization OR logistics OR offices) "${city}" Kenya "contact" "+254" (site:.or.ke OR site:.co.ke OR site:.org)`
-    case 'shop':
-      return `(supermarket OR electronics OR hardware OR pharmacy ORmart OR store) "${city}" Kenya "contact" "+254" site:.co.ke -jiji -jumia`
+      return `(sacco OR organization OR association OR logistics OR corporate) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.or.ke OR site:.coop OR site:.com)`
     default:
-      return `business "${city}" Kenya "contact" "+254" site:.co.ke -facebook -jiji`
+      return `(organization OR school OR ngo OR parastatal OR shop) "${city}" Kenya "contact" "+254" -facebook -jiji`
   }
 }
 
 /**
- * 100% Free, Zero-Key, Zero-Card Kenyan Business Discovery Engine:
- * Finds official Kenyan business websites for hotels, schools, organizations, and shops,
- * filtering out social media (Facebook, etc.) and directory/OTA aggregators so only
- * authentic first-party business websites are scraped for public corporate contacts.
+ * Multi-Sector Kenyan Online Entity Discovery via Gemini 3.5 Flash / Claude:
+ * Discovers real Kenyan schools, NGOs, government parastatals (.go.ke), hospitals,
+ * everyday shops (like Nila Baby Shop), hotels, and organizations with official websites.
  */
 export async function discoverKenyanBusinessWebsitesViaAi(params: {
   category: LeadCategory
   city: string
   maxResults: number
+  customQuery?: string
   excludeDomains?: Set<string>
   fetchImpl?: typeof fetch
 }): Promise<GooglePlaceRaw[]> {
@@ -172,27 +186,44 @@ export async function discoverKenyanBusinessWebsitesViaAi(params: {
     ? Array.from(params.excludeDomains).slice(-60).join(', ')
     : ''
 
-  const categoryLabel =
-    params.category === 'hotel'
-      ? 'hotels, resorts, lodges, and conference hotels'
-      : params.category === 'school'
-        ? 'private schools, international schools, colleges, and universities'
-        : params.category === 'organization'
-          ? 'private hospitals, medical clinics, NGOs, Saccos, logistics companies, and corporate offices'
-          : 'supermarket chains, electronics retailers, solar/hardware stores, pharmacies, and commercial shops'
+  const categoryDescriptions: Record<string, string> = {
+    government:
+      'Kenyan government parastatals, state corporations, regulatory authorities, ministries, and county agencies (including .go.ke, .co.ke, and .or.ke official websites)',
+    ngo: 'NGOs, humanitarian agencies, charitable foundations, development trusts, and non-profit organizations operating in Kenya (.or.ke, .org)',
+    hospital:
+      'hospitals, medical centres, specialist clinics, maternity hospitals, and pharmacy chains in Kenya',
+    school:
+      'schools, international schools, colleges, technical institutes, and universities in Kenya (.ac.ke, .sc.ke, .org, .co.ke)',
+    retail:
+      'Kenyan retail stores, baby shops (such as Nila Baby Shop, Lullaby Baby Shop, kids & maternity stores), boutiques, supermarkets, electronics stores, pharmacies, and hardware shops',
+    shop:
+      'Kenyan retail stores, baby shops, boutiques, supermarkets, electronics stores, pharmacies, and commercial shops',
+    hotel: 'hotels, resorts, safari lodges, and conference centres in Kenya',
+    organization:
+      'Kenyan Saccos, professional associations, research institutes, logistics firms, and corporate organizations',
+  }
 
-  const systemPrompt = `You are a Kenyan B2B business directory researcher.
-Return STRICT JSON ONLY listing real, currently operating Kenyan businesses in the requested category and city that have their OWN official corporate website (e.g. .co.ke, .ac.ke, .sc.ke, .or.ke, .com, .org).
-NEVER include Facebook, Instagram, LinkedIn, Booking.com, TripAdvisor, directories, or government (.go.ke) websites.
-NEVER invent fake domains — only list real, established Kenyan institutions and companies whose official domain you know with high confidence.
+  const categoryLabel =
+    categoryDescriptions[params.category] ||
+    'Kenyan schools, NGOs, government parastatals, hospitals, retail/baby shops, and organizations'
+
+  const systemPrompt = `You are a Kenyan institutional & commercial directory researcher.
+Return STRICT JSON ONLY listing real, currently operating Kenyan entities (schools, NGOs, government parastatals including .go.ke, hospitals, retail & baby shops, hotels, Saccos, and organizations) that have their OWN official website (e.g. .co.ke, .go.ke, .ac.ke, .sc.ke, .or.ke, .com, .org, .coop).
+NEVER include Facebook, Instagram, LinkedIn, TikTok, Jiji, Jumia, Booking.com, TripAdvisor, or news articles.
+NEVER invent fake domains — only list real Kenyan organizations, parastatals, schools, NGOs, and shops whose official domain you know with high confidence.
 JSON schema:
 {
   "businesses": [
-    { "name": "Official Business Name", "website": "https://example.co.ke", "address": "Area/Street, City, Kenya" }
+    { "name": "Official Entity Name", "website": "https://example.co.ke", "address": "Area/Street, City, Kenya" }
   ]
 }`
 
-  const userPrompt = `List up to ${Math.min(18, params.maxResults + 4)} real ${categoryLabel} in or serving ${params.city}, Kenya with their official website URLs.${
+  const specificFocus =
+    params.customQuery && isSpecificCustomQuery(params.customQuery)
+      ? `Specifically match or closely relate to this Kenyan search request: "${params.customQuery}" (in or serving ${params.city}, Kenya).`
+      : `List up to ${Math.min(18, params.maxResults + 4)} real ${categoryLabel} in or serving ${params.city}, Kenya with their official website URLs.`
+
+  const userPrompt = `${specificFocus}${
     excludedSample ? `\nExclude these domains already in our directory: ${excludedSample}` : ''
   }`
 
@@ -200,8 +231,8 @@ JSON schema:
     const { text } = await callClaudeMessages({
       systemPrompt,
       userPrompt,
-      maxTokens: 900,
-      temperature: 0.3,
+      maxTokens: 1200,
+      temperature: 0.25,
       fetchImpl: params.fetchImpl,
     })
 
@@ -256,8 +287,8 @@ JSON schema:
 }
 
 /**
- * Verified Kenyan Commercial & Institutional Domain Registry (zero hardcoded emails or phones —
- * 100% of contacts are extracted live over HTTPS via scrapeBusinessWebsite()).
+ * Verified Kenyan Multi-Sector Institutional & Commercial Domain Registry
+ * (zero hardcoded emails or phones — 100% of contacts are extracted live over HTTPS via scrapeBusinessWebsite()).
  */
 const KENYA_VERIFIED_DOMAIN_REGISTRY: ReadonlyArray<{
   name: string
@@ -265,6 +296,104 @@ const KENYA_VERIFIED_DOMAIN_REGISTRY: ReadonlyArray<{
   city: string
   websiteUrl: string
 }> = [
+  // Government Ministries, State Corporations & Parastatals (.go.ke / official portals)
+  { name: 'Kenya Revenue Authority (KRA)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.kra.go.ke' },
+  { name: 'Kenya Ports Authority (KPA)', category: 'government', city: 'Mombasa', websiteUrl: 'https://www.kpa.co.ke' },
+  { name: 'Kenya Electricity Generating Company (KenGen)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.kengen.co.ke' },
+  { name: 'Kenya Electricity Transmission Company (KETRACO)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.ketraco.co.ke' },
+  { name: 'Kenya Medical Supplies Authority (KEMSA)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.kemsa.co.ke' },
+  { name: 'Kenya Bureau of Standards (KEBS)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.kebs.org' },
+  { name: 'Energy and Petroleum Regulatory Authority (EPRA)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.epra.go.ke' },
+  { name: 'Communications Authority of Kenya (CA)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.ca.go.ke' },
+  { name: 'National Social Security Fund (NSSF Kenya)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.nssf.or.ke' },
+  { name: 'Kenya Airports Authority (KAA)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.kaa.go.ke' },
+  { name: 'Kenya Medical Research Institute (KEMRI)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.kemri.go.ke' },
+  { name: 'Kenya Institute of Curriculum Development (KICD)', category: 'government', city: 'Nairobi', websiteUrl: 'https://kicd.ac.ke' },
+  { name: 'Higher Education Loans Board (HELB)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.helb.co.ke' },
+  { name: 'Kenya Wildlife Service (KWS)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.kws.go.ke' },
+  { name: 'National Environment Management Authority (NEMA)', category: 'government', city: 'Nairobi', websiteUrl: 'https://www.nema.go.ke' },
+  { name: 'Kenya National Highways Authority (KeNHA)', category: 'government', city: 'Nairobi', websiteUrl: 'https://kenha.co.ke' },
+
+  // NGOs, Humanitarian Agencies, Foundations & Non-Profits
+  { name: 'Amref Health Africa', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://amref.org' },
+  { name: 'Kenya Red Cross Society', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://www.redcross.or.ke' },
+  { name: 'Shining Hope for Communities (SHOFCO)', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://www.shofco.org' },
+  { name: 'Kenya Community Development Foundation (KCDF)', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://www.kcdf.or.ke' },
+  { name: 'WWF Kenya', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://www.wwfkenya.org' },
+  { name: 'AGRA (Sustainably Growing Africa’s Food Systems)', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://agra.org' },
+  { name: 'ActionAid International Kenya', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://kenya.actionaid.org' },
+  { name: 'Save the Children Kenya', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://kenya.savethechildren.net' },
+  { name: 'African Wildlife Foundation Kenya', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://www.awf.org' },
+  { name: 'Federation of Women Lawyers in Kenya (FIDA-Kenya)', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://www.fidakenya.org' },
+  { name: ' Transparency International Kenya', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://tikenya.org' },
+
+  // Retail, Baby Shops (including Nila Baby Shop!), Boutiques, Pharmacies & Commercial Stores
+  { name: 'Nila Baby Shop', category: 'retail', city: 'Nairobi', websiteUrl: 'https://nilababyshop.com' },
+  { name: 'Lullaby Baby Shop Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://lullaby.co.ke' },
+  { name: 'Text Book Centre Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://textbookcentre.com' },
+  { name: 'Hotpoint Appliances Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://hotpoint.co.ke' },
+  { name: 'Davis & Shirtliff Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://www.davisandshirtliff.com' },
+  { name: 'Ramtons Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://www.ramtons.com' },
+  { name: 'Chloride Exide Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://www.chlorideexide.com' },
+  { name: 'Sollatek Electronics Kenya', category: 'retail', city: 'Mombasa', websiteUrl: 'https://www.sollatek.co.ke' },
+  { name: 'Goodlife Pharmacy Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://www.goodlife.co.ke' },
+  { name: 'MyDawa Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://mydawa.com' },
+  { name: 'AutoXpress Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://www.autoxpress.co.ke' },
+  { name: 'Naivas Supermarket', category: 'retail', city: 'Nairobi', websiteUrl: 'https://naivas.online' },
+  { name: 'Quickmart Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://www.quickmart.co.ke' },
+  { name: 'Chandarana Foodplus', category: 'retail', city: 'Nairobi', websiteUrl: 'https://foodplus.co.ke' },
+  { name: 'Tile & Carpet Centre Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://tileandcarpet.co.ke' },
+  { name: 'Elite Digital Solutions Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://www.elitedigital.co.ke' },
+  { name: 'Salute iWorld Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://saluteiworld.com' },
+  { name: 'Phoneplace Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://www.phoneplacekenya.com' },
+  { name: 'Avechi Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://avechi.co.ke' },
+
+  // Hospitals, Clinics & Healthcare Networks
+  { name: 'The Karen Hospital', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://www.karenhospital.org' },
+  { name: 'Avenue Healthcare Kenya', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://www.avenuehealthcare.com' },
+  { name: 'The Nairobi Hospital', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://thenairobihospital.org' },
+  { name: 'MP Shah Hospital', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://mpshahhosp.org' },
+  { name: "Gertrude's Children's Hospital", category: 'hospital', city: 'Nairobi', websiteUrl: 'https://www.gerties.org' },
+  { name: 'AAR Healthcare Kenya', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://aar-healthcare.com' },
+  { name: 'Bliss Healthcare Kenya', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://www.blisshealthcare.co.ke' },
+  { name: 'Mater Misericordiae Hospital', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://www.materkenya.com' },
+  { name: 'Coptic Hospital Nairobi', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://coptichospitals.org' },
+  { name: 'Mombasa Hospital', category: 'hospital', city: 'Mombasa', websiteUrl: 'https://www.mombasahospital.com' },
+  { name: 'Mediheal Group of Hospitals', category: 'hospital', city: 'Eldoret', websiteUrl: 'https://www.medihealgroup.com' },
+
+  // Private & Public Schools, Colleges & Universities
+  { name: 'Strathmore University', category: 'school', city: 'Nairobi', websiteUrl: 'https://strathmore.edu' },
+  { name: 'Mount Kenya University', category: 'school', city: 'Thika', websiteUrl: 'https://www.mku.ac.ke' },
+  { name: 'Technical University of Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://tukenya.ac.ke' },
+  { name: 'Brookhouse School Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.brookhouse.ac.ke' },
+  { name: 'Braeburn Schools Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://braeburn.com' },
+  { name: 'Peponi School', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.peponischool.org' },
+  { name: 'Makini Schools', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.makinischools.ac.ke' },
+  { name: 'Riara Group of Schools', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.riaraschools.ac.ke' },
+  { name: 'Riara University', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.riarauniversity.ac.ke' },
+  { name: 'United States International University Africa', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.usiu.ac.ke' },
+  { name: 'Daystar University', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.daystar.ac.ke' },
+  { name: 'KCA University', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.kcau.ac.ke' },
+  { name: 'Zetech University', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.zetech.ac.ke' },
+  { name: 'Potterhouse School Runda', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.potterhouse.ac.ke' },
+  { name: 'Rusinga Schools Nairobi', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.rusinga.ac.ke' },
+  { name: 'Light International School Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.lis.sc.ke' },
+  { name: 'Nova Pioneer Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.novapioneer.com' },
+  { name: 'Oshwal Academy Nairobi', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.oshwalacademy.sc.ke' },
+  { name: 'Aga Khan Academy Mombasa', category: 'school', city: 'Mombasa', websiteUrl: 'https://www.agakhanacademies.org/mombasa' },
+  { name: 'Mombasa Academy', category: 'school', city: 'Mombasa', websiteUrl: 'https://www.mombasaacademy.sc.ke' },
+  { name: 'Kabarak University', category: 'school', city: 'Nakuru', websiteUrl: 'https://www.kabarak.ac.ke' },
+  { name: 'Melvin Jones Lions Academy Nakuru', category: 'school', city: 'Nakuru', websiteUrl: 'https://www.melvinjonesacademy.sc.ke' },
+
+  // Saccos, Corporate Organizations & Logistics
+  { name: 'Stima DT Sacco', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.stima-sacco.com' },
+  { name: 'Mwalimu National Sacco', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.mwalimunational.coop' },
+  { name: 'Unaitas Sacco', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.unaitas.com' },
+  { name: 'Harambee Sacco Society', category: 'organization', city: 'Nairobi', websiteUrl: 'https://harambeesacco.com' },
+  { name: 'Kenya National Police DT Sacco', category: 'organization', city: 'Nairobi', websiteUrl: 'https://policesacco.com' },
+  { name: 'Fargo Courier Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.fargocourier.co.ke' },
+  { name: 'Wells Fargo Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.wellsfargo.co.ke' },
+
   // Hotels, Lodges & Conference Centres
   { name: 'Eka Hotel Nairobi', category: 'hotel', city: 'Nairobi', websiteUrl: 'https://www.ekahotel.com' },
   { name: 'PrideInn Hotels, Resorts & Camps', category: 'hotel', city: 'Nairobi', websiteUrl: 'https://www.prideinnhotels.com' },
@@ -290,67 +419,11 @@ const KENYA_VERIFIED_DOMAIN_REGISTRY: ReadonlyArray<{
   { name: 'Alps Hotel Nakuru', category: 'hotel', city: 'Nakuru', websiteUrl: 'https://www.thealpshotelnakuru.com' },
   { name: 'Boma Inn Eldoret', category: 'hotel', city: 'Eldoret', websiteUrl: 'https://www.theboma.co.ke/boma-inn-eldoret' },
   { name: 'Eka Hotel Eldoret', category: 'hotel', city: 'Eldoret', websiteUrl: 'https://www.ekahoteleldoret.com' },
-
-  // Private & International Schools, Colleges & Universities
-  { name: 'Brookhouse School Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.brookhouse.ac.ke' },
-  { name: 'Braeburn Schools Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://braeburn.com' },
-  { name: 'Peponi School', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.peponischool.org' },
-  { name: 'Makini Schools', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.makinischools.ac.ke' },
-  { name: 'Riara Group of Schools', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.riaraschools.ac.ke' },
-  { name: 'Riara University', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.riarauniversity.ac.ke' },
-  { name: 'United States International University Africa', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.usiu.ac.ke' },
-  { name: 'Daystar University', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.daystar.ac.ke' },
-  { name: 'KCA University', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.kcau.ac.ke' },
-  { name: 'Zetech University', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.zetech.ac.ke' },
-  { name: 'Potterhouse School Runda', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.potterhouse.ac.ke' },
-  { name: 'Rusinga Schools Nairobi', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.rusinga.ac.ke' },
-  { name: 'Light International School Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.lis.sc.ke' },
-  { name: 'Nova Pioneer Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.novapioneer.com' },
-  { name: 'Oshwal Academy Nairobi', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.oshwalacademy.sc.ke' },
-  { name: 'Aga Khan Academy Mombasa', category: 'school', city: 'Mombasa', websiteUrl: 'https://www.agakhanacademies.org/mombasa' },
-  { name: 'Mombasa Academy', category: 'school', city: 'Mombasa', websiteUrl: 'https://www.mombasaacademy.sc.ke' },
-  { name: 'Kabarak University', category: 'school', city: 'Nakuru', websiteUrl: 'https://www.kabarak.ac.ke' },
-  { name: 'Melvin Jones Lions Academy Nakuru', category: 'school', city: 'Nakuru', websiteUrl: 'https://www.melvinjonesacademy.sc.ke' },
-
-  // Organizations: Private Hospitals, Clinics, Saccos, Logistics & NGOs
-  { name: 'The Karen Hospital', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.karenhospital.org' },
-  { name: 'Avenue Healthcare Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.avenuehealthcare.com' },
-  { name: 'The Nairobi Hospital', category: 'organization', city: 'Nairobi', websiteUrl: 'https://thenairobihospital.org' },
-  { name: 'MP Shah Hospital', category: 'organization', city: 'Nairobi', websiteUrl: 'https://mpshahhosp.org' },
-  { name: "Gertrude's Children's Hospital", category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.gerties.org' },
-  { name: 'AAR Healthcare Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://aar-healthcare.com' },
-  { name: 'Bliss Healthcare Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.blisshealthcare.co.ke' },
-  { name: 'Stima DT Sacco', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.stima-sacco.com' },
-  { name: 'Mwalimu National Sacco', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.mwalimunational.coop' },
-  { name: 'Unaitas Sacco', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.unaitas.com' },
-  { name: 'Amref Health Africa', category: 'organization', city: 'Nairobi', websiteUrl: 'https://amref.org' },
-  { name: 'Kenya Red Cross Society', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.redcross.or.ke' },
-  { name: 'Fargo Courier Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.fargocourier.co.ke' },
-  { name: 'Mombasa Hospital', category: 'organization', city: 'Mombasa', websiteUrl: 'https://www.mombasahospital.com' },
-  { name: 'Mediheal Group of Hospitals', category: 'organization', city: 'Eldoret', websiteUrl: 'https://www.medihealgroup.com' },
-
-  // Commercial Shops, Retailers, Hardware, Engineering & Supermarkets
-  { name: 'Hotpoint Appliances Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://hotpoint.co.ke' },
-  { name: 'Davis & Shirtliff Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://www.davisandshirtliff.com' },
-  { name: 'Ramtons Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://www.ramtons.com' },
-  { name: 'Chloride Exide Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://www.chlorideexide.com' },
-  { name: 'Sollatek Electronics Kenya', category: 'shop', city: 'Mombasa', websiteUrl: 'https://www.sollatek.co.ke' },
-  { name: 'Goodlife Pharmacy Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://www.goodlife.co.ke' },
-  { name: 'MyDawa Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://mydawa.com' },
-  { name: 'AutoXpress Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://www.autoxpress.co.ke' },
-  { name: 'Naivas Supermarket', category: 'shop', city: 'Nairobi', websiteUrl: 'https://naivas.online' },
-  { name: 'Quickmart Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://www.quickmart.co.ke' },
-  { name: 'Chandarana Foodplus', category: 'shop', city: 'Nairobi', websiteUrl: 'https://foodplus.co.ke' },
-  { name: 'Tile & Carpet Centre Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://tileandcarpet.co.ke' },
-  { name: 'Elite Digital Solutions Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://www.elitedigital.co.ke' },
-  { name: 'Salute iWorld Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://saluteiworld.com' },
-  { name: 'Phoneplace Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://www.phoneplacekenya.com' },
-  { name: 'Avechi Kenya', category: 'shop', city: 'Nairobi', websiteUrl: 'https://avechi.co.ke' },
 ]
 
 /**
  * Queries 100% Free, Zero-Key, Cloud-Safe Open-Data APIs (OpenAlex & Wikidata SPARQL)
- * for authentic Kenyan institutions and businesses with official websites.
+ * for authentic Kenyan schools, parastatals, NGOs, hospitals, businesses & shops with official websites.
  */
 async function discoverFromPublicOpenDataApis(params: {
   category: LeadCategory
@@ -364,16 +437,20 @@ async function discoverFromPublicOpenDataApis(params: {
   const discovered: GooglePlaceRaw[] = []
   const cityLower = params.city.toLowerCase()
 
-  // 1. OpenAlex Kenya Institutions REST API (320+ Kenyan schools, colleges, hospitals, NGOs & companies)
-  if (params.category === 'school' || params.category === 'organization') {
+  const openAlexTypeMap: Partial<Record<LeadCategory, string>> = {
+    school: 'education',
+    government: 'government|facility',
+    ngo: 'nonprofit',
+    hospital: 'healthcare',
+    organization: 'company|nonprofit|facility|government|healthcare',
+  }
+
+  const openAlexType = openAlexTypeMap[params.category]
+  if (openAlexType) {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), 5000)
     try {
-      const typeFilter =
-        params.category === 'school'
-          ? 'education'
-          : 'healthcare|company|nonprofit|facility'
-      const url = `https://api.openalex.org/institutions?filter=country_code:KE,type:${typeFilter}&per-page=80&mailto=sale@batteriq.com`
+      const url = `https://api.openalex.org/institutions?filter=country_code:KE,type:${openAlexType}&per-page=80&mailto=sale@batteriq.com`
       const res = await fetchFn(url, {
         signal: controller.signal,
         headers: {
@@ -392,7 +469,6 @@ async function discoverFromPublicOpenDataApis(params: {
           }>
         }
         const items = json.results ?? []
-        // Prefer institutions matching requested city first, then national Kenyan institutions
         const sorted = [...items].sort((a, b) => {
           const aMatch = (a.geo?.city || '').toLowerCase() === cityLower ? 0 : 1
           const bMatch = (b.geo?.city || '').toLowerCase() === cityLower ? 0 : 1
@@ -430,16 +506,22 @@ async function discoverFromPublicOpenDataApis(params: {
     }
   }
 
-  // 2. Wikidata Kenya SPARQL API (Kenyan hotels, lodges, resorts, shops, hospitals & companies)
+  // 2. Wikidata Kenya SPARQL API (Kenyan parastatals, NGOs, hospitals, schools, hotels, retail & companies)
   if (discovered.length < params.maxResults) {
     const sparqlTypes =
       params.category === 'hotel'
         ? 'wd:Q27686 wd:Q550111 wd:Q1824145 wd:Q875157 wd:Q5056668'
-        : params.category === 'shop'
+        : params.category === 'retail' || params.category === 'shop'
           ? 'wd:Q180846 wd:Q507619 wd:Q11315 wd:Q213441 wd:Q4830453 wd:Q783794'
           : params.category === 'school'
             ? 'wd:Q3918 wd:Q9842 wd:Q15936437'
-            : 'wd:Q16917 wd:Q4830453 wd:Q783794 wd:Q163740'
+            : params.category === 'government'
+              ? 'wd:Q327333 wd:Q2659904 wd:Q178790 wd:Q35798'
+              : params.category === 'ngo'
+                ? 'wd:Q79913 wd:Q163740 wd:Q157031'
+                : params.category === 'hospital'
+                  ? 'wd:Q16917 wd:Q1774898'
+                  : 'wd:Q16917 wd:Q4830453 wd:Q783794 wd:Q163740 wd:Q327333'
 
     const sparql = `SELECT DISTINCT ?itemLabel ?website WHERE {
   ?item wdt:P17 wd:Q114 ; wdt:P856 ?website ; wdt:P31 ?type .
@@ -510,15 +592,33 @@ function discoverFromKenyanDomainRegistry(params: {
   category: LeadCategory
   city: string
   maxResults: number
+  customQuery?: string
   excludeDomains?: Set<string>
   seenDomains: Set<string>
 }): GooglePlaceRaw[] {
   const cityLower = params.city.toLowerCase()
-  const matchingCategory = KENYA_VERIFIED_DOMAIN_REGISTRY.filter(
-    (entry) => entry.category === params.category
+  const keywords = (params.customQuery || '')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((w) => w.length >= 3 && !['kenya', 'nairobi', 'the', 'and', 'for'].includes(w))
+
+  const normalizedCat = params.category === 'shop' ? 'retail' : params.category
+
+  // If custom query has specific keywords (e.g. "nila", "baby", "kra", "red cross"), prioritize keyword matches across all sectors
+  const keywordMatches =
+    keywords.length > 0 && isSpecificCustomQuery(params.customQuery)
+      ? KENYA_VERIFIED_DOMAIN_REGISTRY.filter((entry) => {
+          const hay = `${entry.name} ${entry.websiteUrl} ${entry.category}`.toLowerCase()
+          return keywords.some((kw) => hay.includes(kw))
+        })
+      : []
+
+  const matchingCategory = KENYA_VERIFIED_DOMAIN_REGISTRY.filter((entry) =>
+    normalizedCat === 'other' ? true : entry.category === normalizedCat
   )
-  // Prefer entries in the target city first, then national Kenyan businesses serving all counties
+
   const ordered = [
+    ...keywordMatches,
     ...matchingCategory.filter((e) => e.city.toLowerCase() === cityLower),
     ...matchingCategory.filter((e) => e.city.toLowerCase() !== cityLower),
   ]
@@ -531,12 +631,12 @@ function discoverFromKenyanDomainRegistry(params: {
 
     out.push({
       placeId: `web:${domain}`,
-      name: entry.name,
+      name: entry.name.trim(),
       address: `${entry.city}, Kenya`,
       phone: null, // Strictly extracted live over HTTPS by scrapeBusinessWebsite()
       websiteUrl: entry.websiteUrl,
       rating: null,
-      primaryType: params.category,
+      primaryType: entry.category,
     })
     if (out.length >= params.maxResults) break
   }
@@ -555,6 +655,7 @@ export async function searchFreeKenyanWebDirectory(params: {
   const fetchFn = params.fetchImpl ?? fetch
   const maxResults = Math.min(20, Math.max(1, params.maxResults ?? 12))
   const searchQuery = buildFreeKenyanSearchQuery(params.category, params.city, params.query)
+  const isCustom = isSpecificCustomQuery(params.query)
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 3500)
@@ -577,7 +678,7 @@ export async function searchFreeKenyanWebDirectory(params: {
       html = await res.text()
     }
   } catch {
-    // Fall through to cloud-safe open-data + AI + verified Kenyan domain discovery
+    // Fall through to AI + open-data + verified Kenyan domain discovery
   } finally {
     clearTimeout(timer)
   }
@@ -636,19 +737,44 @@ export async function searchFreeKenyanWebDirectory(params: {
     }
   }
 
-  // Tier 2: Cloud-Safe Free Open-Data APIs (OpenAlex Kenya Institutions + Wikidata Kenya SPARQL)
-  const openDataPlaces = await discoverFromPublicOpenDataApis({
-    category: params.category,
-    city: params.city,
-    maxResults,
-    excludeDomains: params.excludeDomains,
-    seenDomains,
-    fetchImpl: params.fetchImpl,
-  })
-  results.push(...openDataPlaces)
+  // When a user searches a specific entity or niche (e.g. "Nila Baby Shop", "NGOs in Kisumu", "Parastatals .go.ke"),
+  // run Gemini 3.5 Flash AI discovery BEFORE generic bulk OpenAlex lists so niche targets surface first!
+  if (isCustom && results.length < maxResults) {
+    const combinedExcluded = new Set<string>([
+      ...(params.excludeDomains ? Array.from(params.excludeDomains) : []),
+      ...Array.from(seenDomains),
+    ])
+    const aiPlaces = await discoverKenyanBusinessWebsitesViaAi({
+      category: params.category,
+      city: params.city,
+      customQuery: params.query,
+      maxResults: maxResults - results.length,
+      excludeDomains: combinedExcluded,
+      fetchImpl: params.fetchImpl,
+    })
+    for (const p of aiPlaces) {
+      const d = extractDomain(p.websiteUrl)
+      if (d) seenDomains.add(d)
+      results.push(p)
+      if (results.length >= maxResults) break
+    }
+  }
 
-  // Tier 3: AI Directory Discovery (Gemini 2.5 Flash / Claude) when additional slots remain
+  // Tier 2: Cloud-Safe Free Open-Data APIs (OpenAlex Kenya Institutions + Wikidata Kenya SPARQL)
   if (results.length < maxResults) {
+    const openDataPlaces = await discoverFromPublicOpenDataApis({
+      category: params.category,
+      city: params.city,
+      maxResults: maxResults - results.length,
+      excludeDomains: params.excludeDomains,
+      seenDomains,
+      fetchImpl: params.fetchImpl,
+    })
+    results.push(...openDataPlaces)
+  }
+
+  // Tier 3: AI Directory Discovery (Gemini 3.5 Flash / Claude) for rotating category runs
+  if (!isCustom && results.length < maxResults) {
     const combinedExcluded = new Set<string>([
       ...(params.excludeDomains ? Array.from(params.excludeDomains) : []),
       ...Array.from(seenDomains),
@@ -668,11 +794,12 @@ export async function searchFreeKenyanWebDirectory(params: {
     }
   }
 
-  // Tier 4: Verified Kenyan Commercial Domain Registry (100% live-scraped over HTTPS for contacts)
+  // Tier 4: Verified Kenyan Multi-Sector Domain Registry (100% live-scraped over HTTPS for contacts)
   if (results.length < maxResults) {
     const registryPlaces = discoverFromKenyanDomainRegistry({
       category: params.category,
       city: params.city,
+      customQuery: params.query,
       maxResults: maxResults - results.length,
       excludeDomains: params.excludeDomains,
       seenDomains,
@@ -1211,9 +1338,28 @@ export async function runLeadFinderJob(
             continue
           }
 
+          let resolvedCategory: LeadCategory = task.category
+          if (resolvedCategory === 'other') {
+            const dLower = (item.domain || '').toLowerCase()
+            if (dLower.endsWith('.go.ke')) {
+              resolvedCategory = 'government'
+            } else if (dLower.endsWith('.ac.ke') || dLower.endsWith('.sc.ke') || dLower.endsWith('.edu')) {
+              resolvedCategory = 'school'
+            } else {
+              const inferred = mapSearchCategoryToLeadCategory(
+                `${item.place.name} ${item.domain || ''} ${item.place.primaryType || ''} ${item.businessSummary || ''}`
+              )
+              if (inferred !== 'other') {
+                resolvedCategory = inferred
+              } else if (dLower.endsWith('.or.ke')) {
+                resolvedCategory = 'ngo'
+              }
+            }
+          }
+
           rawCandidates.push({
             business_name: item.place.name,
-            category: task.category,
+            category: resolvedCategory,
             city: task.city,
             address: item.place.address,
             website_url: item.cleanWebsiteUrl,

@@ -96,14 +96,24 @@ const JUNK_EMAIL_EXTENSIONS = [
 const BUSINESS_ROLE_PREFIXES = [
   'info',
   'sales',
+  'procurement',
+  'tenders',
+  'purchasing',
   'enquiries',
   'inquiries',
+  'orders',
   'reservations',
   'bookings',
   'booking',
   'admissions',
-  'procurement',
-  'purchasing',
+  'registry',
+  'secretariat',
+  'communications',
+  'communication',
+  'pr',
+  'partnerships',
+  'grants',
+  'programs',
   'office',
   'reception',
   'contact',
@@ -113,6 +123,11 @@ const BUSINESS_ROLE_PREFIXES = [
   'operations',
   'business',
   'corporate',
+  'clinic',
+  'pharmacy',
+  'shop',
+  'store',
+  'care',
   'desk',
   'customercare',
   'support',
@@ -129,7 +144,7 @@ const PERSONAL_PHONE_CONTEXT_RE =
  * Surrounding-text markers indicating an official public business contact line.
  */
 const BUSINESS_PHONE_CONTEXT_RE =
-  /\b(tel|telephone|phone|call\s+us|contact\s+us|office|reception|reservations?|bookings?|front\s+desk|switchboard|customer\s+care|enquiries|inquiries|admissions|sales|help\s*desk|hotline|headquarters|hq|branch|shop|store)\b/i
+  /\b(tel|telephone|phone|call\s+us|contact\s+us|office|reception|reservations?|bookings?|front\s+desk|switchboard|customer\s+care|enquiries|inquiries|admissions|sales|procurement|tenders|registry|secretariat|clinic|hospital|pharmacy|campus|orders|whatsapp|help\s*desk|hotline|headquarters|hq|branch|shop|store)\b/i
 
 export function isForbiddenScrapeUrl(rawUrl: string | null | undefined): boolean {
   if (!rawUrl || typeof rawUrl !== 'string') return true
@@ -497,15 +512,86 @@ export function extractPublicBusinessContacts(
 
 export function mapSearchCategoryToLeadCategory(raw: string): LeadCategory {
   const lower = raw.toLowerCase()
-  if (lower.includes('hotel') || lower.includes('lodge') || lower.includes('resort')) return 'hotel'
-  if (lower.includes('school') || lower.includes('college') || lower.includes('university') || lower.includes('academy')) {
+  if (
+    lower.includes('parastatal') ||
+    lower.includes('government') ||
+    lower.includes('ministry') ||
+    lower.includes('.go.ke') ||
+    lower.includes('county') ||
+    lower.includes('authority') ||
+    lower.includes('commission') ||
+    lower.includes('state corp')
+  ) {
+    return 'government'
+  }
+  if (
+    lower.includes('ngo') ||
+    lower.includes('non-profit') ||
+    lower.includes('nonprofit') ||
+    lower.includes('foundation') ||
+    lower.includes('charity') ||
+    lower.includes('humanitarian') ||
+    lower.includes('red cross') ||
+    lower.includes('amref') ||
+    lower.includes('trust')
+  ) {
+    return 'ngo'
+  }
+  if (
+    lower.includes('hospital') ||
+    lower.includes('clinic') ||
+    lower.includes('medical') ||
+    lower.includes('maternity') ||
+    lower.includes('health') ||
+    lower.includes('diagnostic')
+  ) {
+    return 'hospital'
+  }
+  if (
+    lower.includes('school') ||
+    lower.includes('college') ||
+    lower.includes('university') ||
+    lower.includes('academy') ||
+    lower.includes('polytechnic') ||
+    lower.includes('institute') ||
+    lower.includes('kindergarten')
+  ) {
     return 'school'
   }
-  if (lower.includes('org') || lower.includes('ngo') || lower.includes('hospital') || lower.includes('clinic') || lower.includes('sacco')) {
-    return 'organization'
+  if (
+    lower.includes('hotel') ||
+    lower.includes('lodge') ||
+    lower.includes('resort') ||
+    lower.includes('safari')
+  ) {
+    return 'hotel'
   }
-  if (lower.includes('shop') || lower.includes('store') || lower.includes('supermarket') || lower.includes('retail') || lower.includes('pharmacy')) {
-    return 'shop'
+  if (
+    lower.includes('baby') ||
+    lower.includes('nila') ||
+    lower.includes('boutique') ||
+    lower.includes('retail') ||
+    lower.includes('supermarket') ||
+    lower.includes('shop') ||
+    lower.includes('store') ||
+    lower.includes('pharmacy') ||
+    lower.includes('chemist') ||
+    lower.includes('electronics') ||
+    lower.includes('hardware') ||
+    lower.includes('mart')
+  ) {
+    return 'retail'
+  }
+  if (
+    lower.includes('org') ||
+    lower.includes('sacco') ||
+    lower.includes('cooperative') ||
+    lower.includes('association') ||
+    lower.includes('agency') ||
+    lower.includes('corporate') ||
+    lower.includes('logistics')
+  ) {
+    return 'organization'
   }
   return 'other'
 }

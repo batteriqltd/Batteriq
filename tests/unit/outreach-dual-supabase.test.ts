@@ -112,7 +112,7 @@ describe('Dual-Supabase Outreach Support', () => {
     })
 
     expect(generated.subject).toContain('Sarova Stanley')
-    expect(generated.model).toBe('gemini-2.5-flash')
+    expect(generated.model).toBe('gemini-3.5-flash')
     expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(String(mockFetch.mock.calls[0][0])).toContain('generativelanguage.googleapis.com')
   })
@@ -163,8 +163,8 @@ describe('Dual-Supabase Outreach Support', () => {
       phone: null,
       websiteUrl: 'https://www.strathmore.edu',
     })
-    // Confirm .go.ke government portal was filtered out and verified registry filled remaining slots
-    expect(results.some((r) => r.websiteUrl?.includes('.go.ke'))).toBe(false)
+    // Confirm .go.ke Kenyan government/parastatal portal is now allowed alongside verified registry
+    expect(results.some((r) => r.websiteUrl?.includes('.go.ke'))).toBe(true)
     expect(results.every((r) => r.phone === null)).toBe(true)
   })
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminSession } from '@/lib/admin-auth'
 import { getOutreachSettings } from '@/lib/outreach/compliance'
+import { runDailyEmailCampaignJob } from '@/lib/outreach/email-campaign'
 import { logOutreachEvent } from '@/lib/outreach/logger'
 import { createOutreachAdminClient } from '@/lib/outreach/supabase'
 
@@ -30,6 +31,27 @@ export async function PATCH(req: NextRequest) {
     }
     if (typeof body.review_before_send === 'boolean') {
       updates.review_before_send = body.review_before_send
+    }
+    if (typeof body.auto_attach_proforma === 'boolean') {
+      updates.auto_attach_proforma = body.auto_attach_proforma
+    }
+    if (typeof body.autopilot_enabled === 'boolean') {
+      updates.autopilot_enabled = body.autopilot_enabled
+    }
+    if (
+      typeof body.autopilot_interval_minutes === 'number' &&
+      Number.isFinite(body.autopilot_interval_minutes)
+    ) {
+      updates.autopilot_interval_minutes = Math.min(
+        1440,
+        Math.max(5, Math.round(body.autopilot_interval_minutes))
+      )
+    }
+    if (typeof body.auto_cold_whatsapp === 'boolean') {
+      updates.auto_cold_whatsapp = body.auto_cold_whatsapp
+    }
+    if (typeof body.whatsapp_cold_template === 'string' && body.whatsapp_cold_template.trim()) {
+      updates.whatsapp_cold_template = body.whatsapp_cold_template.trim()
     }
     if (typeof body.daily_email_limit === 'number' && Number.isFinite(body.daily_email_limit)) {
       updates.daily_email_limit = Math.min(500, Math.max(1, Math.round(body.daily_email_limit)))
@@ -83,7 +105,22 @@ export async function PATCH(req: NextRequest) {
       metadata: { updatedFields: Object.keys(updates).filter((k) => k !== 'id') },
     })
 
-    return NextResponse.json({ success: true, settings: data })
+    // When Review Mode is turned OFF (Auto-Send turned ON), automatically dispatch queued drafts & ready leads right away!
+    let autoDispatchResult: { sentNow: number } | null = null
+    if (body.review_before_send === false && !data.campaign_paused && body.trigger_auto_send !== false) {
+      try {
+        const res = await runDailyEmailCampaignJob({ maxToProcess: 6 })
+        autoDispatchResult = { sentNow: res.sentNow }
+      } catch {
+        // Non-fatal; settings update itself succeeded
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      settings: data,
+      autoDispatchResult,
+    })
   } catch (err) {
     return NextResponse.json(
       { error: err instanceof Error ? err.message : 'Failed to update settings' },

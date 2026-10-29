@@ -11,6 +11,12 @@ import {
   loadSuppressionSets,
 } from './compliance'
 import { logOutreachEvent, sleep, withRetry } from './logger'
+import {
+  buildProformaEmailCardHtml,
+  buildProformaEmailTextBlock,
+  generateOutreachProformaPdfBase64,
+  recommendBatteriqProformaForLead,
+} from './proforma'
 import { createOutreachAdminClient, fetchStoreCatalogProductsSafe } from './supabase'
 import type { OutreachEmail, OutreachLead, OutreachSettings } from './types'
 
@@ -74,7 +80,6 @@ export function buildSenderIdentity(settings: Pick<OutreachSettings, 'sender_nam
     process.env.RESEND_FROM_EMAIL?.trim() ||
     'sales@batteriq.com'
 
-  // Extract pure address if RESEND_FROM_EMAIL was formatted as "Name <addr>"
   const bracketMatch = fromEmail.match(/<([^>]+)>/)
   const cleanAddr = bracketMatch ? bracketMatch[1].trim() : fromEmail
   const cleanName = (settings.sender_name || 'Batteriq Kenya').replace(/[<>"]/g, '').trim()
@@ -87,6 +92,7 @@ export function renderOutreachEmailHtml(params: {
   paragraphsHtml: string[]
   senderName: string
   unsubscribeUrl: string
+  proformaHtml?: string
 }): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com'
   const paragraphs = params.paragraphsHtml
@@ -104,34 +110,36 @@ export function renderOutreachEmailHtml(params: {
   <title>${escapeHtml(params.subject)}</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f6fb;font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <div style="max-width:600px;margin:28px auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
-    <div style="background:linear-gradient(135deg,#000033 0%,#00004d 60%,#000099 100%);padding:22px 32px;display:flex;align-items:center;justify-content:space-between;">
+  <div style="max-width:620px;margin:28px auto;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e5e7eb;">
+    <div style="background:linear-gradient(135deg,#05091a 0%,#0b1536 55%,#122b7a 100%);padding:22px 32px;display:flex;align-items:center;justify-content:space-between;">
       <div>
         <span style="color:#ffffff;font-weight:900;font-size:20px;letter-spacing:-0.03em;">BATTERIQ<sup style="font-size:10px;color:#60a5fa;">™</sup></span>
-        <span style="display:block;color:rgba(255,255,255,0.68);font-size:11px;margin-top:2px;">Authorised EcoFlow &amp; BLUETTI Commercial Partner · Kenya</span>
+        <span style="display:block;color:rgba(255,255,255,0.72);font-size:11px;margin-top:2px;">Authorised EcoFlow &amp; BLUETTI Commercial Partner · Kenya</span>
       </div>
     </div>
 
     <div style="padding:32px;">
       ${paragraphs}
 
+      ${params.proformaHtml || ''}
+
       <div style="margin:26px 0 12px 0;padding:16px 20px;background:#f8faff;border-left:4px solid #2563eb;border-radius:0 10px 10px 0;">
-        <p style="margin:0;font-size:13px;color:#1e3a8a;font-weight:700;">Commercial Benefits with Batteriq Kenya</p>
+        <p style="margin:0;font-size:13px;color:#1e3a8a;font-weight:700;">Institutional &amp; Commercial Benefits with Batteriq Kenya</p>
         <p style="margin:4px 0 0 0;font-size:12px;color:#4b5563;line-height:1.5;">
-          ✓ Official KRA eTIMS Tax Invoices &nbsp;·&nbsp; ✓ 24-Month+ Warranty &nbsp;·&nbsp; ✓ Nationwide Delivery &amp; Sizing Support
+          ✓ Official KRA eTIMS VAT Invoices &amp; LPO Support &nbsp;·&nbsp; ✓ 24-Month+ Local Warranty &nbsp;·&nbsp; ✓ Nationwide Delivery &amp; Load Sizing
         </p>
       </div>
 
       <p style="margin:20px 0 0 0;">
         <a href="${escapeHtml(siteUrl)}/power-stations" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;font-weight:700;font-size:13px;padding:11px 22px;border-radius:10px;">
-          Explore Business Backup Solutions →
+          Explore Backup Power &amp; Solar Solutions →
         </a>
       </p>
     </div>
 
     <div style="background:#f9fafb;border-top:1px solid #f3f4f6;padding:18px 32px;text-align:center;">
       <p style="margin:0;font-size:11px;color:#6b7280;line-height:1.6;">
-        Sent by <strong>${escapeHtml(params.senderName)}</strong> · Batteriq Solutions Ltd, Nairobi, Kenya.<br/>
+        Sent by <strong>${escapeHtml(params.senderName)}</strong> · Batteriq Solutions Ltd, Kijabe Street Block 17, Nairobi, Kenya.<br/>
         <a href="${escapeHtml(siteUrl)}" style="color:#2563eb;text-decoration:none;">batteriq.com</a>
         &nbsp;·&nbsp;
         <a href="${escapeHtml(params.unsubscribeUrl)}" style="color:#6b7280;text-decoration:underline;">One-click Unsubscribe</a>
@@ -146,13 +154,18 @@ export function renderOutreachEmailText(params: {
   bodyText: string
   senderName: string
   unsubscribeUrl: string
+  proformaText?: string
 }): string {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com'
-  return `${params.bodyText}
+  const blocks = [params.bodyText]
+  if (params.proformaText) {
+    blocks.push(params.proformaText)
+  }
+  return `${blocks.join('\n\n')}
 
 ---
 ${params.senderName} | Batteriq Solutions Ltd, Nairobi, Kenya (${siteUrl})
-Authorised EcoFlow & BLUETTI Distributor — KRA eTIMS Invoices & Official Warranty
+Authorised EcoFlow & BLUETTI Distributor — KRA eTIMS Invoices, LPOs & Official Warranty
 Unsubscribe instantly (one click): ${params.unsubscribeUrl}`
 }
 
@@ -170,6 +183,7 @@ export async function dispatchOutreachEmailViaResend(params: {
     OutreachEmail,
     'id' | 'lead_id' | 'to_email' | 'from_identity' | 'reply_to' | 'subject' | 'body_html' | 'body_text' | 'unsubscribe_token'
   >
+  attachments?: Array<{ filename: string; content: string }>
   resendClient?: Resend
 }): Promise<{ resendMessageId: string | null }> {
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').replace(/\/$/, '')
@@ -188,6 +202,9 @@ export async function dispatchOutreachEmailViaResend(params: {
         subject: params.emailRow.subject,
         html: params.emailRow.body_html,
         text: params.emailRow.body_text,
+        ...(params.attachments && params.attachments.length > 0
+          ? { attachments: params.attachments }
+          : {}),
         headers: {
           'List-Unsubscribe': `<${oneClickApiUrl}>`,
           'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
@@ -218,6 +235,7 @@ export async function dispatchOutreachEmailViaResend(params: {
 export interface EmailCampaignRunResult {
   paused: boolean
   reviewBeforeSend: boolean
+  autoAttachProforma: boolean
   dailyLimit: number
   alreadySentToday: number
   sentNow: number
@@ -228,10 +246,10 @@ export interface EmailCampaignRunResult {
 }
 
 /**
- * Daily Email Campaign job (Vercel Cron + Admin trigger):
- * - Always checks campaign_paused, daily_email_limit (default 50), review_before_send, and permanent suppression list.
- * - Uses Claude API to write personalized B2B outreach emails from lead details + Batteriq catalog.
- * - Sends through existing Resend setup with sender identity and RFC 8058 one-click unsubscribe link.
+ * Autonomous & Daily Email Campaign job:
+ * - Always enforces campaign_paused, daily_email_limit, review_before_send, and permanent suppression list.
+ * - When review_before_send is OFF (Auto-Send ON), automatically sends both pending_review drafts AND new leads!
+ * - When auto_attach_proforma is ON, embeds a tailored KES Proforma Quotation card & attaches the A4 PDF Proforma!
  */
 export async function runDailyEmailCampaignJob(options: {
   maxToProcess?: number
@@ -241,6 +259,7 @@ export async function runDailyEmailCampaignJob(options: {
 } = {}): Promise<EmailCampaignRunResult> {
   const supabase = createOutreachAdminClient()
   const settings = await getOutreachSettings(supabase)
+  const autoAttachProforma = settings.auto_attach_proforma !== false
 
   // Compute start of day in East Africa Time (UTC+3)
   const now = new Date()
@@ -263,11 +282,12 @@ export async function runDailyEmailCampaignJob(options: {
       module: 'email_campaign',
       level: 'info',
       event: 'campaign_paused_skip',
-      message: 'Skipped daily email campaign run because campaign_paused is true.',
+      message: 'Skipped email campaign run because campaign_paused is true.',
     })
     return {
       paused: true,
       reviewBeforeSend: settings.review_before_send,
+      autoAttachProforma,
       dailyLimit,
       alreadySentToday,
       sentNow: 0,
@@ -287,6 +307,7 @@ export async function runDailyEmailCampaignJob(options: {
     return {
       paused: settings.campaign_paused,
       reviewBeforeSend: settings.review_before_send,
+      autoAttachProforma,
       dailyLimit,
       alreadySentToday,
       sentNow: 0,
@@ -297,6 +318,13 @@ export async function runDailyEmailCampaignJob(options: {
     }
   }
 
+  const catalogProducts = await fetchStoreCatalogProductsSafe(12, [
+    'Power Stations',
+    'Solar Home Systems',
+    'Solar Panels',
+    'Batteries',
+  ])
+
   const suppressionSets = await loadSuppressionSets(supabase)
   let sentNow = 0
   let draftedForReview = 0
@@ -304,18 +332,23 @@ export async function runDailyEmailCampaignJob(options: {
   let failedCount = 0
   const errors: string[] = []
 
-  // Step 1: Send any admin-approved emails waiting in queue first
+  // Step 1: Send queued emails.
+  // If review_before_send is FALSE (Auto-Send ON), promote & send BOTH 'approved' AND 'pending_review' drafts immediately!
+  const statusesToDispatch =
+    !settings.review_before_send && !options.forceSendApprovedOnly
+      ? ['approved', 'pending_review']
+      : ['approved']
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: approvedEmails } = await (supabase.from('outreach_emails') as any)
+  const { data: queuedEmails } = await (supabase.from('outreach_emails') as any)
     .select('*')
-    .eq('status', 'approved')
+    .in('status', statusesToDispatch)
     .order('created_at', { ascending: true })
     .limit(remainingQuota)
 
-  for (const emailRow of (approvedEmails ?? []) as OutreachEmail[]) {
+  for (const emailRow of (queuedEmails ?? []) as OutreachEmail[]) {
     if (remainingQuota <= 0) break
 
-    // Mandatory suppression list check right before send
     if (
       checkInSuppressionSets(suppressionSets, { email: emailRow.to_email }) ||
       (await isSuppressed(supabase, { email: emailRow.to_email }))
@@ -329,8 +362,40 @@ export async function runDailyEmailCampaignJob(options: {
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: lead } = await (supabase.from('outreach_leads') as any)
+        .select('*')
+        .eq('id', emailRow.lead_id)
+        .maybeSingle()
+
+      let attachments: Array<{ filename: string; content: string }> | undefined
+      let proformaNum: string | null = emailRow.proforma_number ?? null
+      let proformaTotal: number | null = emailRow.proforma_total_kes ?? null
+
+      if (autoAttachProforma && lead) {
+        try {
+          const proforma = recommendBatteriqProformaForLead(
+            lead as OutreachLead,
+            catalogProducts,
+            proformaNum || undefined
+          )
+          const pdfBase64 = await generateOutreachProformaPdfBase64(proforma)
+          attachments = [
+            {
+              filename: `Batteriq-Proforma-${proforma.proformaNumber}.pdf`,
+              content: pdfBase64,
+            },
+          ]
+          proformaNum = proforma.proformaNumber
+          proformaTotal = proforma.total
+        } catch {
+          // Non-fatal if PDF generation encounters environment issue; still send email
+        }
+      }
+
       const { resendMessageId } = await dispatchOutreachEmailViaResend({
         emailRow,
+        attachments,
         resendClient: options.resendClient,
       })
 
@@ -342,15 +407,9 @@ export async function runDailyEmailCampaignJob(options: {
           resend_message_id: resendMessageId,
           sent_at: sentAt,
           error_message: null,
+          ...(proformaNum ? { proforma_number: proformaNum, proforma_total_kes: proformaTotal } : {}),
         })
         .eq('id', emailRow.id)
-
-      // Update lead status ('new' -> 'contacted')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: lead } = await (supabase.from('outreach_leads') as any)
-        .select('id, status, email_count')
-        .eq('id', emailRow.lead_id)
-        .maybeSingle()
 
       if (lead) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -365,7 +424,7 @@ export async function runDailyEmailCampaignJob(options: {
 
       sentNow++
       remainingQuota--
-      await sleep(350) // Respect Resend API rate limits
+      await sleep(350)
     } catch (err) {
       failedCount++
       const msg = err instanceof Error ? err.message : String(err)
@@ -385,6 +444,7 @@ export async function runDailyEmailCampaignJob(options: {
     return {
       paused: settings.campaign_paused,
       reviewBeforeSend: settings.review_before_send,
+      autoAttachProforma,
       dailyLimit,
       alreadySentToday,
       sentNow,
@@ -395,15 +455,7 @@ export async function runDailyEmailCampaignJob(options: {
     }
   }
 
-  // Step 2: Load in-stock Batteriq products from Store Supabase (if available) for accurate Claude grounding
-  const catalogProducts = await fetchStoreCatalogProductsSafe(10, [
-    'Power Stations',
-    'Solar Home Systems',
-    'Solar Panels',
-    'Batteries',
-  ])
-
-  // Find leads that already have a pending/approved/sent email so we don't double-email them
+  // Step 2: Generate & send/draft personalized emails (+ KES Proformas) for newly discovered leads
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: existingEmailRows } = await (supabase.from('outreach_emails') as any)
     .select('lead_id, to_email')
@@ -416,7 +468,6 @@ export async function runDailyEmailCampaignJob(options: {
     (existingEmailRows ?? []).map((r: { to_email: string }) => String(r.to_email).toLowerCase())
   )
 
-  // Fetch candidate leads with status = 'new' and valid email
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: candidateLeads } = await (supabase.from('outreach_leads') as any)
     .select('*')
@@ -437,7 +488,6 @@ export async function runDailyEmailCampaignJob(options: {
       continue
     }
 
-    // Always check permanent suppression list BEFORE calling Claude or Resend
     if (
       checkInSuppressionSets(suppressionSets, {
         email: toEmail,
@@ -454,10 +504,21 @@ export async function runDailyEmailCampaignJob(options: {
     }
 
     try {
+      const proforma = autoAttachProforma
+        ? recommendBatteriqProformaForLead(lead, catalogProducts)
+        : null
+
       const generated = await generateOutreachEmailWithClaude({
         lead,
         products: catalogProducts,
         senderName: settings.sender_name,
+        proforma: proforma
+          ? {
+              proformaNumber: proforma.proformaNumber,
+              systemTitle: proforma.systemTitle,
+              totalKes: proforma.total,
+            }
+          : null,
         fetchImpl: options.fetchImpl,
       })
 
@@ -469,12 +530,14 @@ export async function runDailyEmailCampaignJob(options: {
         paragraphsHtml: generated.bodyHtmlParagraphs,
         senderName: settings.sender_name,
         unsubscribeUrl: unsubPageUrl,
+        proformaHtml: proforma ? buildProformaEmailCardHtml(proforma) : undefined,
       })
 
       const bodyText = renderOutreachEmailText({
         bodyText: generated.bodyText,
         senderName: settings.sender_name,
         unsubscribeUrl: unsubPageUrl,
+        proformaText: proforma ? buildProformaEmailTextBlock(proforma) : undefined,
       })
 
       const initialStatus = settings.review_before_send ? 'pending_review' : 'queued'
@@ -492,6 +555,8 @@ export async function runDailyEmailCampaignJob(options: {
           unsubscribe_token: unsubToken,
           status: initialStatus,
           claude_model: generated.model,
+          proforma_number: proforma?.proformaNumber ?? null,
+          proforma_total_kes: proforma?.total ?? null,
         })
         .select('*')
         .single()
@@ -510,7 +575,6 @@ export async function runDailyEmailCampaignJob(options: {
         continue
       }
 
-      // Double-check suppression right before network send
       if (await isSuppressed(supabase, { email: toEmail, phoneE164: lead.phone_e164 })) {
         suppressedSkipped++
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -520,8 +584,24 @@ export async function runDailyEmailCampaignJob(options: {
         continue
       }
 
+      let attachments: Array<{ filename: string; content: string }> | undefined
+      if (proforma) {
+        try {
+          const pdfBase64 = await generateOutreachProformaPdfBase64(proforma)
+          attachments = [
+            {
+              filename: `Batteriq-Proforma-${proforma.proformaNumber}.pdf`,
+              content: pdfBase64,
+            },
+          ]
+        } catch {
+          // Non-fatal fallback: HTML email already contains the full itemized Proforma table
+        }
+      }
+
       const { resendMessageId } = await dispatchOutreachEmailViaResend({
         emailRow: insertedEmail as OutreachEmail,
+        attachments,
         resendClient: options.resendClient,
       })
 
@@ -546,7 +626,7 @@ export async function runDailyEmailCampaignJob(options: {
 
       sentNow++
       remainingQuota--
-      await sleep(350) // Rate-limit Resend calls
+      await sleep(350)
     } catch (err) {
       failedCount++
       const msg = err instanceof Error ? err.message : String(err)
@@ -565,7 +645,7 @@ export async function runDailyEmailCampaignJob(options: {
     module: 'email_campaign',
     level: failedCount > 0 && sentNow === 0 && draftedForReview === 0 ? 'error' : 'info',
     event: 'campaign_run_completed',
-    message: `Daily Email Campaign: sent=${sentNow}, drafted_for_review=${draftedForReview}, already_sent_today=${alreadySentToday}/${dailyLimit}, suppressed=${suppressedSkipped}, failed=${failedCount}`,
+    message: `Email Campaign: sent=${sentNow}${autoAttachProforma ? ' (with KES Proformas)' : ''}, drafted_for_review=${draftedForReview}, already_sent_today=${alreadySentToday}/${dailyLimit}, suppressed=${suppressedSkipped}, failed=${failedCount}`,
     metadata: {
       dailyLimit,
       alreadySentToday,
@@ -574,12 +654,14 @@ export async function runDailyEmailCampaignJob(options: {
       suppressedSkipped,
       failedCount,
       reviewBeforeSend: settings.review_before_send,
+      autoAttachProforma,
     },
   })
 
   return {
     paused: settings.campaign_paused,
     reviewBeforeSend: settings.review_before_send,
+    autoAttachProforma,
     dailyLimit,
     alreadySentToday,
     sentNow,
@@ -623,6 +705,28 @@ export async function approveAndSendEmailDraft(params: {
     return { status: 'suppressed' }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: lead } = await (supabase.from('outreach_leads') as any)
+    .select('*')
+    .eq('id', emailRow.lead_id)
+    .maybeSingle()
+
+  const catalogProducts = await fetchStoreCatalogProductsSafe(12, [
+    'Power Stations',
+    'Solar Home Systems',
+    'Solar Panels',
+    'Batteries',
+  ])
+
+  const proforma =
+    settings.auto_attach_proforma !== false && lead
+      ? recommendBatteriqProformaForLead(
+          lead as OutreachLead,
+          catalogProducts,
+          emailRow.proforma_number || undefined
+        )
+      : null
+
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').replace(/\/$/, '')
   const unsubUrl = `${siteUrl}/unsubscribe?token=${encodeURIComponent(emailRow.unsubscribe_token)}`
 
@@ -644,12 +748,29 @@ export async function approveAndSendEmailDraft(params: {
       paragraphsHtml: cleanParagraphs.map((p) => escapeHtml(p).replace(/\n/g, '<br/>')),
       senderName: settings.sender_name,
       unsubscribeUrl: unsubUrl,
+      proformaHtml: proforma ? buildProformaEmailCardHtml(proforma) : undefined,
     })
     bodyText = renderOutreachEmailText({
       bodyText: cleanParagraphs.join('\n\n'),
       senderName: settings.sender_name,
       unsubscribeUrl: unsubUrl,
+      proformaText: proforma ? buildProformaEmailTextBlock(proforma) : undefined,
     })
+  }
+
+  let attachments: Array<{ filename: string; content: string }> | undefined
+  if (proforma) {
+    try {
+      const pdfBase64 = await generateOutreachProformaPdfBase64(proforma)
+      attachments = [
+        {
+          filename: `Batteriq-Proforma-${proforma.proformaNumber}.pdf`,
+          content: pdfBase64,
+        },
+      ]
+    } catch {
+      // Non-fatal
+    }
   }
 
   const { resendMessageId } = await dispatchOutreachEmailViaResend({
@@ -659,6 +780,7 @@ export async function approveAndSendEmailDraft(params: {
       body_html: bodyHtml,
       body_text: bodyText,
     },
+    attachments,
     resendClient: params.resendClient,
   })
 
@@ -675,14 +797,11 @@ export async function approveAndSendEmailDraft(params: {
       reviewed_at: nowIso,
       sent_at: nowIso,
       error_message: null,
+      ...(proforma
+        ? { proforma_number: proforma.proformaNumber, proforma_total_kes: proforma.total }
+        : {}),
     })
     .eq('id', emailRow.id)
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: lead } = await (supabase.from('outreach_leads') as any)
-    .select('id, status, email_count')
-    .eq('id', emailRow.lead_id)
-    .maybeSingle()
 
   if (lead) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

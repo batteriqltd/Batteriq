@@ -2,9 +2,9 @@
 
 import { Suspense, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Bot, Eye, EyeOff, Loader2, Lock, ArrowRight } from 'lucide-react'
+import { ArrowRight, Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react'
 
-function OutreachLoginForm() {
+function ExecutiveSignInForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirect') || '/outreach-admin'
@@ -19,7 +19,7 @@ function OutreachLoginForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!email || !password) {
-      setError('Please enter your email and password.')
+      setError('Please enter your email address and password.')
       return
     }
     setLoading(true)
@@ -33,7 +33,7 @@ function OutreachLoginForm() {
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setError(data.error || 'Invalid credentials')
+        setError(data.error || 'Invalid credentials.')
         setLoading(false)
         return
       }
@@ -47,84 +47,115 @@ function OutreachLoginForm() {
       router.push(redirectTo)
       router.refresh()
     } catch {
-      setError('Connection error. Please try again.')
+      setError('Unable to verify credentials. Please try again.')
       setLoading(false)
     }
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center px-6 py-12"
-      style={{
-        background: 'radial-gradient(circle at 50% 35%, #00004d 0%, #00001e 100%)',
-      }}
-    >
-      <div className="w-full max-w-[440px]">
+    <div className="relative min-h-screen flex items-center justify-center px-5 py-12 bg-[#060919] text-slate-100 overflow-hidden selection:bg-blue-500/30">
+      {/* Subtle Architectural Grid + Ambient Sapphire Vignette */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.16]"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, rgba(148,163,184,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.12) 1px, transparent 1px)',
+          backgroundSize: '48px 48px',
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[420px] rounded-full blur-[130px] bg-blue-600/20"
+      />
+
+      <div className="relative z-10 w-full max-w-[420px]">
+        {/* Brand Wordmark */}
         <div className="text-center mb-8">
-          <span className="text-3xl font-black text-white tracking-tighter">
-            BATTERIQ<sup className="text-xs align-super text-blue-400">™</sup>
-          </span>
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-blue-300/70 mt-2">
-            Outreach Agent Portal
+          <div className="inline-flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-600/25">
+              B
+            </div>
+            <span className="text-2xl sm:text-[26px] font-black text-white tracking-tight">
+              BATTERIQ<sup className="text-[10px] align-super text-blue-400 ml-0.5">™</sup>
+            </span>
+          </div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mt-3">
+            Executive Portal
           </p>
         </div>
 
-        <div className="bg-white/[0.04] backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600/20 border border-blue-400/30 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-blue-300" />
-            </div>
+        {/* Obsidian Frosted Card */}
+        <div className="relative rounded-3xl bg-[#10162b]/85 backdrop-blur-2xl border border-white/[0.08] p-7 sm:p-9 shadow-[0_24px_80px_rgba(0,0,0,0.65)] overflow-hidden">
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400/60 to-transparent"
+          />
+
+          <div className="mb-7 text-center">
+            <h1 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+              Authorised Sign In
+            </h1>
+            <p className="text-xs text-slate-400 mt-1.5">
+              Enter your corporate credentials to continue.
+            </p>
           </div>
 
-          <h1 className="text-xl font-black text-white text-center">Outreach Management Login</h1>
-          <p className="text-xs text-blue-200/50 text-center mt-1.5 mb-7">
-            Sign in to manage leads, daily Claude campaigns &amp; WhatsApp inbox
-          </p>
-
           {reason === 'session_expired' && (
-            <div className="mb-5 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-400/25 text-xs font-bold text-amber-200">
-              Your session expired. Please sign in again.
+            <div className="mb-5 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-400/25 text-xs font-semibold text-amber-200">
+              Your session has expired. Please sign in again.
             </div>
           )}
 
           {error && (
-            <div className="mb-5 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/25 text-xs font-bold text-red-300">
+            <div className="mb-5 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/25 text-xs font-semibold text-red-300">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-[0.18em] text-blue-200/50 mb-1.5 ml-1">
-                Sales / Admin Email
+              <label
+                htmlFor="exec-email"
+                className="block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-2 ml-0.5"
+              >
+                Email Address
               </label>
               <input
+                id="exec-email"
                 type="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="sale@batteriq.com"
-                className="w-full h-13 py-3.5 px-4 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-medium outline-none focus:border-blue-500"
+                placeholder="Enter email address"
+                className="w-full h-12 px-4 rounded-xl bg-[#090e1d] border border-white/10 text-white placeholder:text-slate-600 text-sm font-medium outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
               />
             </div>
 
             <div>
-              <label className="block text-[10px] font-black uppercase tracking-[0.18em] text-blue-200/50 mb-1.5 ml-1">
+              <label
+                htmlFor="exec-password"
+                className="block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-2 ml-0.5"
+              >
                 Password
               </label>
               <div className="relative">
                 <input
+                  id="exec-password"
                   type={showPassword ? 'text' : 'password'}
+                  autoComplete="current-password"
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full h-13 py-3.5 px-4 pr-12 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-medium outline-none focus:border-blue-500"
+                  placeholder="••••••••••••"
+                  className="w-full h-12 px-4 pr-11 rounded-xl bg-[#090e1d] border border-white/10 text-white placeholder:text-slate-600 text-sm font-medium outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -134,22 +165,22 @@ function OutreachLoginForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-13 py-3.5 mt-2 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-[0.16em] flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              className="w-full h-12 mt-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold text-xs uppercase tracking-[0.16em] flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25 transition-all disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  <span>Open Outreach Console</span>
+                  <span>Sign In</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-7 pt-5 border-t border-white/10 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-blue-200/40">
-            <Lock className="w-3 h-3 text-blue-400" />
-            <span>Protected by Batteriq Admin Auth</span>
+          <div className="mt-7 pt-5 border-t border-white/[0.06] flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-400/80" />
+            <span>Restricted Access · Batteriq Solutions Ltd</span>
           </div>
         </div>
       </div>
@@ -159,8 +190,8 @@ function OutreachLoginForm() {
 
 export default function OutreachAdminLoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#00001e]" />}>
-      <OutreachLoginForm />
+    <Suspense fallback={<div className="min-h-screen bg-[#060919]" />}>
+      <ExecutiveSignInForm />
     </Suspense>
   )
 }

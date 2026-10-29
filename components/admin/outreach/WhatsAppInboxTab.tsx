@@ -2,16 +2,17 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import {
-  Bot,
-  UserCheck,
-  Send,
-  RefreshCw,
-  ShieldAlert,
-  Clock,
-  CheckCheck,
-  Flame,
-  FileText,
+  ArrowLeft,
   Ban,
+  Bot,
+  CheckCheck,
+  Clock,
+  FileText,
+  Flame,
+  RefreshCw,
+  Send,
+  ShieldCheck,
+  UserCheck,
 } from 'lucide-react'
 import {
   LEAD_STATUSES,
@@ -22,6 +23,12 @@ import {
 
 const APPROVED_TEMPLATES = [
   {
+    name: 'batteriq_quote_ready',
+    label: 'Commercial Proforma & Backup Quote Ready',
+    preview:
+      'Hello {{1}}, your Batteriq Kenya commercial backup & eTIMS proforma quote is ready. Reply YES to review details with our specialist.',
+  },
+  {
     name: 'batteriq_business_reply',
     label: 'Business Power Inquiry Follow-up',
     preview:
@@ -29,15 +36,9 @@ const APPROVED_TEMPLATES = [
   },
   {
     name: 'batteriq_inquiry_followup',
-    label: 'Website Lead 7-Day Check-in',
+    label: 'Website Lead Check-in',
     preview:
       'Hello {{1}}, following up on your recent inquiry at batteriq.com regarding backup power solutions. Reply here anytime if you would like a tailored quote.',
-  },
-  {
-    name: 'batteriq_quote_ready',
-    label: 'Commercial Quote Ready',
-    preview:
-      'Hello {{1}}, your Batteriq Kenya commercial backup & eTIMS quote is ready. Reply YES to review details with our specialist.',
   },
 ]
 
@@ -56,6 +57,7 @@ export function WhatsAppInboxTab({
 }) {
   const [conversations, setConversations] = useState<OutreachConversation[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [mobileShowThread, setMobileShowThread] = useState(false)
   const [messages, setMessages] = useState<OutreachMessage[]>([])
   const [loadingList, setLoadingList] = useState(true)
   const [loadingThread, setLoadingThread] = useState(false)
@@ -148,8 +150,8 @@ export function WhatsAppInboxTab({
         type: 'ok',
         text:
           nextMode === 'ai'
-            ? 'Switched to AI Takeover — Claude will handle incoming replies.'
-            : 'Switched to Human Mode — AI auto-replies paused for this thread.',
+            ? 'AI Takeover active — Gemini 3.5 Flash handles incoming WhatsApp replies automatically.'
+            : 'Human Mode active — AI auto-replies paused for this thread.',
       })
       onStatsChange?.()
     } else {
@@ -219,36 +221,40 @@ export function WhatsAppInboxTab({
   }
 
   return (
-    <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Compliance Banner */}
-      <div className="px-6 py-3.5 bg-emerald-50/70 border-b border-emerald-100 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 text-xs font-semibold text-emerald-900">
-          <ShieldAlert className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+    <div className="rounded-3xl bg-[#10162b]/90 backdrop-blur-xl border border-white/[0.08] shadow-2xl overflow-hidden text-slate-100">
+      {/* Top Telemetry & Compliance Strip */}
+      <div className="px-4 sm:px-6 py-3.5 bg-emerald-500/[0.08] border-b border-emerald-400/15 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex items-center gap-2.5 text-xs font-medium text-emerald-200/90">
+          <ShieldCheck className="w-4 h-4 text-emerald-400 flex-shrink-0" />
           <span>
-            <strong>Policy Enforced:</strong> Cold outbound WhatsApp is disabled. Only contacts who
-            messaged first or ticked website consent can be messaged; approved templates are
-            enforced outside the 24-hour window.
+            <strong className="text-emerald-300">WhatsApp Cloud &amp; AI Takeover:</strong> Free-form
+            AI/staff replies inside 24h window · Approved Meta templates outside 24h · Permanent
+            Kenya DPA opt-out guard.
           </span>
         </div>
         <button
           onClick={loadConversations}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 hover:text-emerald-950"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-300 hover:text-white transition-colors"
         >
-          <RefreshCw className="w-3.5 h-3.5" /> Refresh
+          <RefreshCw className="w-3.5 h-3.5" /> Sync
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[580px]">
-        {/* Left Pane: Thread List */}
-        <div className="lg:col-span-4 border-b lg:border-b-0 lg:border-r border-gray-100 flex flex-col max-h-[620px] overflow-y-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[560px]">
+        {/* Left Pane: Thread List (visible on desktop or when mobileShowThread is false) */}
+        <div
+          className={`lg:col-span-4 border-b lg:border-b-0 lg:border-r border-white/[0.07] flex flex-col max-h-[620px] overflow-y-auto ${
+            mobileShowThread ? 'hidden lg:flex' : 'flex'
+          }`}
+        >
           {loadingList ? (
-            <div className="p-8 text-center text-sm text-gray-400">Loading conversations…</div>
+            <div className="p-8 text-center text-sm text-slate-400">Loading conversations…</div>
           ) : conversations.length === 0 ? (
             <div className="p-10 text-center">
-              <p className="text-sm font-bold text-gray-800">No WhatsApp threads yet</p>
-              <p className="text-xs text-gray-400 mt-1 leading-relaxed">
-                Incoming messages to your WhatsApp Cloud API webhook and consented website follow-ups
-                appear here automatically.
+              <p className="text-sm font-bold text-white">No WhatsApp threads yet</p>
+              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                Inbound messages to your WhatsApp Cloud webhook, template dispatches, and consented
+                follow-ups appear here in real time.
               </p>
             </div>
           ) : (
@@ -260,28 +266,31 @@ export function WhatsAppInboxTab({
                 <button
                   key={conv.id}
                   type="button"
-                  onClick={() => setSelectedId(conv.id)}
-                  className={`w-full text-left px-5 py-4 border-b border-gray-50 transition-colors ${
-                    selected ? 'bg-blue-50/70' : 'hover:bg-gray-50'
+                  onClick={() => {
+                    setSelectedId(conv.id)
+                    setMobileShowThread(true)
+                  }}
+                  className={`w-full text-left px-5 py-4 border-b border-white/[0.05] transition-colors ${
+                    selected ? 'bg-blue-500/15 border-l-2 border-l-blue-400' : 'hover:bg-white/[0.04]'
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-sm text-gray-900 truncate">
+                    <span className="font-bold text-sm text-white truncate">
                       {conv.contact_name ||
                         conv.outreach_leads?.business_name ||
                         conv.phone_e164}
                     </span>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       {leadStatus === 'hot' && (
-                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 text-[10px] font-black uppercase">
+                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30 text-[10px] font-black uppercase">
                           <Flame className="w-3 h-3" /> Hot
                         </span>
                       )}
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
                           conv.mode === 'ai'
-                            ? 'bg-indigo-100 text-indigo-700'
-                            : 'bg-amber-100 text-amber-800'
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-400/25'
+                            : 'bg-amber-500/20 text-amber-300 border border-amber-400/25'
                         }`}
                       >
                         {conv.mode === 'ai' ? 'AI' : 'Human'}
@@ -289,8 +298,8 @@ export function WhatsAppInboxTab({
                     </div>
                   </div>
 
-                  <p className="text-xs font-mono text-gray-400 mt-0.5">{conv.phone_e164}</p>
-                  <p className="text-xs text-gray-600 truncate mt-1.5">
+                  <p className="text-xs font-mono text-slate-400 mt-0.5">{conv.phone_e164}</p>
+                  <p className="text-xs text-slate-300/80 truncate mt-1.5">
                     {conv.last_message_preview || 'No messages'}
                   </p>
 
@@ -298,20 +307,20 @@ export function WhatsAppInboxTab({
                     <span
                       className={`text-[10px] font-bold ${
                         conv.status === 'opted_out'
-                          ? 'text-red-600'
+                          ? 'text-red-400'
                           : isOpen24h
-                            ? 'text-emerald-600'
-                            : 'text-gray-400'
+                            ? 'text-emerald-400'
+                            : 'text-slate-500'
                       }`}
                     >
                       {conv.status === 'opted_out'
                         ? 'Opted Out'
                         : isOpen24h
                           ? '● 24h Window Open'
-                          : 'Template Only (>24h)'}
+                          : 'Template Mode (>24h)'}
                     </span>
                     {conv.unread_count > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-blue-600 text-white text-[10px] font-black">
+                      <span className="px-2 py-0.5 rounded-full bg-blue-500 text-white text-[10px] font-black">
                         {conv.unread_count}
                       </span>
                     )}
@@ -323,58 +332,69 @@ export function WhatsAppInboxTab({
         </div>
 
         {/* Right Pane: Active Thread */}
-        <div className="lg:col-span-8 flex flex-col justify-between bg-[#f8fafc]">
+        <div
+          className={`lg:col-span-8 flex flex-col justify-between bg-[#090e1d] ${
+            !mobileShowThread ? 'hidden lg:flex' : 'flex'
+          }`}
+        >
           {!activeConv ? (
-            <div className="flex-1 flex items-center justify-center p-12 text-sm text-gray-400">
-              Select a WhatsApp conversation to view history and reply.
+            <div className="flex-1 flex items-center justify-center p-12 text-sm text-slate-500">
+              Select a WhatsApp conversation to view live messages and AI Takeover controls.
             </div>
           ) : (
             <>
               {/* Conversation Top Bar */}
-              <div className="px-6 py-4 bg-white border-b border-gray-100 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-black text-base text-gray-900">
-                      {activeConv.contact_name ||
-                        activeConv.outreach_leads?.business_name ||
-                        activeConv.phone_e164}
-                    </h3>
-                    <span className="text-xs font-mono text-gray-400">
-                      {activeConv.phone_e164}
-                    </span>
+              <div className="px-4 sm:px-6 py-4 bg-[#10162b] border-b border-white/[0.07] flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setMobileShowThread(false)}
+                    className="lg:hidden p-2 rounded-xl bg-white/5 text-slate-300 hover:text-white"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </button>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-extrabold text-sm sm:text-base text-white truncate">
+                        {activeConv.contact_name ||
+                          activeConv.outreach_leads?.business_name ||
+                          activeConv.phone_e164}
+                      </h3>
+                      <span className="text-xs font-mono text-slate-400">
+                        {activeConv.phone_e164}
+                      </span>
+                    </div>
+                    {activeConv.escalated_reason && activeConv.mode === 'human' && (
+                      <p className="text-xs font-semibold text-amber-300 mt-0.5">
+                        Escalated to Human: {activeConv.escalated_reason}
+                      </p>
+                    )}
                   </div>
-                  {activeConv.escalated_reason && activeConv.mode === 'human' && (
-                    <p className="text-xs font-semibold text-amber-700 mt-0.5">
-                      Escalated to Human: {activeConv.escalated_reason}
-                    </p>
-                  )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5">
-                  {/* Lead Status Selector */}
+                <div className="flex flex-wrap items-center gap-2">
                   {activeConv.lead_id && (
                     <select
                       value={activeConv.outreach_leads?.status || 'replied'}
                       onChange={(e) => handleLeadStatusChange(e.target.value as LeadStatus)}
-                      className="h-9 px-3 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold text-gray-800"
+                      className="h-9 px-3 rounded-xl border border-white/10 bg-[#090e1d] text-xs font-bold text-slate-200 outline-none focus:border-blue-500"
                     >
                       {LEAD_STATUSES.map((st) => (
-                        <option key={st} value={st}>
-                          Status: {st.replace('_', ' ').toUpperCase()}
+                        <option key={st} value={st} className="bg-[#090e1d] text-slate-100">
+                          {st.replace('_', ' ').toUpperCase()}
                         </option>
                       ))}
                     </select>
                   )}
 
-                  {/* Per-Conversation AI / Human Switch */}
-                  <div className="inline-flex rounded-xl p-1 bg-gray-100 border border-gray-200">
+                  <div className="inline-flex rounded-xl p-1 bg-[#090e1d] border border-white/10">
                     <button
                       type="button"
                       onClick={() => handleToggleMode('ai')}
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                         activeConv.mode === 'ai'
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900'
+                          ? 'bg-blue-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-white'
                       }`}
                     >
                       <Bot className="w-3.5 h-3.5" /> AI Mode
@@ -385,7 +405,7 @@ export function WhatsAppInboxTab({
                       className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
                         activeConv.mode === 'human'
                           ? 'bg-amber-600 text-white shadow-sm'
-                          : 'text-gray-600 hover:text-gray-900'
+                          : 'text-slate-400 hover:text-white'
                       }`}
                     >
                       <UserCheck className="w-3.5 h-3.5" /> Human
@@ -396,10 +416,10 @@ export function WhatsAppInboxTab({
 
               {feedback && (
                 <div
-                  className={`mx-6 mt-3 px-4 py-2.5 rounded-xl text-xs font-semibold ${
+                  className={`mx-4 sm:mx-6 mt-3 px-4 py-2.5 rounded-xl text-xs font-semibold ${
                     feedback.type === 'ok'
-                      ? 'bg-blue-50 text-blue-800 border border-blue-100'
-                      : 'bg-red-50 text-red-700 border border-red-100'
+                      ? 'bg-blue-500/15 text-blue-200 border border-blue-400/25'
+                      : 'bg-red-500/15 text-red-200 border border-red-400/25'
                   }`}
                 >
                   {feedback.text}
@@ -407,11 +427,11 @@ export function WhatsAppInboxTab({
               )}
 
               {/* Messages Feed */}
-              <div className="flex-1 p-6 space-y-3 overflow-y-auto max-h-[390px]">
+              <div className="flex-1 p-4 sm:p-6 space-y-3 overflow-y-auto max-h-[390px]">
                 {loadingThread ? (
-                  <p className="text-center text-xs text-gray-400 py-8">Loading messages…</p>
+                  <p className="text-center text-xs text-slate-500 py-8">Loading messages…</p>
                 ) : messages.length === 0 ? (
-                  <p className="text-center text-xs text-gray-400 py-8">
+                  <p className="text-center text-xs text-slate-500 py-8">
                     No messages in this conversation yet.
                   </p>
                 ) : (
@@ -423,25 +443,25 @@ export function WhatsAppInboxTab({
                         className={`flex ${inbound ? 'justify-start' : 'justify-end'}`}
                       >
                         <div
-                          className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-sm ${
+                          className={`max-w-[85%] sm:max-w-[78%] rounded-2xl px-4 py-3 text-sm shadow-md ${
                             inbound
-                              ? 'bg-white border border-gray-100 text-gray-900'
+                              ? 'bg-[#141c36] border border-white/10 text-slate-100'
                               : m.sender_type === 'ai'
-                                ? 'bg-indigo-600 text-white'
+                                ? 'bg-gradient-to-br from-blue-600 to-indigo-600 text-white'
                                 : m.sender_type === 'system_template'
-                                  ? 'bg-emerald-700 text-white'
-                                  : 'bg-[#00004d] text-white'
+                                  ? 'bg-emerald-600/90 text-white'
+                                  : 'bg-blue-700 text-white'
                           }`}
                         >
                           <div className="flex items-center gap-2 mb-1 opacity-75 text-[10px] font-bold uppercase tracking-wider">
                             <span>
                               {inbound
-                                ? 'Customer'
+                                ? 'Client'
                                 : m.sender_type === 'ai'
-                                  ? 'Claude AI'
+                                  ? 'Gemini AI'
                                   : m.sender_type === 'system_template'
                                     ? `Template (${m.template_name || 'approved'})`
-                                    : 'Admin Staff'}
+                                    : 'Batteriq Staff'}
                             </span>
                             <span>·</span>
                             <span>
@@ -463,20 +483,20 @@ export function WhatsAppInboxTab({
               </div>
 
               {/* Composer */}
-              <div className="p-4 bg-white border-t border-gray-100">
+              <div className="p-4 bg-[#10162b] border-t border-white/[0.07]">
                 {!canMessageAtAll ? (
-                  <div className="flex items-center gap-2 text-xs font-bold text-red-600 bg-red-50 px-4 py-3 rounded-xl">
-                    <Ban className="w-4 h-4" />
+                  <div className="flex items-center gap-2 text-xs font-bold text-red-300 bg-red-500/10 border border-red-400/20 px-4 py-3 rounded-xl">
+                    <Ban className="w-4 h-4 flex-shrink-0" />
                     <span>
-                      Messaging blocked: contact has opted out or never initiated / consented to
-                      WhatsApp contact.
+                      Messaging blocked: contact opted out or has no initiated / consented WhatsApp
+                      session.
                     </span>
                   </div>
                 ) : (
                   <form onSubmit={handleSendMessage} className="space-y-3">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="flex items-center gap-1.5 font-semibold text-gray-500">
-                        <Clock className="w-3.5 h-3.5" />
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <span className="flex items-center gap-1.5 font-medium text-slate-400">
+                        <Clock className="w-3.5 h-3.5 text-blue-400" />
                         {windowOpen
                           ? '24-hour customer care window active — free-form reply allowed'
                           : 'Outside 24-hour window — approved Meta template required'}
@@ -485,7 +505,7 @@ export function WhatsAppInboxTab({
                         <button
                           type="button"
                           onClick={() => setUseTemplate((v) => !v)}
-                          className="inline-flex items-center gap-1 text-blue-600 font-bold hover:underline"
+                          className="inline-flex items-center gap-1 text-blue-400 font-bold hover:text-blue-300"
                         >
                           <FileText className="w-3.5 h-3.5" />
                           {useTemplate ? 'Switch to Free-form Text' : 'Send Approved Template'}
@@ -498,10 +518,14 @@ export function WhatsAppInboxTab({
                         <select
                           value={templateName}
                           onChange={(e) => setTemplateName(e.target.value)}
-                          className="sm:col-span-5 h-11 px-3 rounded-xl border border-gray-200 text-xs font-bold text-gray-800 bg-gray-50"
+                          className="sm:col-span-5 h-11 px-3 rounded-xl border border-white/10 text-xs font-bold text-slate-100 bg-[#090e1d] outline-none focus:border-blue-500"
                         >
                           {APPROVED_TEMPLATES.map((tpl) => (
-                            <option key={tpl.name} value={tpl.name}>
+                            <option
+                              key={tpl.name}
+                              value={tpl.name}
+                              className="bg-[#090e1d] text-slate-100"
+                            >
                               {tpl.label} ({tpl.name})
                             </option>
                           ))}
@@ -511,30 +535,30 @@ export function WhatsAppInboxTab({
                           value={templateParam1}
                           onChange={(e) => setTemplateParam1(e.target.value)}
                           placeholder="Recipient name ({{1}})"
-                          className="sm:col-span-4 h-11 px-3 rounded-xl border border-gray-200 text-xs font-medium text-gray-800"
+                          className="sm:col-span-4 h-11 px-3 rounded-xl border border-white/10 bg-[#090e1d] text-xs font-medium text-white outline-none focus:border-blue-500"
                         />
                         <button
                           type="submit"
                           disabled={sending}
-                          className="sm:col-span-3 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
+                          className="sm:col-span-3 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
                         >
                           <Send className="w-3.5 h-3.5" />
                           {sending ? 'Sending…' : 'Send Template'}
                         </button>
                       </div>
                     ) : (
-                      <div className="flex gap-2.5">
+                      <div className="flex flex-col sm:flex-row gap-2.5">
                         <input
                           type="text"
                           value={textDraft}
                           onChange={(e) => setTextDraft(e.target.value)}
-                          placeholder="Write a WhatsApp reply as Batteriq staff…"
-                          className="flex-1 h-11 px-4 rounded-xl border border-gray-200 text-sm text-gray-900 focus:border-blue-600 focus:outline-none"
+                          placeholder="Write a WhatsApp reply as Batteriq specialist…"
+                          className="flex-1 h-11 px-4 rounded-xl border border-white/10 bg-[#090e1d] text-sm text-white placeholder:text-slate-500 focus:border-blue-500 focus:outline-none"
                         />
                         <button
                           type="submit"
                           disabled={sending || !textDraft.trim()}
-                          className="px-5 h-11 rounded-xl bg-[#00004d] hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wider flex items-center gap-2 disabled:opacity-50"
+                          className="px-5 h-11 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50"
                         >
                           <Send className="w-3.5 h-3.5" />
                           {sending ? 'Sending…' : 'Reply'}
