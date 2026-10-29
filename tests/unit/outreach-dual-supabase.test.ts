@@ -112,9 +112,60 @@ describe('Dual-Supabase Outreach Support', () => {
     })
 
     expect(generated.subject).toContain('Sarova Stanley')
-    expect(generated.model).toBe('gemini-2.0-flash')
+    expect(generated.model).toBe('gemini-2.5-flash')
     expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(String(mockFetch.mock.calls[0][0])).toContain('generativelanguage.googleapis.com')
+  })
+
+  it('falls back to cloud-safe Kenyan open-data & domain registry when DuckDuckGo returns HTTP 202 on serverless IPs', async () => {
+    vi.stubEnv('ANTHROPIC_API_KEY', '')
+    vi.stubEnv('GEMINI_API_KEY', '')
+
+    const mockFetch = vi.fn().mockImplementation(async (url: string) => {
+      if (String(url).includes('duckduckgo.com')) {
+        return { ok: true, status: 202, text: async () => '' }
+      }
+      if (String(url).includes('api.openalex.org')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({
+            results: [
+              {
+                display_name: 'Strathmore University',
+                homepage_url: 'https://www.strathmore.edu',
+                geo: { city: 'Nairobi' },
+              },
+              {
+                display_name: 'Kenya Gov Portal',
+                homepage_url: 'https://www.education.go.ke',
+                geo: { city: 'Nairobi' },
+              },
+            ],
+          }),
+        }
+      }
+      return { ok: false, status: 503, json: async () => ({}), text: async () => '' }
+    })
+
+    const results = await searchFreeKenyanWebDirectory({
+      query: 'schools in Nairobi, Kenya',
+      category: 'school',
+      city: 'Nairobi',
+      maxResults: 4,
+      fetchImpl: mockFetch as unknown as typeof fetch,
+    })
+
+    expect(results).toHaveLength(4)
+    expect(results[0]).toMatchObject({
+      placeId: 'web:strathmore.edu',
+      name: 'Strathmore University',
+      phone: null,
+      websiteUrl: 'https://www.strathmore.edu',
+    })
+    // Confirm .go.ke government portal was filtered out and verified registry filled remaining slots
+    expect(results.some((r) => r.websiteUrl?.includes('.go.ke'))).toBe(false)
+    expect(results.every((r) => r.phone === null)).toBe(true)
   })
 
   it('discovers Kenyan business websites via free no-card search while blocking Facebook & aggregators', async () => {

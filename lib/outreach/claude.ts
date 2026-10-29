@@ -4,8 +4,13 @@ import { LEAD_STATUSES, type LeadStatus, type OutreachLead, type OutreachMessage
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 const DEFAULT_CLAUDE_MODEL = 'claude-sonnet-4-6'
 const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
-const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash'
-const FALLBACK_GEMINI_MODEL = 'gemini-1.5-flash'
+const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash'
+const FALLBACK_GEMINI_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-flash-latest',
+  'gemini-2.5-flash-lite',
+  'gemini-2.0-flash',
+]
 const REQUEST_TIMEOUT_MS = 35_000
 
 export interface CatalogProductSummary {
@@ -115,10 +120,7 @@ async function callGeminiGenerateContent(params: {
 }): Promise<{ text: string; model: string }> {
   const fetchFn = params.fetchImpl ?? fetch
   const wantsJson = /JSON/i.test(params.systemPrompt)
-  const modelsToTry =
-    params.model === FALLBACK_GEMINI_MODEL
-      ? [params.model]
-      : [params.model, FALLBACK_GEMINI_MODEL]
+  const modelsToTry = Array.from(new Set([params.model, ...FALLBACK_GEMINI_MODELS]))
 
   let activeModel = modelsToTry[0]
 
