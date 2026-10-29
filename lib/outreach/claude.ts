@@ -3,6 +3,9 @@ import { LEAD_STATUSES, type LeadStatus, type OutreachLead, type OutreachMessage
 
 const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages'
 const DEFAULT_CLAUDE_MODEL = 'claude-sonnet-4-6'
+const GEMINI_API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models'
+const DEFAULT_GEMINI_MODEL = 'gemini-2.0-flash'
+const FALLBACK_GEMINI_MODEL = 'gemini-1.5-flash'
 const REQUEST_TIMEOUT_MS = 35_000
 
 export interface CatalogProductSummary {
@@ -29,13 +32,48 @@ export interface GeneratedWhatsAppDecision {
   model: string
 }
 
-function getAnthropicConfig(): { apiKey: string; model: string } {
-  const apiKey = process.env.ANTHROPIC_API_KEY?.trim()
-  if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY is not configured in environment variables')
+type ActiveAiConfig =
+  | { provider: 'claude'; apiKey: string; model: string }
+  | { provider: 'gemini'; apiKey: string; model: string }
+
+function isRealKey(val: string | undefined): val is string {
+  if (!val) return false
+  const t = val.trim()
+  return Boolean(t && t !== 'replace_me')
+}
+
+export function resolveOutreachAiConfig(): ActiveAiConfig {
+  const forcedProvider = process.env.OUTREACH_AI_PROVIDER?.trim().toLowerCase()
+  const anthropicKey = process.env.ANTHROPIC_API_KEY
+  const geminiKey = process.env.OUTREACH_GEMINI_API_KEY || process.env.GEMINI_API_KEY
+
+  if (forcedProvider === 'gemini' && isRealKey(geminiKey)) {
+    return {
+      provider: 'gemini',
+      apiKey: geminiKey.trim(),
+      model: process.env.OUTREACH_GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL,
+    }
   }
-  const model = process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_CLAUDE_MODEL
-  return { apiKey, model }
+
+  if (isRealKey(anthropicKey)) {
+    return {
+      provider: 'claude',
+      apiKey: anthropicKey.trim(),
+      model: process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_CLAUDE_MODEL,
+    }
+  }
+
+  if (isRealKey(geminiKey)) {
+    return {
+      provider: 'gemini',
+      apiKey: geminiKey.trim(),
+      model: process.env.OUTREACH_GEMINI_MODEL?.trim() || DEFAULT_GEMINI_MODEL,
+    }
+  }
+
+  throw new Error(
+    'Neither ANTHROPIC_API_KEY nor GEMINI_API_KEY is configured in environment variables'
+  )
 }
 
 function extractJsonObject(raw: string): Record<string, unknown> {
@@ -66,6 +104,107 @@ export function escapeHtml(input: string): string {
     .replace(/'/g, '&#39;')
 }
 
+async function callGeminiGenerateContent(params: {
+  apiKey: string
+  model: string
+  systemPrompt: string
+  userPrompt: string
+  maxTokens?: number
+  temperature?: number
+  fetchImpl?: typeof fetch
+}): Promise<{ text: string; model: string }> {
+  const fetchFn = params.fetchImpl ?? fetch
+  const wantsJson = /JSON/i.test(params.systemPrompt)
+  const modelsToTry =
+    params.model === FALLBACK_GEMINI_MODEL
+      ? [params.model]
+      : [params.model, FALLBACK_GEMINI_MODEL]
+
+  let activeModel = modelsToTry[0]
+
+  const responseText = await withRetry(
+    async () => {
+      for (let i = 0; i < modelsToTry.length; i++) {
+        activeModel = modelsToTry[i]
+        const controller = new AbortController()
+        const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
+        try {
+          const url = `${GEMINI_API_BASE}/${encodeURIComponent(activeModel)}:generateContent?key=${encodeURIComponent(params.apiKey)}`
+          const res = await fetchFn(url, {
+            method: 'POST',
+            signal: controller.signal,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              systemInstruction: {
+                parts: [{ text: params.systemPrompt }],
+              },
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: params.userPrompt }],
+                },
+              ],
+              generationConfig: {
+                temperature: params.temperature ?? 0.5,
+                maxOutputTokens: params.maxTokens ?? 900,
+                ...(wantsJson ? { responseMimeType: 'application/json' } : {}),
+              },
+            }),
+            cache: 'no-store',
+          })
+
+          if (res.status === 404 && i < modelsToTry.length - 1) {
+            continue
+          }
+
+          if (!res.ok) {
+            const errBody = await res.text().catch(() => '')
+            const err = new Error(
+              `Gemini API error (HTTP ${res.status}): ${errBody.slice(0, 240)}`
+            ) as Error & { status?: number }
+            err.status = res.status
+            throw err
+          }
+
+          const data = (await res.json()) as {
+            candidates?: Array<{
+              content?: { parts?: Array<{ text?: string }> }
+            }>
+          }
+          const textBlock = data.candidates?.[0]?.content?.parts
+            ?.map((p) => p.text || '')
+            .join('')
+            .trim()
+
+          if (!textBlock) {
+            throw new Error('Gemini API returned an empty candidate content block')
+          }
+          return textBlock
+        } finally {
+          clearTimeout(timer)
+        }
+      }
+      throw new Error('No Gemini model succeeded')
+    },
+    {
+      maxAttempts: 3,
+      baseDelayMs: 900,
+      onRetry: async (err, attempt, delayMs) => {
+        await logOutreachEvent({
+          module: 'email_campaign',
+          level: 'warn',
+          event: 'gemini_retry',
+          message: `Retrying Gemini API call (attempt ${attempt}) after ${delayMs}ms`,
+          metadata: { error: err instanceof Error ? err.message : String(err) },
+        })
+      },
+    }
+  )
+
+  return { text: responseText, model: activeModel }
+}
+
 export async function callClaudeMessages(params: {
   systemPrompt: string
   userPrompt: string
@@ -73,7 +212,16 @@ export async function callClaudeMessages(params: {
   temperature?: number
   fetchImpl?: typeof fetch
 }): Promise<{ text: string; model: string }> {
-  const { apiKey, model } = getAnthropicConfig()
+  const aiConfig = resolveOutreachAiConfig()
+  if (aiConfig.provider === 'gemini') {
+    return callGeminiGenerateContent({
+      apiKey: aiConfig.apiKey,
+      model: aiConfig.model,
+      ...params,
+    })
+  }
+
+  const { apiKey, model } = aiConfig
   const fetchFn = params.fetchImpl ?? fetch
 
   const responseText = await withRetry(
