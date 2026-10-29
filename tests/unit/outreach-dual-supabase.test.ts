@@ -4,6 +4,10 @@ import {
   resolveOutreachAiConfig,
 } from '@/lib/outreach/claude'
 import {
+  isDirectoryOrAggregatorUrl,
+  searchFreeKenyanWebDirectory,
+} from '@/lib/outreach/lead-finder'
+import {
   createStoreAdminClientSafe,
   fetchStoreCatalogProductsSafe,
   hasOutreachSupabaseConfig,
@@ -111,5 +115,55 @@ describe('Dual-Supabase Outreach Support', () => {
     expect(generated.model).toBe('gemini-2.0-flash')
     expect(mockFetch).toHaveBeenCalledTimes(1)
     expect(String(mockFetch.mock.calls[0][0])).toContain('generativelanguage.googleapis.com')
+  })
+
+  it('discovers Kenyan business websites via free no-card search while blocking Facebook & aggregators', async () => {
+    expect(isDirectoryOrAggregatorUrl('https://www.facebook.com/somehotel')).toBe(true)
+    expect(isDirectoryOrAggregatorUrl('https://www.booking.com/hotel/ke/nairobi.html')).toBe(true)
+    expect(isDirectoryOrAggregatorUrl('https://www.tripadvisor.com/Hotel-Nairobi')).toBe(true)
+    expect(isDirectoryOrAggregatorUrl('https://www.hotelboulevard.co.ke/contact-us/')).toBe(false)
+
+    const sampleDdgHtml = `
+      <div class="result">
+        <a class="result__a" href="https://www.booking.com/hotel/ke/nairobi.html">Top 10 Hotels in Nairobi - Booking.com</a>
+      </div>
+      <div class="result">
+        <a class="result__a" href="https://www.facebook.com/hotelboulevardke">Hotel Boulevard Facebook</a>
+      </div>
+      <div class="result">
+        <a class="result__a" href="//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.hotelboulevard.co.ke%2Fcontact-us%2F">Contact Us - Hotel Boulevard Nairobi</a>
+        <a class="result__snippet">Harry Thuku Rd, Nairobi. Reception: +254 722 200 755</a>
+      </div>
+      <div class="result">
+        <a class="result__a" href="https://www.oakplace.co.ke/contact">Contact &amp; Book | Oak Place Hotel &amp; Conference Centre | +254 727 959 026</a>
+      </div>
+    `
+
+    const mockFetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      text: async () => sampleDdgHtml,
+    })
+
+    const results = await searchFreeKenyanWebDirectory({
+      query: 'hotels in Nairobi, Kenya',
+      category: 'hotel',
+      city: 'Nairobi',
+      fetchImpl: mockFetch as unknown as typeof fetch,
+    })
+
+    expect(results).toHaveLength(2)
+    expect(results[0]).toMatchObject({
+      placeId: 'web:hotelboulevard.co.ke',
+      name: 'Hotel Boulevard Nairobi',
+      phone: '+254722200755',
+      websiteUrl: 'https://www.hotelboulevard.co.ke/contact-us/',
+    })
+    expect(results[1]).toMatchObject({
+      placeId: 'web:oakplace.co.ke',
+      name: 'Oak Place Hotel & Conference Centre',
+      phone: '+254727959026',
+      websiteUrl: 'https://www.oakplace.co.ke/contact',
+    })
   })
 })

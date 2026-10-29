@@ -19,10 +19,259 @@ import {
   type LeadCandidateInput,
 } from './validators'
 
-const SCRAPE_TIMEOUT_MS = 7000
+const SCRAPE_TIMEOUT_MS = 5500
 const MAX_HTML_BYTES = 450_000
 const SCRAPE_USER_AGENT =
   'Mozilla/5.0 (compatible; BatteriqBusinessDirectoryBot/1.0; +https://batteriq.com)'
+const BROWSER_SEARCH_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+
+const AGGREGATOR_AND_DIRECTORY_DOMAINS = [
+  'booking.com',
+  'tripadvisor.',
+  'expedia.',
+  'airbnb.',
+  'agoda.',
+  'hotels.com',
+  'trivago.',
+  'kayak.',
+  'lonelyplanet.',
+  'wikipedia.org',
+  'wikimedia.org',
+  'yellowpages',
+  'businesslist.co.ke',
+  'kenyayote.com',
+  'victormatara.com',
+  'tuko.co.ke',
+  'nation.africa',
+  'standardmedia.co.ke',
+  'the-star.co.ke',
+  'businessdailyafrica.com',
+  'kenyans.co.ke',
+  'pulselive.co.ke',
+  'jiji.co.ke',
+  'jumia.co.ke',
+  'kilimall.co.ke',
+  'pigiame.co.ke',
+  'myjobmag.co.ke',
+  'brightermonday.co.ke',
+  'fuzu.com',
+  'glassdoor.',
+  'indeed.',
+  'crunchbase.com',
+  'zoominfo.com',
+  'apollo.io',
+  'rocketreach.co',
+  'lusha.com',
+  'yelp.com',
+  'foursquare.com',
+  'wanderlog.com',
+  'evendo.com',
+  'safari.co.ke',
+  'safaribookings.com',
+  'google.',
+  'bing.com',
+  'duckduckgo.com',
+  'yahoo.com',
+  'youtube.com',
+  'pinterest.',
+  'reddit.com',
+  'quora.com',
+  'medium.com',
+  'amazon.',
+  'ebay.',
+  'alibaba.com',
+  'batteriq.com',
+]
+
+export function isDirectoryOrAggregatorUrl(rawUrl: string): boolean {
+  if (isForbiddenScrapeUrl(rawUrl)) return true
+  const domain = extractDomain(rawUrl)
+  if (!domain) return true
+  const lower = domain.toLowerCase()
+  if (lower.endsWith('.gov') || lower.endsWith('.go.ke') || lower.endsWith('.mil')) {
+    return true
+  }
+  return AGGREGATOR_AND_DIRECTORY_DOMAINS.some((blocked) => lower.includes(blocked))
+}
+
+function cleanDiscoveredBusinessTitle(rawTitle: string, domain: string): string {
+  const decoded = rawTitle
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/gi, '&')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&quot;/gi, '"')
+    .replace(/&ndash;|&mdash;/gi, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+
+  // Remove generic page prefixes/suffixes like "Contact Us - Hotel Boulevard | +254..."
+  const parts = decoded
+    .split(/\s*[|\-–—:]\s*/)
+    .map((p) => p.trim())
+    .filter((p) => {
+      if (!p || p.length < 3) return false
+      if (/^\+?\d[\d\s\-()]{6,}$/.test(p)) return false
+      if (
+        /^(contact(\s+us|\s+&\s+\w+|\s+info|\s+details)?|about(\s+us)?|home(\s+page)?|book(\s+now|\s+online|\s+a\s+room)?|call\s+us|reach\s+us|find\s+us|locations?|welcome(\s+to)?|official\s+website|get\s+in\s+touch|enquiries|inquiries|admissions|reservations|customer\s+(care|service|support)|support)$/i.test(
+          p
+        )
+      ) {
+        return false
+      }
+      return true
+    })
+
+  const best = parts[0] || ''
+  if (best.length >= 3 && best.length <= 90) {
+    return best.replace(/^welcome\s+to\s+/i, '').trim()
+  }
+
+  // Fallback: humanize domain root (e.g. "hotelboulevard.co.ke" -> "Hotelboulevard")
+  const base = domain.split('.')[0].replace(/[-_]+/g, ' ')
+  return base.charAt(0).toUpperCase() + base.slice(1)
+}
+
+function buildFreeKenyanSearchQuery(category: LeadCategory, city: string, rawQuery?: string): string {
+  if (rawQuery && !rawQuery.toLowerCase().includes(' in ')) {
+    return `${rawQuery} Kenya contact "+254" -facebook -tripadvisor -booking`
+  }
+
+  switch (category) {
+    case 'hotel':
+      return `(hotel OR resort OR lodge) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.com) -booking -tripadvisor -expedia`
+    case 'school':
+      return `(school OR college OR academy OR institute) "${city}" Kenya "contact" "+254" (site:.ac.ke OR site:.sc.ke OR site:.co.ke OR site:.org)`
+    case 'organization':
+      return `(hospital OR clinic OR foundation OR organization OR logistics OR offices) "${city}" Kenya "contact" "+254" (site:.or.ke OR site:.co.ke OR site:.org)`
+    case 'shop':
+      return `(supermarket OR electronics OR hardware OR pharmacy ORmart OR store) "${city}" Kenya "contact" "+254" site:.co.ke -jiji -jumia`
+    default:
+      return `business "${city}" Kenya "contact" "+254" site:.co.ke -facebook -jiji`
+  }
+}
+
+/**
+ * 100% Free, Zero-Key, Zero-Card Kenyan Business Discovery Engine:
+ * Finds official Kenyan business websites for hotels, schools, organizations, and shops,
+ * filtering out social media (Facebook, etc.) and directory/OTA aggregators so only
+ * authentic first-party business websites are scraped for public corporate contacts.
+ */
+export async function searchFreeKenyanWebDirectory(params: {
+  query: string
+  category: LeadCategory
+  city: string
+  maxResults?: number
+  fetchImpl?: typeof fetch
+}): Promise<GooglePlaceRaw[]> {
+  const fetchFn = params.fetchImpl ?? fetch
+  const maxResults = Math.min(20, Math.max(1, params.maxResults ?? 12))
+  const searchQuery = buildFreeKenyanSearchQuery(params.category, params.city, params.query)
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 8000)
+
+  let html = ''
+  try {
+    const res = await fetchFn('https://html.duckduckgo.com/html/', {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': BROWSER_SEARCH_UA,
+        Accept: 'text/html,application/xhtml+xml',
+      },
+      body: `q=${encodeURIComponent(searchQuery)}&kl=ke-en`,
+      cache: 'no-store',
+    })
+
+    if (res.ok) {
+      html = await res.text()
+    }
+  } catch {
+    // Will try Lite endpoint fallback below if HTML endpoint failed
+  } finally {
+    clearTimeout(timer)
+  }
+
+  if (!html) {
+    const controller2 = new AbortController()
+    const timer2 = setTimeout(() => controller2.abort(), 8000)
+    try {
+      const res2 = await fetchFn('https://lite.duckduckgo.com/lite/', {
+        method: 'POST',
+        signal: controller2.signal,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': BROWSER_SEARCH_UA,
+        },
+        body: `q=${encodeURIComponent(searchQuery)}&kl=ke-en`,
+        cache: 'no-store',
+      })
+      if (res2.ok) {
+        html = await res2.text()
+      }
+    } catch {
+      return []
+    } finally {
+      clearTimeout(timer2)
+    }
+  }
+
+  if (!html) return []
+
+  const results: GooglePlaceRaw[] = []
+  const seenDomains = new Set<string>()
+
+  // Match DuckDuckGo HTML result blocks (anchors + optional snippet)
+  const anchorRegex =
+    /<a[^>]*class="[^"]*(?:result__a|result-link)[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi
+
+  let match: RegExpExecArray | null
+  while ((match = anchorRegex.exec(html)) !== null && results.length < maxResults) {
+    let href = match[1].replace(/&amp;/g, '&').trim()
+    const uddg = href.match(/[?&]uddg=([^&]+)/)
+    if (uddg) {
+      try {
+        href = decodeURIComponent(uddg[1])
+      } catch {
+        continue
+      }
+    }
+
+    if (!/^https?:\/\//i.test(href)) continue
+    if (href.toLowerCase().endsWith('.pdf') || href.toLowerCase().endsWith('.doc')) continue
+    if (isDirectoryOrAggregatorUrl(href) || isForbiddenContactSubpage(href)) continue
+
+    const domain = extractDomain(href)
+    if (!domain || seenDomains.has(domain)) continue
+    seenDomains.add(domain)
+
+    const rawTitle = match[2] || ''
+    const businessName = cleanDiscoveredBusinessTitle(rawTitle, domain)
+
+    // Check nearby snippet text (next 500 chars) for a public +254 business phone
+    const nearbyWindow = html
+      .slice(match.index, Math.min(html.length, match.index + 700))
+      .replace(/<[^>]+>/g, ' ')
+    const phoneMatch = nearbyWindow.match(/(?:\+254|0)[\s\-()]*[127]\d(?:[\s\-()]*\d){7}/)
+    const snippetPhone = phoneMatch
+      ? normalizeKenyanPhone(phoneMatch[0], { source: 'google_places' })
+      : null
+
+    results.push({
+      placeId: `web:${domain}`,
+      name: businessName,
+      address: `${params.city}, Kenya`,
+      phone: snippetPhone,
+      websiteUrl: href,
+      rating: null,
+      primaryType: params.category,
+    })
+  }
+
+  return results
+}
 
 export interface GooglePlaceRaw {
   placeId: string
@@ -357,17 +606,9 @@ export interface LeadFinderRunResult {
 export async function runLeadFinderJob(
   options: LeadFinderRunOptions = {}
 ): Promise<LeadFinderRunResult> {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY?.trim()
-  if (!apiKey) {
-    const msg = 'GOOGLE_PLACES_API_KEY is not configured in environment variables'
-    await logOutreachEvent({
-      module: 'lead_finder',
-      level: 'error',
-      event: 'missing_api_key',
-      message: msg,
-    })
-    throw new Error(msg)
-  }
+  const rawPlacesKey = process.env.GOOGLE_PLACES_API_KEY?.trim()
+  const apiKey = rawPlacesKey && rawPlacesKey !== 'replace_me' ? rawPlacesKey : ''
+  const useGooglePlaces = Boolean(apiKey)
 
   const supabase = createOutreachAdminClient()
   const settings = await getOutreachSettings(supabase)
@@ -447,79 +688,136 @@ export async function runLeadFinderJob(
 
   for (const task of searchTasks) {
     try {
-      const places = await searchGooglePlacesKenya({
-        query: task.query,
-        apiKey,
-        maxResults: options.maxPlacesPerQuery ?? 15,
-        fetchImpl: options.fetchImpl,
-      })
+      const places = useGooglePlaces
+        ? await searchGooglePlacesKenya({
+            query: task.query,
+            apiKey,
+            maxResults: options.maxPlacesPerQuery ?? 15,
+            fetchImpl: options.fetchImpl,
+          })
+        : await searchFreeKenyanWebDirectory({
+            query: task.query,
+            category: task.category,
+            city: task.city,
+            maxResults: options.maxPlacesPerQuery ?? 10,
+            fetchImpl: options.fetchImpl,
+          })
 
       placesFound += places.length
 
-      for (const place of places) {
-        // Skip early if google_place_id already exists
-        if (existingKeys.placeIds.has(place.placeId)) {
-          continue
-        }
+      // Filter out already-known placeIds/domains upfront
+      const unseenPlaces = places.filter((place) => {
+        if (existingKeys.placeIds.has(place.placeId)) return false
+        const d = extractDomain(place.websiteUrl)
+        if (d && existingKeys.domains.has(d)) return false
+        return true
+      })
 
-        const placesPhone = normalizeKenyanPhone(place.phone, { source: 'google_places' })
-        let websiteEmail: string | null = null
-        let websitePhone: string | null = null
-        let cleanWebsiteUrl: string | null = null
-        let domain: string | null = null
-        let businessSummary: string | null = null
+      // Scrape business websites in polite parallel batches of 4 so Vercel serverless runs fast (<20s)
+      const BATCH_SIZE = 4
+      for (let i = 0; i < unseenPlaces.length; i += BATCH_SIZE) {
+        const batch = unseenPlaces.slice(i, i + BATCH_SIZE)
+        const batchResults = await Promise.all(
+          batch.map(async (place) => {
+            const placesPhone = normalizeKenyanPhone(place.phone, { source: 'google_places' })
+            let websiteEmail: string | null = null
+            let websitePhone: string | null = null
+            let cleanWebsiteUrl: string | null = null
+            let domain: string | null = null
+            let businessSummary: string | null = null
+            let skippedForbidden = 0
+            let scrapedCount = 0
 
-        if (place.websiteUrl) {
-          if (isForbiddenScrapeUrl(place.websiteUrl)) {
-            forbiddenUrlsSkipped++
-          } else {
-            websitesScraped++
-            const scraped = await scrapeBusinessWebsite(place.websiteUrl, options.fetchImpl)
-            cleanWebsiteUrl = scraped.cleanWebsiteUrl
-            domain = scraped.domain
-            websiteEmail = scraped.email
-            websitePhone = scraped.phoneE164
-            businessSummary = scraped.businessSummary
-            if (scraped.blockedForbiddenUrl) forbiddenUrlsSkipped++
-            // Polite delay between website scrapes
-            await sleep(120)
-          }
-        }
+            if (place.websiteUrl) {
+              if (isForbiddenScrapeUrl(place.websiteUrl)) {
+                skippedForbidden++
+              } else {
+                scrapedCount++
+                const scraped = await scrapeBusinessWebsite(place.websiteUrl, options.fetchImpl)
+                cleanWebsiteUrl = scraped.cleanWebsiteUrl
+                domain = scraped.domain
+                websiteEmail = scraped.email
+                websitePhone = scraped.phoneE164
+                businessSummary = scraped.businessSummary
+                if (scraped.blockedForbiddenUrl) skippedForbidden++
 
-        const finalPhone = placesPhone || websitePhone
-        const finalEmail = websiteEmail
+                // If discovery landed on a subpage (e.g. /book-now/) that lacked an email, also check root homepage!
+                if (!websiteEmail && domain) {
+                  const rootUrl = `https://${domain}`
+                  if (cleanWebsiteUrl && cleanWebsiteUrl.replace(/\/$/, '') !== rootUrl) {
+                    const rootScraped = await scrapeBusinessWebsite(rootUrl, options.fetchImpl)
+                    websiteEmail = websiteEmail || rootScraped.email
+                    websitePhone = websitePhone || rootScraped.phoneE164
+                    businessSummary = businessSummary || rootScraped.businessSummary
+                  }
+                }
+              }
+            }
 
-        // Permanent suppression check (Kenya DPA 2019)
-        if (
-          checkInSuppressionSets(suppressionSets, {
-            email: finalEmail,
-            phoneE164: finalPhone,
-            domain,
+            return {
+              place,
+              placesPhone,
+              websiteEmail,
+              websitePhone,
+              cleanWebsiteUrl,
+              domain,
+              businessSummary,
+              skippedForbidden,
+              scrapedCount,
+            }
           })
-        ) {
-          suppressedSkipped++
-          continue
+        )
+
+        for (const item of batchResults) {
+          websitesScraped += item.scrapedCount
+          forbiddenUrlsSkipped += item.skippedForbidden
+
+          const finalPhone = item.placesPhone || item.websitePhone
+          const finalEmail = item.websiteEmail
+
+          // Permanent suppression check (Kenya DPA 2019)
+          if (
+            checkInSuppressionSets(suppressionSets, {
+              email: finalEmail,
+              phoneE164: finalPhone,
+              domain: item.domain,
+            })
+          ) {
+            suppressedSkipped++
+            continue
+          }
+
+          rawCandidates.push({
+            business_name: item.place.name,
+            category: task.category,
+            city: task.city,
+            address: item.place.address,
+            website_url: item.cleanWebsiteUrl,
+            domain: item.domain,
+            google_place_id: item.place.placeId,
+            email: finalEmail,
+            phone_e164: finalPhone,
+            rating: item.place.rating,
+            business_summary: item.businessSummary,
+            source_details: {
+              discovery_engine: useGooglePlaces ? 'google_places_api' : 'free_kenya_web_directory',
+              query: task.query,
+              primary_type: item.place.primaryType,
+              email_from: finalEmail ? 'business_website' : null,
+              phone_from: item.placesPhone
+                ? useGooglePlaces
+                  ? 'google_places'
+                  : 'directory_snippet'
+                : item.websitePhone
+                  ? 'business_website'
+                  : null,
+            },
+          })
         }
 
-        rawCandidates.push({
-          business_name: place.name,
-          category: task.category,
-          city: task.city,
-          address: place.address,
-          website_url: cleanWebsiteUrl,
-          domain,
-          google_place_id: place.placeId,
-          email: finalEmail,
-          phone_e164: finalPhone,
-          rating: place.rating,
-          business_summary: businessSummary,
-          source_details: {
-            query: task.query,
-            primary_type: place.primaryType,
-            email_from: finalEmail ? 'business_website' : null,
-            phone_from: placesPhone ? 'google_places' : websitePhone ? 'business_website' : null,
-          },
-        })
+        if (i + BATCH_SIZE < unseenPlaces.length) {
+          await sleep(150)
+        }
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
