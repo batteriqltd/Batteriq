@@ -86,7 +86,7 @@ export function VisitorTracker() {
   pathRef.current = pathname
 
   // Never track admins as storefront visitors
-  const isAdmin = pathname?.startsWith('/admin')
+  const isAdmin = pathname?.startsWith('/admin') || pathname?.startsWith('/outreach-admin')
 
   // Heartbeat lifecycle
   useEffect(() => {

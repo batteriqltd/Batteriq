@@ -20,6 +20,8 @@ async function executeAutopilotCycle(params: {
   actor: string
   force?: boolean
   customQuery?: string
+  maxLeads?: number
+  maxEmails?: number
 }) {
   const supabase = createOutreachAdminClient()
   const settings = await getOutreachSettings(supabase)
@@ -33,15 +35,16 @@ async function executeAutopilotCycle(params: {
   }
 
   // 1. Online Multi-Sector Lead Discovery (Schools, NGOs, Parastatals .go.ke, Baby/Retail Shops, Hospitals, Hotels, Orgs)
+  // Tuned per 30-minute cycle so serverless execution consistently finishes in ~15-25s well below Vercel's 60s limit.
   const leadResult = await runLeadFinderJob({
     customQuery: params.customQuery,
-    queriesPerRun: params.customQuery ? 1 : 2,
-    maxPlacesPerQuery: 8,
+    queriesPerRun: 1,
+    maxPlacesPerQuery: Math.min(10, Math.max(2, params.maxLeads ?? 6)),
   })
 
-  // 2. Automatic Cold Email + Tailored KES Proforma Invoice Dispatch
+  // 2. Automatic Cold Email + Tailored KES Proforma Invoice Dispatch (4 per 30m = 192/day capacity)
   const emailResult = await runDailyEmailCampaignJob({
-    maxToProcess: 8,
+    maxToProcess: Math.min(8, Math.max(1, params.maxEmails ?? 4)),
   })
 
   // 3. WhatsApp Cloud Template Outreach (when Meta WhatsApp Cloud credentials are configured)
@@ -228,6 +231,8 @@ export async function POST(req: Request) {
       force: Boolean(body.force || auth.actor === 'admin'),
       customQuery:
         typeof body.query === 'string' && body.query.trim() ? body.query.trim() : undefined,
+      maxLeads: typeof body.maxLeads === 'number' ? body.maxLeads : undefined,
+      maxEmails: typeof body.maxEmails === 'number' ? body.maxEmails : undefined,
     })
     return NextResponse.json({ success: true, ...result })
   } catch (err) {

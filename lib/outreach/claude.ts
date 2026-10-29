@@ -168,7 +168,13 @@ async function callGeminiGenerateContent(params: {
             cache: 'no-store',
           })
 
-          if ((res.status === 404 || res.status === 400) && i < modelsToTry.length - 1) {
+          if (
+            (res.status === 404 ||
+              res.status === 400 ||
+              res.status === 429 ||
+              res.status === 503) &&
+            i < modelsToTry.length - 1
+          ) {
             continue
           }
 

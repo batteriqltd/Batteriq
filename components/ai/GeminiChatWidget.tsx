@@ -122,7 +122,7 @@ export function GeminiChatWidget() {
 
   const pathname = usePathname()
   // Never show on admin routes; hide while cart drawer or mobile nav is open
-  if (pathname?.startsWith('/admin')) return null
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/outreach-admin')) return null
   if (cartOpen || mobileNavOpen) return null
 
   return (
