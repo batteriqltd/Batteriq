@@ -871,3 +871,12 @@ section, .section, [data-section] {
 .animate-hero-float {
   animation: heroFloat 5s ease-in-out infinite;
 }
+
+/* Hide scrollbars on the outreach console rails and chip strips */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

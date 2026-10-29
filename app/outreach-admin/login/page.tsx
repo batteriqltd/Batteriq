@@ -53,62 +53,63 @@ function ExecutiveSignInForm() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-5 py-12 bg-[#060919] text-slate-100 overflow-hidden selection:bg-blue-500/30">
-      {/* Subtle Architectural Grid + Ambient Sapphire Vignette */}
+    <div className="relative min-h-screen flex items-center justify-center px-5 py-12 bg-[#f3f6fc] text-bq-gray-900 overflow-hidden selection:bg-bq-blue/15">
+      {/* Soft brand ambience */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.16]"
+        className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage:
-            'linear-gradient(to right, rgba(148,163,184,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(148,163,184,0.12) 1px, transparent 1px)',
-          backgroundSize: '48px 48px',
+          background:
+            'radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.07), transparent 60%), radial-gradient(800px 520px at 90% 100%, rgba(0,0,77,0.06), transparent 60%)',
         }}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[420px] rounded-full blur-[130px] bg-blue-600/20"
+        className="pointer-events-none absolute inset-0 opacity-[0.5]"
+        style={{
+          backgroundImage:
+            'linear-gradient(to right, rgba(0,0,77,0.035) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,77,0.035) 1px, transparent 1px)',
+          backgroundSize: '56px 56px',
+        }}
       />
 
-      <div className="relative z-10 w-full max-w-[420px]">
+      <div className="relative z-10 w-full max-w-[440px]">
         {/* Brand Wordmark */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-7">
           <div className="inline-flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-600/25">
+            <div className="w-9 h-9 rounded-xl bg-bq-navy flex items-center justify-center font-display font-bold text-white text-base">
               B
             </div>
-            <span className="text-2xl sm:text-[26px] font-black text-white tracking-tight">
-              BATTERIQ<sup className="text-[10px] align-super text-blue-400 ml-0.5">™</sup>
+            <span className="font-display text-2xl sm:text-[26px] font-bold text-bq-navy tracking-tight">
+              BATTERIQ<sup className="text-[10px] align-super text-bq-blue ml-0.5">™</sup>
             </span>
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400 mt-3">
-            Executive Portal
+          <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-bq-gray-400 mt-3">
+            Outreach Admin
           </p>
         </div>
 
-        {/* Obsidian Frosted Card */}
-        <div className="relative rounded-3xl bg-[#10162b]/85 backdrop-blur-2xl border border-white/[0.08] p-7 sm:p-9 shadow-[0_24px_80px_rgba(0,0,0,0.65)] overflow-hidden">
-          <div
-            aria-hidden="true"
-            className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-blue-400/60 to-transparent"
-          />
+        {/* Clean Card */}
+        <div className="relative rounded-[26px] bg-white border border-[#e7edf8] p-7 sm:p-9 shadow-[0_30px_70px_-32px_rgba(0,0,77,0.28)] overflow-hidden">
+          <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-bq-navy" />
 
-          <div className="mb-7 text-center">
-            <h1 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
-              Authorised Sign In
+          <div className="mb-7">
+            <h1 className="font-display text-xl sm:text-[22px] font-bold text-bq-navy tracking-tight">
+              Welcome back
             </h1>
-            <p className="text-xs text-slate-400 mt-1.5">
-              Enter your corporate credentials to continue.
+            <p className="text-[13px] text-bq-gray-400 mt-1.5">
+              Sign in with your authorised account to continue.
             </p>
           </div>
 
           {reason === 'session_expired' && (
-            <div className="mb-5 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-400/25 text-xs font-semibold text-amber-200">
+            <div className="mb-5 px-4 py-3 rounded-xl bg-[#fff8eb] border border-[#f3e4c2] text-xs font-medium text-[#8a6116]">
               Your session has expired. Please sign in again.
             </div>
           )}
 
           {error && (
-            <div className="mb-5 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/25 text-xs font-semibold text-red-300">
+            <div className="mb-5 px-4 py-3 rounded-xl bg-[#fdf2f2] border border-[#f4d9d9] text-xs font-medium text-[#a63b3b]">
               {error}
             </div>
           )}
@@ -117,9 +118,9 @@ function ExecutiveSignInForm() {
             <div>
               <label
                 htmlFor="exec-email"
-                className="block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-2 ml-0.5"
+                className="block text-xs font-semibold text-bq-gray-600 mb-2"
               >
-                Email Address
+                Email address
               </label>
               <input
                 id="exec-email"
@@ -128,15 +129,15 @@ function ExecutiveSignInForm() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter email address"
-                className="w-full h-12 px-4 rounded-xl bg-[#090e1d] border border-white/10 text-white placeholder:text-slate-600 text-sm font-medium outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                placeholder="you@batteriq.com"
+                className="w-full h-12 px-4 rounded-xl bg-[#f8faff] border border-[#e3e9f5] text-bq-navy placeholder:text-[#9aa6bf] text-sm font-medium outline-none transition-all focus:bg-white focus:border-bq-blue focus:ring-4 focus:ring-bq-blue/10"
               />
             </div>
 
             <div>
               <label
                 htmlFor="exec-password"
-                className="block text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400 mb-2 ml-0.5"
+                className="block text-xs font-semibold text-bq-gray-600 mb-2"
               >
                 Password
               </label>
@@ -148,14 +149,14 @@ function ExecutiveSignInForm() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full h-12 px-4 pr-11 rounded-xl bg-[#090e1d] border border-white/10 text-white placeholder:text-slate-600 text-sm font-medium outline-none transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                  placeholder="Enter your password"
+                  className="w-full h-12 px-4 pr-11 rounded-xl bg-[#f8faff] border border-[#e3e9f5] text-bq-navy placeholder:text-[#9aa6bf] text-sm font-medium outline-none transition-all focus:bg-white focus:border-bq-blue focus:ring-4 focus:ring-bq-blue/10"
                 />
                 <button
                   type="button"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-200 transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9aa6bf] hover:text-bq-navy transition-colors"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -165,24 +166,28 @@ function ExecutiveSignInForm() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full h-12 mt-2 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold text-xs uppercase tracking-[0.16em] flex items-center justify-center gap-2 shadow-lg shadow-blue-600/25 transition-all disabled:opacity-50"
+              className="w-full h-12 mt-2 rounded-xl bg-bq-blue hover:bg-bq-blue-dim text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  <span>Sign In</span>
+                  <span>Sign in</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </button>
           </form>
 
-          <div className="mt-7 pt-5 border-t border-white/[0.06] flex items-center justify-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            <ShieldCheck className="w-3.5 h-3.5 text-blue-400/80" />
-            <span>Restricted Access · Batteriq Solutions Ltd</span>
+          <div className="mt-7 pt-5 border-t border-[#eef2fa] flex items-center justify-center gap-2 text-[11px] font-medium text-bq-gray-400">
+            <ShieldCheck className="w-3.5 h-3.5 text-bq-blue" />
+            <span>Restricted access · Batteriq Solutions Ltd</span>
           </div>
         </div>
+
+        <p className="text-center text-[11px] text-[#9aa6bf] mt-6">
+          © {new Date().getFullYear()} Batteriq. All rights reserved.
+        </p>
       </div>
     </div>
   )
@@ -190,7 +195,7 @@ function ExecutiveSignInForm() {
 
 export default function OutreachAdminLoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#060919]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#f3f6fc]" />}>
       <ExecutiveSignInForm />
     </Suspense>
   )
