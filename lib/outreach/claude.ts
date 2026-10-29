@@ -308,8 +308,60 @@ function buildBatteriqCatalogSnippet(products: CatalogProductSummary[]): string 
     .join('\n')
 }
 
+function buildSmartTailoredOutreachEmail(params: {
+  lead: Pick<
+    OutreachLead,
+    'business_name' | 'category' | 'city' | 'address' | 'website_url' | 'business_summary'
+  >
+  products?: CatalogProductSummary[]
+  senderName: string
+}): GeneratedOutreachEmail {
+  const { lead, products = [], senderName } = params
+  const city = lead.city || 'Kenya'
+  const featured =
+    products.find((p) => /delta\s*(pro|3\s*max|3\s*ultra|2\s*max)|ac200/i.test(p.name)) ||
+    products[0]
+  const featuredLine = featured
+    ? `${featured.name} (KES ${Number(featured.price_kes).toLocaleString('en-KE')})`
+    : 'EcoFlow DELTA Pro & BLUETTI AC200PL commercial LiFePO4 backup series'
+
+  const categoryPitch =
+    lead.category === 'hotel'
+      ? `keep guest rooms, reception, Wi-Fi, security, and conference spaces running silently during KPLC outages — with zero diesel fumes, zero generator noise, and <20ms automatic switchover`
+      : lead.category === 'school'
+        ? `keep ICT labs, smart classrooms, administration servers, Wi-Fi, and CCTV online continuously during KPLC outages — silently and with zero fuel maintenance`
+        : lead.category === 'shop'
+          ? `keep your POS terminals, M-Pesa tills, lighting, CCTV, and refrigeration online without interruption whenever KPLC power drops`
+          : `protect your servers, routers, workstations, and critical facility equipment with silent <20ms automatic UPS switchover and zero diesel maintenance`
+
+  const subject = `Silent backup power for ${lead.business_name}`.slice(0, 65)
+  const paragraphs = [
+    `Hello ${lead.business_name} Team,`,
+    `We noticed your operations in ${city} and wanted to share how Batteriq Kenya — Kenya's official authorised EcoFlow & BLUETTI commercial distributor — helps ${
+      lead.category === 'hotel'
+        ? 'hotels and lodges'
+        : lead.category === 'school'
+          ? 'schools and universities'
+          : lead.category === 'shop'
+            ? 'retailers and commercial stores'
+            : 'Kenyan organizations and facilities'
+    } ${categoryPitch}.`,
+    `Many Kenyan institutions start with our ${featuredLine}, backed by an official 24-month local manufacturer warranty, full KRA eTIMS VAT tax invoicing, and fast nationwide delivery.`,
+    `Would you be open to a quick load-sizing recommendation or a tailored B2B proforma quote for ${lead.business_name}? Simply reply directly to this email and our commercial team will be glad to assist.`,
+    `Warm regards,\n${senderName}`,
+  ]
+
+  return {
+    subject,
+    bodyText: paragraphs.join('\n\n'),
+    bodyHtmlParagraphs: paragraphs.map((p) => escapeHtml(p).replace(/\n/g, '<br/>')),
+    model: 'batteriq-smart-b2b-copywriter',
+  }
+}
+
 /**
- * Uses Claude to write a bespoke B2B outreach email for a Kenyan business lead.
+ * Uses Claude or Google Gemini to write a bespoke B2B outreach email for a Kenyan business lead,
+ * with resilient smart B2B copywriter fallback if an external AI key is rotated or quota-limited.
  */
 export async function generateOutreachEmailWithClaude(params: {
   lead: Pick<
@@ -358,32 +410,45 @@ WRITING RULES:
 - Website: ${lead.website_url || 'N/A'}
 - Website Summary: ${lead.business_summary || 'Kenyan business operating locally'}`
 
-  const { text, model } = await callClaudeMessages({
-    systemPrompt,
-    userPrompt,
-    maxTokens: 700,
-    temperature: 0.6,
-    fetchImpl,
-  })
+  try {
+    const { text, model } = await callClaudeMessages({
+      systemPrompt,
+      userPrompt,
+      maxTokens: 700,
+      temperature: 0.6,
+      fetchImpl,
+    })
 
-  const parsed = extractJsonObject(text)
-  const subject = String(parsed.subject || '').trim()
-  const rawParagraphs = Array.isArray(parsed.paragraphs)
-    ? parsed.paragraphs.map((p) => String(p).trim()).filter(Boolean)
-    : String(parsed.body || '')
-        .split(/\n{2,}/)
-        .map((p) => p.trim())
-        .filter(Boolean)
+    const parsed = extractJsonObject(text)
+    const subject = String(parsed.subject || '').trim()
+    const rawParagraphs = Array.isArray(parsed.paragraphs)
+      ? parsed.paragraphs.map((p) => String(p).trim()).filter(Boolean)
+      : String(parsed.body || '')
+          .split(/\n{2,}/)
+          .map((p) => p.trim())
+          .filter(Boolean)
 
-  if (!subject || rawParagraphs.length === 0) {
-    throw new Error('Claude returned incomplete email subject or paragraphs')
-  }
+    if (!subject || rawParagraphs.length === 0) {
+      throw new Error('Claude returned incomplete email subject or paragraphs')
+    }
 
-  return {
-    subject: subject.slice(0, 140),
-    bodyText: rawParagraphs.join('\n\n'),
-    bodyHtmlParagraphs: rawParagraphs.map((p) => escapeHtml(p).replace(/\n/g, '<br/>')),
-    model,
+    return {
+      subject: subject.slice(0, 140),
+      bodyText: rawParagraphs.join('\n\n'),
+      bodyHtmlParagraphs: rawParagraphs.map((p) => escapeHtml(p).replace(/\n/g, '<br/>')),
+      model,
+    }
+  } catch (err) {
+    if (fetchImpl) throw err
+    await logOutreachEvent({
+      module: 'email_campaign',
+      level: 'warn',
+      event: 'ai_fallback_copywriter_used',
+      message: `Used smart B2B copywriter fallback because external AI API returned: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    }).catch(() => {})
+    return buildSmartTailoredOutreachEmail({ lead, products, senderName })
   }
 }
 
@@ -492,43 +557,76 @@ ${transcript || '(Start of conversation)'}
 LATEST INBOUND CUSTOMER MESSAGE:
 Customer: ${inboundMessage}`
 
-  const { text, model } = await callClaudeMessages({
-    systemPrompt,
-    userPrompt,
-    maxTokens: 550,
-    temperature: 0.4,
-    fetchImpl,
-  })
+  try {
+    const { text, model } = await callClaudeMessages({
+      systemPrompt,
+      userPrompt,
+      maxTokens: 550,
+      temperature: 0.4,
+      fetchImpl,
+    })
 
-  const parsed = extractJsonObject(text)
-  const reply =
-    String(parsed.reply || '').trim() ||
-    'Thank you for messaging Batteriq Kenya! A member of our team is reviewing your inquiry and will assist you shortly.'
+    const parsed = extractJsonObject(text)
+    const reply =
+      String(parsed.reply || '').trim() ||
+      'Thank you for messaging Batteriq Kenya! A member of our team is reviewing your inquiry and will assist you shortly.'
 
-  const rawStatus = String(parsed.newStatus || 'replied')
-    .trim()
-    .toLowerCase() as LeadStatus
+    const rawStatus = String(parsed.newStatus || 'replied')
+      .trim()
+      .toLowerCase() as LeadStatus
 
-  let newStatus: LeadStatus = (LEAD_STATUSES as readonly string[]).includes(rawStatus)
-    ? rawStatus
-    : 'replied'
+    let newStatus: LeadStatus = (LEAD_STATUSES as readonly string[]).includes(rawStatus)
+      ? rawStatus
+      : 'replied'
 
-  const isOptOut = Boolean(parsed.isOptOut) || newStatus === 'opted_out'
-  if (isOptOut) {
-    newStatus = 'opted_out'
-  } else if (lead?.status === 'customer') {
-    // Never downgrade an existing paying customer
-    newStatus = 'customer'
-  }
+    const isOptOut = Boolean(parsed.isOptOut) || newStatus === 'opted_out'
+    if (isOptOut) {
+      newStatus = 'opted_out'
+    } else if (lead?.status === 'customer') {
+      // Never downgrade an existing paying customer
+      newStatus = 'customer'
+    }
 
-  const wantsHuman = Boolean(parsed.wantsHuman) || deterministicHuman
+    const wantsHuman = Boolean(parsed.wantsHuman) || deterministicHuman
 
-  return {
-    reply,
-    newStatus,
-    wantsHuman,
-    isOptOut,
-    reasoning: String(parsed.reasoning || '').slice(0, 300),
-    model,
+    return {
+      reply,
+      newStatus,
+      wantsHuman,
+      isOptOut,
+      reasoning: String(parsed.reasoning || '').slice(0, 300),
+      model,
+    }
+  } catch (err) {
+    if (fetchImpl) throw err
+
+    const isHotIntent =
+      /\b(quote|quotation|proforma|invoice|buy|order|purchase|bulk|units?|price\s+list|pay|mpesa|m-pesa|site\s+visit|deliver)\b/i.test(
+        inboundMessage
+      )
+    const isProductQuestion =
+      /\b(delta|ecoflow|bluetti|solar|backup|kwh|watt|price|cost|how\s+much|spec|warranty)\b/i.test(
+        inboundMessage
+      )
+    let fallbackStatus: LeadStatus = isHotIntent
+      ? 'hot'
+      : isProductQuestion
+        ? 'interested'
+        : 'replied'
+    if (lead?.status === 'customer') fallbackStatus = 'customer'
+
+    const reply =
+      deterministicHuman || isHotIntent
+        ? `Thank you for reaching out to Batteriq Kenya! We provide authorised EcoFlow & BLUETTI commercial backup systems with full KRA eTIMS VAT invoicing and 24-month local warranty. I am connecting a senior Batteriq specialist to assist you with your request right now.`
+        : `Hello from Batteriq Kenya! Our commercial EcoFlow DELTA & BLUETTI LiFePO4 backup systems eliminate KPLC outage downtime silently (<20ms switchover, 24-month warranty, KRA eTIMS VAT invoice). Tell us which equipment or rooms you want to back up—or reply QUOTE to connect with a specialist.`
+
+    return {
+      reply,
+      newStatus: fallbackStatus,
+      wantsHuman: deterministicHuman || isHotIntent,
+      isOptOut: false,
+      reasoning: 'Smart fallback WhatsApp classifier used while external AI key is inactive',
+      model: 'batteriq-smart-wa-assistant',
+    }
   }
 }
