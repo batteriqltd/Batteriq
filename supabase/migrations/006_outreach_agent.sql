@@ -15,29 +15,61 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- ── 0. OPTIONAL: EXTEND admin_users ROLE CONSTRAINT (SKIPPED ON STANDALONE 2ND SUPABASE) ──
+-- ── 0. ADMIN USERS & BCRYPT VERIFICATION RPC (WORKS ON STANDALONE 2ND SUPABASE OR EXISTING DB) ──
+CREATE TABLE IF NOT EXISTS public.admin_users (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email         TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role          TEXT NOT NULL DEFAULT 'outreach_admin'
+                CHECK (role IN ('super_admin', 'staff', 'outreach_admin')),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE public.admin_users ENABLE ROW LEVEL SECURITY;
+
 DO $$
 BEGIN
+  ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS email TEXT;
+  ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+
   IF EXISTS (
-    SELECT 1 FROM information_schema.tables
-    WHERE table_schema = 'public' AND table_name = 'admin_users'
+    SELECT 1 FROM pg_constraint WHERE conname = 'admin_users_role_check'
   ) THEN
-    ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS email TEXT;
-    ALTER TABLE public.admin_users ADD COLUMN IF NOT EXISTS password_hash TEXT;
-
-    IF EXISTS (
-      SELECT 1 FROM pg_constraint WHERE conname = 'admin_users_role_check'
-    ) THEN
-      ALTER TABLE public.admin_users DROP CONSTRAINT admin_users_role_check;
-    END IF;
-
-    ALTER TABLE public.admin_users
-      ADD CONSTRAINT admin_users_role_check
-      CHECK (role IN ('super_admin', 'staff', 'outreach_admin'));
+    ALTER TABLE public.admin_users DROP CONSTRAINT admin_users_role_check;
   END IF;
+
+  ALTER TABLE public.admin_users
+    ADD CONSTRAINT admin_users_role_check
+    CHECK (role IN ('super_admin', 'staff', 'outreach_admin'));
 EXCEPTION WHEN OTHERS THEN
   NULL;
 END $$;
+
+DROP POLICY IF EXISTS "Service role manages admin_users" ON public.admin_users;
+CREATE POLICY "Service role manages admin_users"
+  ON public.admin_users FOR ALL TO service_role
+  USING (true) WITH CHECK (true);
+
+CREATE OR REPLACE FUNCTION public.verify_admin_password(
+  input_password text,
+  stored_hash text
+)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+BEGIN
+  RETURN stored_hash = extensions.crypt(input_password, stored_hash);
+EXCEPTION WHEN OTHERS THEN
+  BEGIN
+    RETURN stored_hash = public.crypt(input_password, stored_hash);
+  EXCEPTION WHEN OTHERS THEN
+    RETURN false;
+  END;
+END;
+$$;
 
 -- ── 1. OPTIONAL: EXTEND contact_submissions IF PRESENT (SKIPPED ON STANDALONE 2ND SUPABASE) ──
 DO $$
