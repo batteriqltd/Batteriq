@@ -1,0 +1,66 @@
+name: Batteriq 24/7 Outreach Agent
+
+on:
+  schedule:
+    # Runs every 20 minutes, 24 hours a day, 7 days a week, 365 days a year
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+    # Allows manual 1-click trigger directly from GitHub Actions tab
+
+jobs:
+  run-outreach-cycle:
+    name: Autonomous Outreach & WhatsApp Cycle
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: 1. Trigger 24/7 Autopilot Cycle (Lead Finding, Proforma & Cold Email)
+        run: |
+          echo "Triggering Batteriq 24/7 Autopilot Cycle at $(date -u)..."
+          CRON_TOKEN="${{ secrets.CRON_SECRET }}"
+          if [ -z "$CRON_TOKEN" ]; then
+            CRON_TOKEN="11fb30d12b7fbe2e6b41621d0cdeade4c55670ef0c798dcb1065e4c37b64bbf5"
+          fi
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X GET \
+            -H "Authorization: Bearer $CRON_TOKEN" \
+            "https://batteriq.com/api/cron/outreach-autopilot")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "Autopilot HTTP Status: $HTTP_CODE"
+          echo "Response Body: $BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "::warning::Autopilot returned non-200 status code: $HTTP_CODE"
+          fi
+
+      - name: 2. Trigger WhatsApp Cold Queue (Strict 1-msg/min Throttle)
+        run: |
+          echo "Triggering WhatsApp cold queue dispatcher (1-msg/min cadence)..."
+          CRON_TOKEN="${{ secrets.CRON_SECRET }}"
+          if [ -z "$CRON_TOKEN" ]; then
+            CRON_TOKEN="11fb30d12b7fbe2e6b41621d0cdeade4c55670ef0c798dcb1065e4c37b64bbf5"
+          fi
+
+          # Attempt 1
+          echo "Dispatching WhatsApp candidate 1..."
+          curl -s -X GET -H "Authorization: Bearer $CRON_TOKEN" "https://batteriq.com/api/cron/outreach-whatsapp" || true
+          echo ""
+
+          # Wait 65s for strict 1-msg/min compliance
+          echo "Pacing 65s for WhatsApp 1-message-per-minute compliance..."
+          sleep 65
+
+          # Attempt 2
+          echo "Dispatching WhatsApp candidate 2..."
+          curl -s -X GET -H "Authorization: Bearer $CRON_TOKEN" "https://batteriq.com/api/cron/outreach-whatsapp" || true
+          echo ""
+
+      - name: 3. Health & Status Summary
+        run: |
+          echo "======================================================"
+          echo "Batteriq 24/7 Cloud Outreach Cycle Finished at $(date -u)"
+          echo "Status: Active & Operating Autonomously in Cloud"
+          echo "======================================================"

@@ -383,10 +383,35 @@ function buildSmartTailoredOutreachEmail(params: {
     },
   }
 
-  const chosen = sectorInfo[lead.category] || {
-    noun: 'Kenyan organizations and institutions',
-    benefit:
-      'protect servers, routers, workstations, and critical facility equipment with silent <20ms automatic UPS switchover and zero diesel maintenance',
+  const nameAndAddr = `${lead.business_name} ${lead.address || ''} ${lead.business_summary || ''}`.toLowerCase()
+  let chosen = sectorInfo[lead.category]
+
+  if (/\b(property|properties|real\s*estate|rental|rentals|apartment|apartments|tsavo|housing|estate|estates|residence|residences|court)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'property management firms, residential apartments, and commercial estates',
+      benefit:
+        'keep tenant common area lighting, borehole/water pressure pumps, access control, electric fences, and CCTV fully powered during KPLC blackouts — completely silent, zero diesel expense, and zero fuel refilling hassles',
+    }
+  } else if (/\b(tech|technologies|technology|software|fintech|digital|systems|cloud|ai|data|labs|code|cyber|developer|developers|ict)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'software companies, tech startups, and fintech firms',
+      benefit:
+        'keep developer workstations, local staging servers, fiber routers, and network racks online with 0ms pure-sine-wave failover — protecting ongoing code deployments and client uptime without losing an hour of productivity',
+    }
+  } else if (/\b(laundry|laundries|dry\s*clean|dry\s*cleaners|dry\s*cleaning|wash|laundromat|laundromats|cleaners|garment)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'commercial laundromats and professional dry cleaners',
+      benefit:
+        'keep commercial front-load washers, steam solenoid valves, water pump systems, and POS billing running through sudden power cuts with high-surge pure-sine-wave power and zero generator smoke',
+    }
+  }
+
+  if (!chosen) {
+    chosen = {
+      noun: 'Kenyan organizations and institutions',
+      benefit:
+        'protect servers, routers, workstations, and critical facility equipment with silent <20ms automatic UPS switchover and zero diesel maintenance',
+    }
   }
 
   const subject = proforma

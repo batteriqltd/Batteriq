@@ -129,83 +129,113 @@ export function recommendBatteriqProformaForLead(
   })
 
   const category: LeadCategory = lead.category || 'other'
+  const nameAndAddr = `${lead.business_name} ${lead.address || ''} ${lead.city || ''}`.toLowerCase()
+  const isProperty = /\b(property|properties|real\s*estate|rental|rentals|apartment|apartments|tsavo|housing|estate|estates|residence|residences|court)\b/i.test(nameAndAddr)
+  const isTech = /\b(tech|technologies|technology|software|fintech|digital|systems|cloud|ai|data|labs|code|cyber|developer|developers|ict)\b/i.test(nameAndAddr)
+  const isLaundry = /\b(laundry|laundries|dry\s*clean|dry\s*cleaners|dry\s*cleaning|wash|laundromat|laundromats|cleaners|garment)\b/i.test(nameAndAddr)
 
   let systemTitle = 'Commercial Uptime & LiFePO4 Backup Package'
   let useCaseSummary =
     'Silent <20ms automatic UPS switchover for routers, workstations, lighting & critical equipment — zero diesel fumes or maintenance.'
   let rawItems: Array<{ brand: string; name: string; quantity: number; unitPrice: number }> = []
 
-  switch (category) {
-    case 'retail':
-    case 'shop':
-      systemTitle = 'Retail Store, POS & Lighting Instant Backup Package'
-      useCaseSummary =
-        'Keeps POS tills, M-Pesa terminals, barcode scanners, warm shop lighting, Wi-Fi & CCTV running seamlessly during KPLC blackouts.'
-      rawItems = [
-        { ...delta2, quantity: 1 },
-        { ...solar220, quantity: 1 },
-      ]
-      break
+  if (isProperty) {
+    systemTitle = 'Residential & Commercial Property Common-Area, Pump & Security Backup System'
+    useCaseSummary =
+      'Zero-diesel, zero-fume silent LiFePO4 backup for tenant common area lighting, borehole/water pressure pumps, CCTV, electric perimeter fences & access gates during KPLC outages.'
+    rawItems = [
+      { ...deltaPro, quantity: 1 },
+      { ...solar400, quantity: 1 },
+    ]
+  } else if (isTech) {
+    systemTitle = 'Tech Startup & Software House Server Room 0ms Failover System'
+    useCaseSummary =
+      'Pure-sine-wave uninterruptible LiFePO4 power for developer workstations, local build servers, high-throughput network racks & fiber gateways with zero reboot time.'
+    rawItems = [
+      { ...delta2Max, quantity: 2 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else if (isLaundry) {
+    systemTitle = 'Commercial Laundromat High-Surge Washer & Billing Backup Package'
+    useCaseSummary =
+      'High-surge motor inverter support for commercial front-load washers, steam valve controls, POS billing & pump systems without smoke or expensive diesel fuel refilling.'
+    rawItems = [
+      { ...deltaPro, quantity: 1 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else {
+    switch (category) {
+      case 'retail':
+      case 'shop':
+        systemTitle = 'Retail Store, POS & Lighting Instant Backup Package'
+        useCaseSummary =
+          'Keeps POS tills, M-Pesa terminals, barcode scanners, warm shop lighting, Wi-Fi & CCTV running seamlessly during KPLC blackouts.'
+        rawItems = [
+          { ...delta2, quantity: 1 },
+          { ...solar220, quantity: 1 },
+        ]
+        break
 
-    case 'school':
-      systemTitle = 'Campus ICT Lab, Smart Classroom & Admin Backup System'
-      useCaseSummary =
-        'Powers school ICT servers, Wi-Fi network, smart boards, administration offices & CCTV silently with zero generator noise.'
-      rawItems = [
-        { ...delta2Max, quantity: 2 },
-        { ...solar400, quantity: 1 },
-      ]
-      break
+      case 'school':
+        systemTitle = 'Campus ICT Lab, Smart Classroom & Admin Backup System'
+        useCaseSummary =
+          'Powers school ICT servers, Wi-Fi network, smart boards, administration offices & CCTV silently with zero generator noise.'
+        rawItems = [
+          { ...delta2Max, quantity: 2 },
+          { ...solar400, quantity: 1 },
+        ]
+        break
 
-    case 'ngo':
-      systemTitle = 'NGO Office & Field Operations Solar-Hybrid Backup Kit'
-      useCaseSummary =
-        'Clean portable LiFePO4 + solar power for headquarters, field routers, laptops & project equipment without diesel fuel logistics.'
-      rawItems = [
-        { ...delta2Max, quantity: 1 },
-        { ...solar220, quantity: 2 },
-      ]
-      break
+      case 'ngo':
+        systemTitle = 'NGO Office & Field Operations Solar-Hybrid Backup Kit'
+        useCaseSummary =
+          'Clean portable LiFePO4 + solar power for headquarters, field routers, laptops & project equipment without diesel fuel logistics.'
+        rawItems = [
+          { ...delta2Max, quantity: 1 },
+          { ...solar220, quantity: 2 },
+        ]
+        break
 
-    case 'government':
-      systemTitle = 'Parastatal & Public Service ICT Continuity Package'
-      useCaseSummary =
-        'Institutional-grade 3.6kWh–7.2kWh pure-sine-wave backup for public service desks, registries, servers & security infrastructure.'
-      rawItems = [
-        { ...deltaPro, quantity: 2 },
-        { ...solar400, quantity: 2 },
-      ]
-      break
+      case 'government':
+        systemTitle = 'Parastatal & Public Service ICT Continuity Package'
+        useCaseSummary =
+          'Institutional-grade 3.6kWh–7.2kWh pure-sine-wave backup for public service desks, registries, servers & security infrastructure.'
+        rawItems = [
+          { ...deltaPro, quantity: 2 },
+          { ...solar400, quantity: 2 },
+        ]
+        break
 
-    case 'hospital':
-      systemTitle = 'Medical Cold-Chain, Clinic & Diagnostic Backup System'
-      useCaseSummary =
-        'Zero-fume indoor lithium backup for vaccine/pharmacy refrigeration, lab diagnostics, patient monitors, HMIS & clinic lighting.'
-      rawItems = [
-        { ...deltaPro, quantity: 1 },
-        { ...delta2Max, quantity: 1 },
-      ]
-      break
+      case 'hospital':
+        systemTitle = 'Medical Cold-Chain, Clinic & Diagnostic Backup System'
+        useCaseSummary =
+          'Zero-fume indoor lithium backup for vaccine/pharmacy refrigeration, lab diagnostics, patient monitors, HMIS & clinic lighting.'
+        rawItems = [
+          { ...deltaPro, quantity: 1 },
+          { ...delta2Max, quantity: 1 },
+        ]
+        break
 
-    case 'hotel':
-      systemTitle = 'Silent Hospitality Guest Suite & Reception Backup System'
-      useCaseSummary =
-        'Silent, zero-emission power for reception, Wi-Fi, conference rooms, POS & VIP suites without disturbing guests.'
-      rawItems = [
-        { ...deltaPro, quantity: 1 },
-        { ...solar400, quantity: 1 },
-      ]
-      break
+      case 'hotel':
+        systemTitle = 'Silent Hospitality Guest Suite & Reception Backup System'
+        useCaseSummary =
+          'Silent, zero-emission power for reception, Wi-Fi, conference rooms, POS & VIP suites without disturbing guests.'
+        rawItems = [
+          { ...deltaPro, quantity: 1 },
+          { ...solar400, quantity: 1 },
+        ]
+        break
 
-    default:
-      systemTitle = 'Corporate Office & Server Room Uptime Package'
-      useCaseSummary =
-        'Automatic <20ms switchover for routers, servers, workstations, access control & office lighting during KPLC outages.'
-      rawItems = [
-        { ...delta2Max, quantity: 1 },
-        { ...solar220, quantity: 1 },
-      ]
-      break
+      default:
+        systemTitle = 'Corporate Office & Server Room Uptime Package'
+        useCaseSummary =
+          'Automatic <20ms switchover for routers, servers, workstations, access control & office lighting during KPLC outages.'
+        rawItems = [
+          { ...delta2Max, quantity: 1 },
+          { ...solar220, quantity: 1 },
+        ]
+        break
+    }
   }
 
   const items: OutreachProformaLineItem[] = rawItems.map((it) => ({
