@@ -79,7 +79,7 @@ interface Metrics {
 
 const STATUS_BADGE: Record<LeadStatus, string> = {
   new: 'bg-slate-100 text-slate-600 border border-slate-200',
-  contacted: 'bg-blue-50 text-blue-700 border border-blue-200',
+  contacted: 'bg-[#f4f3fc] text-[#5844d8] border border-[#e4e2f5]',
   replied: 'bg-sky-50 text-sky-700 border border-sky-200',
   interested: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
   hot: 'bg-amber-50 text-amber-700 border border-amber-200',
@@ -106,11 +106,11 @@ const CATEGORY_META: Record<string, { label: string; badge: string }> = {
   },
   retail: {
     label: 'Retail / Baby Shop',
-    badge: 'bg-blue-50 text-blue-700 border-blue-200',
+    badge: 'bg-[#f4f3fc] text-[#5844d8] border-[#e4e2f5]',
   },
   shop: {
     label: 'Retail / Shop',
-    badge: 'bg-blue-50 text-blue-700 border-blue-200',
+    badge: 'bg-[#f4f3fc] text-[#5844d8] border-[#e4e2f5]',
   },
   hotel: {
     label: 'Hotel / Resort',
@@ -122,7 +122,7 @@ const CATEGORY_META: Record<string, { label: string; badge: string }> = {
   },
   website_inquiry: {
     label: 'Website Inquiry',
-    badge: 'bg-blue-50 text-blue-700 border-blue-200',
+    badge: 'bg-[#f4f3fc] text-[#5844d8] border-[#e4e2f5]',
   },
   other: {
     label: 'Organization',
@@ -271,7 +271,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
             const ec = data.emailCampaign || {}
             setBanner({
               type: 'ok',
-              text: `30m Autopilot Cycle Complete: Scanned ${lf.placesFound ?? 0} Kenyan sites â†’ ${lf.leadsSaved ?? 0} new leads saved Â· ${ec.sentNow ?? 0} cold outreach emails + KES proformas sent${ec.draftedForReview ? ` (${ec.draftedForReview} queued for review)` : ''}.`,
+              text: `30m Autopilot Cycle Complete: Scanned ${lf.placesFound ?? 0} Kenyan sites → ${lf.leadsSaved ?? 0} new leads saved · ${ec.sentNow ?? 0} cold outreach emails + KES proformas sent${ec.draftedForReview ? ` (${ec.draftedForReview} queued for review)` : ''}.`,
             })
           } else if (actionKey === 'leads') {
             setBanner({
@@ -587,7 +587,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
     if (!proformaPkg) return
     const digits = (proformaPkg.customerPhone || '').replace(/\D/g, '')
     const lines = proformaPkg.items.map(
-      (it) => `â€¢ ${it.name} x${it.quantity} â€” KES ${it.total.toLocaleString('en-KE')}`
+      (it) => `”¢ ${it.name} x${it.quantity} — KES ${it.total.toLocaleString('en-KE')}`
     )
     const text = [
       `Hello ${proformaPkg.customerName} Team,`,
@@ -595,7 +595,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
       `*${proformaPkg.systemTitle}*`,
       ...lines,
       `*Total (Incl. 16% VAT & 24-Month Warranty): KES ${proformaPkg.total.toLocaleString('en-KE')}*`,
-      `Official KRA eTIMS Tax Invoice & LPO accepted. Reply here to customize or confirm delivery! â€” Batteriq Solutions Ltd (https://batteriq.com)`,
+      `Official KRA eTIMS Tax Invoice & LPO accepted. Reply here to customize or confirm delivery! — Batteriq Solutions Ltd (https://batteriq.com)`,
     ].join('\n')
 
     const waUrl = digits
@@ -625,7 +625,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
 
   const autoSendActive = !settings.review_before_send
 
-  // â”€â”€â”€ Derived data for the dashboard tabs â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // ─── Derived data for the dashboard tabs ────────────────────────────────
   const sentEmails = emails.filter((e) => e.status === 'sent')
   const failedEmails = emails.filter((e) => e.status === 'failed' || e.status === 'suppressed')
   const proformaEmails = emails.filter((e) => Boolean(e.proforma_number))
@@ -692,13 +692,13 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   const activeNav = NAV.find((n) => n.id === activeTab) || NAV[0]
 
   const cardCls =
-    'rounded-[26px] bg-white border border-[#e6edf8] shadow-[0_12px_32px_-18px_rgba(0,0,77,0.10)]'
+    'rounded-[28px] bg-white border border-[#ecebf6] shadow-[0_12px_32px_-18px_rgba(106,87,220,0.12)]'
   const inputCls =
-    'h-11 px-3.5 rounded-xl bg-[#f6f9ff] border border-[#dfe8f6] text-[13px] font-medium text-[#0b1a3a] placeholder:text-slate-400 outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/15 transition'
+    'h-11 px-3.5 rounded-2xl bg-[#f6f5fc] border border-[#e4e2f5] text-[13px] font-medium text-[#1e1b3a] placeholder:text-slate-400 outline-none focus:border-[#6c5dd3] focus:ring-2 focus:ring-[#6c5dd3]/15 transition'
   const primaryBtn =
-    'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold shadow-[0_8px_18px_-8px_rgba(37,99,235,0.35)] transition disabled:opacity-50'
+    'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-2xl bg-[#6c5dd3] hover:bg-[#5844d8] text-white text-xs font-bold shadow-[0_8px_18px_-8px_rgba(108,93,211,0.5)] transition disabled:opacity-50'
   const ghostBtn =
-    'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl bg-[#eef4ff] hover:bg-[#e0ebff] text-[#1d4ed8] text-xs font-bold transition disabled:opacity-50'
+    'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-2xl bg-[#f0eefa] hover:bg-[#e6e2f7] text-[#5b4cc4] text-xs font-bold transition disabled:opacity-50'
 
   function renderLeadActions(lead: OutreachLead) {
     const waDigits = (lead.phone_e164 || '').replace(/\D/g, '')
@@ -707,7 +707,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         <select
           value={lead.status}
           onChange={(e) => handleUpdateLeadStatus(lead.id, e.target.value as LeadStatus)}
-          className="h-8 px-2 rounded-lg bg-[#f6f9ff] border border-[#dfe8f6] text-[11px] font-bold text-[#0b1a3a] outline-none"
+          className="h-8 px-2 rounded-lg bg-[#f7f8fd] border border-[#e4e2f5] text-[11px] font-bold text-[#1e1b3a] outline-none"
           aria-label="Update status"
         >
           {LEAD_STATUSES.map((s) => (
@@ -719,7 +719,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         <button
           type="button"
           onClick={() => openProformaDrawer(lead)}
-          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-[#eff6ff] text-[#1d4ed8] text-[11px] font-bold hover:bg-[#dbeafe]"
+          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-[#f0eefa] text-[#5844d8] text-[11px] font-bold hover:bg-[#dbeafe]"
         >
           <FileText className="w-3.5 h-3.5" /> Quote
         </button>
@@ -754,15 +754,15 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
     return (
       <div
         key={lead.id}
-        className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-2xl bg-[#f8fbff] border border-[#e9eff9] hover:border-[#c9dbf7] transition"
+        className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-2xl bg-[#f9f9fe] border border-[#ecebf6] hover:border-[#c9dbf7] transition"
       >
         <div className="flex items-start gap-3 min-w-0">
-          <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-[#3b82f6] to-[#2563eb] text-white flex items-center justify-center text-sm font-extrabold">
+          <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-[#7765ee] to-[#6c5dd3] text-white flex items-center justify-center text-sm font-extrabold">
             {lead.business_name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
-              <p className="text-[13px] font-bold text-[#0b1a3a] truncate max-w-[260px]">
+              <p className="text-[13px] font-bold text-[#1e1b3a] truncate max-w-[260px]">
                 {lead.business_name}
               </p>
               <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${cat.badge}`}>
@@ -774,10 +774,10 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5 truncate">
               {lead.email || 'No email yet'}
-              {lead.phone_e164 ? ` Â· ${lead.phone_e164}` : ''}
-              {lead.city ? ` Â· ${lead.city}` : ''}
+              {lead.phone_e164 ? ` · ${lead.phone_e164}` : ''}
+              {lead.city ? ` · ${lead.city}` : ''}
             </p>
-            {meta && <p className="text-[11px] font-semibold text-[#2563eb] mt-0.5">{meta}</p>}
+            {meta && <p className="text-[11px] font-semibold text-[#6c5dd3] mt-0.5">{meta}</p>}
           </div>
         </div>
         {renderLeadActions(lead)}
@@ -789,15 +789,15 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
     <div
       className={
         standalone
-          ? 'fixed inset-0 z-[60] overflow-hidden bg-gradient-to-br from-[#eef3fb] via-[#e7eef9] to-[#dde7f6] text-[#0b1a3a]'
-          : 'relative h-full overflow-hidden bg-gradient-to-br from-[#eef3fb] via-[#e7eef9] to-[#dde7f6] text-[#0b1a3a]'
+          ? 'fixed inset-0 z-[60] overflow-hidden bg-gradient-to-br from-[#f0f2fa] via-[#e8eaf6] to-[#dde1f3] text-[#1e1b3a]'
+          : 'relative h-full overflow-hidden bg-gradient-to-br from-[#f0f2fa] via-[#e8eaf6] to-[#dde1f3] text-[#1e1b3a]'
       }
     >
       <div className="mx-auto max-w-[1720px] h-full lg:p-5">
-        <div className="relative flex gap-5 h-full lg:rounded-[36px] bg-[#f6f9ff] lg:border lg:border-white lg:shadow-[0_30px_80px_-30px_rgba(0,0,77,0.18)] lg:p-5">
-          {/* â•â•â• STICKY NAVY ICON RAIL (Laptop / Desktop) â•â•â• */}
+        <div className="relative flex gap-5 h-full lg:rounded-[36px] bg-[#f7f8fd] lg:border lg:border-white lg:shadow-[0_30px_80px_-30px_rgba(106,87,220,0.18)] lg:p-5">
+          {/* ─── STICKY NAVY ICON RAIL (Laptop / Desktop) ─── */}
           <aside className="hidden lg:block w-[84px] flex-shrink-0 h-full">
-            <nav className="h-full rounded-[28px] bg-gradient-to-b from-[#0a1a5c] to-[#00004d] shadow-[0_18px_40px_-16px_rgba(0,0,77,0.35)] flex flex-col items-center py-5">
+            <nav className="h-full rounded-[28px] bg-gradient-to-b from-[#6f5ee4] via-[#6552df] to-[#5540d4] shadow-[0_18px_40px_-16px_rgba(106,87,220,0.45)] flex flex-col items-center py-5">
               <div className="h-11 w-11 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-white font-black text-sm tracking-tight">
                 BQ
               </div>
@@ -815,13 +815,13 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       aria-label={item.label}
                       className={`group relative h-11 w-11 flex-shrink-0 rounded-2xl flex items-center justify-center transition ${
                         active
-                          ? 'bg-white text-[#00004d] shadow-lg'
+                          ? 'bg-white text-[#5844d8] shadow-lg'
                           : 'text-white/75 hover:text-white hover:bg-white/15'
                       }`}
                     >
                       <Icon className="w-[19px] h-[19px]" />
                       {item.badge ? (
-                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#1d4ed8] text-white text-[9px] font-black flex items-center justify-center ring-2 ring-[#00004d]">
+                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#5844d8] text-white text-[9px] font-black flex items-center justify-center ring-2 ring-[#5844d8]">
                           {item.badge > 99 ? '99+' : item.badge}
                         </span>
                       ) : null}
@@ -851,14 +851,14 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
             </nav>
           </aside>
 
-          {/* â•â•â• MAIN COLUMN â•â•â• */}
+          {/* ─── MAIN COLUMN ─── */}
           <main className="flex-1 min-w-0 h-full flex flex-col">
             {/* STICKY HEADER — never moves while scrolling */}
-            <header className="sticky top-0 z-40 flex-shrink-0 bg-[#f6f9ff]/95 backdrop-blur-xl">
-              <div className="flex items-center justify-between gap-3 px-4 sm:px-6 lg:px-1 py-3.5 border-b border-[#e6edf8] lg:border-none">
+            <header className="sticky top-0 z-40 flex-shrink-0 bg-[#f7f8fd]/95 backdrop-blur-xl">
+              <div className="flex items-center justify-between gap-3 px-4 sm:px-6 lg:px-1 py-3.5 border-b border-[#ecebf6] lg:border-none">
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold text-slate-400">Batteriq Outreach</p>
-                  <h1 className="text-lg sm:text-[22px] font-extrabold text-[#0b1a3a] tracking-tight truncate">
+                  <h1 className="text-lg sm:text-[22px] font-extrabold text-[#1e1b3a] tracking-tight truncate">
                     {activeNav.label}
                   </h1>
                 </div>
@@ -873,8 +873,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') setActiveTab('leads')
                       }}
-                      placeholder="Search clientsâ€¦"
-                      className="h-11 w-56 xl:w-64 pl-10 pr-3 rounded-2xl bg-white border border-[#e6edf8] text-[13px] text-[#0b1a3a] placeholder:text-slate-400 outline-none focus:border-[#2563eb]"
+                      placeholder="Search clients…"
+                      className="h-11 w-56 xl:w-64 pl-10 pr-3 rounded-2xl bg-white border border-[#ecebf6] text-[13px] text-[#1e1b3a] placeholder:text-slate-400 outline-none focus:border-[#6c5dd3]"
                     />
                   </div>
 
@@ -883,7 +883,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                     onClick={() => setActiveTab('overview')}
                     className={`hidden sm:inline-flex items-center gap-2 h-11 px-3.5 rounded-2xl border text-xs font-bold ${
                       settings.autopilot_enabled && !settings.campaign_paused
-                        ? 'bg-white border-[#e6edf8] text-[#0b1a3a]'
+                        ? 'bg-white border-[#ecebf6] text-[#1e1b3a]'
                         : 'bg-amber-50 border-amber-200 text-amber-700'
                     }`}
                     title="Next automatic scan"
@@ -903,14 +903,14 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   <button
                     type="button"
                     onClick={() => fetchOverview()}
-                    className="h-11 w-11 rounded-2xl bg-white border border-[#e6edf8] flex items-center justify-center text-slate-500 hover:text-[#2563eb]"
+                    className="h-11 w-11 rounded-2xl bg-white border border-[#ecebf6] flex items-center justify-center text-slate-500 hover:text-[#6c5dd3]"
                     aria-label="Refresh"
                   >
                     <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                   </button>
 
                   <div
-                    className="h-11 w-11 rounded-2xl bg-gradient-to-br from-[#3b82f6] to-[#1d4ed8] text-white flex items-center justify-center text-xs font-black shadow-md"
+                    className="h-11 w-11 rounded-2xl bg-gradient-to-br from-[#ff6584] to-[#f04f76] text-white flex items-center justify-center text-xs font-black shadow-md"
                     title={adminEmail || 'Admin'}
                   >
                     {adminInitials}
@@ -920,7 +920,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                     <button
                       type="button"
                       onClick={handleStandaloneSignOut}
-                      className="lg:hidden h-11 w-11 rounded-2xl bg-white border border-[#e6edf8] flex items-center justify-center text-slate-500"
+                      className="lg:hidden h-11 w-11 rounded-2xl bg-white border border-[#ecebf6] flex items-center justify-center text-slate-500"
                       aria-label="Sign out"
                     >
                       <LogOut className="w-4 h-4" />
@@ -940,8 +940,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') setActiveTab('leads')
                     }}
-                    placeholder="Search clientsâ€¦"
-                    className="h-11 w-full pl-10 pr-3 rounded-2xl bg-white border border-[#e6edf8] text-[13px] outline-none focus:border-[#2563eb]"
+                    placeholder="Search clients…"
+                    className="h-11 w-full pl-10 pr-3 rounded-2xl bg-white border border-[#ecebf6] text-[13px] outline-none focus:border-[#6c5dd3]"
                   />
                 </div>
               </div>
@@ -970,12 +970,12 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </div>
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: DASHBOARD â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: DASHBOARD ─────────── */}
               {activeTab === 'overview' && (
                 <>
                   <div className="grid grid-cols-1 xl:grid-cols-[1.55fr_1fr] gap-5">
                     {/* Overview chart card */}
-                    <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0a1a5c] to-[#00004d] text-white p-5 sm:p-6 shadow-[0_24px_50px_-22px_rgba(0,0,77,0.35)]">
+                    <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#6f5ee4] via-[#6552df] to-[#5540d4] text-white p-5 sm:p-6 shadow-[0_24px_50px_-22px_rgba(106,87,220,0.45)]">
                       <div className="flex items-center justify-between gap-3">
                         <h2 className="text-base sm:text-lg font-extrabold">Outreach Overview</h2>
                         <span className="px-3 py-1.5 rounded-xl bg-white/15 border border-white/20 text-[11px] font-bold">
@@ -1006,7 +1006,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
 
                     {/* Autopilot + Pipeline cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-5">
-                      <div className="rounded-[28px] bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] text-white p-5 shadow-[0_20px_44px_-22px_rgba(37,99,235,0.35)]">
+                      <div className="rounded-[28px] bg-gradient-to-br from-[#6754e4] to-[#5844d8] text-white p-5 shadow-[0_20px_44px_-22px_rgba(106,87,220,0.35)]">
                         <div className="flex items-center gap-3">
                           <div className="h-12 w-12 rounded-2xl bg-white/20 border border-white/25 flex items-center justify-center">
                             <Zap className="w-5 h-5" />
@@ -1071,7 +1071,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       <button
                         type="button"
                         onClick={() => setActiveTab('quotes')}
-                        className="relative overflow-hidden text-left rounded-[28px] bg-gradient-to-br from-[#3b82f6] to-[#1d4ed8] text-white p-5 shadow-[0_20px_44px_-22px_rgba(37,99,235,0.35)]"
+                        className="relative overflow-hidden text-left rounded-[28px] bg-gradient-to-br from-[#ff6584] to-[#f04f76] text-white p-5 shadow-[0_20px_44px_-22px_rgba(106,87,220,0.35)]"
                       >
                         <svg
                           aria-hidden="true"
@@ -1152,16 +1152,16 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                               type="button"
                               disabled={busyAction !== null}
                               onClick={a.run}
-                              className="flex flex-col items-start gap-3 p-4 rounded-2xl bg-[#f6f9ff] border border-[#e6edf8] hover:border-[#bfd3f5] hover:bg-[#eef4ff] text-left transition disabled:opacity-50"
+                              className="flex flex-col items-start gap-3 p-4 rounded-2xl bg-[#f7f8fd] border border-[#ecebf6] hover:border-[#bfd3f5] hover:bg-[#f0eefa] text-left transition disabled:opacity-50"
                             >
-                              <span className="h-10 w-10 rounded-xl bg-[#2563eb] text-white flex items-center justify-center">
+                              <span className="h-10 w-10 rounded-xl bg-[#6c5dd3] text-white flex items-center justify-center">
                                 {busyAction === a.key ? (
                                   <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
                                   <Icon className="w-4 h-4" />
                                 )}
                               </span>
-                              <span className="text-xs font-bold text-[#0b1a3a]">{a.label}</span>
+                              <span className="text-xs font-bold text-[#1e1b3a]">{a.label}</span>
                             </button>
                           )
                         })}
@@ -1174,18 +1174,18 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           <h3 className="text-sm font-extrabold">Latest emails sent</h3>
                           <p className="text-[11px] text-slate-400">Most recent outreach</p>
                         </div>
-                        <button type="button" onClick={() => setActiveTab('sent')} className="text-[11px] font-bold text-[#2563eb]">
+                        <button type="button" onClick={() => setActiveTab('sent')} className="text-[11px] font-bold text-[#6c5dd3]">
                           View all
                         </button>
                       </div>
                       {sentEmails.length === 0 ? (
                         <EmptyState icon={MailCheck} text="No emails sent yet." />
                       ) : (
-                        <div className="divide-y divide-[#edf2fa]">
+                        <div className="divide-y divide-[#f0eef9]">
                           {sentEmails.slice(0, 5).map((em) => (
                             <div key={em.id} className="py-2.5 flex items-center justify-between gap-3">
                               <div className="flex items-center gap-3 min-w-0">
-                                <div className="h-9 w-9 flex-shrink-0 rounded-xl bg-[#eef4ff] text-[#2563eb] flex items-center justify-center text-xs font-black">
+                                <div className="h-9 w-9 flex-shrink-0 rounded-xl bg-[#f0eefa] text-[#6c5dd3] flex items-center justify-center text-xs font-black">
                                   {(em.outreach_leads?.business_name || em.to_email).charAt(0).toUpperCase()}
                                 </div>
                                 <div className="min-w-0">
@@ -1205,13 +1205,13 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </>
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: FIND CLIENTS â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: FIND CLIENTS ─────────── */}
               {activeTab === 'finder' && (
                 <>
-                  <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#0a1a5c] to-[#00004d] text-white p-5 sm:p-7">
+                  <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#6f5ee4] via-[#6552df] to-[#5540d4] text-white p-5 sm:p-7">
                     <h2 className="text-lg sm:text-xl font-extrabold">Find new clients online</h2>
                     <p className="text-xs text-white/75 mt-1 max-w-xl">
-                      Schools, NGOs, government & parastatals, hospitals, hotels, shops â€” type anything.
+                      Schools, NGOs, government & parastatals, hospitals, hotels, shops — type anything.
                     </p>
                     <div className="mt-5 flex flex-col sm:flex-row gap-2.5">
                       <div className="relative flex-1">
@@ -1233,7 +1233,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             customDiscoveryQuery.trim() ? { query: customDiscoveryQuery.trim() } : {}
                           )
                         }
-                        className="h-12 px-5 rounded-2xl bg-white text-[#00004d] text-xs font-extrabold inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                        className="h-12 px-5 rounded-2xl bg-white text-[#5844d8] text-xs font-extrabold inline-flex items-center justify-center gap-2 disabled:opacity-60"
                       >
                         {busyAction === 'leads' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                         Scan
@@ -1247,7 +1247,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             ...(customDiscoveryQuery.trim() ? { query: customDiscoveryQuery.trim() } : {}),
                           })
                         }
-                        className="h-12 px-5 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-extrabold inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                        className="h-12 px-5 rounded-2xl bg-[#6c5dd3] hover:bg-[#5844d8] text-white text-xs font-extrabold inline-flex items-center justify-center gap-2 disabled:opacity-60"
                       >
                         {busyAction === 'autopilot' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                         Scan & send
@@ -1277,13 +1277,13 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           className={`${cardCls} p-4 text-left hover:-translate-y-0.5 transition disabled:opacity-60`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="h-10 w-10 rounded-xl bg-[#eef4ff] text-[#2563eb] flex items-center justify-center">
+                            <span className="h-10 w-10 rounded-xl bg-[#f0eefa] text-[#6c5dd3] flex items-center justify-center">
                               <Building2 className="w-4 h-4" />
                             </span>
                             <span className="text-[10px] font-bold text-slate-400">{count} saved</span>
                           </div>
                           <p className="mt-3 text-[13px] font-extrabold">{chip.label}</p>
-                          <p className="text-[11px] text-[#2563eb] font-semibold mt-0.5">Tap to scan â†’</p>
+                          <p className="text-[11px] text-[#6c5dd3] font-semibold mt-0.5">Tap to scan →</p>
                         </button>
                       )
                     })}
@@ -1292,7 +1292,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   <div className={`${cardCls} p-5`}>
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-extrabold">Recently found</h3>
-                      <button type="button" onClick={() => setActiveTab('leads')} className="text-[11px] font-bold text-[#2563eb]">
+                      <button type="button" onClick={() => setActiveTab('leads')} className="text-[11px] font-bold text-[#6c5dd3]">
                         All clients
                       </button>
                     </div>
@@ -1305,7 +1305,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </>
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: CLIENTS â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: CLIENTS ─────────── */}
               {activeTab === 'leads' && (
                 <>
                   <div className={`${cardCls} p-4 flex flex-col lg:flex-row lg:items-center gap-2.5`}>
@@ -1314,7 +1314,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       <input
                         value={searchQ}
                         onChange={(e) => setSearchQ(e.target.value)}
-                        placeholder="Name, domain, email, phone, cityâ€¦"
+                        placeholder="Name, domain, email, phone, city…"
                         className={`${inputCls} w-full pl-10`}
                       />
                     </div>
@@ -1353,8 +1353,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       </select>
                       <input placeholder="City" value={newLead.city} onChange={(e) => setNewLead({ ...newLead, city: e.target.value })} className={inputCls} />
                       <input type="email" placeholder="Email" value={newLead.email} onChange={(e) => setNewLead({ ...newLead, email: e.target.value })} className={inputCls} />
-                      <input placeholder="Phone (+254â€¦)" value={newLead.phone} onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })} className={inputCls} />
-                      <input placeholder="Website (https://â€¦)" value={newLead.website_url} onChange={(e) => setNewLead({ ...newLead, website_url: e.target.value })} className={inputCls} />
+                      <input placeholder="Phone (+254…)" value={newLead.phone} onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })} className={inputCls} />
+                      <input placeholder="Website (https://…)" value={newLead.website_url} onChange={(e) => setNewLead({ ...newLead, website_url: e.target.value })} className={inputCls} />
                       <input placeholder="Notes for the pitch & quote" value={newLead.business_summary} onChange={(e) => setNewLead({ ...newLead, business_summary: e.target.value })} className={`${inputCls} sm:col-span-2`} />
                       <button type="submit" disabled={busyAction === 'add-lead'} className={`${primaryBtn} h-11`}>
                         {busyAction === 'add-lead' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
@@ -1375,7 +1375,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                         {leads.map((l) =>
                           renderLeadRow(
                             l,
-                            l.last_emailed_at ? `Last emailed ${fmtShort(l.last_emailed_at)} Â· ${l.email_count} email(s)` : undefined
+                            l.last_emailed_at ? `Last emailed ${fmtShort(l.last_emailed_at)} · ${l.email_count} email(s)` : undefined
                           )
                         )}
                       </div>
@@ -1384,7 +1384,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </>
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: PENDING REVIEW â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: PENDING REVIEW ─────────── */}
               {activeTab === 'review' && (
                 <div className={`${cardCls} p-5 space-y-4`}>
                   <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1392,8 +1392,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       <h3 className="text-sm font-extrabold">{pendingReviewList.length} drafts waiting</h3>
                       <p className="text-[11px] text-slate-400">
                         {autoSendActive
-                          ? 'Auto-send is ON â€” new drafts are sent automatically.'
-                          : 'Review mode is ON â€” approve drafts before they go out.'}
+                          ? 'Auto-send is ON — new drafts are sent automatically.'
+                          : 'Review mode is ON — approve drafts before they go out.'}
                       </p>
                     </div>
                     {pendingReviewList.length > 0 && (
@@ -1409,14 +1409,14 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                     pendingReviewList.map((em) => {
                       const isEditing = editingEmailId === em.id
                       return (
-                        <div key={em.id} className="p-4 rounded-2xl bg-[#f8fbff] border border-[#e9eff9] space-y-3">
+                        <div key={em.id} className="p-4 rounded-2xl bg-[#f9f9fe] border border-[#ecebf6] space-y-3">
                           <div className="flex flex-wrap items-start justify-between gap-2">
                             <div className="min-w-0">
                               <p className="text-[13px] font-bold">{em.outreach_leads?.business_name || em.to_email}</p>
                               <p className="text-[11px] text-slate-500">{em.to_email}</p>
                               {em.proforma_number && (
-                                <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#eff6ff] text-[#1d4ed8] text-[10px] font-bold">
-                                  Quote #{em.proforma_number} Â· KES {Number(em.proforma_total_kes || 0).toLocaleString('en-KE')}
+                                <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#f0eefa] text-[#5844d8] text-[10px] font-bold">
+                                  Quote #{em.proforma_number} · KES {Number(em.proforma_total_kes || 0).toLocaleString('en-KE')}
                                 </span>
                               )}
                             </div>
@@ -1445,10 +1445,10 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           {isEditing ? (
                             <div className="space-y-2">
                               <input value={editSubject} onChange={(e) => setEditSubject(e.target.value)} className={`${inputCls} w-full font-bold`} />
-                              <textarea rows={7} value={editBodyText} onChange={(e) => setEditBodyText(e.target.value)} className="w-full p-3.5 rounded-xl bg-white border border-[#dfe8f6] text-[13px] leading-relaxed outline-none focus:border-[#2563eb]" />
+                              <textarea rows={7} value={editBodyText} onChange={(e) => setEditBodyText(e.target.value)} className="w-full p-3.5 rounded-xl bg-white border border-[#e4e2f5] text-[13px] leading-relaxed outline-none focus:border-[#6c5dd3]" />
                             </div>
                           ) : (
-                            <div className="p-3.5 rounded-xl bg-white border border-[#e9eff9]">
+                            <div className="p-3.5 rounded-xl bg-white border border-[#ecebf6]">
                               <p className="text-xs font-bold mb-1.5">{em.subject}</p>
                               <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed line-clamp-6">{em.body_text}</p>
                             </div>
@@ -1460,25 +1460,25 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </div>
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: EMAILS SENT â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: EMAILS SENT ─────────── */}
               {activeTab === 'sent' && (
                 <>
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatTile label="Sent today" value={metrics.emailsSentToday} accent="blue" />
                     <StatTile label="Sent (loaded)" value={sentEmails.length} accent="green" />
-                    <StatTile label="With quote PDF" value={sentEmails.filter((e) => e.proforma_number).length} accent="navy" />
+                    <StatTile label="With quote PDF" value={sentEmails.filter((e) => e.proforma_number).length} accent="purple" />
                     <StatTile label="Failed" value={failedEmails.length} accent="amber" />
                   </div>
                   <div className={`${cardCls} p-4 sm:p-5`}>
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                      <div className="inline-flex rounded-2xl bg-[#eef4ff] p-1">
+                      <div className="inline-flex rounded-2xl bg-[#f0eefa] p-1">
                         {(['sent', 'failed', 'all'] as const).map((f) => (
                           <button
                             key={f}
                             type="button"
                             onClick={() => setSentFilter(f)}
                             className={`px-4 h-9 rounded-xl text-xs font-bold capitalize transition ${
-                              sentFilter === f ? 'bg-[#2563eb] text-white shadow' : 'text-[#1d4ed8]'
+                              sentFilter === f ? 'bg-[#6c5dd3] text-white shadow' : 'text-[#5844d8]'
                             }`}
                           >
                             {f}
@@ -1497,27 +1497,27 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                         {visibleSentList.map((em) => {
                           const open = expandedEmailId === em.id
                           return (
-                            <div key={em.id} className="rounded-2xl bg-[#f8fbff] border border-[#e9eff9]">
+                            <div key={em.id} className="rounded-2xl bg-[#f9f9fe] border border-[#ecebf6]">
                               <button
                                 type="button"
                                 onClick={() => setExpandedEmailId(open ? null : em.id)}
                                 className="w-full p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left"
                               >
                                 <div className="flex items-start gap-3 min-w-0">
-                                  <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-[#eef4ff] text-[#2563eb] flex items-center justify-center">
+                                  <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-[#f0eefa] text-[#6c5dd3] flex items-center justify-center">
                                     <Mail className="w-4 h-4" />
                                   </div>
                                   <div className="min-w-0">
                                     <p className="text-[13px] font-bold truncate">{em.outreach_leads?.business_name || em.to_email}</p>
                                     <p className="text-[11px] text-slate-500 truncate">{em.subject}</p>
                                     <p className="text-[10px] text-slate-400 mt-0.5">
-                                      {em.to_email} Â· {fmtShort(em.sent_at || em.created_at)}
+                                      {em.to_email} · {fmtShort(em.sent_at || em.created_at)}
                                     </p>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
                                   {em.proforma_number && (
-                                    <span className="px-2 py-0.5 rounded-full bg-[#eff6ff] text-[#1d4ed8] text-[10px] font-bold">
+                                    <span className="px-2 py-0.5 rounded-full bg-[#f0eefa] text-[#5844d8] text-[10px] font-bold">
                                       KES {Number(em.proforma_total_kes || 0).toLocaleString('en-KE')}
                                     </span>
                                   )}
@@ -1526,7 +1526,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                               </button>
                               {open && (
                                 <div className="px-4 pb-4">
-                                  <div className="p-3.5 rounded-xl bg-white border border-[#e9eff9]">
+                                  <div className="p-3.5 rounded-xl bg-white border border-[#ecebf6]">
                                     <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed">{em.body_text}</p>
                                     {em.error_message && <p className="mt-2 text-[11px] font-semibold text-rose-600">{em.error_message}</p>}
                                   </div>
@@ -1541,11 +1541,11 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </>
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: PROFORMA QUOTES â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: PROFORMA QUOTES ─────────── */}
               {activeTab === 'quotes' && (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <StatTile label="Quotes sent" value={metrics.proformasSentCount ?? proformaEmails.length} accent="navy" />
+                    <StatTile label="Quotes sent" value={metrics.proformasSentCount ?? proformaEmails.length} accent="purple" />
                     <StatTile label="Pipeline value" value={`KES ${Number(metrics.pipelineValueKes ?? 0).toLocaleString('en-KE')}`} accent="blue" />
                     <StatTile label="Auto-attach" value={settings.auto_attach_proforma !== false ? 'ON' : 'OFF'} accent="green" />
                   </div>
@@ -1561,7 +1561,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                         }}
                         className={`${inputCls} sm:w-72`}
                       >
-                        <option value="">+ New quote for a clientâ€¦</option>
+                        <option value="">+ New quote for a client…</option>
                         {leads.map((l) => (
                           <option key={l.id} value={l.id}>
                             {l.business_name}
@@ -1576,9 +1576,9 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                         {proformaEmails.map((em) => {
                           const lead = leads.find((l) => l.id === em.lead_id)
                           return (
-                            <div key={em.id} className="p-4 rounded-2xl bg-[#f8fbff] border border-[#e9eff9] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div key={em.id} className="p-4 rounded-2xl bg-[#f9f9fe] border border-[#ecebf6] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                               <div className="flex items-start gap-3 min-w-0">
-                                <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-[#3b82f6] to-[#1d4ed8] text-white flex items-center justify-center">
+                                <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-[#ff6584] to-[#f04f76] text-white flex items-center justify-center">
                                   <FileText className="w-4 h-4" />
                                 </div>
                                 <div className="min-w-0">
@@ -1588,7 +1588,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-black tabular-nums text-[#0b1a3a]">
+                                <span className="text-sm font-black tabular-nums text-[#1e1b3a]">
                                   KES {Number(em.proforma_total_kes || 0).toLocaleString('en-KE')}
                                 </span>
                                 <EmailStatusPill status={em.status} />
@@ -1607,13 +1607,13 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </>
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: FOLLOW-UPS â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: FOLLOW-UPS ─────────── */}
               {activeTab === 'followups' && (
                 <>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <StatTile label="Replied / interested" value={repliedLeads.length} accent="green" />
                     <StatTile label="Awaiting reply" value={awaitingReplyLeads.length} accent="blue" />
-                    <StatTile label="WhatsApp follow-ups" value={whatsappFollowedLeads.length} accent="navy" />
+                    <StatTile label="WhatsApp follow-ups" value={whatsappFollowedLeads.length} accent="purple" />
                   </div>
 
                   <div className={`${cardCls} p-4 sm:p-5`}>
@@ -1634,7 +1634,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                       <div>
                         <h3 className="text-sm font-extrabold">Awaiting reply</h3>
-                        <p className="text-[11px] text-slate-400">Emailed â€” oldest first</p>
+                        <p className="text-[11px] text-slate-400">Emailed — oldest first</p>
                       </div>
                       <button type="button" disabled={busyAction !== null} onClick={() => triggerJob('/api/cron/outreach-followups', 'followups')} className={primaryBtn}>
                         {busyAction === 'followups' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Repeat className="w-4 h-4" />}
@@ -1646,7 +1646,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                     ) : (
                       <div className="space-y-2.5">
                         {awaitingReplyLeads.slice(0, 40).map((l) =>
-                          renderLeadRow(l, `Emailed ${daysSince(l.last_emailed_at)} Â· ${l.email_count} email(s)`)
+                          renderLeadRow(l, `Emailed ${daysSince(l.last_emailed_at)} · ${l.email_count} email(s)`)
                         )}
                       </div>
                     )}
@@ -1663,12 +1663,12 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </>
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: WHATSAPP â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: WHATSAPP ─────────── */}
               {activeTab === 'whatsapp' && (
                 <WhatsAppInboxTab defaultTemplateName={settings.whatsapp_default_template} onStatsChange={fetchOverview} />
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: CALLS â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: CALLS ─────────── */}
               {activeTab === 'calling' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                   <div className={`${cardCls} p-5`}>
@@ -1679,10 +1679,10 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                     ) : (
                       <div className="space-y-2.5">
                         {eligibleCallLeads.slice(0, 20).map((lead) => (
-                          <div key={lead.id} className="p-3.5 rounded-2xl bg-[#f8fbff] border border-[#e9eff9] flex items-center justify-between gap-3">
+                          <div key={lead.id} className="p-3.5 rounded-2xl bg-[#f9f9fe] border border-[#ecebf6] flex items-center justify-between gap-3">
                             <div className="min-w-0">
                               <p className="text-[13px] font-bold truncate">{lead.business_name}</p>
-                              <p className="text-[11px] text-slate-500 font-mono">{lead.phone_e164} Â· {lead.status}</p>
+                              <p className="text-[11px] text-slate-500 font-mono">{lead.phone_e164} · {lead.status}</p>
                             </div>
                             <div className="flex gap-2">
                               <a href={`tel:${lead.phone_e164}`} className={`${ghostBtn} h-9 px-3`}>
@@ -1704,12 +1704,12 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                     ) : (
                       <div className="space-y-2.5">
                         {calls.map((c) => (
-                          <div key={c.id} className="p-3.5 rounded-2xl bg-[#f8fbff] border border-[#e9eff9] text-xs space-y-1">
+                          <div key={c.id} className="p-3.5 rounded-2xl bg-[#f9f9fe] border border-[#ecebf6] text-xs space-y-1">
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-bold truncate">{c.outreach_leads?.business_name || c.phone_e164}</span>
-                              <span className="px-2 py-0.5 rounded-full bg-[#eef4ff] text-[#1d4ed8] text-[10px] font-bold uppercase">{c.status}</span>
+                              <span className="px-2 py-0.5 rounded-full bg-[#f0eefa] text-[#5844d8] text-[10px] font-bold uppercase">{c.status}</span>
                             </div>
-                            <p className="text-[11px] text-slate-500">{c.phone_e164} Â· {fmtShort(c.created_at)}</p>
+                            <p className="text-[11px] text-slate-500">{c.phone_e164} · {fmtShort(c.created_at)}</p>
                           </div>
                         ))}
                       </div>
@@ -1718,18 +1718,18 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </div>
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: ACTIVITY LOG â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: ACTIVITY LOG ─────────── */}
               {activeTab === 'logs' && (
                 <div className={`${cardCls} p-4 sm:p-5`}>
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                    <div className="inline-flex rounded-2xl bg-[#eef4ff] p-1">
+                    <div className="inline-flex rounded-2xl bg-[#f0eefa] p-1">
                       {(['all', 'info', 'warn', 'error'] as const).map((f) => (
                         <button
                           key={f}
                           type="button"
                           onClick={() => setLogFilter(f)}
                           className={`px-4 h-9 rounded-xl text-xs font-bold capitalize transition ${
-                            logFilter === f ? 'bg-[#2563eb] text-white shadow' : 'text-[#1d4ed8]'
+                            logFilter === f ? 'bg-[#6c5dd3] text-white shadow' : 'text-[#5844d8]'
                           }`}
                         >
                           {f}
@@ -1743,7 +1743,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   ) : (
                     <div className="space-y-2">
                       {visibleLogs.map((l) => (
-                        <div key={l.id} className="flex gap-3 p-3.5 rounded-2xl bg-[#f8fbff] border border-[#e9eff9]">
+                        <div key={l.id} className="flex gap-3 p-3.5 rounded-2xl bg-[#f9f9fe] border border-[#ecebf6]">
                           <span
                             className={`mt-1 h-2.5 w-2.5 flex-shrink-0 rounded-full ${
                               l.level === 'error' ? 'bg-rose-500' : l.level === 'warn' ? 'bg-amber-500' : 'bg-emerald-500'
@@ -1751,9 +1751,9 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           />
                           <div className="min-w-0">
                             <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
-                              {l.module.replace('_', ' ')} Â· {l.event.replace(/_/g, ' ')} Â· {fmtShort(l.created_at)}
+                              {l.module.replace('_', ' ')} · {l.event.replace(/_/g, ' ')} · {fmtShort(l.created_at)}
                             </p>
-                            <p className="text-xs text-[#0b1a3a] leading-relaxed break-words">{l.message}</p>
+                            <p className="text-xs text-[#1e1b3a] leading-relaxed break-words">{l.message}</p>
                           </div>
                         </div>
                       ))}
@@ -1762,7 +1762,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </div>
               )}
 
-              {/* â•â•â•â•â•â•â•â•â•â•â• TAB: SETTINGS â•â•â•â•â•â•â•â•â•â•â• */}
+              {/* ─────────── TAB: SETTINGS ─────────── */}
               {activeTab === 'settings' && (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
                   <div className={`${cardCls} p-5 space-y-1`}>
@@ -1773,7 +1773,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       { label: 'Attach KES quote PDF', on: settings.auto_attach_proforma !== false, set: (v: boolean) => setSettings({ ...settings, auto_attach_proforma: v }) },
                       { label: 'WhatsApp cold templates', on: Boolean(settings.auto_cold_whatsapp), set: (v: boolean) => setSettings({ ...settings, auto_cold_whatsapp: v }) },
                     ].map((row) => (
-                      <div key={row.label} className="flex items-center justify-between gap-3 py-3 border-b border-[#edf2fa] last:border-none">
+                      <div key={row.label} className="flex items-center justify-between gap-3 py-3 border-b border-[#f0eef9] last:border-none">
                         <span className="text-[13px] font-semibold">{row.label}</span>
                         <Switch on={row.on} onClick={() => row.set(!row.on)} />
                       </div>
@@ -1853,25 +1853,25 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
             </div>
           </main>
 
-          {/* â•â•â• STICKY RIGHT PANEL (Desktop) â•â•â• */}
+          {/* ─── STICKY RIGHT PANEL (Desktop) ─── */}
           <aside className="hidden 2xl:block w-[300px] flex-shrink-0 h-full">
-            <div className="h-full overflow-y-auto no-scrollbar rounded-[28px] bg-white border border-[#e6edf8] p-5 space-y-5">
+            <div className="h-full overflow-y-auto no-scrollbar rounded-[28px] bg-white border border-[#ecebf6] p-5 space-y-5">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-extrabold flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#2563eb]" /> Follow-ups
+                  <Users className="w-4 h-4 text-[#6c5dd3]" /> Follow-ups
                 </h3>
-                <button type="button" onClick={() => setActiveTab('followups')} className="text-[11px] font-bold text-[#2563eb]">
+                <button type="button" onClick={() => setActiveTab('followups')} className="text-[11px] font-bold text-[#6c5dd3]">
                   View all
                 </button>
               </div>
-              <div className="inline-flex w-full rounded-2xl bg-[#eef4ff] p-1">
+              <div className="inline-flex w-full rounded-2xl bg-[#f0eefa] p-1">
                 {(['replies', 'activity'] as const).map((p) => (
                   <button
                     key={p}
                     type="button"
                     onClick={() => setSidePanel(p)}
                     className={`flex-1 h-9 rounded-xl text-xs font-bold capitalize transition ${
-                      sidePanel === p ? 'bg-[#2563eb] text-white shadow' : 'text-[#1d4ed8]'
+                      sidePanel === p ? 'bg-[#6c5dd3] text-white shadow' : 'text-[#5844d8]'
                     }`}
                   >
                     {p}
@@ -1888,13 +1888,13 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       onClick={() => openProformaDrawer(l)}
                       className="w-full flex items-center gap-3 text-left group"
                     >
-                      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#2563eb] text-white flex items-center justify-center text-xs font-black">
+                      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-[#7765ee] to-[#6c5dd3] text-white flex items-center justify-center text-xs font-black">
                         {l.business_name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold truncate group-hover:text-[#2563eb]">{l.business_name}</p>
+                        <p className="text-xs font-bold truncate group-hover:text-[#6c5dd3]">{l.business_name}</p>
                         <p className="text-[10px] text-slate-400 capitalize truncate">
-                          {l.status} Â· {fmtShort(l.whatsapp_last_inbound_at || l.last_emailed_at || l.updated_at)}
+                          {l.status} · {fmtShort(l.whatsapp_last_inbound_at || l.last_emailed_at || l.updated_at)}
                         </p>
                       </div>
                       <Mail className="w-4 h-4 text-slate-300" />
@@ -1908,7 +1908,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                     <div key={l.id} className="flex gap-2.5">
                       <span className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full ${l.level === 'error' ? 'bg-rose-500' : l.level === 'warn' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
                       <div className="min-w-0">
-                        <p className="text-[11px] font-semibold text-[#0b1a3a] line-clamp-2">{l.message}</p>
+                        <p className="text-[11px] font-semibold text-[#1e1b3a] line-clamp-2">{l.message}</p>
                         <p className="text-[10px] text-slate-400">{fmtShort(l.created_at)}</p>
                       </div>
                     </div>
@@ -1916,9 +1916,9 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 </div>
               )}
 
-              <div className="pt-4 border-t border-[#edf2fa]">
+              <div className="pt-4 border-t border-[#f0eef9]">
                 <h3 className="text-sm font-extrabold flex items-center gap-2 mb-3">
-                  <Building2 className="w-4 h-4 text-[#2563eb]" /> Sectors
+                  <Building2 className="w-4 h-4 text-[#6c5dd3]" /> Sectors
                 </h3>
                 <div className="space-y-2.5">
                   {(['school', 'ngo', 'government', 'hospital', 'retail', 'hotel', 'organization'] as const).map((c) => {
@@ -1930,8 +1930,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           <span>{CATEGORY_META[c]?.label || c}</span>
                           <span className="text-slate-400">{n}</span>
                         </div>
-                        <div className="h-1.5 rounded-full bg-[#eef4ff] overflow-hidden">
-                          <div className="h-full rounded-full bg-gradient-to-r from-[#3b82f6] to-[#2563eb]" style={{ width: `${pct}%` }} />
+                        <div className="h-1.5 rounded-full bg-[#f0eefa] overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-[#7765ee] to-[#6c5dd3]" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
                     )
@@ -1943,8 +1943,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         </div>
       </div>
 
-      {/* â•â•â• MOBILE BOTTOM NAV (Phones / Tablets) â•â•â• */}
-      <nav className="lg:hidden fixed bottom-3 inset-x-3 z-50 rounded-[24px] bg-gradient-to-r from-[#0a1a5c] to-[#00004d] shadow-[0_16px_40px_-12px_rgba(0,0,77,0.35)] px-2 py-2">
+      {/* ─── MOBILE BOTTOM NAV (Phones / Tablets) ─── */}
+      <nav className="lg:hidden fixed bottom-3 inset-x-3 z-50 rounded-[24px] bg-gradient-to-r from-[#6f5ee4] via-[#6552df] to-[#5540d4] shadow-[0_16px_40px_-12px_rgba(106,87,220,0.45)] px-2 py-2">
         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
           {NAV.map((item) => {
             const Icon = item.icon
@@ -1958,13 +1958,13 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   contentScrollRef.current?.scrollTo({ top: 0 })
                 }}
                 className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 rounded-2xl px-2 transition ${
-                  active ? 'bg-white text-[#00004d]' : 'text-white/80'
+                  active ? 'bg-white text-[#5844d8]' : 'text-white/80'
                 }`}
               >
                 <Icon className="w-[18px] h-[18px]" />
                 <span className="text-[9px] font-bold whitespace-nowrap">{item.label}</span>
                 {item.badge ? (
-                  <span className="absolute top-1 right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#1d4ed8] text-white text-[8px] font-black flex items-center justify-center">
+                  <span className="absolute top-1 right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#5844d8] text-white text-[8px] font-black flex items-center justify-center">
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 ) : null}
@@ -1974,11 +1974,11 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         </div>
       </nav>
 
-      {/* â•â•â• PROFORMA QUOTE DRAWER â•â•â• */}
+      {/* ─── PROFORMA QUOTE DRAWER ─── */}
       {proformaLead && (
         <div className="fixed inset-0 z-[80] flex justify-end bg-[#0b1a3a]/40 backdrop-blur-sm">
-          <div className="relative w-full max-w-2xl bg-[#f6f9ff] h-full flex flex-col shadow-2xl sm:rounded-l-[32px] overflow-hidden">
-            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-[#0a1a5c] to-[#00004d] text-white flex items-center justify-between gap-3">
+          <div className="relative w-full max-w-2xl bg-[#f7f8fd] h-full flex flex-col shadow-2xl sm:rounded-l-[32px] overflow-hidden">
+            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-[#6f5ee4] via-[#6552df] to-[#5540d4] text-white flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">KES Proforma Quote</p>
                 <h3 className="text-base sm:text-lg font-extrabold truncate">{proformaLead.business_name}</h3>
@@ -1991,8 +1991,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
             <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
               {proformaLoading ? (
                 <div className="py-20 text-center space-y-3">
-                  <Loader2 className="w-7 h-7 animate-spin text-[#2563eb] mx-auto" />
-                  <p className="text-xs text-slate-500">Preparing quoteâ€¦</p>
+                  <Loader2 className="w-7 h-7 animate-spin text-[#6c5dd3] mx-auto" />
+                  <p className="text-xs text-slate-500">Preparing quote…</p>
                 </div>
               ) : proformaPkg ? (
                 <>
@@ -2039,12 +2039,12 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             ])
                             e.target.value = ''
                           }}
-                          className="h-9 px-3 rounded-xl bg-[#eef4ff] text-[11px] font-bold text-[#1d4ed8] outline-none"
+                          className="h-9 px-3 rounded-xl bg-[#f0eefa] text-[11px] font-bold text-[#5844d8] outline-none"
                         >
-                          <option value="">+ Add from catalogâ€¦</option>
+                          <option value="">+ Add from catalog…</option>
                           {catalogOptions.map((p, idx) => (
                             <option key={`${p.name}-${idx}`} value={idx}>
-                              {p.name} â€” KES {Number(p.price_kes).toLocaleString('en-KE')}
+                              {p.name} — KES {Number(p.price_kes).toLocaleString('en-KE')}
                             </option>
                           ))}
                         </select>
@@ -2062,7 +2062,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                               updateProformaItems(copy)
                             }}
                             placeholder="Brand"
-                            className={`${inputCls} w-24 h-10 font-bold text-[#2563eb]`}
+                            className={`${inputCls} w-24 h-10 font-bold text-[#6c5dd3]`}
                           />
                           <input
                             value={item.name}
@@ -2125,13 +2125,13 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           { brand: 'EcoFlow', name: 'EcoFlow 220W Bifacial Solar Panel Kit', quantity: 1, unitPrice: 78000, total: 78000 },
                         ])
                       }
-                      className="text-xs font-bold text-[#2563eb] inline-flex items-center gap-1"
+                      className="text-xs font-bold text-[#6c5dd3] inline-flex items-center gap-1"
                     >
                       <Plus className="w-3.5 h-3.5" /> Add line item
                     </button>
                   </div>
 
-                  <div className="rounded-[24px] bg-gradient-to-br from-[#3b82f6] to-[#1d4ed8] text-white p-5 space-y-1.5">
+                  <div className="rounded-[24px] bg-gradient-to-br from-[#ff6584] to-[#f04f76] text-white p-5 space-y-1.5">
                     <div className="flex items-center justify-between text-xs text-white/85">
                       <span>Includes 16% VAT</span>
                       <span className="font-mono">KES {proformaPkg.vatIncludedKes.toLocaleString('en-KE')}</span>
@@ -2146,7 +2146,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
             </div>
 
             {proformaPkg && (
-              <div className="p-4 sm:p-5 bg-white border-t border-[#e6edf8] flex flex-col sm:flex-row gap-2.5">
+              <div className="p-4 sm:p-5 bg-white border-t border-[#ecebf6] flex flex-col sm:flex-row gap-2.5">
                 <button type="button" disabled={proformaSending !== null} onClick={() => handleProformaSubmit('email')} className={`${primaryBtn} flex-1 h-12`}>
                   {proformaSending === 'email' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                   Email PDF
@@ -2167,12 +2167,12 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   )
 }
 
-// â”€â”€â”€ Presentational helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Presentational helpers ─────────────────────────────────────────────────
 
 function fmtShort(iso: string | null | undefined): string {
-  if (!iso) return 'â€”'
+  if (!iso) return '—'
   const t = Date.parse(iso)
-  if (!Number.isFinite(t)) return 'â€”'
+  if (!Number.isFinite(t)) return '—'
   return new Date(t).toLocaleString('en-KE', {
     day: '2-digit',
     month: 'short',
@@ -2182,9 +2182,9 @@ function fmtShort(iso: string | null | undefined): string {
 }
 
 function daysSince(iso: string | null | undefined): string {
-  if (!iso) return 'â€”'
+  if (!iso) return '—'
   const t = Date.parse(iso)
-  if (!Number.isFinite(t)) return 'â€”'
+  if (!Number.isFinite(t)) return '—'
   const days = Math.floor((Date.now() - t) / 86_400_000)
   if (days <= 0) return 'today'
   if (days === 1) return '1 day ago'
@@ -2210,13 +2210,13 @@ function Switch({
       disabled={disabled}
       onClick={onClick}
       className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition disabled:opacity-50 ${
-        on ? (light ? 'bg-white' : 'bg-[#2563eb]') : light ? 'bg-white/25' : 'bg-slate-200'
+        on ? (light ? 'bg-white' : 'bg-[#6c5dd3]') : light ? 'bg-white/25' : 'bg-slate-200'
       }`}
     >
       <span
         className={`inline-block h-5 w-5 rounded-full shadow transition-transform ${
           on ? 'translate-x-[22px]' : 'translate-x-0.5'
-        } ${light ? (on ? 'bg-[#2563eb]' : 'bg-white') : 'bg-white'}`}
+        } ${light ? (on ? 'bg-[#6c5dd3]' : 'bg-white') : 'bg-white'}`}
       />
     </button>
   )
@@ -2225,7 +2225,7 @@ function Switch({
 function EmptyState({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
   return (
     <div className="py-10 flex flex-col items-center justify-center text-center gap-2">
-      <span className="h-12 w-12 rounded-2xl bg-[#eef4ff] text-[#2563eb] flex items-center justify-center">
+      <span className="h-12 w-12 rounded-2xl bg-[#f0eefa] text-[#6c5dd3] flex items-center justify-center">
         <Icon className="w-5 h-5" />
       </span>
       <p className="text-xs font-semibold text-slate-400">{text}</p>
@@ -2240,20 +2240,21 @@ function StatTile({
 }: {
   label: string
   value: number | string
-  accent: 'blue' | 'navy' | 'green' | 'amber'
+  accent: 'blue' | 'purple' | 'pink' | 'green' | 'amber'
 }) {
   const dot = {
-    blue: 'bg-[#2563eb]',
-    navy: 'bg-[#00004d]',
+    blue: 'bg-[#6c5dd3]',
+    purple: 'bg-[#6c5dd3]',
+    pink: 'bg-[#ff6584]',
     green: 'bg-emerald-500',
     amber: 'bg-amber-500',
   }[accent]
   return (
-    <div className="rounded-[22px] bg-white border border-[#e6edf8] p-4 shadow-[0_12px_32px_-20px_rgba(0,0,77,0.10)]">
+    <div className="rounded-[22px] bg-white border border-[#ecebf6] p-4 shadow-[0_12px_32px_-20px_rgba(106,87,220,0.10)]">
       <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
         <span className={`h-2 w-2 rounded-full ${dot}`} /> {label}
       </p>
-      <p className="mt-1.5 text-xl sm:text-2xl font-black text-[#0b1a3a] tabular-nums truncate">{value}</p>
+      <p className="mt-1.5 text-xl sm:text-2xl font-black text-[#1e1b3a] tabular-nums truncate">{value}</p>
     </div>
   )
 }
@@ -2295,15 +2296,15 @@ function GoalCard({
     <button
       type="button"
       onClick={onClick}
-      className="relative text-left rounded-[26px] bg-white border border-[#e6edf8] px-5 pb-5 pt-11 shadow-[0_12px_32px_-18px_rgba(0,0,77,0.10)] hover:-translate-y-0.5 transition"
+      className="relative text-left rounded-[26px] bg-white border border-[#ecebf6] px-5 pb-5 pt-11 shadow-[0_12px_32px_-18px_rgba(106,87,220,0.10)] hover:-translate-y-0.5 transition"
     >
-      <span className="absolute -top-7 left-1/2 -translate-x-1/2 h-14 w-14 rounded-2xl bg-gradient-to-br from-[#3b82f6] to-[#2563eb] text-white flex items-center justify-center shadow-[0_12px_24px_-10px_rgba(37,99,235,0.35)]">
+      <span className="absolute -top-6 left-1/2 -translate-x-1/2 h-12 w-12 rounded-2xl bg-gradient-to-br from-[#7765ee] to-[#5a46db] text-white flex items-center justify-center shadow-[0_8px_20px_-6px_rgba(90,70,219,0.7)]">
         <Icon className="w-6 h-6" />
       </span>
-      <p className="text-center text-sm font-extrabold text-[#0b1a3a]">{title}</p>
+      <p className="text-center text-sm font-extrabold text-[#1e1b3a]">{title}</p>
       <p className="text-center text-[11px] text-slate-400 mt-0.5">{subtitle}</p>
       <div className="mt-4 flex items-center justify-between text-[11px] font-bold">
-        <span className="text-[#0b1a3a]">Progress</span>
+        <span className="text-[#1e1b3a]">Progress</span>
         <span className="text-slate-500">{pct}%</span>
       </div>
       <div className="mt-1.5 h-1.5 rounded-full bg-slate-100 overflow-hidden">
@@ -2311,7 +2312,7 @@ function GoalCard({
       </div>
       <div className="mt-3 flex items-center justify-between">
         <span className="text-[11px] text-slate-400">{footLeft}</span>
-        <span className="px-2.5 py-1 rounded-full bg-[#eff6ff] text-[#1d4ed8] text-[10px] font-bold">{chip}</span>
+        <span className="px-2.5 py-1 rounded-full bg-[#f0eefa] text-[#5844d8] text-[10px] font-bold">{chip}</span>
       </div>
     </button>
   )
@@ -2372,7 +2373,7 @@ function WaveChart({ values, labels }: { values: number[]; labels: string[] }) {
           <span
             key={l}
             className={`${i % 2 === 1 && i !== lastIdx ? 'hidden sm:inline' : ''} ${
-              i === lastIdx ? 'px-2 py-0.5 rounded-md bg-white text-[#00004d]' : ''
+              i === lastIdx ? 'px-2 py-0.5 rounded-md bg-white text-[#5844d8]' : ''
             }`}
           >
             {i === lastIdx ? 'Today' : l}
