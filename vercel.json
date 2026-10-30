@@ -31,6 +31,9 @@
     "app/api/cron/outreach-autopilot/route.ts": {
       "maxDuration": 60
     },
+    "app/api/cron/outreach-whatsapp/route.ts": {
+      "maxDuration": 60
+    },
     "app/api/admin/outreach/proforma/route.ts": {
       "maxDuration": 60
     },
@@ -50,6 +53,14 @@
     {
       "path": "/api/cron/outreach-followups",
       "schedule": "30 7 * * *"
+    },
+    {
+      "path": "/api/cron/outreach-autopilot",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/outreach-whatsapp",
+      "schedule": "* * * * *"
     }
   ],
   "headers": [
