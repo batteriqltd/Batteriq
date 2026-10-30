@@ -477,7 +477,9 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
               ? 'Email draft discarded.'
               : action === 'approve_all_pending'
                 ? `Approved & dispatched ${data.sentNow ?? 0} outreach emails via Resend.`
-                : 'Email & KES Proforma approved and dispatched via Resend.',
+                : emailRow?.status === 'failed'
+                  ? 'Retried and sent successfully via Resend.'
+                  : 'Email & KES Proforma approved and dispatched via Resend.',
         })
         await fetchOverview()
       }
@@ -1641,7 +1643,24 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                                 <div className="px-4 pb-4">
                                   <div className="p-3.5 rounded-xl bg-white border border-[#e3e9f5]">
                                     <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed">{em.body_text}</p>
-                                    {em.error_message && <p className="mt-2 text-[11px] font-semibold text-rose-600">{em.error_message}</p>}
+                                    {em.error_message && (
+                                      <p className="mt-2 text-[11px] font-semibold text-rose-600">{em.error_message}</p>
+                                    )}
+                                    {em.status === 'failed' && (
+                                      <button
+                                        type="button"
+                                        disabled={busyAction !== null}
+                                        onClick={() => handleEmailAction('approve_and_send', em)}
+                                        className={`${primaryBtn} h-9 mt-3`}
+                                      >
+                                        {busyAction === `email-${em.id}` ? (
+                                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                        ) : (
+                                          <RefreshCw className="w-3.5 h-3.5" />
+                                        )}
+                                        Retry send
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
                               )}

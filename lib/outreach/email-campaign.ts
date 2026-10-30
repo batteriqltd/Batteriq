@@ -347,7 +347,22 @@ export async function runDailyEmailCampaignJob(options: {
     .order('created_at', { ascending: true })
     .limit(remainingQuota)
 
-  for (const emailRow of (queuedEmails ?? []) as OutreachEmail[]) {
+  let dispatchBatch = (queuedEmails ?? []) as OutreachEmail[]
+
+  // Auto-retry emails that previously failed (e.g. a transient Resend/env issue),
+  // capped at 3 attempts so a permanently-bad address doesn't retry forever.
+  if (dispatchBatch.length < remainingQuota) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: retryableFailed } = await (supabase.from('outreach_emails') as any)
+      .select('*')
+      .eq('status', 'failed')
+      .lt('retry_count', 3)
+      .order('created_at', { ascending: true })
+      .limit(remainingQuota - dispatchBatch.length)
+    dispatchBatch = dispatchBatch.concat((retryableFailed ?? []) as OutreachEmail[])
+  }
+
+  for (const emailRow of dispatchBatch) {
     if (remainingQuota <= 0) break
 
     if (
