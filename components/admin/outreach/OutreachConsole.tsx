@@ -136,6 +136,17 @@ const CATEGORY_META: Record<string, { label: string; badge: string }> = {
 }
 
 const SECTOR_QUICK_SCANS: Array<{ label: string; query: string; category: string }> = [
+  { label: 'SACCOs & Microfinance', query: 'SACCOs microfinance cooperative banks Kenya', category: 'organization' },
+  { label: 'Pharmacies & Chemists', query: 'pharmacies chemists pharmaceutical distributors Kenya', category: 'retail' },
+  { label: 'Law Firms & Chambers', query: 'law firms advocates legal chambers corporate lawyers Kenya', category: 'organization' },
+  { label: 'Restaurants & Cafes', query: 'restaurants cafes coffee shops bakeries Nairobi Kenya', category: 'retail' },
+  { label: 'Warehouses & Logistics', query: 'logistics freight forwarders courier warehouses Kenya', category: 'organization' },
+  { label: 'Auto Garages & Dealerships', query: 'auto garages motor vehicle dealerships tyre centres Kenya', category: 'organization' },
+  { label: 'Petrol & Forecourts', query: 'petrol service stations fuel forecourts Kenya', category: 'organization' },
+  { label: 'Churches & Auditoriums', query: 'churches cathedrals Christian ministries Nairobi Kenya', category: 'ngo' },
+  { label: 'Gyms, Spas & Salons', query: 'gyms fitness wellness centres spas executive salons Kenya', category: 'retail' },
+  { label: 'Agribusiness & Dairies', query: 'agribusiness horticulture dairy farms flower exporters Kenya', category: 'organization' },
+  { label: 'Supermarkets & Wholesalers', query: 'supermarkets food wholesale grocery chains Kenya', category: 'retail' },
   { label: 'Private & Int. Schools', query: 'private high schools and international schools in Kenya', category: 'school' },
   { label: 'Tech Firms & Startups', query: 'tech firms software companies fintech startups Nairobi Kenya', category: 'organization' },
   { label: 'Properties & Rentals (Tsavo)', query: 'property management real estate rental apartments Nairobi Kenya Tsavo', category: 'organization' },

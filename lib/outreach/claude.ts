@@ -404,6 +404,66 @@ function buildSmartTailoredOutreachEmail(params: {
       benefit:
         'keep commercial front-load washers, steam solenoid valves, water pump systems, and POS billing running through sudden power cuts with high-surge pure-sine-wave power and zero generator smoke',
     }
+  } else if (/\b(sacco|cooperative|microfinance|bank|banking|cbo)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'SACCOs, financial cooperatives, and microfinance banking institutions',
+      benefit:
+        'keep cash teller counters, biometric scanners, vault security locks, CCTV, and transaction databases running seamlessly with <20ms automatic UPS switchover and full regulatory compliance',
+    }
+  } else if (/\b(pharmacy|pharmacies|chemist|chemists|pharmaceutical|drugstore)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'pharmacies, chemists, and pharmaceutical distributors',
+      benefit:
+        'protect temperature-sensitive medicine/vaccine cold-chain storage and digital prescription dispensing with zero-fume, silent indoor lithium backup without generator exhaust fumes',
+    }
+  } else if (/\b(law\s*firm|advocate|advocates|legal|chambers|attorney|attorneys|llp)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'law firms, advocates, and corporate legal chambers',
+      benefit:
+        'power virtual Zoom court hearings (Judiciary e-filing), high-speed document printing, registry servers, and client boardroom connectivity without interruption',
+    }
+  } else if (/\b(restaurant|restaurants|cafe|cafes|bakery|bakeries|coffee|bistro|diner|eatery)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'restaurants, cafes, bakeries, and food establishments',
+      benefit:
+        'keep commercial espresso machines, POS order touchscreens, ticket printers, and beverage refrigeration running during dinner/lunch peaks without deafening generator noise',
+    }
+  } else if (/\b(logistics|freight|courier|warehouse|warehouses|warehousing|cargo|transport|haulage)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'logistics hubs, cargo forwarders, and distribution warehouses',
+      benefit:
+        'power automated weighbridges, dispatch label printers, barcode scanners, and security gate barriers through power cuts to avoid delivery truck congestion',
+    }
+  } else if (/\b(garage|garages|motors|motor|tyres|tyre|tires|tire|mechanic|dealership)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'automotive dealerships, service garages, and tire centres',
+      benefit:
+        'keep vehicle OBD-II diagnostic scanning benches, computerized wheel alignment systems, and hydraulic lifts operating safely during power drops',
+    }
+  } else if (/\b(church|cathedral|chapel|ministries|mosque|worship|auditorium)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'churches, cathedrals, and large worship auditoriums',
+      benefit:
+        'power live-streaming video switchers, multi-channel sound audio mixers, and LED video walls with pure-sine-wave electricity and zero audio interference',
+    }
+  } else if (/\b(gym|gyms|fitness|spa|spas|wellness|salon|salons|barber|barbershop)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'gyms, fitness centres, wellness studios, and spas',
+      benefit:
+        'keep sound systems, treadmill electronics, biometric turnstiles, and spa lighting fully operational during morning and evening workout rushes',
+    }
+  } else if (/\b(agri|agribusiness|horticulture|flower|farm|farms|farming|dairy|dairies|greenhouse|poultry)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'agribusinesses, horticulture farms, and packhouse facilities',
+      benefit:
+        'power automated drip irrigation timers, climate sensors, egg incubators, and packhouse cold-storage monitoring with zero diesel logistics costs',
+    }
+  } else if (/\b(petrol|fuel|forecourt|petroleum|filling\s*station)\b/i.test(nameAndAddr)) {
+    chosen = {
+      noun: 'petrol service stations and fuel forecourts',
+      benefit:
+        'keep digital fuel dispensers, automated ATG tank gauges, forecourt canopy lighting, and convenience mart POS registers online with zero switchover flicker',
+    }
   }
 
   if (!chosen) {

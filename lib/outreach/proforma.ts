@@ -133,6 +133,16 @@ export function recommendBatteriqProformaForLead(
   const isProperty = /\b(property|properties|real\s*estate|rental|rentals|apartment|apartments|tsavo|housing|estate|estates|residence|residences|court)\b/i.test(nameAndAddr)
   const isTech = /\b(tech|technologies|technology|software|fintech|digital|systems|cloud|ai|data|labs|code|cyber|developer|developers|ict)\b/i.test(nameAndAddr)
   const isLaundry = /\b(laundry|laundries|dry\s*clean|dry\s*cleaners|dry\s*cleaning|wash|laundromat|laundromats|cleaners|garment)\b/i.test(nameAndAddr)
+  const isSacco = /\b(sacco|cooperative|microfinance|bank|banking|cbo)\b/i.test(nameAndAddr)
+  const isPharmacy = /\b(pharmacy|pharmacies|chemist|chemists|pharmaceutical|drugstore)\b/i.test(nameAndAddr)
+  const isLaw = /\b(law\s*firm|advocate|advocates|legal|chambers|attorney|attorneys|llp)\b/i.test(nameAndAddr)
+  const isRestaurant = /\b(restaurant|restaurants|cafe|cafes|bakery|bakeries|coffee|bistro|diner|eatery)\b/i.test(nameAndAddr)
+  const isLogistics = /\b(logistics|freight|courier|warehouse|warehouses|warehousing|cargo|transport|haulage)\b/i.test(nameAndAddr)
+  const isAuto = /\b(garage|garages|motors|motor|tyres|tyre|tires|tire|mechanic|dealership)\b/i.test(nameAndAddr)
+  const isChurch = /\b(church|cathedral|chapel|ministries|mosque|worship|auditorium)\b/i.test(nameAndAddr)
+  const isGym = /\b(gym|gyms|fitness|spa|spas|wellness|salon|salons|barber|barbershop)\b/i.test(nameAndAddr)
+  const isAgri = /\b(agri|agribusiness|horticulture|flower|farm|farms|farming|dairy|dairies|greenhouse|poultry)\b/i.test(nameAndAddr)
+  const isPetrol = /\b(petrol|fuel|forecourt|petroleum|filling\s*station)\b/i.test(nameAndAddr)
 
   let systemTitle = 'Commercial Uptime & LiFePO4 Backup Package'
   let useCaseSummary =
@@ -162,6 +172,86 @@ export function recommendBatteriqProformaForLead(
     rawItems = [
       { ...deltaPro, quantity: 1 },
       { ...solar220, quantity: 1 },
+    ]
+  } else if (isSacco) {
+    systemTitle = 'SACCO Branch Teller, Biometric ATM & Server Vault Backup System'
+    useCaseSummary =
+      'Instant <20ms automatic UPS switchover for cash teller counters, biometric scanners, vault time-locks, CCTV security & member transaction servers during blackouts.'
+    rawItems = [
+      { ...deltaPro, quantity: 1 },
+      { ...delta2Max, quantity: 1 },
+    ]
+  } else if (isPharmacy) {
+    systemTitle = 'Pharmacy Cold-Chain Medicine & Retail Dispensing Backup Package'
+    useCaseSummary =
+      'Zero-diesel, zero-fume indoor power safeguarding insulin/vaccine cold-chain fridges, POS billing computers, digital prescription dispensing & security lighting.'
+    rawItems = [
+      { ...delta2Max, quantity: 1 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else if (isLaw) {
+    systemTitle = 'Law Chambers Virtual Court & High-Volume Printing Uptime Package'
+    useCaseSummary =
+      'Continuous pure-sine-wave backup for virtual Zoom court hearings (Judiciary e-filing), high-speed heavy legal document printers, server registries & client boardroom Wi-Fi.'
+    rawItems = [
+      { ...delta2Max, quantity: 1 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else if (isRestaurant) {
+    systemTitle = 'Restaurant, Cafe & Bakery Espresso & POS Continuity System'
+    useCaseSummary =
+      'Keep commercial espresso baristas, POS touchscreens, order ticket printers, kitchen display units & draft beverage chillers running silently without generator smoke scaring guests.'
+    rawItems = [
+      { ...deltaPro, quantity: 1 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else if (isLogistics) {
+    systemTitle = 'Logistics Warehouse Weighbridge, Barcode & Gate Continuity System'
+    useCaseSummary =
+      'Keep automated weighbridge computers, dispatch thermal label printers, automated gate barriers, barcode scanners & yard security floodlights running during KPLC cuts.'
+    rawItems = [
+      { ...deltaPro, quantity: 1 },
+      { ...solar400, quantity: 1 },
+    ]
+  } else if (isAuto) {
+    systemTitle = 'Automotive Garage Electronic Diagnostic & Lift Safety Backup System'
+    useCaseSummary =
+      'Uninterruptible power for vehicle OBD-II diagnostic scanning stations, computerized wheel alignment racks, hydraulic lift safety locks & front-office customer billing desks.'
+    rawItems = [
+      { ...delta2Max, quantity: 1 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else if (isChurch) {
+    systemTitle = 'Church & Auditorium Live Broadcast, Sound & LED Wall System'
+    useCaseSummary =
+      'High-wattage pure-sine-wave power for live-streaming video switchers, multi-channel sound audio mixers, LED backdrop displays & musical instrument amplifiers with zero audio hum.'
+    rawItems = [
+      { ...deltaPro, quantity: 1 },
+      { ...solar400, quantity: 1 },
+    ]
+  } else if (isGym) {
+    systemTitle = 'Gym & Wellness Center Sound, Biometric Turnstile & Lighting Backup'
+    useCaseSummary =
+      'Keep commercial audio systems, treadmill display consoles, biometric entry turnstiles, juice bar blenders & spa ambient lighting online seamlessly during power drops.'
+    rawItems = [
+      { ...delta2Max, quantity: 1 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else if (isAgri) {
+    systemTitle = 'Agribusiness & Greenhouse Automated Drip Irrigation & Cold Packhouse Backup'
+    useCaseSummary =
+      'Solar-hybrid LiFePO4 backup for automated drip solenoid timers, temperature/humidity sensors, egg incubators & packhouse cold-storage monitoring without diesel fuel logistics.'
+    rawItems = [
+      { ...deltaPro, quantity: 1 },
+      { ...solar400, quantity: 1 },
+    ]
+  } else if (isPetrol) {
+    systemTitle = 'Petrol Station Digital Fuel Pump & Forecourt POS Uptime System'
+    useCaseSummary =
+      'Keep digital electronic fuel dispensers, underground automatic tank gauges (ATG), canopy LED lighting & convenience mart POS tills running without generator changeover flickers.'
+    rawItems = [
+      { ...deltaPro, quantity: 1 },
+      { ...solar400, quantity: 1 },
     ]
   } else {
     switch (category) {

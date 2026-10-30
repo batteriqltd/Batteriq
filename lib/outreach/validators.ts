@@ -533,7 +533,12 @@ export function mapSearchCategoryToLeadCategory(raw: string): LeadCategory {
     lower.includes('humanitarian') ||
     lower.includes('red cross') ||
     lower.includes('amref') ||
-    lower.includes('trust')
+    lower.includes('trust') ||
+    lower.includes('church') ||
+    lower.includes('cathedral') ||
+    lower.includes('chapel') ||
+    lower.includes('ministries') ||
+    lower.includes('mosque')
   ) {
     return 'ngo'
   }
@@ -543,7 +548,10 @@ export function mapSearchCategoryToLeadCategory(raw: string): LeadCategory {
     lower.includes('medical') ||
     lower.includes('maternity') ||
     lower.includes('health') ||
-    lower.includes('diagnostic')
+    lower.includes('diagnostic') ||
+    lower.includes('laboratory') ||
+    lower.includes('pathology') ||
+    lower.includes('dental')
   ) {
     return 'hospital'
   }
@@ -580,6 +588,15 @@ export function mapSearchCategoryToLeadCategory(raw: string): LeadCategory {
     lower.includes('store') ||
     lower.includes('pharmacy') ||
     lower.includes('chemist') ||
+    lower.includes('restaurant') ||
+    lower.includes('bakery') ||
+    lower.includes('cafe') ||
+    lower.includes('coffee') ||
+    lower.includes('gym') ||
+    lower.includes('fitness') ||
+    lower.includes('spa') ||
+    lower.includes('salon') ||
+    lower.includes('barber') ||
     lower.includes('electronics') ||
     lower.includes('hardware') ||
     lower.includes('mart') ||
@@ -598,6 +615,25 @@ export function mapSearchCategoryToLeadCategory(raw: string): LeadCategory {
     lower.includes('agency') ||
     lower.includes('corporate') ||
     lower.includes('logistics') ||
+    lower.includes('freight') ||
+    lower.includes('warehouse') ||
+    lower.includes('courier') ||
+    lower.includes('cargo') ||
+    lower.includes('law firm') ||
+    lower.includes('advocate') ||
+    lower.includes('chambers') ||
+    lower.includes('legal') ||
+    lower.includes('garage') ||
+    lower.includes('motors') ||
+    lower.includes('dealership') ||
+    lower.includes('tyre') ||
+    lower.includes('tire') ||
+    lower.includes('petrol') ||
+    lower.includes('fuel') ||
+    lower.includes('station') ||
+    lower.includes('agribusiness') ||
+    lower.includes('dairy') ||
+    lower.includes('farm') ||
     lower.includes('tsavo') ||
     lower.includes('property') ||
     lower.includes('real estate') ||

@@ -154,16 +154,16 @@ function buildFreeKenyanSearchQuery(category: LeadCategory, city: string, rawQue
     case 'ngo':
       return `(ngo OR foundation OR humanitarian OR trust OR charity OR society) "${city}" Kenya "contact" "+254" (site:.or.ke OR site:.org)`
     case 'hospital':
-      return `(hospital OR clinic OR medical OR healthcare OR maternity) "${city}" Kenya "contact" "+254" (site:.org OR site:.co.ke OR site:.or.ke)`
+      return `(hospital OR clinic OR medical OR healthcare OR maternity OR laboratory OR "dental clinic" OR pharmacy) "${city}" Kenya "contact" "+254" (site:.org OR site:.co.ke OR site:.or.ke)`
     case 'school':
       return `(school OR "high school" OR "secondary school" OR "international school" OR college OR university OR academy OR institute) "${city}" Kenya "contact" "+254" (site:.ac.ke OR site:.sc.ke OR site:.co.ke OR site:.org)`
     case 'retail':
     case 'shop':
-      return `("baby shop" OR "laundry" OR "dry cleaners" OR "laundromat" OR boutique OR pharmacy OR supermarket OR electronics OR hardware OR store) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.com) -jiji -jumia`
+      return `("baby shop" OR "laundry" OR "dry cleaners" OR "laundromat" OR boutique OR pharmacy OR chemist OR restaurant OR bakery OR cafe OR supermarket OR gym OR spa OR "spare parts" OR hardware OR store) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.com) -jiji -jumia`
     case 'hotel':
       return `(hotel OR resort OR lodge) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.com) -booking -tripadvisor -expedia`
     case 'organization':
-      return `("property management" OR "real estate" OR "tech firm" OR "startup" OR "fintech" OR sacco OR organization OR association OR logistics OR corporate) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.or.ke OR site:.coop OR site:.com OR site:.io)`
+      return `("property management" OR "real estate" OR "tech firm" OR "startup" OR "fintech" OR sacco OR "law firm" OR advocates OR logistics OR freight OR warehouse OR "petrol station" OR agribusiness OR corporate) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.or.ke OR site:.coop OR site:.com OR site:.io)`
     default:
       return `(organization OR school OR ngo OR parastatal OR shop OR laundry OR "real estate") "${city}" Kenya "contact" "+254" -facebook -jiji`
   }
@@ -468,6 +468,90 @@ const KENYA_VERIFIED_DOMAIN_REGISTRY: ReadonlyArray<{
   { name: 'Nairobi West Hospital', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://nairobiwesthospital.com' },
   { name: 'Chiromo Hospital Group', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://chiromohospitalgroup.co.ke' },
   { name: 'Ladnan Hospital', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://ladnanhospital.com' },
+
+  // SACCOs, Financial Cooperatives & Microfinance Banks
+  { name: 'Safaricom Sacco', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.safaricomsacco.com' },
+  { name: 'Tower Sacco', category: 'organization', city: 'Nakuru', websiteUrl: 'https://www.towersacco.co.ke' },
+  { name: 'Imarisha Sacco', category: 'organization', city: 'Kericho', websiteUrl: 'https://www.imarishasacco.co.ke' },
+  { name: 'Kenya Bankers Sacco', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.kenyabankers.coop' },
+  { name: 'Hazina Sacco', category: 'organization', city: 'Nairobi', websiteUrl: 'https://hazinasacco.or.ke' },
+  { name: 'KWFT (Kenya Women Microfinance Bank)', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.kwftbank.com' },
+  { name: 'Faulu Microfinance Bank', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.faulu.co.ke' },
+
+  // Pharmacies, Chemists & Pharmaceutical Importers
+  { name: 'Haltons Pharmacy Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://haltons.co.ke' },
+  { name: 'Portal Pharmacy Nairobi', category: 'retail', city: 'Nairobi', websiteUrl: 'https://portalpharmacy.com' },
+  { name: 'KAM Pharmacy Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://kampharmacy.com' },
+  { name: 'Mimosa Pharmacy Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://mimosapharmacy.com' },
+  { name: "Harley's Limited Kenya", category: 'organization', city: 'Nairobi', websiteUrl: 'https://harleysltd.com' },
+  { name: 'Cosmos Pharmaceutical Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://cosmos-pharm.com' },
+
+  // Law Firms, Legal Chambers & Advocates
+  { name: 'Bowmans Kenya (Coulson Harney LLP)', category: 'organization', city: 'Nairobi', websiteUrl: 'https://bowmanslaw.com' },
+  { name: 'Anjarwalla & Khanna (ALN Kenya)', category: 'organization', city: 'Nairobi', websiteUrl: 'https://africalegalnetwork.com' },
+  { name: 'Kaplan & Stratton Advocates', category: 'organization', city: 'Nairobi', websiteUrl: 'https://kaplanstratton.com' },
+  { name: 'TripleOKLaw Advocates', category: 'organization', city: 'Nairobi', websiteUrl: 'https://tripleoklaw.com' },
+  { name: 'Igeria & Ngugi Advocates', category: 'organization', city: 'Nairobi', websiteUrl: 'https://ingadvocates.com' },
+  { name: 'Dentons Hamilton Harrison & Mathews', category: 'organization', city: 'Nairobi', websiteUrl: 'https://dentons.com' },
+  { name: 'CM Advocates LLP', category: 'organization', city: 'Nairobi', websiteUrl: 'https://cmadvocates.com' },
+
+  // Diagnostic Laboratories & Specialist Dental Clinics
+  { name: 'PathCare Kenya', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://pathcarekenya.com' },
+  { name: 'Cerba Lancet Africa Kenya', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://cerbalancet.africa' },
+  { name: 'Metropolis Healthcare Kenya', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://metropoliskenya.com' },
+  { name: 'Dental Smiles Kenya', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://dentalsmiles.co.ke' },
+  { name: 'Royal Dental Clinic Nairobi', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://royaldentalclinic.co.ke' },
+
+  // Restaurants, Bakeries, Cafes & Food Chains
+  { name: 'Java House Africa', category: 'retail', city: 'Nairobi', websiteUrl: 'https://javahouseafrica.com' },
+  { name: 'Artcaffe Coffee & Bakery', category: 'retail', city: 'Nairobi', websiteUrl: 'https://artcaffe.co.ke' },
+  { name: "CJ's Restaurant Kenya", category: 'retail', city: 'Nairobi', websiteUrl: 'https://cjs.co.ke' },
+  { name: 'Big Square Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://bigsquare.co.ke' },
+  { name: 'Bakers Inn Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://simbisa.co.ke' },
+
+  // Warehouses, Logistics, Courier & Freight Forwarders
+  { name: 'Siginon Group Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://siginon.com' },
+  { name: 'Mitchell Cotts Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://mitchellcotts.co.ke' },
+  { name: 'Freight Forwarders Kenya', category: 'organization', city: 'Mombasa', websiteUrl: 'https://ffk.co.ke' },
+  { name: 'AGL Kenya (Africa Global Logistics)', category: 'organization', city: 'Mombasa', websiteUrl: 'https://aglgroup.com' },
+  { name: 'DHL Express Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://dhl.com' },
+  { name: 'G4S Kenya Secure Solutions', category: 'organization', city: 'Nairobi', websiteUrl: 'https://g4s.com' },
+
+  // Supermarkets & Retail Wholesalers
+  { name: 'Cleanshelf Supermarkets', category: 'retail', city: 'Nairobi', websiteUrl: 'https://cleanshelf.co.ke' },
+  { name: 'Khetias Supermarket', category: 'retail', city: 'Eldoret', websiteUrl: 'https://khetias.com' },
+  { name: 'Carrefour Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://carrefourkenya.com' },
+
+  // Automotive Garages, Dealerships & Tire Centres
+  { name: 'Kingsway Tyres Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://kingswaytyres.com' },
+  { name: 'CFAO Motors Kenya (Toyota)', category: 'organization', city: 'Nairobi', websiteUrl: 'https://cfaomotors.co.ke' },
+  { name: 'Simba Corp Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://simbacorp.com' },
+  { name: 'DT Dobie Kenya (Mercedes-Benz & VW)', category: 'organization', city: 'Nairobi', websiteUrl: 'https://dtdobie.co.ke' },
+
+  // Petrol Stations & Fuel Forecourts
+  { name: 'Rubis Energy Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://rubiskenya.com' },
+  { name: 'TotalEnergies Marketing Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://totalenergies.ke' },
+  { name: 'Vivo Energy Kenya (Shell)', category: 'organization', city: 'Nairobi', websiteUrl: 'https://vivoenergy.com' },
+  { name: 'Hass Petroleum Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://hasspetroleum.com' },
+  { name: 'Ola Energy Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://olaenergy.com' },
+
+  // Churches, Cathedrals & Auditoriums
+  { name: 'CITAM (Christ Is The Answer Ministries)', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://citam.org' },
+  { name: 'Mavuno Church', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://mavunochurch.org' },
+  { name: 'Nairobi Chapel', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://nairobichapel.org' },
+  { name: 'All Saints Cathedral Nairobi', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://allsaintsnairobi.org' },
+  { name: 'Deliverance Church International', category: 'ngo', city: 'Nairobi', websiteUrl: 'https://deliverancechurch.org' },
+
+  // Gyms, Spas & Wellness Centres
+  { name: 'Smart Gyms Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://smartgyms.co.ke' },
+  { name: 'Alpha Fit Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://alphafit.co.ke' },
+  { name: 'Serenity Spa Nairobi', category: 'retail', city: 'Nairobi', websiteUrl: 'https://serenityspa.co.ke' },
+
+  // Agribusiness, Horticulture & Dairies
+  { name: 'Brookside Dairy Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://brookside.co.ke' },
+  { name: 'New KCC Kenya', category: 'government', city: 'Nairobi', websiteUrl: 'https://newkcc.co.ke' },
+  { name: 'Kenchic Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://kenchic.com' },
+  { name: 'Vegpro Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://vegpro-group.com' },
 ]
 
 /**
