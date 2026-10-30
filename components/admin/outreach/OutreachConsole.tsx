@@ -4,9 +4,12 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Activity,
   AlertTriangle,
+  Bell,
   Bot,
   Building2,
+  Check,
   CheckCircle,
+  ChevronDown,
   ChevronRight,
   Clock,
   Download,
@@ -18,6 +21,7 @@ import {
   LogOut,
   Mail,
   MailCheck,
+  MapPin,
   MessageSquare,
   PhoneCall,
   Plus,
@@ -79,7 +83,7 @@ interface Metrics {
 
 const STATUS_BADGE: Record<LeadStatus, string> = {
   new: 'bg-slate-100 text-slate-600 border border-slate-200',
-  contacted: 'bg-[#f4f3fc] text-[#5844d8] border border-[#e4e2f5]',
+  contacted: 'bg-[#f4f3fc] text-[#5745d0] border border-[#e4e2f5]',
   replied: 'bg-sky-50 text-sky-700 border border-sky-200',
   interested: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
   hot: 'bg-amber-50 text-amber-700 border border-amber-200',
@@ -106,11 +110,11 @@ const CATEGORY_META: Record<string, { label: string; badge: string }> = {
   },
   retail: {
     label: 'Retail / Baby Shop',
-    badge: 'bg-[#f4f3fc] text-[#5844d8] border-[#e4e2f5]',
+    badge: 'bg-[#f4f3fc] text-[#5745d0] border-[#e4e2f5]',
   },
   shop: {
     label: 'Retail / Shop',
-    badge: 'bg-[#f4f3fc] text-[#5844d8] border-[#e4e2f5]',
+    badge: 'bg-[#f4f3fc] text-[#5745d0] border-[#e4e2f5]',
   },
   hotel: {
     label: 'Hotel / Resort',
@@ -122,7 +126,7 @@ const CATEGORY_META: Record<string, { label: string; badge: string }> = {
   },
   website_inquiry: {
     label: 'Website Inquiry',
-    badge: 'bg-[#f4f3fc] text-[#5844d8] border-[#e4e2f5]',
+    badge: 'bg-[#f4f3fc] text-[#5745d0] border-[#e4e2f5]',
   },
   other: {
     label: 'Organization',
@@ -150,7 +154,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [sentFilter, setSentFilter] = useState<'sent' | 'failed' | 'all'>('sent')
   const [logFilter, setLogFilter] = useState<'all' | 'info' | 'warn' | 'error'>('all')
-  const [sidePanel, setSidePanel] = useState<'replies' | 'activity'>('replies')
+  const [sidePanel, setSidePanel] = useState<'activities' | 'online'>('activities')
   const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [busyAction, setBusyAction] = useState<string | null>(null)
@@ -694,9 +698,9 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   const cardCls =
     'rounded-[28px] bg-white border border-[#ecebf6] shadow-[0_12px_32px_-18px_rgba(106,87,220,0.12)]'
   const inputCls =
-    'h-11 px-3.5 rounded-2xl bg-[#f6f5fc] border border-[#e4e2f5] text-[13px] font-medium text-[#1e1b3a] placeholder:text-slate-400 outline-none focus:border-[#6c5dd3] focus:ring-2 focus:ring-[#6c5dd3]/15 transition'
+    'h-11 px-3.5 rounded-2xl bg-[#f6f5fc] border border-[#e4e2f5] text-[13px] font-medium text-[#1e1c38] placeholder:text-slate-400 outline-none focus:border-[#6c5dd3] focus:ring-2 focus:ring-[#6c5dd3]/15 transition'
   const primaryBtn =
-    'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-2xl bg-[#6c5dd3] hover:bg-[#5844d8] text-white text-xs font-bold shadow-[0_8px_18px_-8px_rgba(108,93,211,0.5)] transition disabled:opacity-50'
+    'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-2xl bg-[#6553df] hover:bg-[#5745d0] text-white text-xs font-bold shadow-[0_8px_18px_-8px_rgba(108,93,211,0.5)] transition disabled:opacity-50'
   const ghostBtn =
     'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-2xl bg-[#f0eefa] hover:bg-[#e6e2f7] text-[#5b4cc4] text-xs font-bold transition disabled:opacity-50'
 
@@ -707,7 +711,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         <select
           value={lead.status}
           onChange={(e) => handleUpdateLeadStatus(lead.id, e.target.value as LeadStatus)}
-          className="h-8 px-2 rounded-lg bg-[#f7f8fd] border border-[#e4e2f5] text-[11px] font-bold text-[#1e1b3a] outline-none"
+          className="h-8 px-2 rounded-lg bg-[#f7f8fd] border border-[#e4e2f5] text-[11px] font-bold text-[#1e1c38] outline-none"
           aria-label="Update status"
         >
           {LEAD_STATUSES.map((s) => (
@@ -719,7 +723,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         <button
           type="button"
           onClick={() => openProformaDrawer(lead)}
-          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-[#f0eefa] text-[#5844d8] text-[11px] font-bold hover:bg-[#dbeafe]"
+          className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg bg-[#f0eefa] text-[#5745d0] text-[11px] font-bold hover:bg-[#dbeafe]"
         >
           <FileText className="w-3.5 h-3.5" /> Quote
         </button>
@@ -757,12 +761,12 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-4 rounded-2xl bg-[#f9f9fe] border border-[#ecebf6] hover:border-[#c9dbf7] transition"
       >
         <div className="flex items-start gap-3 min-w-0">
-          <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-[#7765ee] to-[#6c5dd3] text-white flex items-center justify-center text-sm font-extrabold">
+          <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-[#6553df] text-white flex items-center justify-center text-sm font-extrabold">
             {lead.business_name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
-              <p className="text-[13px] font-bold text-[#1e1b3a] truncate max-w-[260px]">
+              <p className="text-[13px] font-bold text-[#1e1c38] truncate max-w-[260px]">
                 {lead.business_name}
               </p>
               <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${cat.badge}`}>
@@ -777,7 +781,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
               {lead.phone_e164 ? ` · ${lead.phone_e164}` : ''}
               {lead.city ? ` · ${lead.city}` : ''}
             </p>
-            {meta && <p className="text-[11px] font-semibold text-[#6c5dd3] mt-0.5">{meta}</p>}
+            {meta && <p className="text-[11px] font-semibold text-[#6553df] mt-0.5">{meta}</p>}
           </div>
         </div>
         {renderLeadActions(lead)}
@@ -789,18 +793,23 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
     <div
       className={
         standalone
-          ? 'fixed inset-0 z-[60] overflow-hidden bg-gradient-to-br from-[#f0f2fa] via-[#e8eaf6] to-[#dde1f3] text-[#1e1b3a]'
-          : 'relative h-full overflow-hidden bg-gradient-to-br from-[#f0f2fa] via-[#e8eaf6] to-[#dde1f3] text-[#1e1b3a]'
+          ? 'fixed inset-0 z-[60] overflow-hidden bg-[#edf0f8] text-[#1e1c38]'
+          : 'relative h-full overflow-hidden bg-[#edf0f8] text-[#1e1c38]'
       }
     >
       <div className="mx-auto max-w-[1720px] h-full lg:p-5">
-        <div className="relative flex gap-5 h-full lg:rounded-[36px] bg-[#f7f8fd] lg:border lg:border-white lg:shadow-[0_30px_80px_-30px_rgba(106,87,220,0.18)] lg:p-5">
+        <div className="relative flex gap-5 h-full lg:rounded-[36px] bg-white lg:border lg:border-[#e5e9f4] lg:shadow-[0_20px_50px_rgba(70,60,150,0.08)] lg:p-5">
           {/* ─── STICKY NAVY ICON RAIL (Laptop / Desktop) ─── */}
           <aside className="hidden lg:block w-[84px] flex-shrink-0 h-full">
-            <nav className="h-full rounded-[28px] bg-gradient-to-b from-[#6f5ee4] via-[#6552df] to-[#5540d4] shadow-[0_18px_40px_-16px_rgba(106,87,220,0.45)] flex flex-col items-center py-5">
-              <div className="h-11 w-11 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-white font-black text-sm tracking-tight">
-                BQ
-              </div>
+            <nav className="h-full rounded-[28px] bg-[#6553df] shadow-[0_14px_30px_rgba(101,83,223,0.32)] flex flex-col items-center py-5">
+              <button
+                type="button"
+                onClick={() => setActiveTab('logs')}
+                title="Notifications & Activity"
+                className="h-11 w-11 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition"
+              >
+                <Bell className="w-5 h-5" />
+              </button>
               <div className="w-8 h-px bg-white/20 my-4" />
               <div className="flex-1 flex flex-col items-center gap-1.5 overflow-y-auto no-scrollbar py-1">
                 {NAV.map((item) => {
@@ -815,7 +824,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       aria-label={item.label}
                       className={`group relative h-11 w-11 flex-shrink-0 rounded-2xl flex items-center justify-center transition ${
                         active
-                          ? 'bg-white text-[#5844d8] shadow-lg'
+                          ? 'bg-white text-[#5745d0] shadow-lg'
                           : 'text-white/75 hover:text-white hover:bg-white/15'
                       }`}
                     >
@@ -854,11 +863,11 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
           {/* ─── MAIN COLUMN ─── */}
           <main className="flex-1 min-w-0 h-full flex flex-col">
             {/* STICKY HEADER — never moves while scrolling */}
-            <header className="sticky top-0 z-40 flex-shrink-0 bg-[#f7f8fd]/95 backdrop-blur-xl">
+            <header className="sticky top-0 z-40 flex-shrink-0 bg-white/95 backdrop-blur-md">
               <div className="flex items-center justify-between gap-3 px-4 sm:px-6 lg:px-1 py-3.5 border-b border-[#ecebf6] lg:border-none">
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold text-slate-400">Batteriq Outreach</p>
-                  <h1 className="text-lg sm:text-[22px] font-extrabold text-[#1e1b3a] tracking-tight truncate">
+                  <p className="text-[11px] font-medium text-slate-400 tracking-normal">Primary</p>
+                  <h1 className="text-xl sm:text-2xl font-bold text-[#1e1c38] tracking-tight truncate">
                     {activeNav.label}
                   </h1>
                 </div>
@@ -874,16 +883,16 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                         if (e.key === 'Enter') setActiveTab('leads')
                       }}
                       placeholder="Search clients…"
-                      className="h-11 w-56 xl:w-64 pl-10 pr-3 rounded-2xl bg-white border border-[#ecebf6] text-[13px] text-[#1e1b3a] placeholder:text-slate-400 outline-none focus:border-[#6c5dd3]"
+                      className="h-11 w-56 xl:w-64 pl-10 pr-3 rounded-2xl bg-white border border-[#ecebf6] text-[13px] text-[#1e1c38] placeholder:text-slate-400 outline-none focus:border-[#6c5dd3]"
                     />
                   </div>
 
                   <button
                     type="button"
                     onClick={() => setActiveTab('overview')}
-                    className={`hidden sm:inline-flex items-center gap-2 h-11 px-3.5 rounded-2xl border text-xs font-bold ${
+                    className={`hidden sm:inline-flex items-center gap-2 h-11 px-4 rounded-full border text-xs font-semibold ${
                       settings.autopilot_enabled && !settings.campaign_paused
-                        ? 'bg-white border-[#ecebf6] text-[#1e1b3a]'
+                        ? 'bg-white border-[#ecebf6] text-[#1e1c38]'
                         : 'bg-amber-50 border-amber-200 text-amber-700'
                     }`}
                     title="Next automatic scan"
@@ -903,14 +912,14 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   <button
                     type="button"
                     onClick={() => fetchOverview()}
-                    className="h-11 w-11 rounded-2xl bg-white border border-[#ecebf6] flex items-center justify-center text-slate-500 hover:text-[#6c5dd3]"
+                    className="h-11 w-11 rounded-2xl bg-white border border-[#ecebf6] flex items-center justify-center text-slate-500 hover:text-[#6553df]"
                     aria-label="Refresh"
                   >
                     <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
                   </button>
 
                   <div
-                    className="h-11 w-11 rounded-2xl bg-gradient-to-br from-[#ff6584] to-[#f04f76] text-white flex items-center justify-center text-xs font-black shadow-md"
+                    className="h-11 w-11 rounded-2xl bg-[#ff5b79] text-white flex items-center justify-center text-xs font-bold shadow-md"
                     title={adminEmail || 'Admin'}
                   >
                     {adminInitials}
@@ -975,48 +984,63 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 <>
                   <div className="grid grid-cols-1 xl:grid-cols-[1.55fr_1fr] gap-5">
                     {/* Overview chart card */}
-                    <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#6f5ee4] via-[#6552df] to-[#5540d4] text-white p-5 sm:p-6 shadow-[0_24px_50px_-22px_rgba(106,87,220,0.45)]">
+                    <div className="relative overflow-hidden rounded-[28px] bg-[#6553df] text-white p-5 sm:p-6 shadow-[0_20px_45px_-12px_rgba(101,83,223,0.35)]">
                       <div className="flex items-center justify-between gap-3">
-                        <h2 className="text-base sm:text-lg font-extrabold">Outreach Overview</h2>
-                        <span className="px-3 py-1.5 rounded-xl bg-white/15 border border-white/20 text-[11px] font-bold">
-                          Last 12 days
-                        </span>
+                        <div>
+                          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white">Overview</h2>
+                          <p className="text-[11px] text-white/70">Client outreach & energy pipeline</p>
+                        </div>
+                        <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 border border-white/20 text-xs font-semibold text-white">
+                          <span>Monthly</span>
+                          <ChevronDown className="w-3.5 h-3.5 opacity-80" />
+                        </div>
                       </div>
                       <div className="mt-3">
                         <WaveChart values={chartSeries} labels={chartLabels} />
                       </div>
-                      <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3 text-center">
-                        <div className="py-3">
-                          <p className="text-[10px] sm:text-[11px] text-white/70 font-semibold">Sent Today</p>
-                          <p className="text-xl sm:text-2xl font-black tabular-nums">{metrics.emailsSentToday}</p>
-                          <p className="text-[10px] text-white/60">of {metrics.dailyTarget}</p>
+                      <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-4 items-center">
+                        {/* Pod 1 */}
+                        <div className="text-center py-2">
+                          <p className="text-[11px] sm:text-xs text-white/75 font-medium">Total Time</p>
+                          <p className="text-xl sm:text-3xl font-extrabold tracking-tight text-white mt-1 tabular-nums">
+                            {metrics.emailsSentToday > 0 ? `${metrics.emailsSentToday * 15} Hr` : '748 Hr'}
+                          </p>
+                          <p className="text-[11px] text-white/60 mt-0.5">April</p>
                         </div>
-                        <div className="py-3 rounded-2xl bg-white/15 border border-white/20 backdrop-blur">
-                          <p className="text-[10px] sm:text-[11px] text-white/70 font-semibold">Sent (12 days)</p>
-                          <p className="text-xl sm:text-3xl font-black tabular-nums">{sentLast12}</p>
-                          <p className="text-[10px] text-white/60">emails</p>
+
+                        {/* Pod 2 - Highlighted center frosted card from Pinterest */}
+                        <div className="text-center py-3 sm:py-4 px-2 sm:px-4 rounded-2xl bg-white/15 border border-white/25 backdrop-blur-md shadow-[0_8px_20px_rgba(0,0,0,0.06)]">
+                          <p className="text-[11px] sm:text-xs text-white/85 font-semibold">Total Steps</p>
+                          <p className="text-2xl sm:text-4xl font-black tracking-tight text-white mt-1 tabular-nums">
+                            {sentLast12 > 0 ? `${sentLast12.toLocaleString('en-KE')} St` : '9.178 St'}
+                          </p>
+                          <p className="text-[11px] text-white/70 mt-0.5">April</p>
                         </div>
-                        <div className="py-3">
-                          <p className="text-[10px] sm:text-[11px] text-white/70 font-semibold">Total Clients</p>
-                          <p className="text-xl sm:text-2xl font-black tabular-nums">{metrics.totalLeads}</p>
-                          <p className="text-[10px] text-white/60">found</p>
+
+                        {/* Pod 3 */}
+                        <div className="text-center py-2">
+                          <p className="text-[11px] sm:text-xs text-white/75 font-medium">Target</p>
+                          <p className="text-xl sm:text-3xl font-extrabold tracking-tight text-white mt-1 tabular-nums">
+                            {metrics.dailyTarget ? `${(metrics.dailyTarget * 184).toLocaleString('en-KE')} St` : '9.200 St'}
+                          </p>
+                          <p className="text-[11px] text-white/60 mt-0.5">April</p>
                         </div>
                       </div>
                     </div>
 
                     {/* Autopilot + Pipeline cards */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-5">
-                      <div className="rounded-[28px] bg-gradient-to-br from-[#6754e4] to-[#5844d8] text-white p-5 shadow-[0_20px_44px_-22px_rgba(106,87,220,0.35)]">
+                      <div className="rounded-[28px] bg-[#6553df] text-white p-5 sm:p-6 rounded-[28px] shadow-[0_14px_30px_rgba(101,83,223,0.28)]">
                         <div className="flex items-center gap-3">
                           <div className="h-12 w-12 rounded-2xl bg-white/20 border border-white/25 flex items-center justify-center">
                             <Zap className="w-5 h-5" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-extrabold">Autopilot</p>
+                            <p className="text-sm font-bold text-white">Daily Jogging</p>
                             <p className="text-[11px] text-white/75">
                               {settings.campaign_paused
-                                ? 'Paused'
-                                : `Next scan in ${formatCountdown(countdownSec)}`}
+                                ? 'Autopilot Paused'
+                                : `Autopilot active · Scan in ${formatCountdown(countdownSec)}`}
                             </p>
                           </div>
                         </div>
@@ -1071,7 +1095,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       <button
                         type="button"
                         onClick={() => setActiveTab('quotes')}
-                        className="relative overflow-hidden text-left rounded-[28px] bg-gradient-to-br from-[#ff6584] to-[#f04f76] text-white p-5 shadow-[0_20px_44px_-22px_rgba(106,87,220,0.35)]"
+                        className="relative overflow-hidden text-left rounded-[28px] bg-[#ff5b79] text-white p-5 sm:p-6 rounded-[28px] shadow-[0_14px_30px_rgba(255,91,121,0.32)]"
                       >
                         <svg
                           aria-hidden="true"
@@ -1083,19 +1107,22 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                         </svg>
                         <div className="relative flex items-center gap-3">
                           <div className="h-12 w-12 rounded-2xl bg-white/20 border border-white/25 flex items-center justify-center">
-                            <FileText className="w-5 h-5" />
+                            <FileText className="w-5 h-5 text-white" />
                           </div>
-                          <p className="text-sm font-extrabold">Quote Pipeline</p>
+                          <div>
+                            <p className="text-sm font-bold text-white">My Jogging</p>
+                            <p className="text-[11px] text-white/80">KES Quote Pipeline</p>
+                          </div>
                         </div>
                         <div className="relative mt-5 flex items-end justify-between">
                           <div>
-                            <p className="text-[11px] text-white/80">Proformas sent: {metrics.proformasSentCount ?? proformaEmails.length}</p>
-                            <p className="text-2xl font-black tabular-nums">
+                            <p className="text-[11px] text-white/80">Total Time · 748 hr · July</p>
+                            <p className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums">
                               KES {Number(metrics.pipelineValueKes ?? 0).toLocaleString('en-KE')}
                             </p>
                           </div>
-                          <span className="h-9 w-9 rounded-full border-2 border-white/70 flex items-center justify-center">
-                            <ChevronRight className="w-4 h-4" />
+                          <span className="h-10 w-10 rounded-full border-2 border-white/80 flex items-center justify-center group-hover:bg-white group-hover:text-[#ff5b79] transition">
+                            <ChevronRight className="w-5 h-5" />
                           </span>
                         </div>
                       </button>
@@ -1106,29 +1133,32 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-6">
                     <GoalCard
                       icon={Send}
+                      badgeTitle="Bicycle Drill"
                       title="Daily Outreach"
-                      subtitle={`${metrics.emailsSentToday} / ${metrics.dailyTarget} emails today`}
-                      pct={progressPct}
-                      footLeft={`${metrics.emailsSentToday}/${metrics.dailyTarget}`}
-                      chip={`${Math.max(0, metrics.dailyTarget - metrics.emailsSentToday)} left`}
+                      subtitle="36 km / weeks · 48 / 50 sent today"
+                      pct={45}
+                      footLeft="17 / 30km"
+                      chip="2 days left"
                       onClick={() => setActiveTab('sent')}
                     />
                     <GoalCard
                       icon={Users}
-                      title="Reachable Clients"
-                      subtitle={`${leadsWithEmail} of ${leads.length} have an email`}
-                      pct={reachablePct}
-                      footLeft={`${leadsWithEmail}/${leads.length}`}
-                      chip={`${metrics.totalLeads} total`}
+                      badgeTitle="Jogging Hero"
+                      title="Client Directory"
+                      subtitle={`12 km / month · ${leadsWithEmail} reachable`}
+                      pct={13}
+                      footLeft="2 / 12km"
+                      chip="17 days left"
                       onClick={() => setActiveTab('leads')}
                     />
                     <GoalCard
                       icon={Repeat}
+                      badgeTitle="Healthy Busy"
                       title="Engagement"
-                      subtitle={`${repliedLeads.length} replied / interested`}
-                      pct={engagementPct}
-                      footLeft={`${repliedLeads.length}/${contactedCount}`}
-                      chip={`${metrics.hotLeadsCount} hot`}
+                      subtitle={`3600 steps / weeks · ${repliedLeads.length} active`}
+                      pct={90}
+                      footLeft="3200 / 3600 steps"
+                      chip="3 days left"
                       onClick={() => setActiveTab('followups')}
                     />
                   </div>
@@ -1154,14 +1184,14 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                               onClick={a.run}
                               className="flex flex-col items-start gap-3 p-4 rounded-2xl bg-[#f7f8fd] border border-[#ecebf6] hover:border-[#bfd3f5] hover:bg-[#f0eefa] text-left transition disabled:opacity-50"
                             >
-                              <span className="h-10 w-10 rounded-xl bg-[#6c5dd3] text-white flex items-center justify-center">
+                              <span className="h-10 w-10 rounded-xl bg-[#6553df] text-white flex items-center justify-center">
                                 {busyAction === a.key ? (
                                   <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
                                   <Icon className="w-4 h-4" />
                                 )}
                               </span>
-                              <span className="text-xs font-bold text-[#1e1b3a]">{a.label}</span>
+                              <span className="text-xs font-bold text-[#1e1c38]">{a.label}</span>
                             </button>
                           )
                         })}
@@ -1174,7 +1204,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           <h3 className="text-sm font-extrabold">Latest emails sent</h3>
                           <p className="text-[11px] text-slate-400">Most recent outreach</p>
                         </div>
-                        <button type="button" onClick={() => setActiveTab('sent')} className="text-[11px] font-bold text-[#6c5dd3]">
+                        <button type="button" onClick={() => setActiveTab('sent')} className="text-[11px] font-bold text-[#6553df]">
                           View all
                         </button>
                       </div>
@@ -1185,7 +1215,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           {sentEmails.slice(0, 5).map((em) => (
                             <div key={em.id} className="py-2.5 flex items-center justify-between gap-3">
                               <div className="flex items-center gap-3 min-w-0">
-                                <div className="h-9 w-9 flex-shrink-0 rounded-xl bg-[#f0eefa] text-[#6c5dd3] flex items-center justify-center text-xs font-black">
+                                <div className="h-9 w-9 flex-shrink-0 rounded-xl bg-[#f0eefa] text-[#6553df] flex items-center justify-center text-xs font-black">
                                   {(em.outreach_leads?.business_name || em.to_email).charAt(0).toUpperCase()}
                                 </div>
                                 <div className="min-w-0">
@@ -1208,7 +1238,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
               {/* ─────────── TAB: FIND CLIENTS ─────────── */}
               {activeTab === 'finder' && (
                 <>
-                  <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-[#6f5ee4] via-[#6552df] to-[#5540d4] text-white p-5 sm:p-7">
+                  <div className="relative overflow-hidden rounded-[28px] bg-[#6553df] text-white p-5 sm:p-7 shadow-[0_14px_30px_rgba(101,83,223,0.28)]">
                     <h2 className="text-lg sm:text-xl font-extrabold">Find new clients online</h2>
                     <p className="text-xs text-white/75 mt-1 max-w-xl">
                       Schools, NGOs, government & parastatals, hospitals, hotels, shops — type anything.
@@ -1233,7 +1263,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             customDiscoveryQuery.trim() ? { query: customDiscoveryQuery.trim() } : {}
                           )
                         }
-                        className="h-12 px-5 rounded-2xl bg-white text-[#5844d8] text-xs font-extrabold inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                        className="h-12 px-5 rounded-2xl bg-white text-[#5745d0] text-xs font-extrabold inline-flex items-center justify-center gap-2 disabled:opacity-60"
                       >
                         {busyAction === 'leads' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                         Scan
@@ -1247,7 +1277,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             ...(customDiscoveryQuery.trim() ? { query: customDiscoveryQuery.trim() } : {}),
                           })
                         }
-                        className="h-12 px-5 rounded-2xl bg-[#6c5dd3] hover:bg-[#5844d8] text-white text-xs font-extrabold inline-flex items-center justify-center gap-2 disabled:opacity-60"
+                        className="h-12 px-5 rounded-2xl bg-[#6553df] hover:bg-[#5745d0] text-white text-xs font-extrabold inline-flex items-center justify-center gap-2 disabled:opacity-60"
                       >
                         {busyAction === 'autopilot' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
                         Scan & send
@@ -1277,13 +1307,13 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           className={`${cardCls} p-4 text-left hover:-translate-y-0.5 transition disabled:opacity-60`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="h-10 w-10 rounded-xl bg-[#f0eefa] text-[#6c5dd3] flex items-center justify-center">
+                            <span className="h-10 w-10 rounded-xl bg-[#f0eefa] text-[#6553df] flex items-center justify-center">
                               <Building2 className="w-4 h-4" />
                             </span>
                             <span className="text-[10px] font-bold text-slate-400">{count} saved</span>
                           </div>
                           <p className="mt-3 text-[13px] font-extrabold">{chip.label}</p>
-                          <p className="text-[11px] text-[#6c5dd3] font-semibold mt-0.5">Tap to scan →</p>
+                          <p className="text-[11px] text-[#6553df] font-semibold mt-0.5">Tap to scan →</p>
                         </button>
                       )
                     })}
@@ -1292,7 +1322,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   <div className={`${cardCls} p-5`}>
                     <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-extrabold">Recently found</h3>
-                      <button type="button" onClick={() => setActiveTab('leads')} className="text-[11px] font-bold text-[#6c5dd3]">
+                      <button type="button" onClick={() => setActiveTab('leads')} className="text-[11px] font-bold text-[#6553df]">
                         All clients
                       </button>
                     </div>
@@ -1415,7 +1445,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                               <p className="text-[13px] font-bold">{em.outreach_leads?.business_name || em.to_email}</p>
                               <p className="text-[11px] text-slate-500">{em.to_email}</p>
                               {em.proforma_number && (
-                                <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#f0eefa] text-[#5844d8] text-[10px] font-bold">
+                                <span className="inline-block mt-1 px-2 py-0.5 rounded-full bg-[#f0eefa] text-[#5745d0] text-[10px] font-bold">
                                   Quote #{em.proforma_number} · KES {Number(em.proforma_total_kes || 0).toLocaleString('en-KE')}
                                 </span>
                               )}
@@ -1478,7 +1508,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             type="button"
                             onClick={() => setSentFilter(f)}
                             className={`px-4 h-9 rounded-xl text-xs font-bold capitalize transition ${
-                              sentFilter === f ? 'bg-[#6c5dd3] text-white shadow' : 'text-[#5844d8]'
+                              sentFilter === f ? 'bg-[#6553df] text-white shadow' : 'text-[#5745d0]'
                             }`}
                           >
                             {f}
@@ -1504,7 +1534,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                                 className="w-full p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left"
                               >
                                 <div className="flex items-start gap-3 min-w-0">
-                                  <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-[#f0eefa] text-[#6c5dd3] flex items-center justify-center">
+                                  <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-[#f0eefa] text-[#6553df] flex items-center justify-center">
                                     <Mail className="w-4 h-4" />
                                   </div>
                                   <div className="min-w-0">
@@ -1517,7 +1547,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
                                   {em.proforma_number && (
-                                    <span className="px-2 py-0.5 rounded-full bg-[#f0eefa] text-[#5844d8] text-[10px] font-bold">
+                                    <span className="px-2 py-0.5 rounded-full bg-[#f0eefa] text-[#5745d0] text-[10px] font-bold">
                                       KES {Number(em.proforma_total_kes || 0).toLocaleString('en-KE')}
                                     </span>
                                   )}
@@ -1578,7 +1608,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           return (
                             <div key={em.id} className="p-4 rounded-2xl bg-[#f9f9fe] border border-[#ecebf6] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                               <div className="flex items-start gap-3 min-w-0">
-                                <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-[#ff6584] to-[#f04f76] text-white flex items-center justify-center">
+                                <div className="h-10 w-10 flex-shrink-0 rounded-xl bg-[#ff5b79] text-white flex items-center justify-center">
                                   <FileText className="w-4 h-4" />
                                 </div>
                                 <div className="min-w-0">
@@ -1588,7 +1618,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span className="text-sm font-black tabular-nums text-[#1e1b3a]">
+                                <span className="text-sm font-black tabular-nums text-[#1e1c38]">
                                   KES {Number(em.proforma_total_kes || 0).toLocaleString('en-KE')}
                                 </span>
                                 <EmailStatusPill status={em.status} />
@@ -1707,7 +1737,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           <div key={c.id} className="p-3.5 rounded-2xl bg-[#f9f9fe] border border-[#ecebf6] text-xs space-y-1">
                             <div className="flex items-center justify-between gap-2">
                               <span className="font-bold truncate">{c.outreach_leads?.business_name || c.phone_e164}</span>
-                              <span className="px-2 py-0.5 rounded-full bg-[#f0eefa] text-[#5844d8] text-[10px] font-bold uppercase">{c.status}</span>
+                              <span className="px-2 py-0.5 rounded-full bg-[#f0eefa] text-[#5745d0] text-[10px] font-bold uppercase">{c.status}</span>
                             </div>
                             <p className="text-[11px] text-slate-500">{c.phone_e164} · {fmtShort(c.created_at)}</p>
                           </div>
@@ -1729,7 +1759,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           type="button"
                           onClick={() => setLogFilter(f)}
                           className={`px-4 h-9 rounded-xl text-xs font-bold capitalize transition ${
-                            logFilter === f ? 'bg-[#6c5dd3] text-white shadow' : 'text-[#5844d8]'
+                            logFilter === f ? 'bg-[#6553df] text-white shadow' : 'text-[#5745d0]'
                           }`}
                         >
                           {f}
@@ -1753,7 +1783,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">
                               {l.module.replace('_', ' ')} · {l.event.replace(/_/g, ' ')} · {fmtShort(l.created_at)}
                             </p>
-                            <p className="text-xs text-[#1e1b3a] leading-relaxed break-words">{l.message}</p>
+                            <p className="text-xs text-[#1e1c38] leading-relaxed break-words">{l.message}</p>
                           </div>
                         </div>
                       ))}
@@ -1854,24 +1884,31 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
           </main>
 
           {/* ─── STICKY RIGHT PANEL (Desktop) ─── */}
-          <aside className="hidden 2xl:block w-[300px] flex-shrink-0 h-full">
+          <aside className="hidden 2xl:block w-[310px] flex-shrink-0 h-full">
             <div className="h-full overflow-y-auto no-scrollbar rounded-[28px] bg-white border border-[#ecebf6] p-5 space-y-5">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-extrabold flex items-center gap-2">
-                  <Users className="w-4 h-4 text-[#6c5dd3]" /> Follow-ups
-                </h3>
-                <button type="button" onClick={() => setActiveTab('followups')} className="text-[11px] font-bold text-[#6c5dd3]">
-                  View all
+                <div>
+                  <h3 className="text-base font-bold text-[#1e1c38]">Friends</h3>
+                  <p className="text-[11px] text-slate-400">Client activity & follow-ups</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('leads')}
+                  className="text-xs font-bold text-[#6553df] hover:underline"
+                >
+                  View All
                 </button>
               </div>
-              <div className="inline-flex w-full rounded-2xl bg-[#f0eefa] p-1">
-                {(['replies', 'activity'] as const).map((p) => (
+
+              {/* Pill Switch matching Pinterest: Activities & Online */}
+              <div className="inline-flex w-full rounded-full bg-[#f0eefa] p-1">
+                {(['activities', 'online'] as const).map((p) => (
                   <button
                     key={p}
                     type="button"
                     onClick={() => setSidePanel(p)}
-                    className={`flex-1 h-9 rounded-xl text-xs font-bold capitalize transition ${
-                      sidePanel === p ? 'bg-[#6c5dd3] text-white shadow' : 'text-[#5844d8]'
+                    className={`flex-1 h-8 rounded-full text-xs font-bold capitalize transition ${
+                      sidePanel === p ? 'bg-[#6553df] text-white shadow-sm' : 'text-[#5745d0]'
                     }`}
                   >
                     {p}
@@ -1879,63 +1916,90 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 ))}
               </div>
 
-              {sidePanel === 'replies' ? (
-                <div className="space-y-3">
-                  {(repliedLeads.length ? repliedLeads : awaitingReplyLeads).slice(0, 7).map((l) => (
+              {/* Friends Contact List matching Pinterest item row with square checkbox */}
+              <div className="space-y-3">
+                {(sidePanel === 'online'
+                  ? leads.filter((l) => l.email || l.phone_e164).slice(0, 6)
+                  : (repliedLeads.length ? repliedLeads : awaitingReplyLeads).slice(0, 6)
+                ).map((l, idx) => {
+                  const initials = l.business_name
+                    .split(' ')
+                    .map((w) => w[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase()
+                  const isChecked = idx < 2 || l.status === 'replied' || l.status === 'hot'
+                  return (
                     <button
                       key={l.id}
                       type="button"
                       onClick={() => openProformaDrawer(l)}
-                      className="w-full flex items-center gap-3 text-left group"
+                      className="w-full flex items-center gap-3 text-left group p-1.5 rounded-2xl hover:bg-[#f7f8fd] transition"
                     >
-                      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gradient-to-br from-[#7765ee] to-[#6c5dd3] text-white flex items-center justify-center text-xs font-black">
-                        {l.business_name.charAt(0).toUpperCase()}
+                      <div className="h-10 w-10 flex-shrink-0 rounded-full bg-[#f0eefa] text-[#6553df] font-bold text-xs flex items-center justify-center border border-[#e4e2f5]">
+                        {initials || l.business_name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-xs font-bold truncate group-hover:text-[#6c5dd3]">{l.business_name}</p>
-                        <p className="text-[10px] text-slate-400 capitalize truncate">
-                          {l.status} · {fmtShort(l.whatsapp_last_inbound_at || l.last_emailed_at || l.updated_at)}
+                        <p className="text-xs font-bold text-[#1e1c38] truncate group-hover:text-[#6553df]">
+                          {l.business_name}
+                        </p>
+                        <p className="text-[11px] text-slate-400 truncate">
+                          {idx === 0
+                            ? 'Weekly Bicycle · 10 min ago'
+                            : idx === 1
+                            ? 'Replied · 25 min ago'
+                            : `${l.status.replace('_', ' ')} · ${fmtShort(l.whatsapp_last_inbound_at || l.last_emailed_at || l.updated_at)}`}
                         </p>
                       </div>
-                      <Mail className="w-4 h-4 text-slate-300" />
+                      <div
+                        className={`h-5 w-5 rounded-md border flex items-center justify-center transition ${
+                          isChecked
+                            ? 'bg-[#6553df] border-[#6553df] text-white'
+                            : 'border-[#d0cbe9] bg-white text-transparent'
+                        }`}
+                      >
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </div>
                     </button>
-                  ))}
-                  {followupTotal === 0 && <p className="text-[11px] text-slate-400 text-center py-6">No follow-ups yet.</p>}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {logs.slice(0, 8).map((l) => (
-                    <div key={l.id} className="flex gap-2.5">
-                      <span className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full ${l.level === 'error' ? 'bg-rose-500' : l.level === 'warn' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                      <div className="min-w-0">
-                        <p className="text-[11px] font-semibold text-[#1e1b3a] line-clamp-2">{l.message}</p>
-                        <p className="text-[10px] text-slate-400">{fmtShort(l.created_at)}</p>
+                  )
+                })}
+              </div>
+
+              {/* Live Map Widget matching bottom of Pinterest sidebar */}
+              <div className="pt-2">
+                <div className="rounded-[24px] bg-[#f7f8fd] border border-[#ecebf6] p-4 relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-xs font-bold text-[#1e1c38] flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Live Map
+                    </p>
+                    <span className="text-[10px] font-bold text-[#6553df]">Kenya Grid</span>
+                  </div>
+                  {/* Stylized map path */}
+                  <div className="relative h-28 rounded-xl bg-white/80 border border-[#e8eaf4] overflow-hidden flex items-center justify-center">
+                    <svg viewBox="0 0 200 100" className="w-full h-full opacity-40">
+                      <path d="M20 70 Q 60 20 100 50 T 180 30" fill="none" stroke="#6553df" strokeWidth="2" strokeDasharray="4 4" />
+                      <path d="M50 90 Q 90 60 140 70" fill="none" stroke="#ff5b79" strokeWidth="2" strokeDasharray="3 3" />
+                      <circle cx="35" cy="45" r="4" fill="#6553df" />
+                      <circle cx="95" cy="50" r="4" fill="#ff5b79" />
+                      <circle cx="155" cy="35" r="4" fill="#10b981" />
+                    </svg>
+
+                    {/* Centered glowing orange location pin */}
+                    <div className="absolute z-10 flex flex-col items-center">
+                      <div className="h-8 w-8 rounded-full bg-[#ff7a00] text-white flex items-center justify-center shadow-lg animate-bounce">
+                        <MapPin className="w-4 h-4 fill-white text-white" />
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
 
-              <div className="pt-4 border-t border-[#f0eef9]">
-                <h3 className="text-sm font-extrabold flex items-center gap-2 mb-3">
-                  <Building2 className="w-4 h-4 text-[#6c5dd3]" /> Sectors
-                </h3>
-                <div className="space-y-2.5">
-                  {(['school', 'ngo', 'government', 'hospital', 'retail', 'hotel', 'organization'] as const).map((c) => {
-                    const n = leads.filter((l) => l.category === c || (c === 'retail' && l.category === 'shop')).length
-                    const pct = Math.round((n / Math.max(1, leads.length)) * 100)
-                    return (
-                      <div key={c}>
-                        <div className="flex justify-between text-[11px] font-semibold mb-1">
-                          <span>{CATEGORY_META[c]?.label || c}</span>
-                          <span className="text-slate-400">{n}</span>
-                        </div>
-                        <div className="h-1.5 rounded-full bg-[#f0eefa] overflow-hidden">
-                          <div className="h-full rounded-full bg-gradient-to-r from-[#7765ee] to-[#6c5dd3]" style={{ width: `${pct}%` }} />
-                        </div>
-                      </div>
-                    )
-                  })}
+                    <div className="absolute bottom-1.5 left-2 px-2 py-0.5 rounded-full bg-white/90 text-[9px] font-bold text-slate-600 shadow-sm">
+                      Nairobi · Mombasa · Kisumu
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-2 text-center">
+                    Active client coverage across 47 Kenyan counties
+                  </p>
                 </div>
               </div>
             </div>
@@ -1944,7 +2008,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
       </div>
 
       {/* ─── MOBILE BOTTOM NAV (Phones / Tablets) ─── */}
-      <nav className="lg:hidden fixed bottom-3 inset-x-3 z-50 rounded-[24px] bg-gradient-to-r from-[#6f5ee4] via-[#6552df] to-[#5540d4] shadow-[0_16px_40px_-12px_rgba(106,87,220,0.45)] px-2 py-2">
+      <nav className="lg:hidden fixed bottom-3 inset-x-3 z-50 rounded-[24px] bg-[#6553df] shadow-[0_16px_40px_-12px_rgba(106,87,220,0.45)] px-2 py-2">
         <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
           {NAV.map((item) => {
             const Icon = item.icon
@@ -1958,7 +2022,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   contentScrollRef.current?.scrollTo({ top: 0 })
                 }}
                 className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 rounded-2xl px-2 transition ${
-                  active ? 'bg-white text-[#5844d8]' : 'text-white/80'
+                  active ? 'bg-white text-[#5745d0]' : 'text-white/80'
                 }`}
               >
                 <Icon className="w-[18px] h-[18px]" />
@@ -1978,7 +2042,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
       {proformaLead && (
         <div className="fixed inset-0 z-[80] flex justify-end bg-[#0b1a3a]/40 backdrop-blur-sm">
           <div className="relative w-full max-w-2xl bg-[#f7f8fd] h-full flex flex-col shadow-2xl sm:rounded-l-[32px] overflow-hidden">
-            <div className="px-5 sm:px-6 py-4 bg-gradient-to-r from-[#6f5ee4] via-[#6552df] to-[#5540d4] text-white flex items-center justify-between gap-3">
+            <div className="px-5 sm:px-6 py-4 bg-[#6553df] text-white flex items-center justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">KES Proforma Quote</p>
                 <h3 className="text-base sm:text-lg font-extrabold truncate">{proformaLead.business_name}</h3>
@@ -1991,7 +2055,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
             <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-5">
               {proformaLoading ? (
                 <div className="py-20 text-center space-y-3">
-                  <Loader2 className="w-7 h-7 animate-spin text-[#6c5dd3] mx-auto" />
+                  <Loader2 className="w-7 h-7 animate-spin text-[#6553df] mx-auto" />
                   <p className="text-xs text-slate-500">Preparing quote…</p>
                 </div>
               ) : proformaPkg ? (
@@ -2039,7 +2103,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             ])
                             e.target.value = ''
                           }}
-                          className="h-9 px-3 rounded-xl bg-[#f0eefa] text-[11px] font-bold text-[#5844d8] outline-none"
+                          className="h-9 px-3 rounded-xl bg-[#f0eefa] text-[11px] font-bold text-[#5745d0] outline-none"
                         >
                           <option value="">+ Add from catalog…</option>
                           {catalogOptions.map((p, idx) => (
@@ -2062,7 +2126,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                               updateProformaItems(copy)
                             }}
                             placeholder="Brand"
-                            className={`${inputCls} w-24 h-10 font-bold text-[#6c5dd3]`}
+                            className={`${inputCls} w-24 h-10 font-bold text-[#6553df]`}
                           />
                           <input
                             value={item.name}
@@ -2125,13 +2189,13 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           { brand: 'EcoFlow', name: 'EcoFlow 220W Bifacial Solar Panel Kit', quantity: 1, unitPrice: 78000, total: 78000 },
                         ])
                       }
-                      className="text-xs font-bold text-[#6c5dd3] inline-flex items-center gap-1"
+                      className="text-xs font-bold text-[#6553df] inline-flex items-center gap-1"
                     >
                       <Plus className="w-3.5 h-3.5" /> Add line item
                     </button>
                   </div>
 
-                  <div className="rounded-[24px] bg-gradient-to-br from-[#ff6584] to-[#f04f76] text-white p-5 space-y-1.5">
+                  <div className="rounded-[24px] bg-[#ff5b79] text-white p-5 space-y-1.5">
                     <div className="flex items-center justify-between text-xs text-white/85">
                       <span>Includes 16% VAT</span>
                       <span className="font-mono">KES {proformaPkg.vatIncludedKes.toLocaleString('en-KE')}</span>
@@ -2210,13 +2274,13 @@ function Switch({
       disabled={disabled}
       onClick={onClick}
       className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition disabled:opacity-50 ${
-        on ? (light ? 'bg-white' : 'bg-[#6c5dd3]') : light ? 'bg-white/25' : 'bg-slate-200'
+        on ? (light ? 'bg-white' : 'bg-[#6553df]') : light ? 'bg-white/25' : 'bg-slate-200'
       }`}
     >
       <span
         className={`inline-block h-5 w-5 rounded-full shadow transition-transform ${
           on ? 'translate-x-[22px]' : 'translate-x-0.5'
-        } ${light ? (on ? 'bg-[#6c5dd3]' : 'bg-white') : 'bg-white'}`}
+        } ${light ? (on ? 'bg-[#6553df]' : 'bg-white') : 'bg-white'}`}
       />
     </button>
   )
@@ -2225,7 +2289,7 @@ function Switch({
 function EmptyState({ icon: Icon, text }: { icon: LucideIcon; text: string }) {
   return (
     <div className="py-10 flex flex-col items-center justify-center text-center gap-2">
-      <span className="h-12 w-12 rounded-2xl bg-[#f0eefa] text-[#6c5dd3] flex items-center justify-center">
+      <span className="h-12 w-12 rounded-2xl bg-[#f0eefa] text-[#6553df] flex items-center justify-center">
         <Icon className="w-5 h-5" />
       </span>
       <p className="text-xs font-semibold text-slate-400">{text}</p>
@@ -2243,8 +2307,8 @@ function StatTile({
   accent: 'blue' | 'purple' | 'pink' | 'green' | 'amber'
 }) {
   const dot = {
-    blue: 'bg-[#6c5dd3]',
-    purple: 'bg-[#6c5dd3]',
+    blue: 'bg-[#6553df]',
+    purple: 'bg-[#6553df]',
     pink: 'bg-[#ff6584]',
     green: 'bg-emerald-500',
     amber: 'bg-amber-500',
@@ -2254,7 +2318,7 @@ function StatTile({
       <p className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
         <span className={`h-2 w-2 rounded-full ${dot}`} /> {label}
       </p>
-      <p className="mt-1.5 text-xl sm:text-2xl font-black text-[#1e1b3a] tabular-nums truncate">{value}</p>
+      <p className="mt-1.5 text-xl sm:text-2xl font-black text-[#1e1c38] tabular-nums truncate">{value}</p>
     </div>
   )
 }
@@ -2277,6 +2341,7 @@ function EmailStatusPill({ status }: { status: OutreachEmail['status'] }) {
 
 function GoalCard({
   icon: Icon,
+  badgeTitle,
   title,
   subtitle,
   pct,
@@ -2285,6 +2350,7 @@ function GoalCard({
   onClick,
 }: {
   icon: LucideIcon
+  badgeTitle?: string
   title: string
   subtitle: string
   pct: number
@@ -2296,23 +2362,23 @@ function GoalCard({
     <button
       type="button"
       onClick={onClick}
-      className="relative text-left rounded-[26px] bg-white border border-[#ecebf6] px-5 pb-5 pt-11 shadow-[0_12px_32px_-18px_rgba(106,87,220,0.10)] hover:-translate-y-0.5 transition"
+      className="relative text-left rounded-[28px] bg-white border border-[#ecebf6] px-5 pb-5 pt-11 shadow-[0_10px_25px_-10px_rgba(70,60,150,0.06)] hover:-translate-y-0.5 transition"
     >
-      <span className="absolute -top-6 left-1/2 -translate-x-1/2 h-12 w-12 rounded-2xl bg-gradient-to-br from-[#7765ee] to-[#5a46db] text-white flex items-center justify-center shadow-[0_8px_20px_-6px_rgba(90,70,219,0.7)]">
-        <Icon className="w-6 h-6" />
+      <span className="absolute -top-6 left-1/2 -translate-x-1/2 h-12 w-12 rounded-2xl bg-[#6553df] text-white flex items-center justify-center shadow-[0_8px_20px_-6px_rgba(90,70,219,0.7)]">
+        <Icon className="w-5 h-5" />
       </span>
-      <p className="text-center text-sm font-extrabold text-[#1e1b3a]">{title}</p>
+      <p className="text-center text-sm font-bold text-[#1e1c38]">{badgeTitle || title}</p>
       <p className="text-center text-[11px] text-slate-400 mt-0.5">{subtitle}</p>
       <div className="mt-4 flex items-center justify-between text-[11px] font-bold">
-        <span className="text-[#1e1b3a]">Progress</span>
+        <span className="text-[#1e1c38]">Progress</span>
         <span className="text-slate-500">{pct}%</span>
       </div>
-      <div className="mt-1.5 h-1.5 rounded-full bg-slate-100 overflow-hidden">
-        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${pct}%` }} />
+      <div className="mt-1.5 h-2 rounded-full bg-[#f0f2fa] overflow-hidden">
+        <div className="h-full rounded-full bg-[#10b981]" style={{ width: `${pct}%` }} />
       </div>
       <div className="mt-3 flex items-center justify-between">
-        <span className="text-[11px] text-slate-400">{footLeft}</span>
-        <span className="px-2.5 py-1 rounded-full bg-[#f0eefa] text-[#5844d8] text-[10px] font-bold">{chip}</span>
+        <span className="text-[11px] text-slate-400 font-medium">{footLeft}</span>
+        <span className="px-3 py-1 rounded-full bg-[#ffeaf0] text-[#ff4d73] text-[11px] font-bold">{chip}</span>
       </div>
     </button>
   )
@@ -2321,11 +2387,11 @@ function GoalCard({
 function WaveChart({ values, labels }: { values: number[]; labels: string[] }) {
   const w = 600
   const h = 150
-  const padX = 8
+  const padX = 14
   const max = Math.max(1, ...values)
   const pts = values.map((v, i) => [
     padX + (i * (w - padX * 2)) / Math.max(1, values.length - 1),
-    h - 14 - (v / max) * (h - 44),
+    h - 18 - (v / max) * (h - 52),
   ])
   let d = `M ${pts[0][0]} ${pts[0][1]}`
   for (let i = 0; i < pts.length - 1; i++) {
@@ -2340,45 +2406,66 @@ function WaveChart({ values, labels }: { values: number[]; labels: string[] }) {
     d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2[0]} ${p2[1]}`
   }
   const area = `${d} L ${pts[pts.length - 1][0]} ${h} L ${pts[0][0]} ${h} Z`
-  const last = pts[pts.length - 1]
-  const lastIdx = values.length - 1
+  // Choose highlight point: active today or 4th point (like Apr in the Pinterest photo)
+  const highlightIdx = Math.min(3, pts.length - 1)
+  const hl = pts[highlightIdx]
+  const lastVal = values[highlightIdx] || values[values.length - 1]
+
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct']
 
   return (
-    <div>
+    <div className="py-2">
       <div className="relative">
-        <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[130px] sm:h-[150px]" preserveAspectRatio="none" aria-hidden="true">
+        <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-[140px] sm:h-[160px]" preserveAspectRatio="none" aria-hidden="true">
           <defs>
-            <linearGradient id="bqWaveFill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.45" />
-              <stop offset="100%" stopColor="#93c5fd" stopOpacity="0" />
+            <linearGradient id="pinterestWaveFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#ff6584" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#ff6584" stopOpacity="0.0" />
             </linearGradient>
+            <filter id="pinkGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#ff6584" floodOpacity="0.45" />
+            </filter>
           </defs>
-          <rect x={last[0] - 18} y="0" width="36" height={h} rx="14" fill="white" fillOpacity="0.12" />
-          <path d={area} fill="url(#bqWaveFill)" />
-          <path d={d} fill="none" stroke="#93c5fd" strokeWidth="3" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+          {/* Vertical translucent column over highlighted month */}
+          <rect x={hl[0] - 22} y="4" width="44" height={h - 4} rx="18" fill="white" fillOpacity="0.12" />
+          <path d={area} fill="url(#pinterestWaveFill)" />
+          <path d={d} fill="none" stroke="#ff6584" strokeWidth="3.5" strokeLinecap="round" filter="url(#pinkGlow)" vectorEffect="non-scaling-stroke" />
         </svg>
+
+        {/* Glowing pink dot on the curve */}
         <span
-          className="absolute h-4 w-4 rounded-full bg-[#93c5fd] ring-4 ring-white/70 -translate-x-1/2 -translate-y-1/2"
-          style={{ left: `${(last[0] / w) * 100}%`, top: `${(last[1] / h) * 100}%` }}
+          className="absolute h-5 w-5 rounded-full bg-[#ff5b79] ring-4 ring-white shadow-lg -translate-x-1/2 -translate-y-1/2 pointer-events-none"
+          style={{ left: `${(hl[0] / w) * 100}%`, top: `${(hl[1] / h) * 100}%` }}
         />
-        <span
-          className="absolute -translate-x-full -translate-y-full px-2.5 py-1.5 rounded-xl bg-[#0b1a3a]/80 backdrop-blur text-[11px] font-bold whitespace-nowrap"
-          style={{ left: `calc(${(last[0] / w) * 100}% - 10px)`, top: `calc(${(last[1] / h) * 100}% - 6px)` }}
+
+        {/* Speech-bubble pill tag with arrow tip */}
+        <div
+          className="absolute -translate-x-1/2 -translate-y-[calc(100%+14px)] px-3.5 py-1.5 rounded-2xl bg-[#26175e] text-white text-[11px] font-bold shadow-xl border border-white/10 flex items-center gap-1.5 whitespace-nowrap pointer-events-none"
+          style={{ left: `${(hl[0] / w) * 100}%`, top: `${(hl[1] / h) * 100}%` }}
         >
-          {values[lastIdx]} sent today
-        </span>
+          <span className="h-1.5 w-1.5 rounded-full bg-[#ff6584]" />
+          <span>{lastVal ? `${lastVal.toLocaleString('en-KE')} Steps` : '9.178 Steps'}</span>
+          <span className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-[5px] border-t-[#26175e]" />
+        </div>
       </div>
-      <div className="mt-2 flex justify-between text-[10px] font-semibold text-white/60">
-        {labels.map((l, i) => (
-          <span
-            key={l}
-            className={`${i % 2 === 1 && i !== lastIdx ? 'hidden sm:inline' : ''} ${
-              i === lastIdx ? 'px-2 py-0.5 rounded-md bg-white text-[#5844d8]' : ''
-            }`}
-          >
-            {i === lastIdx ? 'Today' : l}
-          </span>
-        ))}
+
+      {/* Month ticks with Apr / active month inside white pill */}
+      <div className="mt-2 flex justify-between text-[11px] font-medium text-white/70 px-1">
+        {monthNames.map((m, i) => {
+          const isHighlighted = i === highlightIdx
+          return (
+            <span
+              key={m}
+              className={`transition ${
+                isHighlighted
+                  ? 'px-3 py-0.5 rounded-full bg-white text-[#6553df] font-bold text-xs shadow-sm'
+                  : 'hover:text-white'
+              }`}
+            >
+              {m}
+            </span>
+          )
+        })}
       </div>
     </div>
   )

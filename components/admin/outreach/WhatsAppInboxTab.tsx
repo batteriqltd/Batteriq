@@ -447,7 +447,7 @@ export function WhatsAppInboxTab({
                             inbound
                               ? 'bg-white border border-[#ecebf7] text-[#0b1a3a]'
                               : m.sender_type === 'ai'
-                                ? 'bg-gradient-to-br from-[#6c5dd3] to-[#5844d8] text-white'
+                                ? 'bg-[#6553df] text-white'
                                 : m.sender_type === 'system_template'
                                   ? 'bg-emerald-600/90 text-white'
                                   : 'bg-[#1f1d3d] text-white'
