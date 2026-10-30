@@ -656,6 +656,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   const whatsappFollowedLeads = leads.filter((l) => Boolean(l.followup_sent_at))
   const followupTotal = repliedLeads.length + awaitingReplyLeads.length + whatsappFollowedLeads.length
   const leadsWithEmail = leads.filter((l) => Boolean(l.email)).length
+  const leadsWithPhone = leads.filter((l) => Boolean(l.phone_e164)).length
   const contactedCount = leads.filter((l) => l.status !== 'new').length
   const engagementPct = Math.min(
     100,
@@ -1060,7 +1061,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           <p className="text-[11px] text-white/70">Client outreach & energy pipeline</p>
                         </div>
                         <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/15 border border-white/20 text-xs font-semibold text-white">
-                          <span>Monthly</span>
+                          <span>12-Day Trend</span>
                           <ChevronDown className="w-3.5 h-3.5 opacity-80" />
                         </div>
                       </div>
@@ -1070,29 +1071,33 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       <div className="mt-5 grid grid-cols-3 gap-2 sm:gap-4 items-center">
                         {/* Pod 1 */}
                         <div className="text-center py-2">
-                          <p className="text-[11px] sm:text-xs text-white/75 font-medium">Total Time</p>
+                          <p className="text-[11px] sm:text-xs text-white/75 font-medium">Total Clients</p>
                           <p className="text-xl sm:text-3xl font-extrabold tracking-tight text-white mt-1 tabular-nums">
-                            {metrics.emailsSentToday > 0 ? `${metrics.emailsSentToday * 15} Hr` : '748 Hr'}
+                            {leads.length > 0 ? leads.length.toLocaleString('en-KE') : '1,240'}
                           </p>
-                          <p className="text-[11px] text-white/60 mt-0.5">April</p>
+                          <p className="text-[11px] text-white/60 mt-0.5">Kenya Directory</p>
                         </div>
 
                         {/* Pod 2 - Highlighted center frosted card from Pinterest */}
                         <div className="text-center py-3 sm:py-4 px-2 sm:px-4 rounded-2xl bg-white/15 border border-white/25 backdrop-blur-md shadow-[0_8px_20px_rgba(0,0,0,0.06)]">
-                          <p className="text-[11px] sm:text-xs text-white/85 font-semibold">Total Steps</p>
+                          <p className="text-[11px] sm:text-xs text-white/85 font-semibold">Proformas Sent</p>
                           <p className="text-2xl sm:text-4xl font-black tracking-tight text-white mt-1 tabular-nums">
-                            {sentLast12 > 0 ? `${sentLast12.toLocaleString('en-KE')} St` : '9.178 St'}
+                            {metrics.emailsSentToday > 0
+                              ? metrics.emailsSentToday.toLocaleString('en-KE')
+                              : sentLast12 > 0
+                                ? sentLast12.toLocaleString('en-KE')
+                                : '48'}
                           </p>
-                          <p className="text-[11px] text-white/70 mt-0.5">April</p>
+                          <p className="text-[11px] text-white/70 mt-0.5">KES Quotes</p>
                         </div>
 
                         {/* Pod 3 */}
                         <div className="text-center py-2">
-                          <p className="text-[11px] sm:text-xs text-white/75 font-medium">Target</p>
+                          <p className="text-[11px] sm:text-xs text-white/75 font-medium">Daily Target</p>
                           <p className="text-xl sm:text-3xl font-extrabold tracking-tight text-white mt-1 tabular-nums">
-                            {metrics.dailyTarget ? `${(metrics.dailyTarget * 184).toLocaleString('en-KE')} St` : '9.200 St'}
+                            {metrics.dailyTarget || 50}
                           </p>
-                          <p className="text-[11px] text-white/60 mt-0.5">April</p>
+                          <p className="text-[11px] text-white/60 mt-0.5">Per Day</p>
                         </div>
                       </div>
                     </div>
@@ -1105,11 +1110,11 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             <Zap className="w-5 h-5" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-white">Daily Jogging</p>
+                            <p className="text-sm font-bold text-white">24/7 Autopilot</p>
                             <p className="text-[11px] text-white/75">
                               {settings.campaign_paused
                                 ? 'Autopilot Paused'
-                                : `Autopilot active · Scan in ${formatCountdown(countdownSec)}`}
+                                : `Autonomous engine · Next scan in ${formatCountdown(countdownSec)}`}
                             </p>
                           </div>
                         </div>
@@ -1179,13 +1184,15 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             <FileText className="w-5 h-5 text-white" />
                           </div>
                           <div>
-                            <p className="text-sm font-bold text-white">My Jogging</p>
+                            <p className="text-sm font-bold text-white">Commercial Energy Quotes</p>
                             <p className="text-[11px] text-white/80">KES Quote Pipeline</p>
                           </div>
                         </div>
                         <div className="relative mt-5 flex items-end justify-between">
                           <div>
-                            <p className="text-[11px] text-white/80">Total Time · 748 hr · July</p>
+                            <p className="text-[11px] text-white/80">
+                              Active Proposals · {proformaEmails.length > 0 ? `${proformaEmails.length} Quotes` : 'EcoFlow & Solar'}
+                            </p>
                             <p className="text-2xl sm:text-3xl font-black tracking-tight tabular-nums">
                               KES {Number(metrics.pipelineValueKes ?? 0).toLocaleString('en-KE')}
                             </p>
@@ -1202,32 +1209,32 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 pt-6">
                     <GoalCard
                       icon={Send}
-                      badgeTitle="Bicycle Drill"
+                      badgeTitle="Cold Outreach"
                       title="Daily Outreach"
-                      subtitle="36 km / weeks · 48 / 50 sent today"
-                      pct={45}
-                      footLeft="17 / 30km"
-                      chip="2 days left"
+                      subtitle={`${metrics.emailsSentToday} sent today · ${metrics.dailyTarget} daily goal`}
+                      pct={Math.min(100, Math.round(((metrics.emailsSentToday || 0) / (metrics.dailyTarget || 50)) * 100))}
+                      footLeft={`${metrics.emailsSentToday} / ${metrics.dailyTarget} sent today`}
+                      chip={metrics.emailsSentToday >= metrics.dailyTarget ? 'Target Met' : 'Active Today'}
                       onClick={() => setActiveTab('sent')}
                     />
                     <GoalCard
                       icon={Users}
-                      badgeTitle="Jogging Hero"
+                      badgeTitle="Client Directory"
                       title="Client Directory"
-                      subtitle={`12 km / month · ${leadsWithEmail} reachable`}
-                      pct={13}
-                      footLeft="2 / 12km"
-                      chip="17 days left"
+                      subtitle={`${leadsWithEmail} with email · ${leadsWithPhone} with phone`}
+                      pct={reachablePct}
+                      footLeft={`${leads.length} total Kenyan leads`}
+                      chip={`${leadsWithPhone} with WhatsApp`}
                       onClick={() => setActiveTab('leads')}
                     />
                     <GoalCard
                       icon={Repeat}
-                      badgeTitle="Healthy Busy"
+                      badgeTitle="Client Responses"
                       title="Engagement"
-                      subtitle={`3600 steps / weeks · ${repliedLeads.length} active`}
-                      pct={90}
-                      footLeft="3200 / 3600 steps"
-                      chip="3 days left"
+                      subtitle={`${repliedLeads.length} active replies · ${engagementPct}% conversion`}
+                      pct={engagementPct}
+                      footLeft={`${metrics.repliesCount || repliedLeads.length} converted inquiries`}
+                      chip={repliedLeads.length > 0 ? `${repliedLeads.length} Hot Leads` : 'Awaiting Reply'}
                       onClick={() => setActiveTab('followups')}
                     />
                   </div>
@@ -2015,11 +2022,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           {l.business_name}
                         </p>
                         <p className="text-[11px] text-slate-400 truncate">
-                          {idx === 0
-                            ? 'Weekly Bicycle · 10 min ago'
-                            : idx === 1
-                            ? 'Replied · 25 min ago'
-                            : `${l.status.replace('_', ' ')} · ${fmtShort(l.whatsapp_last_inbound_at || l.last_emailed_at || l.updated_at)}`}
+                          {`${l.status.replace('_', ' ')} · ${fmtShort(l.whatsapp_last_inbound_at || l.last_emailed_at || l.updated_at)}`}
                         </p>
                       </div>
                       <div
@@ -2568,12 +2571,13 @@ function WaveChart({ values, labels }: { values: number[]; labels: string[] }) {
     d += ` C ${c1x} ${c1y}, ${c2x} ${c2y}, ${p2[0]} ${p2[1]}`
   }
   const area = `${d} L ${pts[pts.length - 1][0]} ${h} L ${pts[0][0]} ${h} Z`
-  // Choose highlight point: active today or 4th point (like Apr in the Pinterest photo)
-  const highlightIdx = Math.min(3, pts.length - 1)
+  // Choose highlight point: most recent / active day
+  const highlightIdx = Math.max(0, pts.length - 1)
   const hl = pts[highlightIdx]
-  const lastVal = values[highlightIdx] || values[values.length - 1]
+  const lastVal = values[highlightIdx] ?? values[values.length - 1] ?? 0
 
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct']
+  const displayLabels = labels && labels.length === values.length ? labels : monthNames.slice(0, values.length)
 
   return (
     <div className="py-2">
@@ -2588,7 +2592,7 @@ function WaveChart({ values, labels }: { values: number[]; labels: string[] }) {
               <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#ff6584" floodOpacity="0.45" />
             </filter>
           </defs>
-          {/* Vertical translucent column over highlighted month */}
+          {/* Vertical translucent column over highlighted point */}
           <rect x={hl[0] - 22} y="4" width="44" height={h - 4} rx="18" fill="white" fillOpacity="0.12" />
           <path d={area} fill="url(#pinterestWaveFill)" />
           <path d={d} fill="none" stroke="#ff6584" strokeWidth="3.5" strokeLinecap="round" filter="url(#pinkGlow)" vectorEffect="non-scaling-stroke" />
@@ -2606,18 +2610,18 @@ function WaveChart({ values, labels }: { values: number[]; labels: string[] }) {
           style={{ left: `${(hl[0] / w) * 100}%`, top: `${(hl[1] / h) * 100}%` }}
         >
           <span className="h-1.5 w-1.5 rounded-full bg-[#ff6584]" />
-          <span>{lastVal ? `${lastVal.toLocaleString('en-KE')} Steps` : '9.178 Steps'}</span>
+          <span>{`${(lastVal ?? 0).toLocaleString('en-KE')} Sent`}</span>
           <span className="absolute bottom-[-5px] left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-[5px] border-t-[#26175e]" />
         </div>
       </div>
 
-      {/* Month ticks with Apr / active month inside white pill */}
+      {/* Date ticks with active day inside white pill */}
       <div className="mt-2 flex justify-between text-[11px] font-medium text-white/70 px-1">
-        {monthNames.map((m, i) => {
+        {displayLabels.map((m, i) => {
           const isHighlighted = i === highlightIdx
           return (
             <span
-              key={m}
+              key={`${m}-${i}`}
               className={`transition ${
                 isHighlighted
                   ? 'px-3 py-0.5 rounded-full bg-white text-[#6553df] font-bold text-xs shadow-sm'
