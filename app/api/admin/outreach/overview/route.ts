@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminSession } from '@/lib/admin-auth'
+import { getAfricasTalkingStubReadiness } from '@/lib/outreach/calling-stub'
 import { getOutreachSettings } from '@/lib/outreach/compliance'
 import { createOutreachAdminClient } from '@/lib/outreach/supabase'
 
@@ -120,24 +121,16 @@ export async function GET(req: NextRequest) {
       status?: string
       proforma_total_kes?: number | null
     }>
-    const quotedKes = emailRows
+    // Real quoted value only — sent, pending-review or approved proformas.
+    // Do not pad this with an invented per-category estimate; it must reflect actual quotes.
+    const pipelineValueKes = emailRows
       .filter((e) => e.status === 'sent' || e.status === 'pending_review' || e.status === 'approved')
       .reduce((sum, e) => sum + (Number(e.proforma_total_kes) || 0), 0)
-
-    const estimatedActiveLeadKes = ((leadsRes.data ?? []) as Array<{ status?: string; category?: string }>)
-      .filter((l) => l.status !== 'opted_out')
-      .reduce((sum, l) => {
-        if (l.category === 'government' || l.category === 'hospital') return sum + 685000
-        if (l.category === 'school' || l.category === 'hotel') return sum + 545000
-        if (l.category === 'ngo' || l.category === 'organization') return sum + 380000
-        return sum + 223000
-      }, 0)
-
-    const pipelineValueKes = Math.max(quotedKes, estimatedActiveLeadKes)
 
     return NextResponse.json({
       admin: { email: session.email, role: session.role },
       settings,
+      callingConfigured: getAfricasTalkingStubReadiness().configured,
       metrics: {
         emailsSentToday: sentTodayRes.count ?? 0,
         dailyTarget: settings.daily_email_limit,
