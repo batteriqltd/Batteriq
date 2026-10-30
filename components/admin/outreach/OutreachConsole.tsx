@@ -683,14 +683,14 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   const NAV: Array<{ id: TabKey; label: string; icon: LucideIcon; badge?: number }> = [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'finder', label: 'Find Clients', icon: Globe },
-    { id: 'leads', label: 'Clients', icon: Users, badge: metrics.totalLeads },
-    { id: 'review', label: 'Pending Review', icon: Clock, badge: pendingReviewList.length },
-    { id: 'sent', label: 'Emails Sent', icon: MailCheck },
-    { id: 'quotes', label: 'Proforma Quotes', icon: FileText },
+    { id: 'leads', label: 'Client Directory', icon: Users, badge: metrics.totalLeads },
+    { id: 'review', label: 'Review Drafts', icon: Clock, badge: pendingReviewList.length },
+    { id: 'sent', label: 'Sent Emails', icon: MailCheck },
+    { id: 'quotes', label: 'Quotes & Invoices', icon: FileText },
     { id: 'followups', label: 'Follow-ups', icon: Repeat, badge: repliedLeads.length },
-    { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare, badge: metrics.pendingHumanCount },
-    { id: 'calling', label: 'Calls', icon: PhoneCall },
-    { id: 'logs', label: 'Activity Log', icon: Activity, badge: metrics.errorsTodayCount },
+    { id: 'whatsapp', label: 'WhatsApp Inbox', icon: MessageSquare, badge: metrics.pendingHumanCount },
+    { id: 'calling', label: 'Warm Calling', icon: PhoneCall },
+    { id: 'logs', label: 'Activity Logs', icon: Activity, badge: metrics.errorsTodayCount },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
   const activeNav = NAV.find((n) => n.id === activeTab) || NAV[0]
@@ -799,19 +799,37 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
     >
       <div className="mx-auto max-w-[1720px] h-full lg:p-5">
         <div className="relative flex gap-5 h-full lg:rounded-[36px] bg-white lg:border lg:border-[#e5e9f4] lg:shadow-[0_20px_50px_rgba(70,60,150,0.08)] lg:p-5">
-          {/* ─── STICKY NAVY ICON RAIL (Laptop / Desktop) ─── */}
-          <aside className="hidden lg:block w-[84px] flex-shrink-0 h-full">
-            <nav className="h-full rounded-[28px] bg-[#6553df] shadow-[0_14px_30px_rgba(101,83,223,0.32)] flex flex-col items-center py-5">
-              <button
-                type="button"
-                onClick={() => setActiveTab('logs')}
-                title="Notifications & Activity"
-                className="h-11 w-11 rounded-2xl bg-white/15 border border-white/20 flex items-center justify-center text-white hover:bg-white/25 transition"
-              >
-                <Bell className="w-5 h-5" />
-              </button>
-              <div className="w-8 h-px bg-white/20 my-4" />
-              <div className="flex-1 flex flex-col items-center gap-1.5 overflow-y-auto no-scrollbar py-1">
+          {/* ─── STICKY LEFT NAVIGATION SIDEBAR (Laptop / Desktop) ─── */}
+          <aside className="hidden lg:block w-[240px] flex-shrink-0 h-full">
+            <nav className="h-full rounded-[28px] bg-[#6553df] shadow-[0_14px_30px_rgba(101,83,223,0.32)] flex flex-col py-4 overflow-hidden">
+              {/* Brand Header */}
+              <div className="px-4 pb-1 flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="h-9 w-9 rounded-xl bg-white/20 border border-white/25 flex items-center justify-center text-white font-black text-sm flex-shrink-0">
+                    B
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white tracking-tight truncate">BATTERIQ</p>
+                    <p className="text-[10px] text-white/70 truncate">Outreach Console</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('logs')}
+                  title="Notifications & Activity"
+                  aria-label="Notifications"
+                  className="h-8 w-8 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition flex-shrink-0"
+                >
+                  <Bell className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="w-full px-4 my-2.5">
+                <div className="w-full h-px bg-white/15" />
+              </div>
+
+              {/* Navigation Items with Icon + Visible Name + Badge */}
+              <div className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar py-1 px-3">
                 {NAV.map((item) => {
                   const Icon = item.icon
                   const active = activeTab === item.id
@@ -822,41 +840,60 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       onClick={() => setActiveTab(item.id)}
                       title={item.label}
                       aria-label={item.label}
-                      className={`group relative h-11 w-11 flex-shrink-0 rounded-2xl flex items-center justify-center transition ${
+                      className={`group w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-semibold transition ${
                         active
-                          ? 'bg-white text-[#5745d0] shadow-lg'
-                          : 'text-white/75 hover:text-white hover:bg-white/15'
+                          ? 'bg-white text-[#6553df] shadow-md font-bold'
+                          : 'text-white/80 hover:text-white hover:bg-white/10'
                       }`}
                     >
-                      <Icon className="w-[19px] h-[19px]" />
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon
+                          className={`w-4 h-4 flex-shrink-0 ${
+                            active ? 'text-[#6553df]' : 'text-white/80 group-hover:text-white'
+                          }`}
+                        />
+                        <span className="truncate text-[12px]">{item.label}</span>
+                      </div>
                       {item.badge ? (
-                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#5844d8] text-white text-[9px] font-black flex items-center justify-center ring-2 ring-[#5844d8]">
+                        <span
+                          className={`min-w-[18px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center flex-shrink-0 ${
+                            active
+                              ? 'bg-[#6553df] text-white'
+                              : 'bg-white/20 text-white'
+                          }`}
+                        >
                           {item.badge > 99 ? '99+' : item.badge}
                         </span>
                       ) : null}
-                      <span className="pointer-events-none absolute left-[calc(100%+12px)] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#0b1a3a] px-2.5 py-1 text-[11px] font-bold text-white opacity-0 group-hover:opacity-100 transition z-50">
-                        {item.label}
-                      </span>
                     </button>
                   )
                 })}
               </div>
-              <div className="w-8 h-px bg-white/20 my-3" />
-              {standalone ? (
-                <button
-                  type="button"
-                  onClick={handleStandaloneSignOut}
-                  title="Sign out"
-                  aria-label="Sign out"
-                  className="h-11 w-11 rounded-2xl flex items-center justify-center text-white/80 hover:text-white hover:bg-white/15"
-                >
-                  <LogOut className="w-[19px] h-[19px]" />
-                </button>
-              ) : (
-                <div className="h-11 w-11 rounded-2xl flex items-center justify-center text-white/70">
-                  <ShieldCheck className="w-[19px] h-[19px]" />
-                </div>
-              )}
+
+              <div className="w-full px-4 my-2">
+                <div className="w-full h-px bg-white/15" />
+              </div>
+
+              {/* Bottom Sign Out / Admin Status */}
+              <div className="px-3">
+                {standalone ? (
+                  <button
+                    type="button"
+                    onClick={handleStandaloneSignOut}
+                    title="Sign out"
+                    aria-label="Sign out"
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 transition"
+                  >
+                    <LogOut className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate text-[12px]">Sign out</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2.5 px-3 py-2 text-white/70 text-xs">
+                    <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate text-[11px]">Outreach Admin</span>
+                  </div>
+                )}
+              </div>
             </nav>
           </aside>
 
@@ -1888,8 +1925,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
             <div className="h-full overflow-y-auto no-scrollbar rounded-[28px] bg-white border border-[#ecebf6] p-5 space-y-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-base font-bold text-[#1e1c38]">Friends</h3>
-                  <p className="text-[11px] text-slate-400">Client activity & follow-ups</p>
+                  <h3 className="text-base font-bold text-[#1e1c38]">Follow-ups & Contacts</h3>
+                  <p className="text-[11px] text-slate-400">Live client interactions</p>
                 </div>
                 <button
                   type="button"
@@ -1911,7 +1948,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       sidePanel === p ? 'bg-[#6553df] text-white shadow-sm' : 'text-[#5745d0]'
                     }`}
                   >
-                    {p}
+                    {p === 'activities' ? 'Activities' : 'Online Clients'}
                   </button>
                 ))}
               </div>
