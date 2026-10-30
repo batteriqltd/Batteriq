@@ -13,7 +13,8 @@ export interface SuppressionSets {
 
 export function hashIpForAudit(ip: string | null | undefined): string | null {
   if (!ip || ip === 'unknown') return null
-  const salt = process.env.ADMIN_SESSION_SECRET || 'batteriq-dpa-salt'
+  const salt = process.env.ADMIN_SESSION_SECRET
+  if (!salt) return null
   return crypto.createHash('sha256').update(`${salt}:${ip}`).digest('hex').slice(0, 32)
 }
 

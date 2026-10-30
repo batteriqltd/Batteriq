@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 const SESSION_COOKIE = 'batteriq_admin_session'
-const SECRET = process.env.ADMIN_SESSION_SECRET || 'batteriq-fallback-2026'
 const SECRET_LOGIN_PATH = '/admin/secure-bq9x2026'
 
 // Task 5: In-memory rate limiter for admin API routes (per Edge instance)
@@ -39,6 +38,8 @@ function checkApiRateLimit(ip: string): boolean {
 
 // Task 2: Verify HMAC-signed session token using Web Crypto (Edge-compatible)
 async function verifyHmacToken(token: string): Promise<{ id: string; email: string; role: string; exp: number } | null> {
+  const SECRET = process.env.ADMIN_SESSION_SECRET
+  if (!SECRET) return null
   try {
     const dotIdx = token.lastIndexOf('.')
     if (dotIdx === -1) return null

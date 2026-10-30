@@ -2,15 +2,18 @@ import { cookies } from 'next/headers'
 import crypto from 'crypto'
 
 const SESSION_COOKIE = 'batteriq_admin_session'
-const SECRET = process.env.ADMIN_SESSION_SECRET || 'batteriq-fallback-2026'
 
 export function createSessionToken(payload: { id: string; email: string; role: string; exp: number }): string {
+  const SECRET = process.env.ADMIN_SESSION_SECRET
+  if (!SECRET) throw new Error('ADMIN_SESSION_SECRET is not configured')
   const data = Buffer.from(JSON.stringify(payload)).toString('base64')
   const sig = crypto.createHmac('sha256', SECRET).update(data).digest('base64url')
   return `${data}.${sig}`
 }
 
 export function verifySessionToken(token: string): { id: string; email: string; role: string; exp: number } | null {
+  const SECRET = process.env.ADMIN_SESSION_SECRET
+  if (!SECRET) return null
   try {
     const dotIdx = token.lastIndexOf('.')
     if (dotIdx === -1) return null

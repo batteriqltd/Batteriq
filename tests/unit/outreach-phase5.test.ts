@@ -106,6 +106,7 @@ describe('Phase 5 — Africa\'s Talking Voice Stub, Cold-Call Block & Mandatory 
   it('authenticates dedicated Outreach Admin login via env vars and issues outreach_admin session cookie', async () => {
     vi.stubEnv('OUTREACH_ADMIN_EMAIL', 'sale@batteriq.com')
     vi.stubEnv('OUTREACH_ADMIN_PASSWORD', 'test-env-only-secret')
+    vi.stubEnv('ADMIN_SESSION_SECRET', 'admin-session-test-secret-2026')
 
     const okReq = new Request('https://batteriq.com/api/admin/auth', {
       method: 'POST',
