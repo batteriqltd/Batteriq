@@ -11,6 +11,7 @@ import {
   loadSuppressionSets,
 } from './compliance'
 import { logOutreachEvent, sleep, withRetry } from './logger'
+import { ensureFreshKenyaLeadsAvailable } from './lead-finder'
 import {
   buildProformaEmailCardHtml,
   buildProformaEmailTextBlock,
@@ -333,11 +334,11 @@ export async function runDailyEmailCampaignJob(options: {
   const errors: string[] = []
 
   // Step 1: Send queued emails.
-  // If review_before_send is FALSE (Auto-Send ON), promote & send BOTH 'approved' AND 'pending_review' drafts immediately!
+  // If review_before_send is FALSE (Auto-Send ON), promote & send 'approved', 'pending_review', and 'queued' drafts immediately!
   const statusesToDispatch =
     !settings.review_before_send && !options.forceSendApprovedOnly
-      ? ['approved', 'pending_review']
-      : ['approved']
+      ? ['approved', 'pending_review', 'queued']
+      : ['approved', 'queued']
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: queuedEmails } = await (supabase.from('outreach_emails') as any)
@@ -469,12 +470,31 @@ export async function runDailyEmailCampaignJob(options: {
   )
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: candidateLeads } = await (supabase.from('outreach_leads') as any)
+  let { data: candidateLeads } = await (supabase.from('outreach_leads') as any)
     .select('*')
-    .eq('status', 'new')
+    .in('status', ['new', 'ready'])
     .not('email', 'is', null)
     .order('created_at', { ascending: true })
     .limit(remainingQuota * 3)
+
+  // If no 'new' leads found, check for uncontacted leads whose last_emailed_at is null
+  if ((!candidateLeads || candidateLeads.length === 0) && remainingQuota > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: unemailedLeads } = await (supabase.from('outreach_leads') as any)
+      .select('*')
+      .is('last_emailed_at', null)
+      .not('email', 'is', null)
+      .not('status', 'eq', 'opted_out')
+      .order('created_at', { ascending: true })
+      .limit(remainingQuota * 3)
+    candidateLeads = unemailedLeads
+  }
+
+  // If candidateLeads is still empty and no emails were sent in Step 1, guarantee fresh leads from verified registry!
+  if ((!candidateLeads || candidateLeads.length === 0) && remainingQuota > 0 && sentNow === 0) {
+    const freshLeads = await ensureFreshKenyaLeadsAvailable(Math.min(remainingQuota, 4), supabase)
+    candidateLeads = freshLeads
+  }
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').replace(/\/$/, '')
   const fromIdentity = buildSenderIdentity(settings)

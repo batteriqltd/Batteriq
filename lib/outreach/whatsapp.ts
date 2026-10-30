@@ -426,6 +426,16 @@ export async function sendNextWhatsAppColdQueueMessage(options?: {
     return { sent: false, reason: 'campaign_paused' }
   }
 
+  const hasWhatsAppCloud = Boolean(
+    process.env.WHATSAPP_ACCESS_TOKEN?.trim() && process.env.WHATSAPP_PHONE_NUMBER_ID?.trim()
+  )
+  if (!hasWhatsAppCloud) {
+    return {
+      sent: false,
+      reason: 'whatsapp_cloud_credentials_pending_configuration',
+    }
+  }
+
   // 1 message per minute throttle enforcement:
   // Query most recent outbound timestamp in outreach_conversations
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

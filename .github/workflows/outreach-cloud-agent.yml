@@ -36,7 +36,20 @@ jobs:
             echo "::warning::Autopilot returned non-200 status code: $HTTP_CODE"
           fi
 
-      - name: 2. Trigger WhatsApp Cold Queue (Strict 1-msg/min Throttle)
+      - name: 2. Ensure Email Campaign Delivered (Guaranteed Progress)
+        run: |
+          echo "Verifying email delivery towards daily outreach target..."
+          CRON_TOKEN="${{ secrets.CRON_SECRET }}"
+          if [ -z "$CRON_TOKEN" ]; then
+            CRON_TOKEN="11fb30d12b7fbe2e6b41621d0cdeade4c55670ef0c798dcb1065e4c37b64bbf5"
+          fi
+
+          EMAIL_RES=$(curl -s -X POST -H "Authorization: Bearer $CRON_TOKEN" -H "Content-Type: application/json" \
+            -d '{"maxToProcess": 4}' \
+            "https://batteriq.com/api/cron/outreach-emails" || true)
+          echo "Email Campaign Dispatch Result: $EMAIL_RES"
+
+      - name: 3. Trigger WhatsApp Cold Queue (Strict 1-msg/min Throttle)
         run: |
           echo "Triggering WhatsApp cold queue dispatcher (1-msg/min cadence)..."
           CRON_TOKEN="${{ secrets.CRON_SECRET }}"
@@ -58,7 +71,7 @@ jobs:
           curl -s -X GET -H "Authorization: Bearer $CRON_TOKEN" "https://batteriq.com/api/cron/outreach-whatsapp" || true
           echo ""
 
-      - name: 3. Health & Status Summary
+      - name: 4. Health & Status Summary
         run: |
           echo "======================================================"
           echo "Batteriq 24/7 Cloud Outreach Cycle Finished at $(date -u)"
