@@ -490,16 +490,27 @@ export async function runDailyEmailCampaignJob(options: {
     candidateLeads = unemailedLeads
   }
 
-  // If candidateLeads is still empty and no emails were sent in Step 1, guarantee fresh leads from verified registry!
-  if ((!candidateLeads || candidateLeads.length === 0) && remainingQuota > 0 && sentNow === 0) {
+  // Filter candidates down to unqueued leads that are ready for outreach
+  let eligibleLeads: OutreachLead[] = ((candidateLeads ?? []) as OutreachLead[]).filter(
+    (lead) => {
+      const e = lead.email?.toLowerCase().trim()
+      return Boolean(e && !alreadyQueuedLeadIds.has(lead.id) && !alreadyQueuedEmails.has(e))
+    }
+  )
+
+  // If no eligible unqueued leads exist in DB and quota remains, immediately seed fresh verified Kenyan leads from the registry!
+  if (eligibleLeads.length === 0 && remainingQuota > 0) {
     const freshLeads = await ensureFreshKenyaLeadsAvailable(Math.min(remainingQuota, 4), supabase)
-    candidateLeads = freshLeads
+    eligibleLeads = freshLeads.filter((lead) => {
+      const e = lead.email?.toLowerCase().trim()
+      return Boolean(e && !alreadyQueuedLeadIds.has(lead.id) && !alreadyQueuedEmails.has(e))
+    })
   }
 
   const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').replace(/\/$/, '')
   const fromIdentity = buildSenderIdentity(settings)
 
-  for (const lead of (candidateLeads ?? []) as OutreachLead[]) {
+  for (const lead of eligibleLeads) {
     if (remainingQuota <= 0) break
     const toEmail = lead.email?.toLowerCase().trim()
     if (!toEmail) continue
