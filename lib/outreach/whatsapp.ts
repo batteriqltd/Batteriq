@@ -1,6 +1,13 @@
 import crypto from 'crypto'
+import {
+  checkInSuppressionSets,
+  getOutreachSettings,
+  loadSuppressionSets,
+} from './compliance'
 import { logOutreachEvent, withRetry } from './logger'
-import { normalizeKenyanPhone } from './validators'
+import { createOutreachAdminClient } from './supabase'
+import type { OutreachLead } from './types'
+import { isKenyanLandline, normalizeKenyanPhone } from './validators'
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000
 
@@ -394,4 +401,162 @@ export function parseWhatsAppWebhookPayload(payload: unknown): {
   }
 
   return { inboundMessages, statusUpdates }
+}
+
+/**
+ * Dispatches WhatsApp cold outreach strictly throttled to 1 message per minute.
+ * Checks the last outbound timestamp across conversations to enforce >= 60 seconds interval.
+ * Dispatches approved Meta WhatsApp template to the next candidate lead (e.g. laundromat, tech firm, school, property).
+ */
+export async function sendNextWhatsAppColdQueueMessage(options?: {
+  templateName?: string
+  fetchImpl?: typeof fetch
+}): Promise<{
+  sent: boolean
+  reason?: string
+  phoneE164?: string
+  businessName?: string
+  waMessageId?: string | null
+  waitSeconds?: number
+}> {
+  const supabase = createOutreachAdminClient()
+  const settings = await getOutreachSettings(supabase)
+
+  if (settings.campaign_paused) {
+    return { sent: false, reason: 'campaign_paused' }
+  }
+
+  // 1 message per minute throttle enforcement:
+  // Query most recent outbound timestamp in outreach_conversations
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: latestConv } = await (supabase.from('outreach_conversations') as any)
+    .select('last_outbound_at')
+    .not('last_outbound_at', 'is', null)
+    .order('last_outbound_at', { ascending: false })
+    .limit(1)
+
+  const lastOutboundStr = latestConv?.[0]?.last_outbound_at
+  if (lastOutboundStr) {
+    const elapsedMs = Date.now() - Date.parse(lastOutboundStr)
+    if (elapsedMs < 60_000) {
+      const waitSeconds = Math.ceil((60_000 - elapsedMs) / 1000)
+      return {
+        sent: false,
+        reason: 'rate_limited_1_per_minute',
+        waitSeconds,
+      }
+    }
+  }
+
+  // Check suppression
+  const suppressionSets = await loadSuppressionSets(supabase)
+
+  // Find candidate phone numbers that haven't been messaged yet
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: existingConvs } = await (supabase.from('outreach_conversations') as any)
+    .select('phone_e164')
+  const messagedPhones = new Set<string>(
+    (existingConvs ?? []).map((c: { phone_e164: string }) => c.phone_e164)
+  )
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: candidates } = await (supabase.from('outreach_leads') as any)
+    .select('*')
+    .in('status', ['new', 'contacted'])
+    .not('phone_e164', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(30)
+
+  let targetLead: OutreachLead | null = null
+  let targetPhone = ''
+
+  for (const lead of (candidates ?? []) as OutreachLead[]) {
+    const phone = lead.phone_e164?.trim()
+    if (!phone || isKenyanLandline(phone) || messagedPhones.has(phone)) continue
+    if (
+      checkInSuppressionSets(suppressionSets, {
+        email: lead.email,
+        phoneE164: phone,
+        domain: lead.domain,
+      })
+    ) {
+      continue
+    }
+    targetLead = lead
+    targetPhone = phone
+    break
+  }
+
+  if (!targetLead || !targetPhone) {
+    return { sent: false, reason: 'no_eligible_leads' }
+  }
+
+  const templateName =
+    options?.templateName?.trim() ||
+    settings.whatsapp_cold_template?.trim() ||
+    'batteriq_quote_ready'
+
+  const { waMessageId } = await sendWhatsAppCloudTemplate({
+    toPhoneE164: targetPhone,
+    templateName,
+    bodyParameters: [targetLead.business_name.slice(0, 60)],
+    fetchImpl: options?.fetchImpl,
+  })
+
+  const nowIso = new Date().toISOString()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: conv } = await (supabase.from('outreach_conversations') as any)
+    .upsert(
+      {
+        lead_id: targetLead.id,
+        phone_e164: targetPhone,
+        contact_name: targetLead.business_name,
+        mode: 'ai',
+        status: 'open',
+        opted_in: true,
+        last_outbound_at: nowIso,
+        last_message_preview: `[Template: ${templateName}]`,
+        unread_count: 0,
+      },
+      { onConflict: 'phone_e164' }
+    )
+    .select('id')
+    .single()
+
+  if (conv?.id) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from('outreach_messages') as any).insert({
+      conversation_id: conv.id,
+      direction: 'outbound',
+      sender_type: 'system_template',
+      body: `Hello ${targetLead.business_name}, we prepared your Batteriq commercial backup proposal.`,
+      wa_message_id: waMessageId,
+      status: 'sent',
+    })
+  }
+
+  // Update lead status
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase.from('outreach_leads') as any)
+    .update({
+      status: 'contacted',
+      human_contacted_at: nowIso,
+      updated_at: nowIso,
+    })
+    .eq('id', targetLead.id)
+
+  await logOutreachEvent({
+    module: 'whatsapp',
+    level: 'info',
+    event: 'whatsapp_queue_1_per_min_sent',
+    message: `1-msg/min WhatsApp sent to ${targetLead.business_name} (${targetPhone})`,
+    metadata: { phone: targetPhone, leadId: targetLead.id, templateName, waMessageId },
+  })
+
+  return {
+    sent: true,
+    phoneE164: targetPhone,
+    businessName: targetLead.business_name,
+    waMessageId,
+  }
 }

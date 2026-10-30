@@ -156,16 +156,16 @@ function buildFreeKenyanSearchQuery(category: LeadCategory, city: string, rawQue
     case 'hospital':
       return `(hospital OR clinic OR medical OR healthcare OR maternity) "${city}" Kenya "contact" "+254" (site:.org OR site:.co.ke OR site:.or.ke)`
     case 'school':
-      return `(school OR college OR university OR academy OR institute) "${city}" Kenya "contact" "+254" (site:.ac.ke OR site:.sc.ke OR site:.co.ke OR site:.org)`
+      return `(school OR "high school" OR "secondary school" OR "international school" OR college OR university OR academy OR institute) "${city}" Kenya "contact" "+254" (site:.ac.ke OR site:.sc.ke OR site:.co.ke OR site:.org)`
     case 'retail':
     case 'shop':
-      return `("baby shop" OR boutique OR pharmacy OR supermarket OR electronics OR hardware OR store) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.com) -jiji -jumia`
+      return `("baby shop" OR "laundry" OR "dry cleaners" OR "laundromat" OR boutique OR pharmacy OR supermarket OR electronics OR hardware OR store) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.com) -jiji -jumia`
     case 'hotel':
       return `(hotel OR resort OR lodge) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.com) -booking -tripadvisor -expedia`
     case 'organization':
-      return `(sacco OR organization OR association OR logistics OR corporate) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.or.ke OR site:.coop OR site:.com)`
+      return `("property management" OR "real estate" OR "tech firm" OR "startup" OR "fintech" OR sacco OR organization OR association OR logistics OR corporate) "${city}" Kenya "contact" "+254" (site:.co.ke OR site:.or.ke OR site:.coop OR site:.com OR site:.io)`
     default:
-      return `(organization OR school OR ngo OR parastatal OR shop) "${city}" Kenya "contact" "+254" -facebook -jiji`
+      return `(organization OR school OR ngo OR parastatal OR shop OR laundry OR "real estate") "${city}" Kenya "contact" "+254" -facebook -jiji`
   }
 }
 
@@ -419,6 +419,55 @@ const KENYA_VERIFIED_DOMAIN_REGISTRY: ReadonlyArray<{
   { name: 'Alps Hotel Nakuru', category: 'hotel', city: 'Nakuru', websiteUrl: 'https://www.thealpshotelnakuru.com' },
   { name: 'Boma Inn Eldoret', category: 'hotel', city: 'Eldoret', websiteUrl: 'https://www.theboma.co.ke/boma-inn-eldoret' },
   { name: 'Eka Hotel Eldoret', category: 'hotel', city: 'Eldoret', websiteUrl: 'https://www.ekahoteleldoret.com' },
+
+  // Private High Schools & International Schools
+  { name: 'Hillcrest International Schools', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.hillcrest.ac.ke' },
+  { name: "St. Christopher's International School", category: 'school', city: 'Nairobi', websiteUrl: 'https://www.scis.ac.ke' },
+  { name: 'Rosslyn Academy', category: 'school', city: 'Nairobi', websiteUrl: 'https://rosslynacademy.com' },
+  { name: 'The Banda School', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.bandaschool.com' },
+  { name: 'Crawford International School Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://www.crawfordinternationalschool.com' },
+  { name: 'Premier Academy Kenya', category: 'school', city: 'Nairobi', websiteUrl: 'https://premieracademy.ac.ke' },
+  { name: 'Strathmore School', category: 'school', city: 'Nairobi', websiteUrl: 'https://strathmore.ac.ke' },
+  { name: 'Nairobi International School', category: 'school', city: 'Nairobi', websiteUrl: 'https://nis.ac.ke' },
+  { name: 'Pembroke House School', category: 'school', city: 'Nakuru', websiteUrl: 'https://pembrokehouse.sc.ke' },
+  { name: 'Braeside High School', category: 'school', city: 'Nairobi', websiteUrl: 'https://braeside.braeburn.com' },
+
+  // Tech Firms & Startups (Small & Big)
+  { name: 'Cellulant Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://cellulant.io' },
+  { name: 'Twiga Foods', category: 'organization', city: 'Nairobi', websiteUrl: 'https://twigafoods.com' },
+  { name: 'Wasoko Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://wasoko.com' },
+  { name: 'Copia Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://copia.co.ke' },
+  { name: 'Tala Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://tala.co.ke' },
+  { name: 'Branch International Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://branch.co.ke' },
+  { name: 'Sendy Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://sendyit.com' },
+  { name: "Africa's Talking", category: 'organization', city: 'Nairobi', websiteUrl: 'https://africastalking.com' },
+  { name: 'Pezesha Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://pezesha.com' },
+  { name: 'BuuPass Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://buupass.com' },
+  { name: 'Moringa School', category: 'organization', city: 'Nairobi', websiteUrl: 'https://moringaschool.com' },
+
+  // Property Management, Rental & Real Estate Firms (Tsavo, etc.)
+  { name: 'Tsavo Real Estate', category: 'organization', city: 'Nairobi', websiteUrl: 'https://tsavo.ke' },
+  { name: 'HassConsult Real Estate', category: 'organization', city: 'Nairobi', websiteUrl: 'https://hassconsult.co.ke' },
+  { name: 'BuyRentKenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.buyrentkenya.com' },
+  { name: 'Villa Care Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://villacarekenya.com' },
+  { name: 'Dunhill Consulting', category: 'organization', city: 'Nairobi', websiteUrl: 'https://dunhillconsulting.com' },
+  { name: 'Optiven Real Estate', category: 'organization', city: 'Nairobi', websiteUrl: 'https://www.optiven.co.ke' },
+  { name: 'Cytonn Real Estate', category: 'organization', city: 'Nairobi', websiteUrl: 'https://cytonn.com' },
+  { name: 'Vaal Real Estate Kenya', category: 'organization', city: 'Nairobi', websiteUrl: 'https://vaal.co.ke' },
+
+  // Commercial Laundries, Dry Cleaners & Laundromats
+  { name: 'White Rose Drycleaners Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://whiterosedrycleaners.com' },
+  { name: 'Clean Green Dry Cleaners Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://cleangreen.co.ke' },
+  { name: 'Spik and Span Drycleaners', category: 'retail', city: 'Nairobi', websiteUrl: 'https://spikandspan.co.ke' },
+  { name: 'Laundromat Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://laundromat.co.ke' },
+  { name: 'Eco Wash Laundromat Nairobi', category: 'retail', city: 'Nairobi', websiteUrl: 'https://ecowash.co.ke' },
+  { name: 'Sparkle Dry Cleaners Kenya', category: 'retail', city: 'Nairobi', websiteUrl: 'https://sparkledrycleaners.co.ke' },
+
+  // Private Hospitals & Specialist Healthcare Networks
+  { name: 'Metropolitan Hospital Nairobi', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://metro-hospital.com' },
+  { name: 'Nairobi West Hospital', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://nairobiwesthospital.com' },
+  { name: 'Chiromo Hospital Group', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://chiromohospitalgroup.co.ke' },
+  { name: 'Ladnan Hospital', category: 'hospital', city: 'Nairobi', websiteUrl: 'https://ladnanhospital.com' },
 ]
 
 /**

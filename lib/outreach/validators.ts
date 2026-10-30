@@ -554,7 +554,11 @@ export function mapSearchCategoryToLeadCategory(raw: string): LeadCategory {
     lower.includes('academy') ||
     lower.includes('polytechnic') ||
     lower.includes('institute') ||
-    lower.includes('kindergarten')
+    lower.includes('kindergarten') ||
+    lower.includes('secondary') ||
+    lower.includes('high school') ||
+    lower.includes('international school') ||
+    lower.includes('prep school')
   ) {
     return 'school'
   }
@@ -578,7 +582,11 @@ export function mapSearchCategoryToLeadCategory(raw: string): LeadCategory {
     lower.includes('chemist') ||
     lower.includes('electronics') ||
     lower.includes('hardware') ||
-    lower.includes('mart')
+    lower.includes('mart') ||
+    lower.includes('laundry') ||
+    lower.includes('laundromat') ||
+    lower.includes('dry cleaner') ||
+    lower.includes('dryclean')
   ) {
     return 'retail'
   }
@@ -589,7 +597,18 @@ export function mapSearchCategoryToLeadCategory(raw: string): LeadCategory {
     lower.includes('association') ||
     lower.includes('agency') ||
     lower.includes('corporate') ||
-    lower.includes('logistics')
+    lower.includes('logistics') ||
+    lower.includes('tsavo') ||
+    lower.includes('property') ||
+    lower.includes('real estate') ||
+    lower.includes('rental') ||
+    lower.includes('apartment') ||
+    lower.includes('letting') ||
+    lower.includes('estate') ||
+    lower.includes('tech') ||
+    lower.includes('software') ||
+    lower.includes('startup') ||
+    lower.includes('fintech')
   ) {
     return 'organization'
   }

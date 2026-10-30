@@ -17,6 +17,7 @@ import {
   FileText,
   Globe,
   LayoutDashboard,
+  LayoutGrid,
   Loader2,
   LogOut,
   Mail,
@@ -135,11 +136,14 @@ const CATEGORY_META: Record<string, { label: string; badge: string }> = {
 }
 
 const SECTOR_QUICK_SCANS: Array<{ label: string; query: string; category: string }> = [
-  { label: 'Schools & Universities', query: 'schools colleges and universities in Nairobi Kenya', category: 'school' },
-  { label: 'NGOs & Foundations', query: 'NGOs foundations and humanitarian organizations in Kenya', category: 'ngo' },
-  { label: 'Gov & Parastatals (.go.ke)', query: 'government parastatals and state corporations in Kenya .go.ke', category: 'government' },
-  { label: 'Baby & Retail Shops', query: 'Nila Baby Shop baby stores boutiques and retail shops in Nairobi', category: 'retail' },
-  { label: 'Hospitals & Clinics', query: 'hospitals medical clinics and pharmacies in Kenya', category: 'hospital' },
+  { label: 'Private & Int. Schools', query: 'private high schools and international schools in Kenya', category: 'school' },
+  { label: 'Tech Firms & Startups', query: 'tech firms software companies fintech startups Nairobi Kenya', category: 'organization' },
+  { label: 'Properties & Rentals (Tsavo)', query: 'property management real estate rental apartments Nairobi Kenya Tsavo', category: 'organization' },
+  { label: 'Laundromats & Drycleaners', query: 'commercial laundry dry cleaners laundromats Nairobi Kenya', category: 'retail' },
+  { label: 'Private Hospitals & Clinics', query: 'private hospitals medical clinics maternity Nairobi Kenya', category: 'hospital' },
+  { label: 'Small & Big NGOs', query: 'NGOs humanitarian foundations charitable trusts Nairobi Kenya', category: 'ngo' },
+  { label: 'Gov & Parastatals (.go.ke)', query: 'government parastatals state corporations Kenya .go.ke', category: 'government' },
+  { label: 'Baby & Retail Shops', query: 'Nila Baby Shop baby stores boutiques retail shops Nairobi', category: 'retail' },
   { label: 'Hotels & Lodges', query: 'hotels resorts and conference lodges in Kenya', category: 'hotel' },
 ]
 
@@ -152,6 +156,7 @@ function formatCountdown(seconds: number): string {
 
 export function OutreachConsole({ standalone = false }: { standalone?: boolean }) {
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [sentFilter, setSentFilter] = useState<'sent' | 'failed' | 'all'>('sent')
   const [logFilter, setLogFilter] = useState<'all' | 'info' | 'warn' | 'error'>('all')
   const [sidePanel, setSidePanel] = useState<'activities' | 'online'>('activities')
@@ -901,12 +906,25 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
           <main className="flex-1 min-w-0 h-full flex flex-col">
             {/* STICKY HEADER — never moves while scrolling */}
             <header className="sticky top-0 z-40 flex-shrink-0 bg-white/95 backdrop-blur-md">
-              <div className="flex items-center justify-between gap-3 px-4 sm:px-6 lg:px-1 py-3.5 border-b border-[#ecebf6] lg:border-none">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-medium text-slate-400 tracking-normal">Primary</p>
-                  <h1 className="text-xl sm:text-2xl font-bold text-[#1e1c38] tracking-tight truncate">
-                    {activeNav.label}
-                  </h1>
+              <div className="flex items-center justify-between gap-2.5 px-3.5 sm:px-6 lg:px-1 py-3 border-b border-[#ecebf6] lg:border-none">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setMobileMenuOpen(true)}
+                    className="lg:hidden h-10 w-10 flex-shrink-0 rounded-2xl bg-[#f0eefa] text-[#6553df] flex items-center justify-center hover:bg-[#e4e2f7] active:scale-95 transition"
+                    aria-label="Open Navigation Menu"
+                    title="All Sections"
+                  >
+                    <LayoutGrid className="w-5 h-5" />
+                  </button>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold text-slate-400 tracking-normal uppercase truncate">
+                      Batteriq Outreach
+                    </p>
+                    <h1 className="text-lg sm:text-2xl font-bold text-[#1e1c38] tracking-tight truncate">
+                      {activeNav.label}
+                    </h1>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-3">
@@ -1210,6 +1228,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                           { key: 'autopilot', label: 'Full cycle', icon: Zap, run: () => triggerJob('/api/cron/outreach-autopilot', 'autopilot', { force: true }) },
                           { key: 'leads', label: 'Find clients', icon: Globe, run: () => triggerJob('/api/cron/outreach-leads', 'leads') },
                           { key: 'emails', label: 'Send emails', icon: Send, run: () => triggerJob('/api/cron/outreach-emails', 'emails') },
+                          { key: 'whatsapp', label: 'Send WA (1/min)', icon: MessageSquare, run: () => triggerJob('/api/cron/outreach-whatsapp', 'whatsapp') },
                           { key: 'followups', label: 'Follow-ups', icon: Repeat, run: () => triggerJob('/api/cron/outreach-followups', 'followups') },
                         ].map((a) => {
                           const Icon = a.icon
@@ -2044,9 +2063,95 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         </div>
       </div>
 
-      {/* ─── MOBILE BOTTOM NAV (Phones / Tablets) ─── */}
-      <nav className="lg:hidden fixed bottom-3 inset-x-3 z-50 rounded-[24px] bg-[#6553df] shadow-[0_16px_40px_-12px_rgba(106,87,220,0.45)] px-2 py-2">
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
+      {/* ─── MOBILE SLIDE-UP NAVIGATION DRAWER ─── */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden fixed inset-0 z-[70] flex items-end bg-[#0b1a3a]/50 backdrop-blur-sm">
+          <div
+            className="w-full max-h-[85vh] bg-white rounded-t-[32px] p-5 shadow-2xl flex flex-col overflow-hidden"
+            role="dialog"
+            aria-modal="true"
+          >
+            {/* Drawer Drag Handle & Close */}
+            <div className="flex items-center justify-between pb-3 border-b border-[#f0eef9]">
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 rounded-xl bg-[#6553df] text-white flex items-center justify-center font-bold text-xs shadow">
+                  BQ
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-[#1e1c38]">Batteriq Workspaces</h3>
+                  <p className="text-[10px] text-slate-400">Tap any section to switch instantly</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setMobileMenuOpen(false)}
+                className="h-9 w-9 rounded-full bg-[#f0eefa] text-slate-500 hover:text-[#1e1c38] flex items-center justify-center transition"
+                aria-label="Close menu"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* All 11 Sections Grid */}
+            <div className="flex-1 overflow-y-auto no-scrollbar py-3 grid grid-cols-2 gap-2">
+              {NAV.map((item) => {
+                const Icon = item.icon
+                const active = activeTab === item.id
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveTab(item.id)
+                      setMobileMenuOpen(false)
+                      contentScrollRef.current?.scrollTo({ top: 0 })
+                    }}
+                    className={`flex items-center justify-between gap-2 p-3 rounded-2xl border text-left transition ${
+                      active
+                        ? 'bg-[#6553df] text-white border-[#6553df] shadow-md font-bold'
+                        : 'bg-[#f7f8fd] border-[#ecebf6] text-[#1e1c38] hover:bg-[#f0eefa]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-[#6553df]'}`} />
+                      <span className="truncate text-xs font-semibold">{item.label}</span>
+                    </div>
+                    {item.badge ? (
+                      <span
+                        className={`min-w-[18px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center flex-shrink-0 ${
+                          active ? 'bg-white text-[#6553df]' : 'bg-[#6553df] text-white'
+                        }`}
+                      >
+                        {item.badge > 99 ? '99+' : item.badge}
+                      </span>
+                    ) : null}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Quick Actions Footer inside Drawer */}
+            <div className="pt-3 border-t border-[#f0eef9] flex items-center justify-between gap-2 text-xs">
+              <span className="text-[11px] text-slate-400">
+                Autopilot: {settings.campaign_paused ? 'Paused' : 'Active (every 30m)'}
+              </span>
+              {standalone && (
+                <button
+                  type="button"
+                  onClick={handleStandaloneSignOut}
+                  className="font-bold text-rose-600 hover:underline"
+                >
+                  Sign out
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── MOBILE BOTTOM FLOATING CAPSULE NAV (Phones / Tablets) ─── */}
+      <nav className="lg:hidden fixed bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-6 z-50 rounded-full bg-[#6553df]/95 backdrop-blur-xl border border-white/20 shadow-[0_16px_40px_rgba(101,83,223,0.45)] p-1.5">
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {NAV.map((item) => {
             const Icon = item.icon
             const active = activeTab === item.id
@@ -2058,14 +2163,20 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   setActiveTab(item.id)
                   contentScrollRef.current?.scrollTo({ top: 0 })
                 }}
-                className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-14 rounded-2xl px-2 transition ${
-                  active ? 'bg-white text-[#5745d0]' : 'text-white/80'
+                className={`relative flex-shrink-0 flex items-center gap-1.5 h-10 rounded-full px-3.5 transition-all ${
+                  active
+                    ? 'bg-white text-[#6553df] shadow-md font-bold scale-[1.02]'
+                    : 'text-white/85 hover:text-white hover:bg-white/10 font-semibold'
                 }`}
               >
-                <Icon className="w-[18px] h-[18px]" />
-                <span className="text-[9px] font-bold whitespace-nowrap">{item.label}</span>
+                <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-[#6553df]' : 'text-white/90'}`} />
+                <span className="text-xs whitespace-nowrap">{item.label}</span>
                 {item.badge ? (
-                  <span className="absolute top-1 right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#5844d8] text-white text-[8px] font-black flex items-center justify-center">
+                  <span
+                    className={`min-w-[16px] h-4 px-1 rounded-full text-[9px] font-black flex items-center justify-center ${
+                      active ? 'bg-[#6553df] text-white' : 'bg-white/25 text-white'
+                    }`}
+                  >
                     {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 ) : null}
