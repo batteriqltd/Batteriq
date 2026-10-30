@@ -806,7 +806,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         <div className="relative flex gap-5 h-full lg:rounded-[36px] bg-white lg:border lg:border-[#e5e9f4] lg:shadow-[0_20px_50px_rgba(70,60,150,0.08)] lg:p-5">
           {/* ─── STICKY LEFT NAVIGATION SIDEBAR (Laptop / Desktop) ─── */}
           <aside className="hidden lg:block w-[240px] flex-shrink-0 h-full">
-            <nav className="h-full rounded-[28px] bg-[#6553df] shadow-[0_14px_30px_rgba(101,83,223,0.32)] flex flex-col py-4 overflow-hidden">
+            <nav data-admin-nav="true" className="h-full rounded-[28px] bg-[#6553df] shadow-[0_14px_30px_rgba(101,83,223,0.32)] flex flex-col py-4 overflow-hidden">
               {/* Brand Header */}
               <div className="px-4 pb-1 flex items-center justify-between gap-2.5">
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -904,8 +904,11 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
 
           {/* ─── MAIN COLUMN ─── */}
           <main className="flex-1 min-w-0 h-full flex flex-col">
-            {/* STICKY HEADER — never moves while scrolling */}
-            <header className="sticky top-0 z-40 flex-shrink-0 bg-white/95 backdrop-blur-md">
+            {/* STICKY HEADER — never moves while scrolling, stays inside main column */}
+            <div
+              data-admin-header="true"
+              className="sticky top-0 z-20 flex-shrink-0 bg-white/95 backdrop-blur-md"
+            >
               <div className="flex items-center justify-between gap-2.5 px-3.5 sm:px-6 lg:px-1 py-3 border-b border-[#ecebf6] lg:border-none">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <button
@@ -1009,7 +1012,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   />
                 </div>
               </div>
-            </header>
+            </div>
 
             <div ref={contentScrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 sm:px-6 lg:px-1 pt-4 pb-28 lg:pb-4 space-y-5">
               {banner && (
@@ -2150,7 +2153,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
       )}
 
       {/* ─── MOBILE BOTTOM FLOATING CAPSULE NAV (Phones / Tablets) ─── */}
-      <nav className="lg:hidden fixed bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-6 z-50 rounded-full bg-[#6553df]/95 backdrop-blur-xl border border-white/20 shadow-[0_16px_40px_rgba(101,83,223,0.45)] p-1.5">
+      <nav data-admin-nav="true" className="lg:hidden fixed bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-6 z-50 rounded-full bg-[#6553df]/95 backdrop-blur-xl border border-white/20 shadow-[0_16px_40px_rgba(101,83,223,0.45)] p-1.5">
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
           {NAV.map((item) => {
             const Icon = item.icon

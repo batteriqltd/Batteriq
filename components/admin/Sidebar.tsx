@@ -116,7 +116,7 @@ export function AdminSidebar({ adminName = 'Batteriq Admin', adminRole = 'super_
 
       {/* Nav (scrollable, with a bottom fade so it's clear there's more) */}
       <div className="relative flex-1 min-h-0">
-      <nav className="absolute inset-0 px-4 py-6 space-y-1" style={{overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.25) transparent"}}>
+      <nav data-admin-nav="true" className="absolute inset-0 px-4 py-6 space-y-1" style={{overflowY:"auto",overflowX:"hidden",WebkitOverflowScrolling:"touch",scrollbarWidth:"thin",scrollbarColor:"rgba(255,255,255,0.25) transparent"}}>
         <p className="text-[10px] font-black uppercase tracking-[0.2em] px-3 mb-4" style={{ color: 'rgba(255,255,255,0.3)' }}>Management</p>
         {visibleNav.map(item => {
           const active = isActive(item)

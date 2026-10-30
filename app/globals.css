@@ -555,8 +555,8 @@ input, textarea, select {
   display: none;
 }
 
-/* Fixed header safety net */
-header, nav[role="navigation"] {
+/* Fixed header safety net - storefront only, never overrides admin console layout */
+header:not([data-admin-header]), nav[role="navigation"]:not([data-admin-nav]) {
   position: fixed !important;
   top: 0 !important;
   left: 0 !important;
@@ -586,8 +586,8 @@ header, nav[role="navigation"] {
   .product-grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
 }
 
-/* ── STICKY HEADER — stays fixed while content scrolls beneath ── */
-header,
+/* ── STICKY HEADER — stays fixed while content scrolls beneath (storefront only) ── */
+header:not([data-admin-header]),
 nav[data-header="true"] {
   position: fixed !important;
   top: 0 !important;
