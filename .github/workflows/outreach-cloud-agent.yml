@@ -19,7 +19,8 @@ jobs:
           echo "Triggering Batteriq 24/7 Autopilot Cycle at $(date -u)..."
           CRON_TOKEN="${{ secrets.CRON_SECRET }}"
           if [ -z "$CRON_TOKEN" ]; then
-            CRON_TOKEN="11fb30d12b7fbe2e6b41621d0cdeade4c55670ef0c798dcb1065e4c37b64bbf5"
+            echo "::error::CRON_SECRET repository secret is not set. Add it in Settings > Secrets and variables > Actions."
+            exit 1
           fi
 
           RESPONSE=$(curl -s -w "\n%{http_code}" -X GET \
@@ -41,7 +42,8 @@ jobs:
           echo "Verifying email delivery towards daily outreach target..."
           CRON_TOKEN="${{ secrets.CRON_SECRET }}"
           if [ -z "$CRON_TOKEN" ]; then
-            CRON_TOKEN="11fb30d12b7fbe2e6b41621d0cdeade4c55670ef0c798dcb1065e4c37b64bbf5"
+            echo "::error::CRON_SECRET repository secret is not set. Add it in Settings > Secrets and variables > Actions."
+            exit 1
           fi
 
           EMAIL_RES=$(curl -s -X POST -H "Authorization: Bearer $CRON_TOKEN" -H "Content-Type: application/json" \
@@ -54,7 +56,8 @@ jobs:
           echo "Triggering WhatsApp cold queue dispatcher (1-msg/min cadence)..."
           CRON_TOKEN="${{ secrets.CRON_SECRET }}"
           if [ -z "$CRON_TOKEN" ]; then
-            CRON_TOKEN="11fb30d12b7fbe2e6b41621d0cdeade4c55670ef0c798dcb1065e4c37b64bbf5"
+            echo "::error::CRON_SECRET repository secret is not set. Add it in Settings > Secrets and variables > Actions."
+            exit 1
           fi
 
           # Attempt 1
