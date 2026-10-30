@@ -56,11 +56,11 @@
     },
     {
       "path": "/api/cron/outreach-autopilot",
-      "schedule": "*/30 * * * *"
+      "schedule": "15 5 * * *"
     },
     {
       "path": "/api/cron/outreach-whatsapp",
-      "schedule": "* * * * *"
+      "schedule": "45 8 * * *"
     }
   ],
   "headers": [
