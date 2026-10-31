@@ -4,7 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   Activity,
   AlertTriangle,
-  Bell,
   Bot,
   Building2,
   CheckCircle,
@@ -45,8 +44,10 @@ import {
   DEFAULT_OUTREACH_SETTINGS,
   LEAD_CATEGORIES,
   LEAD_STATUSES,
+  NOTIFY_EVENTS,
   type LeadCategory,
   type LeadStatus,
+  type NotifyEvent,
   type OutreachCallLog,
   type OutreachEmail,
   type OutreachLead,
@@ -54,7 +55,8 @@ import {
   type OutreachSettings,
 } from '@/lib/outreach/types'
 import { WhatsAppInboxTab } from './WhatsAppInboxTab'
-import { CommandPalette, type CommandItem, ThemeToggle, useConsoleTheme } from './ui'
+import { CommandPalette, type CommandItem, InstallPrompt, ThemeToggle, useConsoleTheme } from './ui'
+import { NotificationCenter } from './ui/NotificationCenter'
 
 type TabKey =
   | 'overview'
@@ -159,6 +161,14 @@ const SECTOR_QUICK_SCANS: Array<{ label: string; query: string; category: string
   { label: 'Hotels & Lodges', query: 'hotels resorts and conference lodges in Kenya', category: 'hotel' },
 ]
 
+const NOTIFY_EVENT_LABELS: Record<NotifyEvent, string> = {
+  whatsapp_message: 'New WhatsApp messages',
+  client_reply: 'Client replies to a cold email',
+  hot_lead: 'A lead turns hot',
+  batch_failed: 'A send batch has failures',
+  autopilot_error: 'Autopilot hits an error',
+}
+
 function formatCountdown(seconds: number): string {
   const safe = Math.max(0, Math.floor(seconds))
   const m = String(Math.floor(safe / 60)).padStart(2, '0')
@@ -258,6 +268,28 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   }
   const { theme, toggle: toggleTheme } = useConsoleTheme()
 
+  // Per-device notification sound preference — synced to the shared service
+  // worker (via postMessage) so it's honored for both live push and catch-up.
+  const [soundEnabled, setSoundEnabled] = useState(true)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('bq-console-sound')
+      if (saved === '0') setSoundEnabled(false)
+    } catch {
+      /* ignore */
+    }
+  }, [])
+  useEffect(() => {
+    try {
+      localStorage.setItem('bq-console-sound', soundEnabled ? '1' : '0')
+    } catch {
+      /* ignore */
+    }
+    navigator.serviceWorker?.ready
+      .then((reg) => reg.active?.postMessage({ type: 'BQ_SET_SOUND', enabled: soundEnabled }))
+      .catch(() => {})
+  }, [soundEnabled])
+
   const fetchOverview = useCallback(async () => {
     try {
       const qs = new URLSearchParams()
@@ -292,6 +324,23 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   useEffect(() => {
     contentScrollRef.current?.scrollTo({ top: 0 })
   }, [activeTab])
+
+  // Keep the URL hash in sync with the active tab (purely additive — no
+  // existing onClick handler needs to change) so push-notification and
+  // manifest-shortcut links like /outreach-admin#whatsapp land on the right
+  // tab, and so a deep link into this app opens directly on that section.
+  useEffect(() => {
+    if (typeof window !== 'undefined') window.history.replaceState(null, '', `#${activeTab}`)
+  }, [activeTab])
+  useEffect(() => {
+    const hash = window.location.hash.slice(1)
+    const validTabs: TabKey[] = [
+      'overview', 'finder', 'leads', 'review', 'sent', 'quotes',
+      'followups', 'whatsapp', 'calling', 'logs', 'settings',
+    ]
+    if ((validTabs as string[]).includes(hash)) setActiveTab(hash as TabKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const triggerJob = useCallback(
     async (
@@ -911,15 +960,15 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   )}
                 </div>
                 {!sidebarCollapsed && (
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('logs')}
-                  title="Notifications & Activity"
-                  aria-label="Notifications"
-                  className="h-8 w-8 rounded-xl bg-white/15 hover:bg-white/25 flex items-center justify-center text-white transition flex-shrink-0"
-                >
-                  <Bell className="w-4 h-4" />
-                </button>
+                  <NotificationCenter
+                    onNavigate={(hash) => {
+                      const validTabs: TabKey[] = [
+                        'overview', 'finder', 'leads', 'review', 'sent', 'quotes',
+                        'followups', 'whatsapp', 'calling', 'logs', 'settings',
+                      ]
+                      if ((validTabs as string[]).includes(hash)) setActiveTab(hash as TabKey)
+                    }}
+                  />
                 )}
               </div>
 
@@ -1045,6 +1094,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 <div className="flex items-center gap-2 sm:gap-3">
                   <CommandPalette items={paletteItems} />
 
+                  <InstallPrompt />
+
                   <div className="hidden sm:block">
                     <ThemeToggle theme={theme} onToggle={toggleTheme} />
                   </div>
@@ -1070,6 +1121,19 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       {settings.campaign_paused ? 'Paused' : formatCountdown(countdownSec)}
                     </span>
                   </button>
+
+                  <div className="lg:hidden">
+                    <NotificationCenter
+                      variant="light"
+                      onNavigate={(hash) => {
+                        const validTabs: TabKey[] = [
+                          'overview', 'finder', 'leads', 'review', 'sent', 'quotes',
+                          'followups', 'whatsapp', 'calling', 'logs', 'settings',
+                        ]
+                        if ((validTabs as string[]).includes(hash)) setActiveTab(hash as TabKey)
+                      }}
+                    />
+                  </div>
 
                   <button
                     type="button"
@@ -2073,6 +2137,80 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       Save settings
                     </button>
                   </div>
+
+                  <div className={`${cardCls} p-5 space-y-1 xl:col-span-2`}>
+                    <h3 className="text-sm font-extrabold mb-1">Notifications</h3>
+                    <p className="text-[11px] text-slate-400 mb-3">
+                      Workspace-wide for now — everyone with the app installed gets the same alerts.
+                    </p>
+                    {NOTIFY_EVENTS.map((ev) => (
+                      <div key={ev} className="flex items-center justify-between gap-3 py-3 border-b border-[#eff6ff] last:border-none">
+                        <span className="text-[13px] font-semibold flex items-center gap-2">
+                          {NOTIFY_EVENT_LABELS[ev]}
+                          {ev === 'client_reply' && (
+                            <span className="px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-400 text-[9px] font-bold uppercase">
+                              Not wired yet
+                            </span>
+                          )}
+                        </span>
+                        <Switch
+                          on={(settings.notify_events || []).includes(ev)}
+                          onClick={() => {
+                            const current = settings.notify_events || []
+                            const next = current.includes(ev)
+                              ? current.filter((e) => e !== ev)
+                              : [...current, ev]
+                            setSettings({ ...settings, notify_events: next })
+                          }}
+                        />
+                      </div>
+                    ))}
+                    <div className="grid grid-cols-2 gap-3 pt-3">
+                      <label className="space-y-1">
+                        <span className="text-[11px] font-bold text-slate-500">Quiet hours start</span>
+                        <input
+                          type="time"
+                          value={settings.quiet_hours_start || ''}
+                          onChange={(e) => setSettings({ ...settings, quiet_hours_start: e.target.value || null })}
+                          className={`${inputCls} w-full`}
+                        />
+                      </label>
+                      <label className="space-y-1">
+                        <span className="text-[11px] font-bold text-slate-500">Quiet hours end</span>
+                        <input
+                          type="time"
+                          value={settings.quiet_hours_end || ''}
+                          onChange={(e) => setSettings({ ...settings, quiet_hours_end: e.target.value || null })}
+                          className={`${inputCls} w-full`}
+                        />
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-slate-400 pt-1">
+                      Leave both blank for no quiet hours. Times are Africa/Nairobi.
+                    </p>
+                    <div className="flex items-center justify-between gap-3 py-3 mt-2 border-t border-[#eff6ff]">
+                      <span className="text-[13px] font-semibold">Notification sound (this device)</span>
+                      <Switch on={soundEnabled} onClick={() => setSoundEnabled((v) => !v)} />
+                    </div>
+                    <button
+                      type="button"
+                      disabled={busyAction === 'settings'}
+                      onClick={() =>
+                        patchSettings(
+                          {
+                            notify_events: settings.notify_events,
+                            quiet_hours_start: settings.quiet_hours_start,
+                            quiet_hours_end: settings.quiet_hours_end,
+                          },
+                          'Notification settings saved.'
+                        )
+                      }
+                      className={`${primaryBtn} w-full h-11`}
+                    >
+                      {busyAction === 'settings' ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                      Save notification settings
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -2252,6 +2390,15 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   </button>
                 )
               })}
+              <a
+                href="/outreach-admin/get-app"
+                className="flex items-center justify-between gap-2 p-3 rounded-2xl border text-left transition bg-[#f8faff] border-[#e3e9f5] text-[#00004d] hover:bg-[#eff6ff]"
+              >
+                <div className="flex items-center gap-2 min-w-0">
+                  <Download className="w-4 h-4 flex-shrink-0 text-[#2563eb]" />
+                  <span className="truncate text-xs font-semibold">Get the app</span>
+                </div>
+              </a>
             </div>
 
             {/* Quick Actions Footer inside Drawer */}

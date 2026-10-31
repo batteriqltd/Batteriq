@@ -9,6 +9,7 @@ import { runDailyEmailCampaignJob } from '@/lib/outreach/email-campaign'
 import { runWebsiteFollowupsJob } from '@/lib/outreach/followups'
 import { runLeadFinderJob } from '@/lib/outreach/lead-finder'
 import { logOutreachEvent, sleep } from '@/lib/outreach/logger'
+import { sendOutreachNotification } from '@/lib/outreach/notifications'
 import { createOutreachAdminClient } from '@/lib/outreach/supabase'
 import type { OutreachLead } from '@/lib/outreach/types'
 import { isKenyanLandline } from '@/lib/outreach/validators'
@@ -211,10 +212,13 @@ export async function GET(req: Request) {
     const result = await executeAutopilotCycle({ actor: auth.actor || 'cron' })
     return NextResponse.json({ success: true, ...result })
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Autopilot cycle failed' },
-      { status: 500 }
-    )
+    const message = err instanceof Error ? err.message : 'Autopilot cycle failed'
+    sendOutreachNotification({
+      event: 'autopilot_error',
+      body: message.slice(0, 160),
+      url: '/outreach-admin#logs',
+    }).catch(() => {})
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -236,9 +240,12 @@ export async function POST(req: Request) {
     })
     return NextResponse.json({ success: true, ...result })
   } catch (err) {
-    return NextResponse.json(
-      { error: err instanceof Error ? err.message : 'Autopilot cycle failed' },
-      { status: 500 }
-    )
+    const message = err instanceof Error ? err.message : 'Autopilot cycle failed'
+    sendOutreachNotification({
+      event: 'autopilot_error',
+      body: message.slice(0, 160),
+      url: '/outreach-admin#logs',
+    }).catch(() => {})
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

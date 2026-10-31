@@ -46,6 +46,16 @@ export type OutreachModule =
   | 'autopilot'
   | 'proforma'
 
+export const NOTIFY_EVENTS = [
+  'whatsapp_message',
+  'client_reply',
+  'hot_lead',
+  'batch_failed',
+  'autopilot_error',
+] as const
+
+export type NotifyEvent = (typeof NOTIFY_EVENTS)[number]
+
 export interface OutreachSettings {
   id: string
   campaign_paused: boolean
@@ -68,6 +78,14 @@ export interface OutreachSettings {
   auto_cold_whatsapp: boolean
   last_autopilot_at: string | null
   updated_at: string
+  /** Workspace-wide notification settings — there's no per-user settings
+   *  infrastructure anywhere else in the app yet, so these follow the same
+   *  shared-settings pattern as everything else here rather than introducing
+   *  a new per-user table for this alone. */
+  notify_events: NotifyEvent[]
+  /** 24h "HH:MM" in Africa/Nairobi, or null for no quiet hours. */
+  quiet_hours_start: string | null
+  quiet_hours_end: string | null
 }
 
 export interface OutreachLead {
@@ -232,4 +250,7 @@ export const DEFAULT_OUTREACH_SETTINGS: OutreachSettings = {
   auto_cold_whatsapp: false,
   last_autopilot_at: null,
   updated_at: new Date(0).toISOString(),
+  notify_events: [...NOTIFY_EVENTS],
+  quiet_hours_start: null,
+  quiet_hours_end: null,
 }

@@ -4,10 +4,11 @@
  * installability (registered SW with a fetch handler + linked manifest).
  */
 
-const SW_VERSION = 'batteriq-admin-v2'
+const SW_VERSION = 'batteriq-admin-v3'
 const CURSOR_DB = 'batteriq-admin'
 const CURSOR_STORE = 'meta'
 const CURSOR_KEY = 'alert-cursor'
+const SOUND_KEY = 'sound-enabled'
 
 // Show at most this many individual notifications in one catch-up burst; the
 // remainder collapse into a single summary so reconnecting after a long gap
@@ -72,6 +73,38 @@ async function writeCursor(value) {
   }
 }
 
+// Sound-on/off is per-device, set from the page (BQ_SET_SOUND) and read back
+// here so both live push and catch-up notifications honor it. Defaults to
+// enabled (true) when nothing has been stored yet, matching Notification's
+// own default of not being silent.
+async function readSoundEnabled() {
+  try {
+    const db = await openDb()
+    return await new Promise((resolve) => {
+      const tx = db.transaction(CURSOR_STORE, 'readonly')
+      const req = tx.objectStore(CURSOR_STORE).get(SOUND_KEY)
+      req.onsuccess = () => resolve(req.result !== false)
+      req.onerror = () => resolve(true)
+    })
+  } catch (e) {
+    return true
+  }
+}
+
+async function writeSoundEnabled(enabled) {
+  try {
+    const db = await openDb()
+    await new Promise((resolve) => {
+      const tx = db.transaction(CURSOR_STORE, 'readwrite')
+      tx.objectStore(CURSOR_STORE).put(Boolean(enabled), SOUND_KEY)
+      tx.oncomplete = () => resolve()
+      tx.onerror = () => resolve()
+    })
+  } catch (e) {
+    /* ignore */
+  }
+}
+
 // ── Push received ─────────────────────────────────────────────
 self.addEventListener('push', (event) => {
   let payload = {}
@@ -83,67 +116,88 @@ self.addEventListener('push', (event) => {
 
   const kind = payload.tag || 'batteriq'
   const title = payload.title || 'Batteriq Admin'
-  const options = {
-    body: payload.body || '',
-    icon: payload.icon || '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
-    // A per-record tag so several orders stack as separate notifications
-    // instead of silently replacing one another.
-    tag: payload.id ? `${kind}:${payload.id}` : kind,
-    // Re-alert even if a notification with the same tag is already showing
-    renotify: true,
-    // Buzz the phone even on silent — [vibrate, pause, vibrate] in ms
-    vibrate: payload.vibrate || [200, 100, 200],
-    // Keep order/payment alerts on screen until tapped
-    requireInteraction: kind === 'order' || kind === 'payment',
-    timestamp: Date.now(),
-    data: { url: payload.url || '/admin' },
-  }
 
   event.waitUntil((async () => {
-    await self.registration.showNotification(title, options)
+    const soundEnabled = await readSoundEnabled()
+    await self.registration.showNotification(title, {
+      body: payload.body || '',
+      icon: payload.icon || '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      // A per-record tag so several orders stack as separate notifications
+      // instead of silently replacing one another.
+      tag: payload.id ? `${kind}:${payload.id}` : kind,
+      // Re-alert even if a notification with the same tag is already showing
+      renotify: true,
+      // Buzz the phone even on silent — [vibrate, pause, vibrate] in ms
+      vibrate: payload.vibrate || [200, 100, 200],
+      silent: !soundEnabled,
+      // Keep order/payment/hot-lead alerts on screen until tapped
+      requireInteraction: kind === 'order' || kind === 'payment' || kind === 'hot_lead',
+      timestamp: Date.now(),
+      data: { url: payload.url || '/admin' },
+    })
     // Anything at or before this push has now been surfaced, so a later
     // catch-up must not show it a second time.
     if (payload.sentAt) await writeCursor(payload.sentAt)
   })())
 })
 
+// Notification title per alert kind — covers both the main-site admin feed
+// and the outreach console's feed, which share this one catch-up pipeline.
+const CATCHUP_TITLES = {
+  order: '🛒 New Order Received',
+  message: '💬 New Message',
+  whatsapp_message: '💬 New WhatsApp Message',
+  hot_lead: '🔥 Hot Lead',
+  batch_failed: '⚠️ Outreach Batch Had Failures',
+  autopilot_error: '⚠️ Autopilot Error',
+}
+
+async function fetchAlertFeed(path, since) {
+  try {
+    const res = await fetch(
+      `${path}${since ? `?since=${encodeURIComponent(since)}` : ''}`,
+      { credentials: 'include', cache: 'no-store' }
+    )
+    if (!res.ok) return null
+    return await res.json()
+  } catch (e) {
+    return null
+  }
+}
+
 // ── Catch-up: surface anything that landed while we were unreachable ──
 async function catchUp() {
   const since = await readCursor()
 
-  let res
-  try {
-    res = await fetch(
-      `/api/admin/alerts${since ? `?since=${encodeURIComponent(since)}` : ''}`,
-      { credentials: 'include', cache: 'no-store' }
-    )
-  } catch (e) {
-    // Still offline — Background Sync will retry this automatically.
-    throw e
+  // Both feeds share one cursor — same timestamp semantics, independent
+  // sources. A feed that's unreachable this round (not just empty) returns
+  // null and is skipped without advancing past what it hasn't shown yet.
+  const [adminData, outreachData] = await Promise.all([
+    fetchAlertFeed('/api/admin/alerts', since),
+    fetchAlertFeed('/api/admin/outreach/alerts', since),
+  ])
+
+  if (!adminData && !outreachData) {
+    // Neither reachable — likely still offline. Let Background Sync retry.
+    throw new Error('catch-up feeds unreachable')
   }
 
-  // Signed out or server trouble: leave the cursor untouched so nothing is skipped.
-  if (!res.ok) return
-
-  let data
-  try {
-    data = await res.json()
-  } catch (e) {
-    return
-  }
-
-  const alerts = Array.isArray(data.alerts) ? data.alerts : []
+  const alerts = [
+    ...(Array.isArray(adminData && adminData.alerts) ? adminData.alerts : []),
+    ...(Array.isArray(outreachData && outreachData.alerts) ? outreachData.alerts : []),
+  ]
 
   // Don't re-announce what is already sitting in the tray.
   const existing = await self.registration.getNotifications()
   const shown = new Set(existing.map((n) => n.tag))
   const fresh = alerts.filter((a) => !shown.has(`${a.kind}:${a.id}`))
 
+  const soundEnabled = await readSoundEnabled()
   const head = fresh.slice(0, MAX_CATCHUP_NOTIFICATIONS)
   for (const a of head) {
     await self.registration.showNotification(
-      a.kind === 'order' ? '🛒 New Order Received' : '💬 New Message',
+      CATCHUP_TITLES[a.kind] || 'Batteriq',
       {
         body: a.subtitle || '',
         icon: '/icons/icon-192.png',
@@ -151,7 +205,8 @@ async function catchUp() {
         tag: `${a.kind}:${a.id}`,
         renotify: true,
         vibrate: [200, 100, 200],
-        requireInteraction: a.kind === 'order',
+        silent: !soundEnabled,
+        requireInteraction: a.kind === 'order' || a.kind === 'hot_lead',
         timestamp: new Date(a.createdAt).getTime() || Date.now(),
         data: { url: a.url || '/admin' },
       }
@@ -160,7 +215,7 @@ async function catchUp() {
 
   const overflow = fresh.length - head.length
   if (overflow > 0) {
-    await self.registration.showNotification('Batteriq Admin', {
+    await self.registration.showNotification('Batteriq', {
       body: `+${overflow} more new ${overflow === 1 ? 'alert' : 'alerts'} while you were away`,
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png',
@@ -170,7 +225,10 @@ async function catchUp() {
     })
   }
 
-  if (data.serverTime) await writeCursor(data.serverTime)
+  // Advance only to what BOTH reachable feeds have confirmed covering, so a
+  // feed that errored this round still gets its unseen window next time.
+  const serverTimes = [adminData && adminData.serverTime, outreachData && outreachData.serverTime].filter(Boolean)
+  if (serverTimes.length) await writeCursor(serverTimes.sort()[0])
 }
 
 // Fires when connectivity returns, even with every tab closed (Chromium).
@@ -195,6 +253,9 @@ self.addEventListener('message', (event) => {
   }
   if (event.data && event.data.type === 'BQ_SET_CURSOR' && event.data.cursor) {
     event.waitUntil(writeCursor(event.data.cursor))
+  }
+  if (event.data && event.data.type === 'BQ_SET_SOUND') {
+    event.waitUntil(writeSoundEnabled(event.data.enabled))
   }
 })
 

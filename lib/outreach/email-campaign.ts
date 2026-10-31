@@ -12,6 +12,7 @@ import {
 } from './compliance'
 import { logOutreachEvent, sleep, withRetry } from './logger'
 import { ensureFreshKenyaLeadsAvailable } from './lead-finder'
+import { sendOutreachNotification } from './notifications'
 import {
   buildProformaEmailCardHtml,
   buildProformaEmailTextBlock,
@@ -703,6 +704,14 @@ export async function runDailyEmailCampaignJob(options: {
       autoAttachProforma,
     },
   })
+
+  if (failedCount > 0) {
+    sendOutreachNotification({
+      event: 'batch_failed',
+      body: `${failedCount} email${failedCount === 1 ? '' : 's'} failed to send this run (${sentNow} sent OK).`,
+      url: '/outreach-admin#sent',
+    }).catch(() => {})
+  }
 
   return {
     paused: settings.campaign_paused,

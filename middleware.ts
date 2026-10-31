@@ -119,6 +119,12 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next()
     }
 
+    // Public install page — shared with staff before they have credentials,
+    // so it deliberately sits outside the session check below.
+    if (pathname === '/outreach-admin/get-app') {
+      return NextResponse.next()
+    }
+
     const outreachSession = request.cookies.get(SESSION_COOKIE)?.value
     if (!outreachSession) {
       const loginUrl = new URL('/outreach-admin/login', request.url)

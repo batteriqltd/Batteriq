@@ -4,6 +4,7 @@ import { isSuppressed, recordPermanentOptOut } from '@/lib/outreach/compliance'
 import { createOutreachAdminClient } from '@/lib/outreach/supabase'
 import { LEAD_CATEGORIES, LEAD_STATUSES, type LeadCategory, type LeadStatus } from '@/lib/outreach/types'
 import { extractDomain, normalizeKenyanPhone } from '@/lib/outreach/validators'
+import { sendOutreachNotification } from '@/lib/outreach/notifications'
 
 export const dynamic = 'force-dynamic'
 
@@ -134,6 +135,16 @@ export async function PATCH(req: NextRequest) {
       updates.human_contacted_at = new Date().toISOString()
     }
 
+    let previousStatus: string | null = null
+    if (updates.status === 'hot') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: before } = await (supabase.from('outreach_leads') as any)
+        .select('status')
+        .eq('id', leadId)
+        .maybeSingle()
+      previousStatus = before?.status ?? null
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from('outreach_leads') as any)
       .update(updates)
@@ -143,6 +154,15 @@ export async function PATCH(req: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    if (updates.status === 'hot' && previousStatus !== 'hot') {
+      sendOutreachNotification({
+        event: 'hot_lead',
+        body: `${data.business_name} just turned into a hot lead.`,
+        url: '/outreach-admin#leads',
+        id: leadId,
+      }).catch(() => {})
     }
 
     return NextResponse.json({ success: true, lead: data })

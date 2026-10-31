@@ -4,6 +4,7 @@ import { handleAiTakeoverForInboundMessage } from '@/lib/outreach/ai-takeover'
 import { detectDeterministicOptOut } from '@/lib/outreach/claude'
 import { recordConsent, recordPermanentOptOut } from '@/lib/outreach/compliance'
 import { logOutreachEvent } from '@/lib/outreach/logger'
+import { sendOutreachNotification } from '@/lib/outreach/notifications'
 import { createOutreachAdminClient } from '@/lib/outreach/supabase'
 import type { OutreachConversation, OutreachLead } from '@/lib/outreach/types'
 import {
@@ -194,6 +195,13 @@ export async function POST(req: NextRequest) {
         wa_message_id: msg.waMessageId,
         delivery_status: 'received',
       })
+
+      sendOutreachNotification({
+        event: 'whatsapp_message',
+        body: `${conversation.contact_name || lead?.business_name || msg.fromPhoneE164}: ${msg.body.slice(0, 120)}`,
+        url: '/outreach-admin#whatsapp',
+        id: conversation.id,
+      }).catch(() => {})
 
       // Always honor explicit STOP / UNSUBSCRIBE even when conversation is in Human Mode!
       if (detectDeterministicOptOut(msg.body)) {

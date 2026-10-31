@@ -4,6 +4,7 @@ import { getOutreachSettings } from '@/lib/outreach/compliance'
 import { runDailyEmailCampaignJob } from '@/lib/outreach/email-campaign'
 import { logOutreachEvent } from '@/lib/outreach/logger'
 import { createOutreachAdminClient } from '@/lib/outreach/supabase'
+import { NOTIFY_EVENTS } from '@/lib/outreach/types'
 
 export const dynamic = 'force-dynamic'
 
@@ -84,6 +85,18 @@ export async function PATCH(req: NextRequest) {
     }
     if (typeof body.calling_enabled === 'boolean') {
       updates.calling_enabled = body.calling_enabled
+    }
+    if (Array.isArray(body.notify_events)) {
+      const events = body.notify_events.filter((e: unknown) =>
+        (NOTIFY_EVENTS as readonly string[]).includes(String(e))
+      )
+      updates.notify_events = events
+    }
+    if (body.quiet_hours_start === null || /^([01]\d|2[0-3]):[0-5]\d$/.test(body.quiet_hours_start)) {
+      updates.quiet_hours_start = body.quiet_hours_start ?? null
+    }
+    if (body.quiet_hours_end === null || /^([01]\d|2[0-3]):[0-5]\d$/.test(body.quiet_hours_end)) {
+      updates.quiet_hours_end = body.quiet_hours_end ?? null
     }
 
     const supabase = createOutreachAdminClient()
