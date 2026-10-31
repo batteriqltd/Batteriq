@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import QRCode from 'qrcode'
 import { Download, MoreVertical, Plus, Share } from 'lucide-react'
+import { GetAppHero } from './GetAppHero'
 
 export const metadata: Metadata = {
   title: 'Get the App',
@@ -35,22 +36,11 @@ export default async function GetAppPage() {
           </p>
         </div>
 
-        <div className="rounded-[28px] bg-white border border-[#e3e9f5] shadow-[0_20px_50px_-20px_rgba(0,0,77,0.15)] p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-8 mb-10">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qrDataUrl} alt="QR code to open the BatterIQ Console sign-in page" width={200} height={200} className="rounded-2xl border border-[#e3e9f5] flex-shrink-0" />
-          <div className="min-w-0">
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-1">Or open directly</p>
-            <a href={installUrl} className="text-xl sm:text-2xl font-bold text-[#2563eb] break-words hover:underline">
-              {installUrl.replace('https://', '')}
-            </a>
-            <p className="mt-3 text-[13px] text-slate-500">
-              You&apos;ll need your BatterIQ login to get in — ask your manager if you don&apos;t have one yet.
-            </p>
-          </div>
-        </div>
+        <GetAppHero qrDataUrl={qrDataUrl} installUrl={installUrl} />
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           <DeviceCard
+            id="ios-steps"
             title="iPhone / iPad"
             subtitle="Safari only — Chrome on iOS can't install apps"
             steps={[
@@ -85,18 +75,20 @@ export default async function GetAppPage() {
 }
 
 function DeviceCard({
+  id,
   title,
   subtitle,
   steps,
   note,
 }: {
+  id?: string
   title: string
   subtitle: string
   steps: Array<{ icon: React.ReactNode; text: string }>
   note?: string
 }) {
   return (
-    <div className="rounded-[24px] bg-white border border-[#e3e9f5] p-5">
+    <div id={id} className="rounded-[24px] bg-white border border-[#e3e9f5] p-5 scroll-mt-6">
       <h2 className="text-base font-bold">{title}</h2>
       <p className="text-[12px] text-slate-400 mb-4">{subtitle}</p>
       <div className="space-y-3.5">
