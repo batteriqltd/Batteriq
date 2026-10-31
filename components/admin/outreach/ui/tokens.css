@@ -1,0 +1,136 @@
+/*
+ * BatterIQ Console — design tokens.
+ * Scoped to [data-bq-console] so nothing here leaks into the storefront or
+ * the legacy /admin dashboard. Light values live on the selector itself;
+ * dark values override under prefers-color-scheme (system) and
+ * [data-theme="dark"] (explicit user choice always wins).
+ */
+
+[data-bq-console] {
+  /* ── Color — brand (unchanged navy/blue, matches the rest of batteriq.com) ── */
+  --bq-navy: #00004d;
+  --bq-navy-strong: #000033;
+  --bq-blue: #2563eb;
+  --bq-blue-dim: #1d4ed8;
+  --bq-blue-light: #eff6ff;
+  --bq-amber: #b45309;
+  --bq-amber-light: #fffbeb;
+  --bq-success: #059669;
+  --bq-success-light: #ecfdf5;
+  --bq-warning: #d97706;
+  --bq-warning-light: #fffbeb;
+  --bq-danger: #dc2626;
+  --bq-danger-light: #fef2f2;
+
+  /* ── Color — surfaces & text (light) ── */
+  --bq-bg: #f3f6fc;
+  --bq-surface: #ffffff;
+  --bq-surface-raised: #ffffff;
+  --bq-surface-sunken: #f8faff;
+  --bq-border: #e3e9f5;
+  --bq-border-strong: #c9d6ee;
+  --bq-text-primary: #00004d;
+  --bq-text-secondary: #475569;
+  --bq-text-tertiary: #94a3b8;
+  --bq-text-on-accent: #ffffff;
+  --bq-overlay: rgba(0, 0, 30, 0.45);
+
+  /* ── Spacing — 4/8 grid ── */
+  --bq-space-1: 4px;
+  --bq-space-2: 8px;
+  --bq-space-3: 12px;
+  --bq-space-4: 16px;
+  --bq-space-5: 20px;
+  --bq-space-6: 24px;
+  --bq-space-8: 32px;
+  --bq-space-10: 40px;
+  --bq-space-12: 48px;
+  --bq-space-16: 64px;
+
+  /* ── Radius ── */
+  --bq-radius-sm: 8px;
+  --bq-radius-md: 12px;
+  --bq-radius-lg: 16px;
+  --bq-radius-xl: 20px;
+  --bq-radius-2xl: 28px;
+  --bq-radius-full: 9999px;
+
+  /* ── Elevation ── */
+  --bq-shadow-1: 0 1px 2px rgba(0, 0, 40, 0.04);
+  --bq-shadow-2: 0 8px 24px -8px rgba(0, 0, 77, 0.10);
+  --bq-shadow-3: 0 20px 45px -12px rgba(0, 0, 77, 0.16);
+  --bq-shadow-4: 0 30px 70px -20px rgba(0, 0, 77, 0.28);
+
+  /* ── Motion ── */
+  --bq-duration-fast: 150ms;
+  --bq-duration-base: 200ms;
+  --bq-duration-slow: 300ms;
+  --bq-ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --bq-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Touch ── */
+  --bq-touch-target: 44px;
+
+  color-scheme: light;
+  background: var(--bq-bg);
+  color: var(--bq-text-primary);
+}
+
+/* System dark mode — only when the user hasn't made an explicit choice */
+@media (prefers-color-scheme: dark) {
+  [data-bq-console]:not([data-theme="light"]) {
+    --bq-bg: #0a0e1a;
+    --bq-surface: #11162a;
+    --bq-surface-raised: #161c33;
+    --bq-surface-sunken: #0d1120;
+    --bq-border: #232b47;
+    --bq-border-strong: #333d60;
+    --bq-text-primary: #f1f4fb;
+    --bq-text-secondary: #a7b3cc;
+    --bq-text-tertiary: #68739696;
+    --bq-overlay: rgba(0, 0, 10, 0.6);
+    --bq-blue-light: #16213f;
+    --bq-amber-light: #2a1f0f;
+    --bq-success-light: #0d2420;
+    --bq-warning-light: #2a1f0f;
+    --bq-danger-light: #2a1414;
+    color-scheme: dark;
+  }
+}
+
+/* Explicit user toggle — wins in both directions */
+[data-bq-console][data-theme="dark"] {
+  --bq-bg: #0a0e1a;
+  --bq-surface: #11162a;
+  --bq-surface-raised: #161c33;
+  --bq-surface-sunken: #0d1120;
+  --bq-border: #232b47;
+  --bq-border-strong: #333d60;
+  --bq-text-primary: #f1f4fb;
+  --bq-text-secondary: #a7b3cc;
+  --bq-text-tertiary: #68739696;
+  --bq-overlay: rgba(0, 0, 10, 0.6);
+  --bq-blue-light: #16213f;
+  --bq-amber-light: #2a1f0f;
+  --bq-success-light: #0d2420;
+  --bq-warning-light: #2a1f0f;
+  --bq-danger-light: #2a1414;
+  color-scheme: dark;
+}
+
+/* ── Typography scale (Apple HIG-inspired) ── */
+[data-bq-console] .bq-text-large-title { font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: -0.02em; }
+[data-bq-console] .bq-text-title1 { font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.015em; }
+[data-bq-console] .bq-text-title2 { font-size: 22px; line-height: 28px; font-weight: 700; letter-spacing: -0.01em; }
+[data-bq-console] .bq-text-headline { font-size: 17px; line-height: 22px; font-weight: 600; }
+[data-bq-console] .bq-text-body { font-size: 15px; line-height: 22px; font-weight: 400; }
+[data-bq-console] .bq-text-body-lg { font-size: 17px; line-height: 24px; font-weight: 400; }
+[data-bq-console] .bq-text-caption { font-size: 12px; line-height: 16px; font-weight: 500; }
+[data-bq-console] .bq-tabular { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-bq-console] * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

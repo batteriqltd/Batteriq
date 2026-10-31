@@ -9,6 +9,7 @@ import {
   Building2,
   CheckCircle,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Download,
@@ -22,6 +23,7 @@ import {
   Mail,
   MailCheck,
   MessageSquare,
+  MoreHorizontal,
   PhoneCall,
   Plus,
   RefreshCw,
@@ -52,6 +54,7 @@ import {
   type OutreachSettings,
 } from '@/lib/outreach/types'
 import { WhatsAppInboxTab } from './WhatsAppInboxTab'
+import { CommandPalette, type CommandItem, ThemeToggle, useConsoleTheme } from './ui'
 
 type TabKey =
   | 'overview'
@@ -232,6 +235,28 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
 
   // Scrollable section area (sticky header stays put while each tab scrolls)
   const contentScrollRef = useRef<HTMLDivElement | null>(null)
+
+  // Desktop sidebar collapse + light/dark theme, both persisted per device
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  useEffect(() => {
+    try {
+      setSidebarCollapsed(localStorage.getItem('bq-console-sidebar') === 'collapsed')
+    } catch {
+      /* storage unavailable */
+    }
+  }, [])
+  function toggleSidebar() {
+    setSidebarCollapsed((v) => {
+      const next = !v
+      try {
+        localStorage.setItem('bq-console-sidebar', next ? 'collapsed' : 'expanded')
+      } catch {
+        /* ignore */
+      }
+      return next
+    })
+  }
+  const { theme, toggle: toggleTheme } = useConsoleTheme()
 
   const fetchOverview = useCallback(async () => {
     try {
@@ -718,11 +743,46 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
     { id: 'quotes', label: 'Quotes & Invoices', icon: FileText },
     { id: 'followups', label: 'Follow-ups', icon: Repeat, badge: repliedLeads.length },
     { id: 'whatsapp', label: 'WhatsApp Inbox', icon: MessageSquare, badge: metrics.pendingHumanCount },
-    { id: 'calling', label: 'Warm Calling', icon: PhoneCall },
+    { id: 'calling', label: 'Calls', icon: PhoneCall },
     { id: 'logs', label: 'Activity Logs', icon: Activity, badge: metrics.errorsTodayCount },
     { id: 'settings', label: 'Settings', icon: Settings },
   ]
   const activeNav = NAV.find((n) => n.id === activeTab) || NAV[0]
+
+  // Mobile tab bar: 4 fixed destinations + a "More" sheet for everything else,
+  // so phones get a real native-feeling IA instead of 11 items in a scroll strip.
+  const MOBILE_PRIMARY_IDS: TabKey[] = ['overview', 'leads', 'calling', 'whatsapp']
+  const MOBILE_PRIMARY_LABELS: Record<string, string> = {
+    overview: 'Home',
+    leads: 'Clients',
+    calling: 'Calls',
+    whatsapp: 'Inbox',
+  }
+
+  // Cmd/Ctrl+K palette: every nav destination + every loaded client, so staff
+  // can jump straight to a client's record without hunting through tabs.
+  const paletteItems: CommandItem[] = [
+    ...NAV.map((item) => ({
+      id: `nav-${item.id}`,
+      label: item.label,
+      sublabel: 'Section',
+      icon: item.icon,
+      group: 'Sections',
+      onSelect: () => setActiveTab(item.id),
+    })),
+    ...leads.map((lead) => ({
+      id: `lead-${lead.id}`,
+      label: lead.business_name,
+      sublabel: [CATEGORY_META[lead.category]?.label, lead.city].filter(Boolean).join(' · ') || 'Client',
+      icon: Building2,
+      group: 'Clients',
+      keywords: `${lead.email ?? ''} ${lead.phone_e164 ?? ''}`,
+      onSelect: () => {
+        setActiveTab('leads')
+        setSearchQ(lead.business_name)
+      },
+    })),
+  ]
 
   const cardCls =
     'rounded-[28px] bg-white border border-[#e3e9f5] shadow-[0_12px_32px_-18px_rgba(0,0,77,0.12)]'
@@ -820,28 +880,37 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
 
   return (
     <div
+      data-bq-console=""
+      data-theme={theme ?? undefined}
       className={
         standalone
-          ? 'fixed inset-0 z-[60] overflow-hidden bg-[#f3f6fc] text-[#00004d]'
-          : 'relative h-full overflow-hidden bg-[#f3f6fc] text-[#00004d]'
+          ? 'fixed inset-0 z-[60] overflow-hidden bg-[var(--bq-bg)] text-[var(--bq-text-primary)]'
+          : 'relative h-full overflow-hidden bg-[var(--bq-bg)] text-[var(--bq-text-primary)]'
       }
     >
       <div className="mx-auto max-w-[1720px] h-full lg:p-5">
-        <div className="relative flex gap-5 h-full lg:rounded-[36px] bg-white lg:border lg:border-[#e3e9f5] lg:shadow-[0_20px_50px_rgba(0,0,77,0.08)] lg:p-5">
+        <div className="relative flex gap-5 h-full lg:rounded-[36px] bg-[var(--bq-surface)] lg:border lg:border-[var(--bq-border)] lg:shadow-[0_20px_50px_rgba(0,0,77,0.08)] lg:p-5">
           {/* ─── STICKY LEFT NAVIGATION SIDEBAR (Laptop / Desktop) ─── */}
-          <aside className="hidden lg:block w-[240px] flex-shrink-0 h-full">
+          <aside
+            className={`hidden lg:block flex-shrink-0 h-full transition-[width] duration-[var(--bq-duration-slow)] ease-[var(--bq-ease-spring)] ${
+              sidebarCollapsed ? 'w-[76px]' : 'w-[240px]'
+            }`}
+          >
             <nav data-admin-nav="true" className="h-full rounded-[28px] bg-gradient-to-b from-[#00004d] to-[#001a73] shadow-[0_14px_30px_rgba(0,0,77,0.32)] flex flex-col py-4 overflow-hidden">
               {/* Brand Header */}
-              <div className="px-4 pb-1 flex items-center justify-between gap-2.5">
+              <div className={`pb-1 flex items-center gap-2.5 ${sidebarCollapsed ? 'px-2.5 justify-center' : 'px-4 justify-between'}`}>
                 <div className="flex items-center gap-2.5 min-w-0">
                   <div className="h-9 w-9 rounded-xl bg-white/20 border border-white/25 flex items-center justify-center text-white font-black text-sm flex-shrink-0">
                     B
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-white tracking-tight truncate">BATTERIQ</p>
-                    <p className="text-[10px] text-white/70 truncate">Outreach Console</p>
-                  </div>
+                  {!sidebarCollapsed && (
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-white tracking-tight truncate">BATTERIQ</p>
+                      <p className="text-[10px] text-white/70 truncate">Outreach Console</p>
+                    </div>
+                  )}
                 </div>
+                {!sidebarCollapsed && (
                 <button
                   type="button"
                   onClick={() => setActiveTab('logs')}
@@ -851,6 +920,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 >
                   <Bell className="w-4 h-4" />
                 </button>
+                )}
               </div>
 
               <div className="w-full px-4 my-2.5">
@@ -858,7 +928,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
               </div>
 
               {/* Navigation Items with Icon + Visible Name + Badge */}
-              <div className="flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar py-1 px-3">
+              <div className={`flex-1 flex flex-col gap-1 overflow-y-auto no-scrollbar py-1 ${sidebarCollapsed ? 'px-2' : 'px-3'}`}>
                 {NAV.map((item) => {
                   const Icon = item.icon
                   const active = activeTab === item.id
@@ -869,7 +939,9 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       onClick={() => setActiveTab(item.id)}
                       title={item.label}
                       aria-label={item.label}
-                      className={`group w-full flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-semibold transition ${
+                      className={`group w-full flex items-center gap-2.5 py-2.5 rounded-2xl text-xs font-semibold transition ${
+                        sidebarCollapsed ? 'justify-center px-0' : 'justify-between px-3'
+                      } ${
                         active
                           ? 'bg-white text-[#2563eb] shadow-md font-bold'
                           : 'text-white/80 hover:text-white hover:bg-white/10'
@@ -881,9 +953,9 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                             active ? 'text-[#2563eb]' : 'text-white/80 group-hover:text-white'
                           }`}
                         />
-                        <span className="truncate text-[12px]">{item.label}</span>
+                        {!sidebarCollapsed && <span className="truncate text-[12px]">{item.label}</span>}
                       </div>
-                      {item.badge ? (
+                      {!sidebarCollapsed && item.badge ? (
                         <span
                           className={`min-w-[18px] h-5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center flex-shrink-0 ${
                             active
@@ -903,6 +975,22 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 <div className="w-full h-px bg-white/15" />
               </div>
 
+              {/* Collapse toggle */}
+              <div className="px-3 mb-1">
+                <button
+                  type="button"
+                  onClick={toggleSidebar}
+                  title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                  aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-2xl text-xs font-semibold text-white/70 hover:text-white hover:bg-white/10 transition ${
+                    sidebarCollapsed ? 'justify-center' : ''
+                  }`}
+                >
+                  <ChevronLeft className={`w-4 h-4 flex-shrink-0 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+                  {!sidebarCollapsed && <span className="truncate text-[11px]">Collapse</span>}
+                </button>
+              </div>
+
               {/* Bottom Sign Out / Admin Status */}
               <div className="px-3">
                 {standalone ? (
@@ -911,15 +999,15 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                     onClick={handleStandaloneSignOut}
                     title="Sign out"
                     aria-label="Sign out"
-                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 transition"
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-2xl text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 transition ${sidebarCollapsed ? 'justify-center' : ''}`}
                   >
                     <LogOut className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate text-[12px]">Sign out</span>
+                    {!sidebarCollapsed && <span className="truncate text-[12px]">Sign out</span>}
                   </button>
                 ) : (
-                  <div className="flex items-center gap-2.5 px-3 py-2 text-white/70 text-xs">
+                  <div className={`flex items-center gap-2.5 px-3 py-2 text-white/70 text-xs ${sidebarCollapsed ? 'justify-center' : ''}`}>
                     <ShieldCheck className="w-4 h-4 flex-shrink-0" />
-                    <span className="truncate text-[11px]">Outreach Admin</span>
+                    {!sidebarCollapsed && <span className="truncate text-[11px]">Outreach Admin</span>}
                   </div>
                 )}
               </div>
@@ -931,42 +1019,34 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
             {/* STICKY HEADER — never moves while scrolling, stays inside main column */}
             <div
               data-admin-header="true"
-              className="sticky top-0 z-20 flex-shrink-0 bg-white/95 backdrop-blur-md"
+              className="sticky top-0 z-20 flex-shrink-0 bg-[var(--bq-surface)]/95 backdrop-blur-md"
             >
-              <div className="flex items-center justify-between gap-2.5 px-3.5 sm:px-6 lg:px-1 py-3 border-b border-[#e3e9f5] lg:border-none">
+              <div className="flex items-center justify-between gap-2.5 px-3.5 sm:px-6 lg:px-1 py-3 border-b border-[var(--bq-border)] lg:border-none">
                 <div className="flex items-center gap-2.5 min-w-0">
                   <button
                     type="button"
                     onClick={() => setMobileMenuOpen(true)}
-                    className="lg:hidden h-10 w-10 flex-shrink-0 rounded-2xl bg-[#eff6ff] text-[#2563eb] flex items-center justify-center hover:bg-[#e3e9f5] active:scale-95 transition"
+                    className="lg:hidden h-10 w-10 flex-shrink-0 rounded-2xl bg-[var(--bq-blue-light)] text-[var(--bq-blue)] flex items-center justify-center hover:bg-[var(--bq-border)] active:scale-95 transition"
                     aria-label="Open Navigation Menu"
                     title="All Sections"
                   >
                     <LayoutGrid className="w-5 h-5" />
                   </button>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold text-slate-400 tracking-normal uppercase truncate">
+                    <p className="bq-text-caption uppercase tracking-normal text-[var(--bq-text-tertiary)] truncate">
                       Batteriq Outreach
                     </p>
-                    <h1 className="text-lg sm:text-2xl font-bold text-[#00004d] tracking-tight truncate">
+                    <h1 className="bq-text-title2 sm:bq-text-title1 bq-tabular text-[var(--bq-text-primary)] tracking-tight truncate">
                       {activeNav.label}
                     </h1>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="relative hidden md:block">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={searchQ}
-                      onChange={(e) => setSearchQ(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') setActiveTab('leads')
-                      }}
-                      placeholder="Search clients…"
-                      className="h-11 w-56 xl:w-64 pl-10 pr-3 rounded-2xl bg-white border border-[#e3e9f5] text-[13px] text-[#00004d] placeholder:text-slate-400 outline-none focus:border-[#2563eb]"
-                    />
+                  <CommandPalette items={paletteItems} />
+
+                  <div className="hidden sm:block">
+                    <ThemeToggle theme={theme} onToggle={toggleTheme} />
                   </div>
 
                   <button
@@ -2179,54 +2259,85 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
               <span className="text-[11px] text-slate-400">
                 Autopilot: {settings.campaign_paused ? 'Paused' : 'Active (every 30m)'}
               </span>
-              {standalone && (
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
-                  onClick={handleStandaloneSignOut}
-                  className="font-bold text-rose-600 hover:underline"
+                  onClick={toggleTheme}
+                  className="font-bold text-[#2563eb] hover:underline"
                 >
-                  Sign out
+                  {theme === 'dark' ? 'Light mode' : 'Dark mode'}
                 </button>
-              )}
+                {standalone && (
+                  <button
+                    type="button"
+                    onClick={handleStandaloneSignOut}
+                    className="font-bold text-rose-600 hover:underline"
+                  >
+                    Sign out
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ─── MOBILE BOTTOM FLOATING CAPSULE NAV (Phones / Tablets) ─── */}
-      <nav data-admin-nav="true" className="lg:hidden fixed bottom-3 inset-x-3 sm:bottom-4 sm:inset-x-6 z-50 rounded-full bg-gradient-to-r from-[#00004d] to-[#002a8f]/95 backdrop-blur-xl border border-white/20 shadow-[0_16px_40px_rgba(0,0,77,0.45)] p-1.5">
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-          {NAV.map((item) => {
+      {/* ─── MOBILE BOTTOM TAB BAR — 4 fixed destinations + More (Phones) ─── */}
+      <nav
+        data-admin-nav="true"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-[var(--bq-surface)]/95 backdrop-blur-xl border-t border-[var(--bq-border)]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        <div className="grid grid-cols-5">
+          {MOBILE_PRIMARY_IDS.map((id) => {
+            const item = NAV.find((n) => n.id === id)
+            if (!item) return null
             const Icon = item.icon
-            const active = activeTab === item.id
+            const active = activeTab === id
             return (
               <button
-                key={item.id}
+                key={id}
                 type="button"
                 onClick={() => {
-                  setActiveTab(item.id)
+                  setActiveTab(id)
                   contentScrollRef.current?.scrollTo({ top: 0 })
                 }}
-                className={`relative flex-shrink-0 flex items-center gap-1.5 h-10 rounded-full px-3.5 transition-all ${
-                  active
-                    ? 'bg-white text-[#2563eb] shadow-md font-bold scale-[1.02]'
-                    : 'text-white/85 hover:text-white hover:bg-white/10 font-semibold'
-                }`}
+                className="relative flex flex-col items-center justify-center gap-1 h-14 min-w-0"
+                style={{ minHeight: 'var(--bq-touch-target)' }}
+                aria-label={MOBILE_PRIMARY_LABELS[id]}
               >
-                <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-[#2563eb]' : 'text-white/90'}`} />
-                <span className="text-xs whitespace-nowrap">{item.label}</span>
-                {item.badge ? (
-                  <span
-                    className={`min-w-[16px] h-4 px-1 rounded-full text-[9px] font-black flex items-center justify-center ${
-                      active ? 'bg-[#2563eb] text-white' : 'bg-white/25 text-white'
+                <span className="relative">
+                  <Icon
+                    className={`w-[22px] h-[22px] transition-colors ${
+                      active ? 'text-[var(--bq-blue)]' : 'text-[var(--bq-text-tertiary)]'
                     }`}
-                  >
-                    {item.badge > 99 ? '99+' : item.badge}
-                  </span>
-                ) : null}
+                  />
+                  {item.badge ? (
+                    <span className="absolute -top-1 -right-2 min-w-[14px] h-[14px] px-1 rounded-full bg-[var(--bq-danger)] text-white text-[8px] font-black flex items-center justify-center">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  ) : null}
+                </span>
+                <span
+                  className={`text-[10px] font-semibold truncate max-w-full px-0.5 ${
+                    active ? 'text-[var(--bq-blue)]' : 'text-[var(--bq-text-tertiary)]'
+                  }`}
+                >
+                  {MOBILE_PRIMARY_LABELS[id]}
+                </span>
               </button>
             )
           })}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(true)}
+            className="relative flex flex-col items-center justify-center gap-1 h-14 min-w-0"
+            style={{ minHeight: 'var(--bq-touch-target)' }}
+            aria-label="More sections"
+          >
+            <MoreHorizontal className="w-[22px] h-[22px] text-[var(--bq-text-tertiary)]" />
+            <span className="text-[10px] font-semibold text-[var(--bq-text-tertiary)]">More</span>
+          </button>
         </div>
       </nav>
 
