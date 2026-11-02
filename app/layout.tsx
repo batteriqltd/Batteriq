@@ -98,7 +98,18 @@ export const viewport: Viewport = {
 const organizationSchema = {
   '@context': 'https://schema.org',
   '@type': ['Organization', 'LocalBusiness'],
+  '@id': 'https://batteriq.com/#organization',
   name: 'Batteriq Solutions Ltd',
+  // AEO: tells answer engines which topics this business is an authority on.
+  knowsAbout: [
+    'EcoFlow power stations',
+    'BLUETTI power stations',
+    'Portable power stations',
+    'Solar panels',
+    'Home battery backup',
+    'Backup power for KPLC power outages',
+    'Off-grid solar power in Kenya',
+  ],
   alternateName: ['Batteriq Kenya', 'Batteriq'],
   url: 'https://batteriq.com',
   logo: 'https://batteriq.com/logo.png',
@@ -117,7 +128,7 @@ const organizationSchema = {
     { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday'], opens: '09:00', closes: '16:00' },
   ],
   priceRange: 'KES 27,259+',
-  paymentAccepted: 'M-Pesa',
+  paymentAccepted: 'M-Pesa, Visa, Mastercard, Cash on Delivery',
   currenciesAccepted: 'KES',
   areaServed: { '@type': 'Country', name: 'Kenya' },
   contactPoint: {
@@ -160,6 +171,18 @@ const localBusinessSchema = {
   ],
 }
 
+// AEO: names the site as an entity and links it to the organisation above.
+const websiteSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': 'https://batteriq.com/#website',
+  url: 'https://batteriq.com',
+  name: 'Batteriq Kenya',
+  alternateName: 'Batteriq',
+  inLanguage: 'en-KE',
+  publisher: { '@id': 'https://batteriq.com/#organization' },
+}
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -178,6 +201,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable site summary" />
       </head>
       <body className="font-sans bg-slate-50 text-slate-900 antialiased selection:bg-blue-600 selection:text-white">
         <a href="#main-content" className="skip-to-content">

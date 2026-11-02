@@ -11,37 +11,6 @@ export const metadata: Metadata = {
   description: 'Answers to common questions about EcoFlow products in Kenya — charging, battery life, solar compatibility, M-Pesa payment, warranty, and delivery.',
 }
 
-const faqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Is Batteriq an authorised EcoFlow dealer in Kenya?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: "Yes. Batteriq is Kenya's officially appointed EcoFlow distributor. All products are genuine, carry full international EcoFlow warranty, and are supported by EcoFlow-certified after-sales service.",
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Can I pay for EcoFlow products with M-Pesa in Kenya?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes. Batteriq offers instant M-Pesa STK Push checkout. You receive a payment prompt on your phone during checkout and confirm with your M-Pesa PIN. We also accept Cash on Delivery and M-Pesa on Delivery.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'What is the warranty on EcoFlow products bought from Batteriq?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'EcoFlow power stations carry a 24-month warranty. Solar panels carry a 24-month product warranty plus a 5-year power output warranty. Accessories carry a 12-month warranty. All warranties are honoured by Batteriq as the authorised Kenya distributor.',
-      },
-    },
-  ],
-}
-
 const faqCategories = [
   {
     category: 'About Batteriq',
@@ -176,6 +145,21 @@ const faqCategories = [
     ],
   },
 ]
+
+// Every visible question is emitted as FAQPage schema (previously only 3 of
+// them were), so answer engines can quote any of them. Built from the same
+// array the accordion renders, so schema and page can never drift apart.
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqCategories.flatMap(c =>
+    c.items.map(item => ({
+      '@type': 'Question',
+      name: item.question,
+      acceptedAnswer: { '@type': 'Answer', text: item.answer.replace(/\s+/g, ' ').trim() },
+    }))
+  ),
+}
 
 export default function FaqPage() {
   return (
