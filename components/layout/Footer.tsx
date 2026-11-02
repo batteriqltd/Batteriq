@@ -15,6 +15,7 @@ const SUPPORT_LINKS = [
   { href: 'https://wa.me/254716822014', label: 'WhatsApp Us', external: true },
   { href: '/track-order', label: 'Track My Order', external: false },
   { href: '/support/faq', label: 'FAQ', external: false },
+  { href: '/answers', label: "Buyer's Guide", external: false },
   { href: '/support/warranty', label: 'Warranty', external: false },
   { href: '/about', label: 'About Batteriq', external: false },
   { href: '/about#partner', label: 'Become a Partner', external: false },
