@@ -10,7 +10,8 @@ import { ToastContainer } from '@/components/ui/Toast'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'EcoFlow Power Stations Kenya — Buy with M-Pesa | Batteriq',
+  // absolute: skips the root "%s | Batteriq" template, which doubled the brand
+  title: { absolute: 'EcoFlow Power Stations Price in Kenya | Batteriq' },
   description:
     'Shop all EcoFlow power stations in Kenya. RIVER series from KES 27,259, DELTA series from KES 85,539. Instant M-Pesa checkout. Authorised EcoFlow dealer.',
   alternates: { canonical: 'https://batteriq.com/ecoflow' },

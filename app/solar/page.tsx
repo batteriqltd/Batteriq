@@ -10,7 +10,8 @@ import { SolarSelectionGuide } from '@/components/solar/SolarSelectionGuide'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'EcoFlow Solar Panels Kenya — 45W to 400W | Buy with M-Pesa | Batteriq',
+  // absolute: skips the root "%s | Batteriq" template, which doubled the brand
+  title: { absolute: 'EcoFlow Solar Panels Price in Kenya — 45W to 400W | Batteriq' },
   description: 'Buy EcoFlow solar panels in Kenya. 45W to 400W. IP68 waterproof. Compatible with all EcoFlow power stations. Pay with M-Pesa. Official EcoFlow dealer. Same-day Nairobi delivery.',
   keywords: ['solar panels Kenya', 'EcoFlow solar panel Kenya', 'buy solar panel Kenya', 'portable solar panel Kenya', 'solar panel Nairobi', 'EcoFlow 400W solar Kenya', 'solar power Kenya'],
   alternates: { canonical: 'https://batteriq.com/solar' },

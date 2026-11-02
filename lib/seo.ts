@@ -53,13 +53,31 @@ export function buildTitle(product: Product): string {
   const stored = product.meta_title?.trim()
   if (stored) return clamp(stored, TITLE_MAX)
 
-  const full = `${product.name} Kenya — ${kes(product.price_kes)} | Batteriq`
-  if (full.length <= TITLE_MAX) return full
+  // "<product> price in Kenya" is the dominant Kenyan search pattern, so the
+  // fallbacks try that exact phrase first, then shorter variants.
+  const name = brandedName(product)
+  const price = kes(product.price_kes)
+  const candidates = [
+    `${name} Price in Kenya — ${price} | Batteriq`,
+    `${name} Price in Kenya — ${price}`,
+    `${name} Kenya — ${price}`,
+    `${name} Price in Kenya`,
+  ]
+  return candidates.find(c => c.length <= TITLE_MAX) ?? clamp(`${name} Kenya`, TITLE_MAX)
+}
 
-  const noBrand = `${product.name} Kenya — ${kes(product.price_kes)}`
-  if (noBrand.length <= TITLE_MAX) return noBrand
+/** "EcoFlow DELTA 3" stays as-is; "AC180" becomes "BLUETTI AC180". Avoids "EcoFlow EcoFlow …". */
+export function brandedName(product: Pick<Product, 'brand' | 'name'>): string {
+  const brand = product.brand === 'Bluetti' ? 'BLUETTI' : product.brand
+  return product.name.toLowerCase().startsWith(product.brand.toLowerCase())
+    ? product.name
+    : `${brand} ${product.name}`
+}
 
-  return clamp(`${product.name} Kenya`, TITLE_MAX)
+/** Google ignores relative image URLs in structured data and feeds. */
+export function absoluteUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path
+  return `${SITE_URL}${path.startsWith('/') ? '' : '/'}${path}`
 }
 
 export function buildDescription(product: Product): string {
@@ -78,23 +96,33 @@ export function buildDescription(product: Product): string {
 
 export function productJsonLd(product: Product, section: ProductSection) {
   const url = productUrl(section, product.slug)
+  // Google warns when an Offer has no priceValidUntil. Prices are re-read from
+  // the database on every request, so a rolling one-year window is accurate.
+  const validUntil = new Date()
+  validUntil.setFullYear(validUntil.getFullYear() + 1)
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
+    '@id': `${url}#product`,
     name: product.name,
-    image: product.images ?? [],
+    url,
+    image: (product.images ?? []).map(absoluteUrl),
     description: product.description ?? buildDescription(product),
-    brand: { '@type': 'Brand', name: product.brand },
+    brand: { '@type': 'Brand', name: product.brand === 'Bluetti' ? 'BLUETTI' : product.brand },
+    category: product.category,
     sku: product.sku,
+    mpn: product.sku,
     offers: {
       '@type': 'Offer',
       url,
       priceCurrency: 'KES',
       price: product.price_kes,
+      priceValidUntil: validUntil.toISOString().slice(0, 10),
+      itemCondition: 'https://schema.org/NewCondition',
       availability: product.in_stock
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
-      seller: { '@type': 'Organization', name: 'Batteriq' },
+      seller: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: 'Batteriq' },
     },
     // Only emitted when we genuinely have review data — never invented.
     ...(product.schema_rating && product.schema_review_count && product.schema_review_count > 0

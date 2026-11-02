@@ -12,7 +12,8 @@ import { ToastContainer } from '@/components/ui/Toast'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'Bluetti Kenya | Official Bluetti Dealer & Power Stations',
+  // absolute: skips the root "%s | Batteriq" template, which doubled the brand
+  title: { absolute: 'BLUETTI Kenya — Official Dealer, Prices & Stock | Batteriq' },
   description: 'Buy genuine Bluetti power stations, residential backup systems, solar panels and batteries in Kenya from Batteriq. New Homestar 3, HV6K, HV10K and HB500 in stock. Official authorised dealer, M-Pesa payments, Nairobi delivery and manufacturer warranty.',
   keywords: ['Bluetti Kenya', 'buy Bluetti Kenya', 'Bluetti dealer Kenya', 'official Bluetti dealer Kenya', 'Bluetti power station Kenya', 'Bluetti solar generator Kenya', 'Bluetti Nairobi', 'Bluetti AC200PL Kenya', 'Bluetti AC300 Kenya', 'Bluetti AC500 Kenya', 'Bluetti Homestar 3 Kenya', 'Bluetti HV6K Kenya', 'Bluetti HV10K Kenya', 'Bluetti HB500 Kenya'],
   alternates: { canonical: 'https://batteriq.com/bluetti' },

@@ -5,7 +5,8 @@ import type { Product } from '@/lib/supabase/types'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Compare Power Stations — EcoFlow & BLUETTI | Batteriq Kenya',
+  // absolute: skips the root "%s | Batteriq" template, which doubled the brand
+  title: { absolute: 'Compare EcoFlow & BLUETTI Power Stations | Batteriq Kenya' },
   description: 'Compare EcoFlow and BLUETTI power stations side by side. Specs, prices, battery capacity and more. Find the right power station for your needs in Kenya.',
 }
 
