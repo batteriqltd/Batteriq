@@ -12,6 +12,7 @@ import { showToast } from '@/components/ui/Toast'
 import { SpecBadge } from './SpecBadge'
 import { Modal } from '@/components/ui/Modal'
 import type { Product } from '@/lib/supabase/types'
+import { brandedName } from '@/lib/seo'
 
 type ProductDetailProps = {
   product: Product
@@ -61,7 +62,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
           <div className="relative aspect-square bg-white rounded-[8px] overflow-hidden cursor-zoom-in" onClick={() => setZoomOpen(true)}>
             <Image
               src={images[activeImage]}
-              alt={`${product.brand} ${product.name} — Buy in Kenya | Batteriq`}
+              alt={`${brandedName(product)} — price in Kenya | Batteriq`}
               fill
               className="object-contain p-8"
               sizes="(max-width: 1024px) 100vw, 50vw"

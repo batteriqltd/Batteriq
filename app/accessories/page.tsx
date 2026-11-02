@@ -9,7 +9,8 @@ import { ToastContainer } from '@/components/ui/Toast'
 export const revalidate = 60
 
 export const metadata: Metadata = {
-  title: 'EcoFlow Accessories Kenya — Batteries, Cables & Appliances | Batteriq',
+  // absolute: skips the root "%s | Batteriq" template, which doubled the brand
+  title: { absolute: 'EcoFlow Extra Batteries & Accessories Kenya | Batteriq' },
   description:
     'Buy EcoFlow extra batteries, cables, appliances and accessories in Kenya. Extra batteries from KES 27,899. M-Pesa checkout. Authorised EcoFlow dealer.',
   alternates: { canonical: 'https://batteriq.com/accessories' },

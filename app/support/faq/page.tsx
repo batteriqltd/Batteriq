@@ -7,7 +7,8 @@ import { ToastContainer } from '@/components/ui/Toast'
 import { FaqAccordion } from '@/components/support/FaqAccordion'
 
 export const metadata: Metadata = {
-  title: 'FAQ — Frequently Asked Questions | Batteriq Kenya',
+  // absolute: skips the root "%s | Batteriq" template, which doubled the brand
+  title: { absolute: 'FAQ — EcoFlow & BLUETTI in Kenya | Batteriq' },
   description: 'Answers to common questions about EcoFlow products in Kenya — charging, battery life, solar compatibility, M-Pesa payment, warranty, and delivery.',
 }
 

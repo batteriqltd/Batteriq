@@ -8,6 +8,7 @@ import { useUIStore } from '@/store/uiStore'
 import { formatKES, getProductImageUrl, getPrimarySpecs, formatSpecLabel, getDiscountPercent } from '@/lib/utils'
 import { showToast } from '@/components/ui/Toast'
 import type { Product } from '@/lib/supabase/types'
+import { brandedName } from '@/lib/seo'
 import { DiscountTimer } from '@/components/product/DiscountTimer'
 
 type ProductCardProps = {
@@ -72,7 +73,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
               {hasImage ? (
                 <Image
                   src={imageUrl}
-                  alt={`${product.brand} ${product.name} — Buy in Kenya | Batteriq`}
+                  alt={`${brandedName(product)} — price in Kenya | Batteriq`}
                   fill
                   className="object-contain object-center group-hover:scale-[1.05] transition-transform duration-700 ease-out mix-blend-multiply"
                   style={{ padding: '12px' }}
