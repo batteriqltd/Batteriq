@@ -37,6 +37,18 @@ export function isCardPaymentMethod(method: string | null | undefined): boolean 
   return method === CARD_PAYMENT_METHOD
 }
 
+export const PAYMENT_LINK_MIN_KES = 10
+export const PAYMENT_LINK_MAX_KES = 1_000_000
+
+/** Admin payment links take whole shillings. Returns null for anything out of range. */
+export function parsePaymentLinkAmount(raw: unknown): number | null {
+  if (typeof raw !== 'number' && typeof raw !== 'string') return null
+  if (raw === '') return null
+  const value = Number(raw)
+  if (!Number.isInteger(value) || value < PAYMENT_LINK_MIN_KES || value > PAYMENT_LINK_MAX_KES) return null
+  return value
+}
+
 export type CardFeeBreakdown = {
   /** The order value — exactly what an M-Pesa customer would pay. */
   subtotalKes: number

@@ -1,4 +1,5 @@
 import { PromptForm } from './_PromptForm'
+import { PaymentLinkForm } from './_PaymentLinkForm'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,7 @@ export default function AdminPromptPage() {
       </div>
 
       <PromptForm />
+      <PaymentLinkForm />
     </div>
   )
 }

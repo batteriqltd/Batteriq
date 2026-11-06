@@ -7,7 +7,7 @@ import {
   toSubunits,
   verifyWebhookSignature,
 } from '@/lib/paystack'
-import { calculateCardFee, isCardPaymentMethod } from '@/lib/cardFee'
+import { calculateCardFee, isCardPaymentMethod, parsePaymentLinkAmount } from '@/lib/cardFee'
 
 const BODY = JSON.stringify({ event: 'charge.success', data: { reference: 'BQ-1-abcd' } })
 const WHSEC = 'whsec_test_secret'
@@ -129,6 +129,21 @@ describe('helpers', () => {
     expect(isCardPaymentMethod('pesapal_card')).toBe(true)
     expect(isCardPaymentMethod('mpesa_now')).toBe(false)
     expect(isCardPaymentMethod(undefined)).toBe(false)
+  })
+})
+
+describe('parsePaymentLinkAmount', () => {
+  it('accepts whole shillings within range', () => {
+    expect(parsePaymentLinkAmount(140800)).toBe(140800)
+    expect(parsePaymentLinkAmount('140800')).toBe(140800)
+    expect(parsePaymentLinkAmount(10)).toBe(10)
+    expect(parsePaymentLinkAmount(1_000_000)).toBe(1_000_000)
+  })
+
+  it('rejects anything else', () => {
+    for (const bad of ['', null, undefined, 0, 9, -100, 1_000_001, 100.5, 'abc', NaN, true, [], {}]) {
+      expect(parsePaymentLinkAmount(bad)).toBeNull()
+    }
   })
 })
 
