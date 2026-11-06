@@ -7,9 +7,16 @@
 //
 // It never trusts the notification or the URL: the transaction is always
 // re-fetched from Paystack with the secret key before anything is written.
+//
+// Paystack data lives in the existing card columns from migration 005:
+//   pesapal_merchant_reference — our reference for the latest attempt
+//   pesapal_confirmation_code  — the reference that actually paid
+//   pesapal_payment_method     — card brand
+//   pesapal_status_description — latest status, or the mismatch flag
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isCardPaymentMethod } from '@/lib/cardFee'
 import { markOrderPaid, type PayableOrder } from '@/lib/orderPayments'
 import { sendAdminPush } from '@/lib/push'
 import {
@@ -33,8 +40,8 @@ export type PaystackSyncResult = {
 
 type OrderRow = PayableOrder & {
   payment_status: string | null
-  paystack_reference: string | null
-  paystack_status_description: string | null
+  pesapal_merchant_reference: string | null
+  pesapal_status_description: string | null
   card_fee_kes: number | string | null
   total_charged_kes: number | string | null
 }
@@ -47,12 +54,12 @@ async function findOrder(reference: string, transaction: PaystackTransaction): P
   const byReference = await supabase
     .from('orders')
     .select('*')
-    .eq('paystack_reference', reference)
+    .eq('pesapal_merchant_reference', reference)
     .maybeSingle()
   if (byReference.error) throw new PaystackError(`Order lookup failed: ${byReference.error.message}`)
   if (byReference.data) return byReference.data as unknown as OrderRow
 
-  // A retry overwrites paystack_reference, but an earlier attempt can still be
+  // A retry overwrites the stored reference, but an earlier attempt can still be
   // paid in another tab. Those references embed the order number.
   const orderId = readMetadata(transaction.metadata).order_id
   if (typeof orderId !== 'string') return null
@@ -81,8 +88,8 @@ export async function syncPaystackTransaction(reference: string): Promise<Paysta
   if (!order) {
     throw new PaystackError(`No Batteriq order matches Paystack reference ${reference}.`, 'order_not_found')
   }
-  if (order.payment_method !== 'paystack_card') {
-    throw new PaystackError(`Order ${order.order_number} is not a Paystack card order.`, 'order_not_found')
+  if (!isCardPaymentMethod(order.payment_method)) {
+    throw new PaystackError(`Order ${order.order_number} is not a card order.`, 'order_not_found')
   }
 
   const expectedKes = Number(order.total_charged_kes) || 0
@@ -96,9 +103,9 @@ export async function syncPaystackTransaction(reference: string): Promise<Paysta
   // An order that is already paid is never changed, whatever arrives next. A
   // second successful charge is real money though, so it gets flagged.
   if (order.payment_status === 'paid') {
-    if (transaction.status === 'success' && order.paystack_reference !== reference) {
+    if (transaction.status === 'success' && order.pesapal_merchant_reference !== reference) {
       console.error(
-        `[PAYSTACK] Possible double charge on ${order.order_number}: ${reference} succeeded, order was paid by ${order.paystack_reference}`
+        `[PAYSTACK] Possible double charge on ${order.order_number}: ${reference} succeeded, order was paid by ${order.pesapal_merchant_reference}`
       )
       await alertAdmin(order, '⚠️ Possible double card charge', `${order.order_number} · reference ${reference}`)
     }
@@ -114,11 +121,11 @@ export async function syncPaystackTransaction(reference: string): Promise<Paysta
     console.error(`[PAYSTACK] ${order.order_number} NOT marked paid — ${description}`)
 
     // Callback refreshes and webhook retries must not repeat the alert.
-    if (!order.paystack_status_description?.startsWith(MISMATCH_PREFIX)) {
+    if (!order.pesapal_status_description?.startsWith(MISMATCH_PREFIX)) {
       const { error } = await supabase
         .from('orders')
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .update({ paystack_status_description: description } as any)
+        .update({ pesapal_status_description: description } as any)
         .eq('id', order.id)
       if (error) throw new PaystackError(`Could not flag order ${order.order_number}: ${error.message}`)
       await alertAdmin(order, '⚠️ Card payment needs review', `${order.order_number} · ${description}`)
@@ -131,10 +138,10 @@ export async function syncPaystackTransaction(reference: string): Promise<Paysta
       order,
       reference,
       updates: {
-        paystack_reference: reference,
-        paystack_transaction_id: transaction.id != null ? String(transaction.id) : null,
-        paystack_card_type: transaction.authorization?.brand?.trim() || null,
-        paystack_status_description: reason,
+        pesapal_merchant_reference: reference,
+        pesapal_confirmation_code: reference,
+        pesapal_payment_method: transaction.authorization?.brand?.trim() || null,
+        pesapal_status_description: reason,
       },
       amountKes: expectedKes,
       cardFeeKes: Number(order.card_fee_kes) || 0,
@@ -147,11 +154,11 @@ export async function syncPaystackTransaction(reference: string): Promise<Paysta
 
   // Only the customer's current attempt may change the order. A stale result from
   // an abandoned earlier attempt must not fail the live one.
-  if (order.paystack_reference !== reference) {
+  if (order.pesapal_merchant_reference !== reference) {
     return { ...base, status: 'pending', applied: false }
   }
 
-  const updates: Record<string, unknown> = { paystack_status_description: reason }
+  const updates: Record<string, unknown> = { pesapal_status_description: reason }
   if (assessment === 'failed' || assessment === 'refunded') updates.payment_status = assessment
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

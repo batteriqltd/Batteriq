@@ -26,8 +26,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cod_cash: 'Cash on Delivery',
   cod_mpesa: 'M-Pesa at Doorstep',
   sales_confirmation: 'Reserve — Sales Confirmation',
-  paystack_card: 'Visa / Mastercard',
-  pesapal_card: 'Visa / Mastercard (Pesapal)',
+  pesapal_card: 'Visa / Mastercard',
 }
 
 export default async function OrderDetailPage({ params }: { params: { orderId: string } }) {
@@ -185,17 +184,11 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
                 {order.mpesa_transaction_code && (
                   <p className="text-xs font-mono text-green-700 mt-1">M-Pesa Ref: {order.mpesa_transaction_code}</p>
                 )}
-                {order.paystack_reference && order.payment_status === 'paid' && (
-                  <p className="text-xs font-mono text-green-700 mt-1 break-all">Card Ref: {order.paystack_reference}</p>
-                )}
-                {order.paystack_status_description && order.payment_status !== 'paid' && (
-                  <p className="text-xs text-orange-600 font-bold mt-1">Paystack: {order.paystack_status_description}</p>
-                )}
                 {order.pesapal_confirmation_code && (
                   <p className="text-xs font-mono text-green-700 mt-1">Card Ref: {order.pesapal_confirmation_code}</p>
                 )}
                 {order.pesapal_status_description && order.payment_status !== 'paid' && (
-                  <p className="text-xs text-orange-600 font-bold mt-1">Pesapal: {order.pesapal_status_description}</p>
+                  <p className="text-xs text-orange-600 font-bold mt-1">Card: {order.pesapal_status_description}</p>
                 )}
                 {order.payment_status !== 'paid' && (
                   <MarkPaidButton orderId={order.id} paymentMethod={order.payment_method} />
@@ -212,20 +205,12 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
                 <p className="text-sm font-bold text-gray-900">
                   {PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method}
                 </p>
-                {order.paystack_card_type && (
-                  <p className="text-xs text-gray-500 font-bold mt-1">Card type: {order.paystack_card_type}</p>
-                )}
-                {order.paystack_transaction_id && (
-                  <p className="text-[10px] text-gray-400 font-mono mt-1 break-all">
-                    Paystack ID: {order.paystack_transaction_id}
-                  </p>
-                )}
                 {order.pesapal_payment_method && (
                   <p className="text-xs text-gray-500 font-bold mt-1">Card type: {order.pesapal_payment_method}</p>
                 )}
                 {order.pesapal_order_tracking_id && (
                   <p className="text-[10px] text-gray-400 font-mono mt-1 break-all">
-                    Pesapal ID: {order.pesapal_order_tracking_id}
+                    Old Pesapal ID: {order.pesapal_order_tracking_id}
                   </p>
                 )}
               </div>

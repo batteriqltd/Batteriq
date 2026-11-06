@@ -47,7 +47,6 @@ function paymentLabel(method: string) {
     mpesa_now: 'M-Pesa (Pay Now)',
     cod_cash: 'Cash on Delivery',
     cod_mpesa: 'M-Pesa at Doorstep',
-    paystack_card: 'Visa / Mastercard',
     pesapal_card: 'Visa / Mastercard',
   }
   return map[method] ?? method

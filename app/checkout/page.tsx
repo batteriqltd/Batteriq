@@ -12,11 +12,11 @@ import {
 } from 'lucide-react'
 import { WhatsAppIcon, EmailIcon, MpesaIcon, DeliveryIcon, ContactSalesIcon } from '@/components/ui/ContactIcons'
 import { KENYAN_COUNTIES } from '@/lib/delivery'
-import { calculateCardFee, formatKesExact } from '@/lib/cardFee'
+import { calculateCardFee, CARD_PAYMENT_METHOD, formatKesExact } from '@/lib/cardFee'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 
-type PaymentMethod = 'mpesa_now' | 'cod_mpesa' | 'sales_confirmation' | 'paystack_card'
+type PaymentMethod = 'mpesa_now' | 'cod_mpesa' | 'sales_confirmation' | typeof CARD_PAYMENT_METHOD
 
 function normalizePhone(raw: string): string {
   const p = raw.replace(/[\s\-\(\)]/g, '').trim()
@@ -145,7 +145,7 @@ export default function CheckoutPage() {
   // Card payments carry a pass-through card fee. M-Pesa totals are untouched:
   // payableTotal only differs from grandTotal when the card option is selected.
   // This is a preview only — the server recomputes the fee before charging.
-  const isCardPayment = paymentMethod === 'paystack_card'
+  const isCardPayment = paymentMethod === CARD_PAYMENT_METHOD
   const cardFee = calculateCardFee(subtotal)
   const payableTotal = isCardPayment ? cardFee.totalChargedKes : grandTotal
   const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
@@ -197,7 +197,7 @@ export default function CheckoutPage() {
       // ── Visa / Mastercard via Paystack's hosted page ──
       // The cart is deliberately NOT cleared here: if the card payment fails the
       // customer comes back to a full basket. It clears once payment confirms.
-      if (paymentMethod === 'paystack_card') {
+      if (paymentMethod === CARD_PAYMENT_METHOD) {
         const paystackRes = await fetch('/api/paystack/initialize', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -846,7 +846,7 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Option 4: Visa / Mastercard — Paystack hosted checkout */}
-                <div onClick={() => setPaymentMethod('paystack_card')} className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'paystack_card' ? 'border-[#0b3b8f] bg-[#f4f8ff] shadow-[0_0_24px_rgba(11,59,143,0.08)]' : 'border-[#f0f0f0] bg-white hover:border-blue-200'}`}>
+                <div onClick={() => setPaymentMethod(CARD_PAYMENT_METHOD)} className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 ${paymentMethod === CARD_PAYMENT_METHOD ? 'border-[#0b3b8f] bg-[#f4f8ff] shadow-[0_0_24px_rgba(11,59,143,0.08)]' : 'border-[#f0f0f0] bg-white hover:border-blue-200'}`}>
                   <div className="flex items-center gap-5">
                     <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0 p-2">
                       <Image
@@ -861,8 +861,8 @@ export default function CheckoutPage() {
                       <p className="font-black text-gray-900 text-[15px]">Pay by Card — Visa or Mastercard</p>
                       <p className="text-xs text-gray-500 mt-1">You will be taken to <strong>Paystack&apos;s</strong> secure payment page. Batteriq never sees your card details.</p>
                     </div>
-                    <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${paymentMethod === 'paystack_card' ? 'border-[#0b3b8f] bg-[#0b3b8f]' : 'border-gray-200'}`}>
-                      {paymentMethod === 'paystack_card' && <div className="w-2 h-2 rounded-full bg-white" />}
+                    <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${paymentMethod === CARD_PAYMENT_METHOD ? 'border-[#0b3b8f] bg-[#0b3b8f]' : 'border-gray-200'}`}>
+                      {paymentMethod === CARD_PAYMENT_METHOD && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                   </div>
                   {isCardPayment && (
@@ -1050,7 +1050,7 @@ export default function CheckoutPage() {
                       <Lock size={20} className="transition-transform group-hover:scale-110" />
                       {paymentMethod === 'mpesa_now'
                         ? 'Send M-Pesa Payment Prompt'
-                        : paymentMethod === 'paystack_card'
+                        : paymentMethod === CARD_PAYMENT_METHOD
                         ? `Pay ${formatKesExact(payableTotal)} by Card`
                         : paymentMethod === 'cod_mpesa'
                         ? 'Place Order — Pay on Delivery'
@@ -1108,7 +1108,7 @@ export default function CheckoutPage() {
                   ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   : paymentMethod === 'mpesa_now'
                   ? 'Send M-Pesa Prompt'
-                  : paymentMethod === 'paystack_card'
+                  : paymentMethod === CARD_PAYMENT_METHOD
                   ? `Pay ${formatKesExact(payableTotal)} by Card`
                   : paymentMethod === 'cod_mpesa'
                   ? 'Place Order — Pay on Delivery'

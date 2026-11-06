@@ -9,7 +9,7 @@ import { randomBytes } from 'crypto'
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { initializeTransaction, toSubunits } from '@/lib/paystack'
-import { calculateCardFee } from '@/lib/cardFee'
+import { calculateCardFee, isCardPaymentMethod } from '@/lib/cardFee'
 import { rateLimit } from '@/lib/rateLimit'
 
 export const runtime = 'nodejs'
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     if (order.payment_status === 'paid') {
       return NextResponse.json({ error: 'This order has already been paid.' }, { status: 409 })
     }
-    if (order.payment_method !== 'paystack_card') {
+    if (!isCardPaymentMethod(order.payment_method)) {
       return NextResponse.json({ error: 'This order is not a card payment.' }, { status: 400 })
     }
     if (!order.guest_email) {
@@ -69,8 +69,9 @@ export async function POST(req: Request) {
     const { error: updateError } = await supabase
       .from('orders')
       .update({
-        paystack_reference: reference,
-        paystack_status_description: null,
+        // Existing card columns — see lib/paystackSync.ts.
+        pesapal_merchant_reference: reference,
+        pesapal_status_description: null,
         card_fee_rate: fee.rate,
         card_fee_kes: fee.feeKes,
         total_charged_kes: fee.totalChargedKes,

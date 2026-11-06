@@ -26,9 +26,15 @@ function parseRate(raw: string | undefined): number {
 
 export const CARD_FEE_RATE = parseRate(process.env.NEXT_PUBLIC_CARD_FEE_RATE)
 
-/** 'pesapal_card' stays for orders placed before the move to Paystack. */
+/**
+ * The stored value for every card order. It keeps its old name because Paystack
+ * reuses the card columns added by migration 005, so going live needed no schema
+ * change. It no longer means the order went through Pesapal.
+ */
+export const CARD_PAYMENT_METHOD = 'pesapal_card'
+
 export function isCardPaymentMethod(method: string | null | undefined): boolean {
-  return method === 'paystack_card' || method === 'pesapal_card'
+  return method === CARD_PAYMENT_METHOD
 }
 
 export type CardFeeBreakdown = {

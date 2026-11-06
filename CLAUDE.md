@@ -255,7 +255,7 @@ Key types from `lib/supabase/types.ts`:
 category: 'Power Stations' | 'Solar Panels' | 'Accessories' | 'Batteries' | 'Appliances' | 'Solar Home Systems' | 'Power Banks'
 
 // Order payment methods:
-payment_method: 'mpesa_now' | 'cod_cash' | 'cod_mpesa' | 'sales_confirmation' | 'paystack_card' | 'pesapal_card'
+payment_method: 'mpesa_now' | 'cod_cash' | 'cod_mpesa' | 'sales_confirmation' | 'pesapal_card'
 
 // Order payment status:
 payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
@@ -326,9 +326,9 @@ Rate limit on STK Push: 5 requests per IP per minute (in-memory map, reset to Re
 
 Separate rail — it does **not** share code with Daraja.
 
-1. Checkout creates the order with `payment_method: 'paystack_card'`
+1. Checkout creates the order with `payment_method: 'pesapal_card'` (see below)
 2. `POST /api/paystack/initialize` recomputes the 2% fee server-side, saves a
-   unique `paystack_reference` + the fee breakdown as pending, THEN calls Paystack
+   unique reference + the fee breakdown as pending, THEN calls Paystack
    `transaction/initialize` and returns `authorizationUrl`
 3. Customer pays on Paystack's hosted page (Batteriq never sees card numbers)
 4. Paystack calls `POST /api/paystack/webhook` (source of truth) → signature check
@@ -342,8 +342,9 @@ Key modules:
 - `lib/cardFee.ts` — the 2% pass-through fee, integer-cent maths
 - `lib/orderPayments.ts` — `markOrderPaid()`, card flow only (M-Pesa has its own inline copy)
 
-Orders placed before Paystack keep `payment_method: 'pesapal_card'` and their
-`pesapal_*` columns for history. Do not drop them.
+**Column names are historical.** Paystack reuses the card columns from migration
+005, so `pesapal_card` and `pesapal_*` are live for every card order, not just old
+ones. Do not drop them. `pesapal_merchant_reference` holds the Paystack reference.
 
 **The 2% card fee is card-only.** `total_kes` stays the order value (identical
 to M-Pesa); `card_fee_kes` / `total_charged_kes` are separate columns.
@@ -453,7 +454,7 @@ Regions: `fra1`, `iad1`. `www.batteriq.com` redirects to apex domain via `next.c
 | Table | Key columns |
 |---|---|
 | `products` | id, sku, brand, category, name, slug, price_kes, in_stock, featured |
-| `orders` | id, order_number, items (JSON), total_kes, payment_method, payment_status, fulfillment_status, paystack_reference, card_fee_kes, total_charged_kes |
+| `orders` | id, order_number, items (JSON), total_kes, payment_method, payment_status, fulfillment_status, pesapal_merchant_reference, card_fee_kes, total_charged_kes |
 | `ai_chat_sessions` | id, session_token, messages (JSON) |
 | `admin_users` | id (= auth.users.id), role, name |
 | `newsletter_subscribers` | id, email, name |

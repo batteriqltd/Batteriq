@@ -35,8 +35,7 @@ function paymentLabel(method: string): string {
     cod_cash: 'Cash on Delivery',
     cod_mpesa: 'M-Pesa at Doorstep',
     sales_confirmation: 'Reserve Order — Pay After Confirmation',
-    paystack_card: 'Visa / Mastercard',
-    pesapal_card: 'Visa / Mastercard (Pesapal)',
+    pesapal_card: 'Visa / Mastercard',
     mpesa: 'M-Pesa',
     cash: 'Cash',
   }

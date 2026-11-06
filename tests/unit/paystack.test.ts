@@ -125,8 +125,7 @@ describe('helpers', () => {
     expect(readMetadata(null)).toEqual({})
   })
 
-  it('treats old Pesapal orders as card orders, and nothing M-Pesa', () => {
-    expect(isCardPaymentMethod('paystack_card')).toBe(true)
+  it('recognises the stored card method, and nothing M-Pesa', () => {
     expect(isCardPaymentMethod('pesapal_card')).toBe(true)
     expect(isCardPaymentMethod('mpesa_now')).toBe(false)
     expect(isCardPaymentMethod(undefined)).toBe(false)
