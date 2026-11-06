@@ -1,15 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Card processing fee (Pesapal / Visa / Mastercard only)
+// Card processing fee (Visa / Mastercard only)
 //
-// Pesapal charges Batteriq a percentage on every card transaction. Company
-// policy is to pass that cost on to the customer rather than absorb it, so the
-// fee is added ON TOP of the order total for card payments.
+// The card processor charges Batteriq a percentage on every card transaction.
+// Company policy is to pass that cost on to the customer rather than absorb it,
+// so the fee is added ON TOP of the order total for card payments.
 //
-// This applies ONLY to the Pesapal card flow. M-Pesa orders never touch this
-// module and their totals are unchanged.
+// This applies ONLY to the card flow. M-Pesa orders never touch this module and
+// their totals are unchanged.
 //
-// The rate lives in one place — NEXT_PUBLIC_PESAPAL_CARD_FEE_RATE — so it can
-// be changed without a code edit. It is NEXT_PUBLIC_ on purpose: the checkout
+// The rate lives in one place — NEXT_PUBLIC_CARD_FEE_RATE — so it can be changed without a code edit. It is NEXT_PUBLIC_ on purpose: the checkout
 // page renders a live preview with the same rate the server charges. The rate
 // is not a secret, and the amount actually charged is always recomputed
 // server-side from the order stored in the database — never trusted from the
@@ -25,14 +24,19 @@ function parseRate(raw: string | undefined): number {
   return value
 }
 
-export const PESAPAL_CARD_FEE_RATE = parseRate(process.env.NEXT_PUBLIC_PESAPAL_CARD_FEE_RATE)
+export const CARD_FEE_RATE = parseRate(process.env.NEXT_PUBLIC_CARD_FEE_RATE)
+
+/** 'pesapal_card' stays for orders placed before the move to Paystack. */
+export function isCardPaymentMethod(method: string | null | undefined): boolean {
+  return method === 'paystack_card' || method === 'pesapal_card'
+}
 
 export type CardFeeBreakdown = {
   /** The order value — exactly what an M-Pesa customer would pay. */
   subtotalKes: number
-  /** The pass-through Pesapal fee, rounded to cents. */
+  /** The pass-through card fee, rounded to cents. */
   feeKes: number
-  /** subtotalKes + feeKes — the amount sent to Pesapal as `amount`. */
+  /** subtotalKes + feeKes — the amount charged to the card. */
   totalChargedKes: number
   /** The rate used, stored on the order for accounting. */
   rate: number
@@ -43,11 +47,11 @@ export type CardFeeBreakdown = {
 /**
  * Works in integer cents so subtotal + fee always sums exactly to the total —
  * no floating-point drift between what we show, what we store, and what
- * Pesapal charges.
+ * the card is charged.
  */
 export function calculateCardFee(
   subtotal: number | string,
-  rate: number = PESAPAL_CARD_FEE_RATE
+  rate: number = CARD_FEE_RATE
 ): CardFeeBreakdown {
   const amount = Number(subtotal)
   const safeSubtotal = Number.isFinite(amount) && amount > 0 ? amount : 0

@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// "Mark this order as paid" — used by the Pesapal card flow.
+// "Mark this order as paid" — used by the card payment flow.
 //
 // Mirrors, step for step, what app/api/mpesa/callback/route.ts already does on
 // a successful M-Pesa payment: same payment_status update, same admin push,
@@ -11,7 +11,10 @@
 // change the paid-order side effects, change them in BOTH places.
 //
 // The update here is idempotent: it only matches rows that are not already
-// paid, so a duplicated IPN cannot double-send receipts.
+// paid, so a duplicated webhook cannot double-send receipts.
+//
+// The push and emails are awaited: a serverless function can be frozen as soon as
+// it responds, which would silently drop a customer's receipt.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -33,7 +36,7 @@ export type PayableOrder = {
 
 export type MarkOrderPaidOptions = {
   order: PayableOrder
-  /** Provider reference shown to the customer (M-Pesa receipt or Pesapal confirmation code). */
+  /** Provider reference shown to the customer (e.g. the Paystack reference). */
   reference?: string | null
   /** Extra columns to write alongside payment_status, e.g. provider tracking ids. */
   updates?: Record<string, unknown>
@@ -83,8 +86,8 @@ export async function markOrderPaid(
 
   const collected = Number(amountKes ?? order.total_kes) || 0
 
-  // Instant push alert to admin devices — fire-and-forget
-  sendAdminPush({
+  // Instant push alert to admin devices
+  const push = sendAdminPush({
     title: pushTitle ?? '💰 Payment Received',
     body: `KES ${collected.toLocaleString('en-KE')} · ${order.guest_name ?? 'Customer'}`,
     tag: 'payment',
@@ -92,8 +95,8 @@ export async function markOrderPaid(
     url: `/admin/orders/${order.id}`,
   }).catch(() => {})
 
-  // Send payment confirmation emails — non-blocking
-  emailPaymentConfirmed({
+  // Payment confirmation emails. A failure here never un-pays the order.
+  const emails = emailPaymentConfirmed({
     order_number: order.order_number,
     guest_name: order.guest_name ?? '',
     guest_email: order.guest_email ?? '',
@@ -108,6 +111,8 @@ export async function markOrderPaid(
     delivery_address: (order.delivery_address ?? {}) as any,
     created_at: order.created_at,
   }).catch(e => console.error('Payment email failed:', e))
+
+  await Promise.allSettled([push, emails])
 
   return { applied: true }
 }

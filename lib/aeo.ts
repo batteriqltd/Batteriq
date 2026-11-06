@@ -66,7 +66,7 @@ export const ANSWER_GROUPS: AnswerGroup[] = [
         short:
           'Yes. Batteriq accepts M-Pesa through an STK Push prompt at checkout: you enter your phone number, confirm the prompt on your phone with your M-Pesa PIN, and the order is paid instantly.',
         detail: [
-          'Visa and Mastercard are also accepted through Pesapal (a 2% card processing fee applies to card payments only).',
+          'Visa and Mastercard are also accepted through Paystack (a 2% card processing fee applies to card payments only).',
           'Cash on Delivery and M-Pesa on Delivery are available on eligible orders.',
         ],
       },

@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle, FileText, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminNotify } from '@/components/admin/AdminNotify'
+import { isCardPaymentMethod } from '@/lib/cardFee'
 
 interface Order {
   id: string
@@ -20,7 +21,9 @@ interface Order {
   created_at: string
   mpesa_transaction_code?: string | null
   mpesa_failure_reason?: string | null
-  // Pesapal card orders
+  // Card orders (pesapal_* only on orders placed before Paystack)
+  paystack_reference?: string | null
+  paystack_status_description?: string | null
   pesapal_confirmation_code?: string | null
   pesapal_status_description?: string | null
   card_fee_kes?: number | string | null
@@ -36,6 +39,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cod_cash: 'Cash on Delivery',
   cod_mpesa: 'M-Pesa at Door',
   sales_confirmation: 'Sales Confirm',
+  paystack_card: 'Visa / Mastercard',
   pesapal_card: 'Visa / Mastercard',
 }
 
@@ -87,16 +91,16 @@ export default function AdminOrdersPage() {
         setOrders(prev => prev.map(o => o.id === updated.id ? updated : o))
 
         if (previous.payment_status !== 'paid' && updated.payment_status === 'paid') {
-          const isCard = updated.payment_method === 'pesapal_card'
+          const isCard = isCardPaymentMethod(updated.payment_method)
           const amount = `KES ${chargedAmount(updated).toLocaleString('en-KE')}`
-          const ref = (isCard ? updated.pesapal_confirmation_code : updated.mpesa_transaction_code) || 'N/A'
+          const ref = (isCard ? (updated.paystack_reference || updated.pesapal_confirmation_code) : updated.mpesa_transaction_code) || 'N/A'
           notify('success', 'Payment Received', `${updated.guest_name} paid ${amount} via ${isCard ? 'Visa/Mastercard' : 'M-Pesa'} — Ref: ${ref}`)
           try { new Audio('/notification.mp3').play().catch(() => {}) } catch {}
         }
 
         if (previous.payment_status !== 'failed' && updated.payment_status === 'failed') {
-          const reason = updated.payment_method === 'pesapal_card'
-            ? (updated.pesapal_status_description || 'Card payment declined or cancelled')
+          const reason = isCardPaymentMethod(updated.payment_method)
+            ? (updated.paystack_status_description || updated.pesapal_status_description || 'Card payment declined or cancelled')
             : (updated.mpesa_failure_reason || 'PIN error or cancelled')
           notify('error', 'Payment Failed', `${updated.guest_name}: ${reason}`)
         }

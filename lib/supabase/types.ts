@@ -44,14 +44,19 @@ export type Database = {
           items: Json
           subtotal_kes: number
           total_kes: number
-          payment_method: 'mpesa_now' | 'cod_cash' | 'cod_mpesa' | 'sales_confirmation' | 'pesapal_card'
+          payment_method: 'mpesa_now' | 'cod_cash' | 'cod_mpesa' | 'sales_confirmation' | 'paystack_card' | 'pesapal_card'
           payment_status: 'pending' | 'paid' | 'failed' | 'refunded'
           fulfillment_status: 'unfulfilled' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
           delivery_address: Json | null
           mpesa_checkout_request_id: string | null
           mpesa_transaction_code: string | null
           mpesa_failure_reason: string | null
-          // Pesapal card payments (migration 005) — null on M-Pesa orders
+          // Paystack card payments (migration 009) — null on other orders
+          paystack_reference: string | null
+          paystack_transaction_id: string | null
+          paystack_card_type: string | null
+          paystack_status_description: string | null
+          // Pesapal card payments (migration 005) — orders placed before Paystack
           pesapal_order_tracking_id: string | null
           pesapal_merchant_reference: string | null
           pesapal_payment_method: string | null

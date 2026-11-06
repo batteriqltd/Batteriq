@@ -16,7 +16,7 @@ import { calculateCardFee, formatKesExact } from '@/lib/cardFee'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 
-type PaymentMethod = 'mpesa_now' | 'cod_mpesa' | 'sales_confirmation' | 'pesapal_card'
+type PaymentMethod = 'mpesa_now' | 'cod_mpesa' | 'sales_confirmation' | 'paystack_card'
 
 function normalizePhone(raw: string): string {
   const p = raw.replace(/[\s\-\(\)]/g, '').trim()
@@ -142,10 +142,10 @@ export default function CheckoutPage() {
   const grandTotal = subtotal // items only — delivery fee is communicated separately when delivery is arranged
   const totalQuantity = mounted ? items.reduce((sum, item) => sum + item.quantity, 0) : 0
 
-  // Card payments carry a pass-through Pesapal fee. M-Pesa totals are untouched:
+  // Card payments carry a pass-through card fee. M-Pesa totals are untouched:
   // payableTotal only differs from grandTotal when the card option is selected.
   // This is a preview only — the server recomputes the fee before charging.
-  const isCardPayment = paymentMethod === 'pesapal_card'
+  const isCardPayment = paymentMethod === 'paystack_card'
   const cardFee = calculateCardFee(subtotal)
   const payableTotal = isCardPayment ? cardFee.totalChargedKes : grandTotal
   const set = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }))
@@ -194,21 +194,21 @@ export default function CheckoutPage() {
       if (!orderRes.ok) throw new Error(orderData.error ?? 'Order creation failed')
       setOrderId(orderData.orderId)
 
-      // ── Visa / Mastercard via Pesapal's hosted page ──
+      // ── Visa / Mastercard via Paystack's hosted page ──
       // The cart is deliberately NOT cleared here: if the card payment fails the
       // customer comes back to a full basket. It clears once payment confirms.
-      if (paymentMethod === 'pesapal_card') {
-        const pesapalRes = await fetch('/api/pesapal/checkout', {
+      if (paymentMethod === 'paystack_card') {
+        const paystackRes = await fetch('/api/paystack/initialize', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ orderId: orderData.orderId }),
         })
-        const pesapalData = await pesapalRes.json()
-        if (!pesapalRes.ok || !pesapalData.redirectUrl) {
-          throw new Error(pesapalData.error ?? 'Could not open the secure card payment page. Please try again or use M-Pesa.')
+        const paystackData = await paystackRes.json()
+        if (!paystackRes.ok || !paystackData.authorizationUrl) {
+          throw new Error(paystackData.error ?? 'Could not open the secure card payment page. Please try again or use M-Pesa.')
         }
         setCardRedirect(true)
-        window.location.href = pesapalData.redirectUrl
+        window.location.href = paystackData.authorizationUrl
         return
       }
 
@@ -290,7 +290,7 @@ export default function CheckoutPage() {
 
   if (!mounted || (items.length === 0 && step === 'form')) return null
 
-  // ── HANDING OFF TO PESAPAL (card only) ──
+  // ── HANDING OFF TO PAYSTACK (card only) ──
   if (cardRedirect) {
     return (
       <div className="min-h-screen flex items-center justify-center px-4 checkout-bg">
@@ -304,7 +304,7 @@ export default function CheckoutPage() {
           <div>
             <h2 className="text-3xl font-black text-[#00004d] mb-3 tracking-tight">Secure Card Payment</h2>
             <p className="text-gray-500 font-bold leading-relaxed px-4">
-              Taking you to Pesapal&apos;s secure payment page to pay {formatKesExact(payableTotal)}...
+              Taking you to Paystack&apos;s secure payment page to pay {formatKesExact(payableTotal)}...
             </p>
           </div>
           <div className="flex gap-3">
@@ -845,8 +845,8 @@ export default function CheckoutPage() {
                   </div>
                 </div>
 
-                {/* Option 4: Visa / Mastercard — Pesapal hosted checkout */}
-                <div onClick={() => setPaymentMethod('pesapal_card')} className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'pesapal_card' ? 'border-[#0b3b8f] bg-[#f4f8ff] shadow-[0_0_24px_rgba(11,59,143,0.08)]' : 'border-[#f0f0f0] bg-white hover:border-blue-200'}`}>
+                {/* Option 4: Visa / Mastercard — Paystack hosted checkout */}
+                <div onClick={() => setPaymentMethod('paystack_card')} className={`relative p-6 rounded-[24px] border-2 cursor-pointer transition-all duration-300 ${paymentMethod === 'paystack_card' ? 'border-[#0b3b8f] bg-[#f4f8ff] shadow-[0_0_24px_rgba(11,59,143,0.08)]' : 'border-[#f0f0f0] bg-white hover:border-blue-200'}`}>
                   <div className="flex items-center gap-5">
                     <div className="w-20 h-14 bg-white rounded-xl flex items-center justify-center shadow-sm border border-[#f0f0f0] flex-shrink-0 p-2">
                       <Image
@@ -859,10 +859,10 @@ export default function CheckoutPage() {
                     </div>
                     <div className="flex-1">
                       <p className="font-black text-gray-900 text-[15px]">Pay by Card — Visa or Mastercard</p>
-                      <p className="text-xs text-gray-500 mt-1">You will be taken to <strong>Pesapal&apos;s</strong> secure payment page. Batteriq never sees your card details.</p>
+                      <p className="text-xs text-gray-500 mt-1">You will be taken to <strong>Paystack&apos;s</strong> secure payment page. Batteriq never sees your card details.</p>
                     </div>
-                    <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${paymentMethod === 'pesapal_card' ? 'border-[#0b3b8f] bg-[#0b3b8f]' : 'border-gray-200'}`}>
-                      {paymentMethod === 'pesapal_card' && <div className="w-2 h-2 rounded-full bg-white" />}
+                    <div className={`w-6 h-6 rounded-full border-2 flex-shrink-0 flex items-center justify-center ${paymentMethod === 'paystack_card' ? 'border-[#0b3b8f] bg-[#0b3b8f]' : 'border-gray-200'}`}>
+                      {paymentMethod === 'paystack_card' && <div className="w-2 h-2 rounded-full bg-white" />}
                     </div>
                   </div>
                   {isCardPayment && (
@@ -1050,7 +1050,7 @@ export default function CheckoutPage() {
                       <Lock size={20} className="transition-transform group-hover:scale-110" />
                       {paymentMethod === 'mpesa_now'
                         ? 'Send M-Pesa Payment Prompt'
-                        : paymentMethod === 'pesapal_card'
+                        : paymentMethod === 'paystack_card'
                         ? `Pay ${formatKesExact(payableTotal)} by Card`
                         : paymentMethod === 'cod_mpesa'
                         ? 'Place Order — Pay on Delivery'
@@ -1067,7 +1067,7 @@ export default function CheckoutPage() {
 
                 {isCardPayment && (
                   <p className="text-center text-[11px] text-gray-400 font-bold mt-3 leading-relaxed">
-                    Includes a {cardFee.ratePercentLabel} card processing fee ({formatKesExact(cardFee.feeKes)}) charged by the card networks and passed on at cost. Card details are entered on Pesapal&apos;s secure page.
+                    Includes a {cardFee.ratePercentLabel} card processing fee ({formatKesExact(cardFee.feeKes)}) charged by the card networks and passed on at cost. Card details are entered on Paystack&apos;s secure page.
                   </p>
                 )}
 
@@ -1108,7 +1108,7 @@ export default function CheckoutPage() {
                   ? <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   : paymentMethod === 'mpesa_now'
                   ? 'Send M-Pesa Prompt'
-                  : paymentMethod === 'pesapal_card'
+                  : paymentMethod === 'paystack_card'
                   ? `Pay ${formatKesExact(payableTotal)} by Card`
                   : paymentMethod === 'cod_mpesa'
                   ? 'Place Order — Pay on Delivery'

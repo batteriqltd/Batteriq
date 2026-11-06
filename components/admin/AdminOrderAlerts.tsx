@@ -97,6 +97,7 @@ const PAYMENT_LABEL: Record<string, string> = {
   mpesa_now: 'M-Pesa (paid now)',
   cod_cash: 'Cash on delivery',
   cod_mpesa: 'M-Pesa on delivery',
+  paystack_card: 'Visa / Mastercard',
 }
 
 /**

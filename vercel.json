@@ -10,6 +10,12 @@
     "app/api/mpesa/stkpush/route.ts": {
       "maxDuration": 30
     },
+    "app/api/paystack/initialize/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/paystack/webhook/route.ts": {
+      "maxDuration": 30
+    },
     "app/api/pesapal/checkout/route.ts": {
       "maxDuration": 30
     },
@@ -66,6 +72,15 @@
   "headers": [
     {
       "source": "/api/mpesa/callback",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
+      "source": "/api/paystack/webhook",
       "headers": [
         {
           "key": "Cache-Control",

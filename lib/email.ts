@@ -1,4 +1,5 @@
 import { Resend } from 'resend'
+import { isCardPaymentMethod } from '@/lib/cardFee'
 import { generateReceiptPDF, type ReceiptData } from './pdf-receipt'
 
 const resend = new Resend(process.env.RESEND_API_KEY ?? 're_placeholder')
@@ -23,6 +24,7 @@ function paymentLabel(m: string): string {
     cod_cash: 'Cash on Delivery',
     cod_mpesa: 'M-Pesa at Doorstep',
     sales_confirmation: 'Reserve Order — Pay After Confirmation',
+    paystack_card: 'Visa / Mastercard',
     pesapal_card: 'Visa / Mastercard (Pesapal)',
     mpesa: 'M-Pesa',
     cash: 'Cash',
@@ -310,7 +312,7 @@ export async function emailPaymentConfirmed(order: {
   total_kes: number
   payment_method: string
   mpesa_transaction_code?: string
-  /** Card orders only — the 2% Pesapal fee the customer paid on top. */
+  /** Card orders only — the 2% card fee the customer paid on top. */
   card_fee_kes?: number
   /** Card orders only — total_kes + card_fee_kes, i.e. what was actually charged. */
   total_charged_kes?: number
@@ -322,12 +324,12 @@ export async function emailPaymentConfirmed(order: {
 
   // Card orders carry a pass-through processing fee and a different provider
   // reference. M-Pesa orders leave these undefined and render exactly as before.
-  const isCard = order.payment_method === 'pesapal_card'
+  const isCard = isCardPaymentMethod(order.payment_method)
   const cardFee = Number(order.card_fee_kes) || 0
   const charged = Number(order.total_charged_kes) || total
   const refLabel = isCard ? 'Card Payment Reference' : 'M-Pesa Reference'
   const paidIntro = isCard
-    ? 'Your card payment has been verified and confirmed by Pesapal. Your order is now being prepared!'
+    ? 'Your card payment has been verified and confirmed. Your order is now being prepared!'
     : 'Your M-Pesa payment has been automatically verified and confirmed. Your order is now being prepared!'
   const proofLine = isCard
     ? 'Your card payment reference above serves as payment proof.'
@@ -442,7 +444,7 @@ export async function emailPaymentConfirmed(order: {
             <div class="info-box"><div class="info-label">${refLabel}</div><div class="info-val" style="font-family:monospace">${order.mpesa_transaction_code ?? 'N/A'}</div></div>
             <div class="info-box"><div class="info-label">Phone</div><div class="info-val" style="font-family:monospace">${order.guest_phone}</div></div>
           </div>
-          ${cardFee > 0 ? `<div class="tip-box">💳 Card order — customer paid ${fmt(charged)} (${fmt(total)} order value + ${fmt(cardFee)} pass-through Pesapal fee). Bank to Batteriq: ${fmt(total)} after Pesapal deducts its cut.</div>` : ''}
+          ${cardFee > 0 ? `<div class="tip-box">💳 Card order — customer paid ${fmt(charged)} (${fmt(total)} order value + ${fmt(cardFee)} pass-through card fee). The processor settles this after deducting its own fee.</div>` : ''}
           <a href="https://batteriq.com/admin/orders" class="cta" style="background:linear-gradient(135deg,#00004d,#000080)">View in Admin</a>
         `, `Payment Received — ${order.order_number}`, `${fmt(charged)} via ${isCard ? 'Visa / Mastercard' : 'M-Pesa'} · Auto-verified`, '#065f46'),
       })
