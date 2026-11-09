@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
 import { hasCapacity } from '@/lib/catalogStats'
+import { breadcrumbListJsonLd, collectionPageJsonLd, jsonLdScript } from '@/lib/structuredData'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
 import { Shield } from 'lucide-react'
@@ -40,60 +41,38 @@ export const metadata: Metadata = withCanonical('/ecoflow-kenya', {
   },
 })
 
+// One list feeds both the visible FAQ and the FAQPage markup, so they always match.
+const ECOFLOW_FAQS = [
+  {
+    q: 'Is Batteriq an authorised EcoFlow dealer in Kenya?',
+    a: 'Yes. Batteriq is Kenya\'s official authorised EcoFlow distributor. All products are 100% genuine with official EcoFlow warranty coverage and local after-sales support.',
+  },
+  {
+    q: 'How do I buy EcoFlow in Kenya?',
+    a: 'Browse our EcoFlow range, add to cart, and checkout. We accept M-Pesa STK Push (instant, pay now), cash on delivery, and M-Pesa on delivery. Our team confirms your order within minutes.',
+  },
+  {
+    q: 'Can I pay for EcoFlow with M-Pesa?',
+    a: 'Yes! Batteriq offers instant M-Pesa STK Push checkout. Enter your Safaricom number at checkout, and you\'ll receive a payment prompt on your phone. Confirm with your M-Pesa PIN and your order is paid instantly.',
+  },
+  {
+    q: 'Does EcoFlow deliver in Nairobi?',
+    a: 'Yes. Batteriq offers same-day and next-day delivery within Nairobi, and nationwide shipping across all 47 counties in Kenya.',
+  },
+  {
+    q: 'What is the EcoFlow warranty in Kenya?',
+    a: 'All EcoFlow products come with the official manufacturer warranty — typically 24 months for power stations, 12 months for accessories. Batteriq is the authorised warranty service partner in Kenya.',
+  },
+]
+
 const faqSchema = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Is Batteriq an authorised EcoFlow dealer in Kenya?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes. Batteriq is Kenya\'s authorised EcoFlow distributor, offering the full range of EcoFlow power stations, solar panels, and accessories with genuine warranty and official after-sales support.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Can I pay for EcoFlow products with M-Pesa in Kenya?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes. Batteriq offers instant M-Pesa STK Push checkout — you receive an M-Pesa prompt on your phone during checkout and confirm payment instantly with your PIN.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'Does Batteriq deliver EcoFlow products in Nairobi?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes. Batteriq offers same-day and next-day delivery within Nairobi, and nationwide shipping across Kenya via trusted courier partners.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'How do I buy EcoFlow in Kenya?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Simply browse Batteriq\'s EcoFlow product range, add items to your cart, and checkout using M-Pesa, cash on delivery, or M-Pesa on delivery. Our team will contact you to confirm delivery.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'What is the EcoFlow warranty in Kenya?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'All EcoFlow products sold by Batteriq come with the official EcoFlow manufacturer warranty — typically 24 months for power stations and 12 months for accessories. Batteriq is the authorised warranty service partner for Kenya.',
-      },
-    },
-  ],
-}
-
-const breadcrumbSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://batteriq.com' },
-    { '@type': 'ListItem', position: 2, name: 'EcoFlow Kenya', item: 'https://batteriq.com/ecoflow-kenya' },
-  ],
+  mainEntity: ECOFLOW_FAQS.map(({ q, a }) => ({
+    '@type': 'Question',
+    name: q,
+    acceptedAnswer: { '@type': 'Answer', text: a },
+  })),
 }
 
 async function getEcoFlowProducts() {
@@ -131,7 +110,19 @@ export default async function EcoFlowKenyaPage() {
     <>
       <Header />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbListJsonLd([{ name: 'Home', path: '/' }, { name: 'EcoFlow Kenya', path: '/ecoflow-kenya' }]))} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(
+          collectionPageJsonLd({
+            path: '/ecoflow-kenya',
+            name: 'EcoFlow Kenya',
+            description: 'Genuine EcoFlow power stations, solar panels, extra batteries, solar home systems and accessories in Kenya, from Batteriq.',
+            // Display order: the sections below, top to bottom.
+            products: [...powerStations, ...solarPanels, ...batteries, ...solarHomeSystems, ...accessories],
+          })
+        )}
+      />
       <ToastContainer />
 
       <PageHero
@@ -245,28 +236,7 @@ export default async function EcoFlowKenyaPage() {
           <section id="faq">
             <h2 className="h2-fluid text-gray-900 mb-8">Frequently Asked Questions — EcoFlow Kenya</h2>
             <div className="space-y-3 max-w-3xl">
-              {[
-                {
-                  q: 'Is Batteriq an authorised EcoFlow dealer in Kenya?',
-                  a: 'Yes. Batteriq is Kenya\'s official authorised EcoFlow distributor. All products are 100% genuine with official EcoFlow warranty coverage and local after-sales support.',
-                },
-                {
-                  q: 'How do I buy EcoFlow in Kenya?',
-                  a: 'Browse our EcoFlow range, add to cart, and checkout. We accept M-Pesa STK Push (instant, pay now), cash on delivery, and M-Pesa on delivery. Our team confirms your order within minutes.',
-                },
-                {
-                  q: 'Can I pay for EcoFlow with M-Pesa?',
-                  a: 'Yes! Batteriq offers instant M-Pesa STK Push checkout. Enter your Safaricom number at checkout, and you\'ll receive a payment prompt on your phone. Confirm with your M-Pesa PIN and your order is paid instantly.',
-                },
-                {
-                  q: 'Does EcoFlow deliver in Nairobi?',
-                  a: 'Yes. Batteriq offers same-day and next-day delivery within Nairobi, and nationwide shipping across all 47 counties in Kenya.',
-                },
-                {
-                  q: 'What is the EcoFlow warranty in Kenya?',
-                  a: 'All EcoFlow products come with the official manufacturer warranty — typically 24 months for power stations, 12 months for accessories. Batteriq is the authorised warranty service partner in Kenya.',
-                },
-              ].map(({ q, a }) => (
+              {ECOFLOW_FAQS.map(({ q, a }) => (
                 <details
                   key={q}
                   className="group bg-white border border-gray-200 rounded-[8px] overflow-hidden"

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { withCanonical } from '@/lib/seo'
+import { breadcrumbListJsonLd, collectionPageJsonLd, jsonLdScript } from '@/lib/structuredData'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -37,6 +38,18 @@ export default async function AccessoriesPage() {
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbListJsonLd([{ name: 'Home', path: '/' }, { name: 'Accessories', path: '/accessories' }]))} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(
+          collectionPageJsonLd({
+            path: '/accessories',
+            name: 'Accessories in Kenya',
+            description: 'Extra batteries, cables, chargers, audio and smart-home accessories from EcoFlow, Anker, Soundcore and Eufy in Kenya, from Batteriq.',
+            products: products,
+          })
+        )}
+      />
       <Header />
       <ToastContainer />
       <PageHero

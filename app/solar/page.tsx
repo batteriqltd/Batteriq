@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { withCanonical } from '@/lib/seo'
+import { collectionPageJsonLd, jsonLdScript } from '@/lib/structuredData'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Header } from '@/components/layout/Header'
 import { Hero3DProduct } from '@/components/layout/Hero3DProduct'
@@ -43,6 +44,17 @@ export default async function SolarPanelsPage() {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(
+          collectionPageJsonLd({
+            path: '/solar',
+            name: 'EcoFlow Solar Panels in Kenya',
+            description: 'EcoFlow portable and rigid solar panels for power stations in Kenya, from Batteriq.',
+            products: products,
+          })
+        )}
+      />
       <Header />
       <ToastContainer />
       {/* ── SOLAR HERO ── */}

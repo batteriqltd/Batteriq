@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { withCanonical } from '@/lib/seo'
+import { collectionPageJsonLd, jsonLdScript } from '@/lib/structuredData'
 import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Header } from '@/components/layout/Header'
@@ -63,20 +64,14 @@ export default async function PowerStationsPage() {
     <PageWrapper>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'CollectionPage',
-            name: 'EcoFlow Power Stations Kenya',
-            description: 'Buy EcoFlow power stations in Kenya with M-Pesa. Official authorised dealer.',
-            url: 'https://batteriq.com/power-stations',
-            provider: {
-              '@type': 'Organization',
-              name: 'Batteriq',
-              description: "Kenya's Official Authorised EcoFlow Distributor",
-            },
-          }),
-        }}
+        dangerouslySetInnerHTML={jsonLdScript(
+          collectionPageJsonLd({
+            path: '/power-stations',
+            name: 'Power Stations in Kenya',
+            description: 'EcoFlow and BLUETTI portable power stations and solar home systems in Kenya, from Batteriq.',
+            products: products,
+          })
+        )}
       />
 
       <Header />

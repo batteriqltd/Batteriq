@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { withCanonical } from '@/lib/seo'
+import { breadcrumbListJsonLd, collectionPageJsonLd, jsonLdScript } from '@/lib/structuredData'
 import { Shield } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { withBluettiFallbacks } from '@/lib/bluetti-residential'
@@ -29,25 +30,6 @@ export const metadata: Metadata = withCanonical('/bluetti', {
   },
 })
 
-const faqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    { '@type': 'Question', name: 'Where can I buy genuine Bluetti power stations in Kenya?', acceptedAnswer: { '@type': 'Answer', text: 'Batteriq supplies genuine Bluetti power stations, solar panels and expansion batteries in Kenya, with local customer support and manufacturer warranty coverage.' } },
-    { '@type': 'Question', name: 'Can I pay for Bluetti products with M-Pesa?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. Batteriq accepts M-Pesa for Bluetti purchases and offers delivery in Nairobi as well as nationwide shipping across Kenya.' } },
-    { '@type': 'Question', name: 'Which Bluetti power station is right for home backup in Kenya?', acceptedAnswer: { '@type': 'Answer', text: 'The right model depends on the appliances and runtime you need. Compact models suit routers and small electronics, while AC and EP series systems support larger home backup requirements. Batteriq can help you select a suitable system.' } },
-  ],
-}
-
-const breadcrumbSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://batteriq.com' },
-    { '@type': 'ListItem', position: 2, name: 'Bluetti Kenya', item: 'https://batteriq.com/bluetti' },
-  ],
-}
-
 async function getBluettiData() {
   try {
     const supabase = createAdminClient()
@@ -70,8 +52,19 @@ export default async function BluettiCollectionPage() {
   return (
     <>
       <Header />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      {/* No FAQPage: these questions are not shown on this page. */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbListJsonLd([{ name: 'Home', path: '/' }, { name: 'Bluetti Kenya', path: '/bluetti' }]))} />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(
+          collectionPageJsonLd({
+            path: '/bluetti',
+            name: 'BLUETTI Kenya',
+            description: 'Genuine BLUETTI power stations, residential backup systems, solar panels and expansion batteries in Kenya, from Batteriq.',
+            products,
+          })
+        )}
+      />
       <ToastContainer />
       <PageHero
         title="Bluetti Kenya"
