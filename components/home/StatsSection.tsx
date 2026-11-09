@@ -49,8 +49,18 @@ const STATS: StatItem[] = [
   },
 ]
 
+// The server HTML carries the final number. After hydration it resets to 0 (if
+// the section has not been reached yet) so the count-up still plays on scroll.
 function useCountUp(target: number, duration: number, started: boolean) {
-  const [count, setCount] = useState(0)
+  const [count, setCount] = useState(target)
+
+  useEffect(() => {
+    if (started) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+    setCount(0)
+    // Mount only: arm the animation once.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     if (!started || target === 0) return
@@ -126,7 +136,7 @@ function StatCard({ stat, started }: { stat: StatItem; started: boolean }) {
           </span>
         ) : (
           <span>
-            {stat.prefix}{started ? count : 0}{stat.suffix}
+            {stat.prefix}{count}{stat.suffix}
           </span>
         )}
       </div>
