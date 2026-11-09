@@ -111,6 +111,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: 'website',
       images: product.images?.[0] ? [{ url: product.images[0] }] : [],
     },
+    // Own card, not the home page's inherited from the root layout.
+    twitter: { card: 'summary_large_image', title, description, images: product.images?.[0] ? [product.images[0]] : [] },
   }
 }
 

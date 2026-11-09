@@ -58,6 +58,14 @@ export function withCanonical(path: string, meta: Metadata): Metadata {
       ...meta.openGraph,
       url,
     },
+    // Without this every page inherited the home page's Twitter card from the root layout.
+    twitter: {
+      card: 'summary_large_image',
+      title: plainTitle(meta.title),
+      description: meta.description ?? undefined,
+      images: [DEFAULT_OG_IMAGE.url],
+      ...meta.twitter,
+    },
   }
 }
 
