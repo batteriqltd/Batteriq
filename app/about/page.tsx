@@ -5,8 +5,8 @@ import { Footer } from '@/components/layout/Footer'
 import { Zap, Shield, Globe, Users } from 'lucide-react'
 
 export const metadata: Metadata = withCanonical('/about', {
-  title: 'About Batteriq — Kenya\'s Authorised EcoFlow Dealer',
-  description: 'Batteriq is Kenya\'s authorised EcoFlow and Bluetti dealer. Learn about our mission to guarantee uptime for homes and businesses across Kenya.',
+  title: { absolute: 'About Batteriq – EcoFlow & Bluetti Dealer, Nairobi' },
+  description: 'Batteriq is a Nairobi-based EcoFlow and Bluetti dealer. Genuine stock, local warranty support, M-Pesa payment and delivery to all 47 Kenyan counties.',
 })
 
 export default function AboutPage() {

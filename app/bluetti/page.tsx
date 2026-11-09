@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { withCanonical } from '@/lib/seo'
+import { getListingStats } from '@/lib/catalogStats'
 import { breadcrumbListJsonLd, collectionPageJsonLd, jsonLdScript } from '@/lib/structuredData'
 import { Shield } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -14,23 +15,24 @@ import { bluettiContent } from '@/lib/categoryContent'
 
 export const revalidate = 60
 
-export const metadata: Metadata = withCanonical('/bluetti', {
-  // absolute: skips the root "%s | Batteriq" template, which doubled the brand
-  title: { absolute: 'BLUETTI Kenya — Official Dealer, Prices & Stock | Batteriq' },
-  description: 'Buy genuine Bluetti power stations, residential backup systems, solar panels and batteries in Kenya from Batteriq. New Homestar 3, HV6K, HV10K and HB500 in stock. Official authorised dealer, M-Pesa payments, Nairobi delivery and manufacturer warranty.',
-  keywords: ['Bluetti Kenya', 'buy Bluetti Kenya', 'Bluetti dealer Kenya', 'official Bluetti dealer Kenya', 'Bluetti power station Kenya', 'Bluetti solar generator Kenya', 'Bluetti Nairobi', 'Bluetti AC200PL Kenya', 'Bluetti AC300 Kenya', 'Bluetti AC500 Kenya', 'Bluetti Homestar 3 Kenya', 'Bluetti HV6K Kenya', 'Bluetti HV10K Kenya', 'Bluetti HB500 Kenya'],
-  openGraph: {
-    title: 'Bluetti Kenya | Official Bluetti Dealer | Batteriq',
-    description: 'Buy genuine Bluetti power stations in Kenya. M-Pesa accepted, Nairobi delivery and local support.',
-    images: [{ url: 'https://batteriq.com/heroes/hero-bluetti.jpg', width: 1200, height: 630, alt: 'Bluetti Kenya - Batteriq official dealer' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Bluetti Kenya | Official Bluetti Dealer | Batteriq',
-    description: 'Genuine Bluetti power stations, solar panels and batteries in Kenya. M-Pesa accepted.',
-    images: ['https://batteriq.com/heroes/hero-bluetti.jpg'],
-  },
-})
+const n = (v: number) => v.toLocaleString('en-KE')
+
+/** "From KES" is the cheapest in-stock Bluetti power station, read live. */
+export async function generateMetadata(): Promise<Metadata> {
+  const { minKes } = await getListingStats({ categories: ['Power Stations'], brand: 'Bluetti', needsCapacity: true })
+  const title = 'Bluetti Kenya – Authorised Dealer, Prices & Stock | Batteriq'
+  const description = `Bluetti price list in Kenya: power stations${minKes ? ` from KES ${n(minKes)}` : ''}, plus Homestar 3, EP760 and HB500 home backup. M-Pesa, Nairobi delivery, local support.`
+  return withCanonical('/bluetti', {
+    // absolute: skips the root "%s | Batteriq" template, which doubled the brand
+    title: { absolute: title },
+    description,
+    keywords: ['Bluetti Kenya', 'buy Bluetti Kenya', 'Bluetti dealer Kenya', 'official Bluetti dealer Kenya', 'Bluetti power station Kenya', 'Bluetti solar generator Kenya', 'Bluetti Nairobi', 'Bluetti AC200PL Kenya', 'Bluetti AC300 Kenya', 'Bluetti AC500 Kenya', 'Bluetti Homestar 3 Kenya', 'Bluetti HV6K Kenya', 'Bluetti HV10K Kenya', 'Bluetti HB500 Kenya'],
+    openGraph: {
+      images: [{ url: 'https://batteriq.com/heroes/hero-bluetti.jpg', width: 1200, height: 630, alt: 'Bluetti Kenya - Batteriq authorised dealer' }],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: ['https://batteriq.com/heroes/hero-bluetti.jpg'] },
+  })
+}
 
 async function getBluettiData() {
   try {

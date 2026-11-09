@@ -7,8 +7,8 @@ import { withCanonical } from '@/lib/seo'
 
 export const metadata: Metadata = withCanonical('/compare', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
-  title: { absolute: 'Compare EcoFlow & BLUETTI Power Stations | Batteriq Kenya' },
-  description: 'Compare EcoFlow and BLUETTI power stations side by side. Specs, prices, battery capacity and more. Find the right power station for your needs in Kenya.',
+  title: { absolute: 'Compare EcoFlow & Bluetti Power Stations | Batteriq Kenya' },
+  description: 'Compare EcoFlow and Bluetti power stations side by side: capacity, output, weight, solar input and Kenya prices, to find the right backup for your home.',
 })
 
 export default async function ComparePage() {

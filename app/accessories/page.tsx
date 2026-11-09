@@ -14,9 +14,9 @@ export const revalidate = 60
 
 export const metadata: Metadata = withCanonical('/accessories', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
-  title: { absolute: 'EcoFlow Extra Batteries & Accessories Kenya | Batteriq' },
+  title: { absolute: 'Anker, Soundcore & EcoFlow Accessories Kenya | Batteriq' },
   description:
-    'Buy EcoFlow extra batteries, cables, appliances and accessories in Kenya. M-Pesa checkout. Authorised EcoFlow dealer.',
+    'Anker power banks and chargers, Soundcore earbuds, Eufy cameras, plus EcoFlow and Bluetti extra batteries. Genuine stock, M-Pesa, Nairobi delivery.',
 })
 
 async function getAccessoriesData() {

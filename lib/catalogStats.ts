@@ -46,3 +46,51 @@ export function formatKesRange(min: number | null, max: number | null): string |
   const f = (n: number) => `KES ${n.toLocaleString('en-KE')}`
   return min === max ? f(min) : `${f(min)} – ${f(max)}`
 }
+
+export type ListingStats = {
+  /** Products listed (real price; with capacity when required). */
+  count: number
+  /** Cheapest and dearest in-stock listed product, KES. */
+  minKes: number | null
+  maxKes: number | null
+  /** Smallest and largest in-stock panel wattage (solar panels only). */
+  minWatts: number | null
+  maxWatts: number | null
+}
+
+const EMPTY_LISTING: ListingStats = { count: 0, minKes: null, maxKes: null, minWatts: null, maxWatts: null }
+
+/** Leading watt figure of "125W x2" or "400W", or null. */
+const watts = (v: unknown) => {
+  const m = typeof v === 'string' ? v.match(/(\d+(?:\.\d+)?)\s*W\b/i) : null
+  return m ? Number(m[1]) : null
+}
+
+/**
+ * Live figures for a listing's title and meta description ("KES {min}–{max}",
+ * "{count} power stations"), so no price is ever written into page metadata.
+ */
+export async function getListingStats(opts: { categories: string[]; brand?: string; needsCapacity?: boolean }): Promise<ListingStats> {
+  try {
+    let q = createAdminClient().from('products').select('price_kes, brand, in_stock, specs').in('category', opts.categories)
+    if (opts.brand) q = q.eq('brand', opts.brand)
+    const { data, error } = await q
+    if (error || !data) return EMPTY_LISTING
+    const rows = (data as { price_kes: number; in_stock: boolean; specs: Record<string, unknown> | null }[])
+      .filter((r) => isRealPrice(r.price_kes) && (!opts.needsCapacity || hasCapacity(r.specs)))
+    const live = rows.filter((r) => r.in_stock)
+    const prices = live.map((r) => Number(r.price_kes))
+    const w = live.map((r) => watts(r.specs?.power ?? r.specs?.wattage)).filter((n): n is number => n != null)
+    return {
+      count: rows.length,
+      minKes: prices.length ? Math.min(...prices) : null,
+      maxKes: prices.length ? Math.max(...prices) : null,
+      minWatts: w.length ? Math.min(...w) : null,
+      maxWatts: w.length ? Math.max(...w) : null,
+    }
+  } catch {
+    return EMPTY_LISTING
+  }
+}
+
+export const kesText = (n: number) => `KES ${n.toLocaleString('en-KE')}`

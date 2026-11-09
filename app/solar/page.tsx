@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { withCanonical } from '@/lib/seo'
+import { getListingStats } from '@/lib/catalogStats'
 import { collectionPageJsonLd, jsonLdScript } from '@/lib/structuredData'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Header } from '@/components/layout/Header'
@@ -14,18 +15,24 @@ import { getPowerStations } from '@/lib/productContentServer'
 
 export const revalidate = 60
 
-export const metadata: Metadata = withCanonical('/solar', {
-  // absolute: skips the root "%s | Batteriq" template, which doubled the brand
-  // The page sells EcoFlow and BLUETTI panels, so the title names both.
-  title: { absolute: 'EcoFlow & BLUETTI Solar Panels Price in Kenya | Batteriq' },
-  description: 'Buy EcoFlow and BLUETTI solar panels in Kenya: foldable, rigid and flexible, 45W to 400W. Pay with M-Pesa. Authorised dealer. Same-day Nairobi delivery.',
-  keywords: ['solar panels Kenya', 'EcoFlow solar panel Kenya', 'buy solar panel Kenya', 'portable solar panel Kenya', 'solar panel Nairobi', 'EcoFlow 400W solar Kenya', 'solar power Kenya'],
-  openGraph: {
-    title: 'EcoFlow & BLUETTI Solar Panels Kenya | Batteriq',
-    description: 'EcoFlow and BLUETTI solar panels in Kenya. M-Pesa accepted.',
-    images: [{ url: 'https://batteriq.com/heroes/hero-solar.jpg', width: 1200, height: 630, alt: 'EcoFlow Solar Panels Kenya' }],
-  },
-})
+const n = (v: number) => v.toLocaleString('en-KE')
+
+/** Wattage and price ranges of in-stock panels, read live. */
+export async function generateMetadata(): Promise<Metadata> {
+  const s = await getListingStats({ categories: ['Solar Panels'] })
+  const watts = s.minWatts && s.maxWatts ? `, ${s.minWatts}W–${s.maxWatts}W` : ''
+  const range = s.minKes && s.maxKes ? `, KES ${n(s.minKes)}–${n(s.maxKes)}` : ''
+  return withCanonical('/solar', {
+    // absolute: skips the root "%s | Batteriq" template, which doubled the brand
+    // The page sells EcoFlow and BLUETTI panels, so the title names both.
+    title: { absolute: 'Solar Panel Price in Kenya – EcoFlow & Bluetti | Batteriq' },
+    description: `Portable, rigid and flexible solar panels from EcoFlow & Bluetti${watts}${range}. Charge your power station from the sun. M-Pesa accepted.`,
+    keywords: ['solar panels Kenya', 'EcoFlow solar panel Kenya', 'buy solar panel Kenya', 'portable solar panel Kenya', 'solar panel Nairobi', 'EcoFlow 400W solar Kenya', 'solar power Kenya'],
+    openGraph: {
+      images: [{ url: 'https://batteriq.com/heroes/hero-solar.jpg', width: 1200, height: 630, alt: 'EcoFlow and Bluetti Solar Panels Kenya' }],
+    },
+  })
+}
 
 async function getSolarProducts() {
   try {

@@ -5,7 +5,7 @@ import { withoutDeprecatedDelta } from '@/lib/delta-series'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
-import { hasCapacity } from '@/lib/catalogStats'
+import { getListingStats, hasCapacity } from '@/lib/catalogStats'
 import { breadcrumbListJsonLd, collectionPageJsonLd, jsonLdScript } from '@/lib/structuredData'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
@@ -15,33 +15,34 @@ import { ecoflowContent } from '@/lib/categoryContent'
 
 export const revalidate = 60
 
-export const metadata: Metadata = withCanonical('/ecoflow-kenya', {
-  // absolute: skips the root "%s | Batteriq" template, which doubled the brand
-  title: { absolute: 'EcoFlow Kenya — Official Authorised EcoFlow Dealer | Batteriq' },
-  description: 'Batteriq is the official EcoFlow dealer in Kenya. Buy genuine EcoFlow power stations as an authorised dealer. EcoFlow DELTA Pro, DELTA 2, RIVER 2, solar panels. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty.',
-  keywords: [
-    'EcoFlow Kenya', 'official EcoFlow dealer', 'official EcoFlow dealer Kenya', 'buy EcoFlow Kenya', 'EcoFlow dealer Kenya', 'EcoFlow authorised dealer Kenya', 'authorised EcoFlow dealer',
-    'EcoFlow distributor Kenya', 'EcoFlow power station Kenya', 'EcoFlow DELTA Pro Kenya',
-    'EcoFlow DELTA 2 Kenya', 'EcoFlow RIVER 2 Kenya', 'EcoFlow solar panel Kenya',
-    'power station Kenya', 'portable power station Kenya', 'home backup power Kenya',
-    'solar power Kenya', 'M-Pesa power station', 'buy power station Nairobi',
-    'EcoFlow Nairobi', 'Batteriq Kenya', 'EcoFlow official Kenya',
-  ],
-  openGraph: {
-    title: 'EcoFlow Kenya — Official Authorised EcoFlow Dealer | Batteriq',
-    description: 'Buy genuine EcoFlow in Kenya. M-Pesa accepted. Same-day Nairobi delivery.',
-    siteName: 'Batteriq Kenya',
-    locale: 'en_KE',
-    type: 'website',
-    images: [{ url: 'https://batteriq.com/heroes/hero-power-stations.jpg', width: 1200, height: 630, alt: 'EcoFlow Kenya — Batteriq Official Dealer' }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'EcoFlow Kenya — Official Dealer | Batteriq',
-    description: 'Buy genuine EcoFlow in Kenya. M-Pesa accepted. Same-day delivery.',
-    images: ['https://batteriq.com/heroes/hero-power-stations.jpg'],
-  },
-})
+const n = (v: number) => v.toLocaleString('en-KE')
+
+/** "From KES" is the cheapest in-stock EcoFlow power station, read live. */
+export async function generateMetadata(): Promise<Metadata> {
+  const { minKes } = await getListingStats({ categories: ['Power Stations'], brand: 'EcoFlow', needsCapacity: true })
+  const title = 'EcoFlow Kenya – Authorised Dealer & Price List | Batteriq'
+  const description = `EcoFlow price list in Kenya: DELTA Pro 3, DELTA 3 and RIVER 3 power stations${minKes ? ` from KES ${n(minKes)}` : ''}, plus solar panels. M-Pesa, Nairobi delivery, eTIMS invoice.`
+  return withCanonical('/ecoflow-kenya', {
+    // absolute: skips the root "%s | Batteriq" template, which doubled the brand
+    title: { absolute: title },
+    description,
+    keywords: [
+      'EcoFlow Kenya', 'official EcoFlow dealer', 'official EcoFlow dealer Kenya', 'buy EcoFlow Kenya', 'EcoFlow dealer Kenya', 'EcoFlow authorised dealer Kenya', 'authorised EcoFlow dealer',
+      'EcoFlow distributor Kenya', 'EcoFlow power station Kenya', 'EcoFlow DELTA Pro Kenya',
+      'EcoFlow DELTA 2 Kenya', 'EcoFlow RIVER 2 Kenya', 'EcoFlow solar panel Kenya',
+      'power station Kenya', 'portable power station Kenya', 'home backup power Kenya',
+      'solar power Kenya', 'M-Pesa power station', 'buy power station Nairobi',
+      'EcoFlow Nairobi', 'Batteriq Kenya', 'EcoFlow official Kenya',
+    ],
+    openGraph: {
+      siteName: 'Batteriq Kenya',
+      locale: 'en_KE',
+      type: 'website',
+      images: [{ url: 'https://batteriq.com/heroes/hero-power-stations.jpg', width: 1200, height: 630, alt: 'EcoFlow Kenya — Batteriq authorised dealer' }],
+    },
+    twitter: { card: 'summary_large_image', title, description, images: ['https://batteriq.com/heroes/hero-power-stations.jpg'] },
+  })
+}
 
 // One list feeds both the visible FAQ and the FAQPage markup, so they always match.
 const ECOFLOW_FAQS = [

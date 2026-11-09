@@ -9,8 +9,8 @@ import { HelpCircle, BookOpen, Shield, MessageCircle, Phone, Mail, ChevronRight 
 import { WhatsAppIcon, EmailIcon } from '@/components/ui/ContactIcons'
 
 export const metadata: Metadata = withCanonical('/support', {
-  title: 'Support & Help — EcoFlow & BLUETTI Kenya',
-  description: 'Official EcoFlow & Bluetti support hub in Kenya. FAQ, product manuals, and warranty registration.',
+  title: { absolute: 'Support – Manuals, FAQ & Warranty | Batteriq Kenya' },
+  description: 'Get help with your EcoFlow or Bluetti product: user manuals, FAQs, warranty registration, order tracking and WhatsApp support from our Nairobi team.',
 })
 
 export default function SupportPage() {

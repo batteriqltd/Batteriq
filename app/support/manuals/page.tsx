@@ -7,8 +7,8 @@ import { ToastContainer } from '@/components/ui/Toast'
 import { ExternalLink, FileText } from 'lucide-react'
 
 export const metadata: Metadata = withCanonical('/support/manuals', {
-  title: 'EcoFlow Product Manuals & Downloads Kenya',
-  description: 'Download official EcoFlow user manuals, quick start guides, and product specifications for all EcoFlow models available in Kenya.',
+  title: { absolute: 'EcoFlow & Bluetti User Manuals | Batteriq Kenya' },
+  description: 'Download user manuals and quick-start guides for EcoFlow and Bluetti power stations, solar panels and batteries sold by Batteriq in Kenya.',
 })
 
 const manualCategories = [

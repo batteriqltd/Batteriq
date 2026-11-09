@@ -9,8 +9,8 @@ import { FaqAccordion } from '@/components/support/FaqAccordion'
 
 export const metadata: Metadata = withCanonical('/support/faq', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
-  title: { absolute: 'FAQ — EcoFlow & BLUETTI in Kenya | Batteriq' },
-  description: 'Answers to common questions about EcoFlow products in Kenya — charging, battery life, solar compatibility, M-Pesa payment, warranty, and delivery.',
+  title: { absolute: 'FAQ – Buying EcoFlow & Bluetti in Kenya | Batteriq' },
+  description: 'Answers on buying EcoFlow and Bluetti in Kenya: M-Pesa payment, delivery times, warranty, solar charging and which power station fits your home.',
 })
 
 const faqCategories = [

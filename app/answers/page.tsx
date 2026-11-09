@@ -15,14 +15,10 @@ const SIZE_GUIDE = '/answers/what-size-power-station'
 const AEO_PUBLISHED = '2026-11-02'
 
 export const metadata: Metadata = withCanonical('/answers', {
-  title: 'Backup Power in Kenya — Straight Answers',
+  title: { absolute: 'Power Station Buying Guide for Kenya | Batteriq' },
   description:
-    'Direct answers on buying EcoFlow and BLUETTI in Kenya: where to buy, M-Pesa payment, what size power station you need for KPLC blackouts, solar charging, warranty and delivery.',
-  openGraph: {
-    title: 'Backup Power in Kenya — Straight Answers | Batteriq',
-    description: 'Where to buy EcoFlow in Kenya, sizing a power station for blackouts, M-Pesa payment, solar, warranty and delivery.',
-    type: 'article',
-  },
+    'What size power station do you need for KPLC blackouts? Straight answers on sizing, solar charging, M-Pesa payment, warranty and delivery in Kenya.',
+  openGraph: { type: 'article' },
 })
 
 // FAQPage schema must mirror the visible text below (Google policy), which it
