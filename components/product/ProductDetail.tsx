@@ -13,6 +13,7 @@ import { SpecBadge } from './SpecBadge'
 import { Modal } from '@/components/ui/Modal'
 import type { Product } from '@/lib/supabase/types'
 import { productImageAlt, SECTION_PARENT, type ProductSection } from '@/lib/seo'
+import { buildSpecRows } from '@/lib/productContent'
 
 type ProductDetailProps = {
   product: Product
@@ -31,6 +32,7 @@ export function ProductDetail({ product, section }: ProductDetailProps) {
   const images = product.images?.length > 0 ? product.images : ['/placeholder-product.jpg']
   const specs = product.specs as Record<string, string>
   const discount = getDiscountPercent(product.price_kes, product.compare_price_kes)
+  const specRows = buildSpecRows(product)
 
   function handleAddToCart() {
     addItem({
@@ -243,17 +245,17 @@ export function ProductDetail({ product, section }: ProductDetailProps) {
         </div>
       </div>
 
-      {/* Full specs table */}
-      {Object.keys(specs).length > 0 && (
+      {/* Full specs table — named rows first, readable labels (lib/productContent.ts) */}
+      {specRows.length > 0 && (
         <section className="mt-16">
           <h2 className="font-display font-bold text-gray-900 text-2xl mb-6">Full Specifications</h2>
           <dl className="grid grid-cols-1 md:grid-cols-2 gap-px bg-gray-100 border border-gray-200 rounded-[8px] overflow-hidden">
-            {Object.entries(specs).map(([key, value]) => (
-              <div key={key} className="flex bg-white px-5 py-3.5 gap-4">
+            {specRows.map((row) => (
+              <div key={row.label} className="flex bg-white px-5 py-3.5 gap-4">
                 <dt className="text-gray-500 text-sm font-medium min-w-[140px] shrink-0">
-                  {formatSpecLabel(key)}
+                  {row.label}
                 </dt>
-                <dd className="text-gray-900 text-sm font-mono">{String(value)}</dd>
+                <dd className="text-gray-900 text-sm font-mono">{row.value}</dd>
               </div>
             ))}
           </dl>

@@ -8,6 +8,9 @@ import { ProductGrid } from '@/components/product/ProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
 import type { Product } from '@/lib/supabase/types'
 import { ProductFaq } from '@/components/product/ProductFaq'
+import { ProductOverview } from '@/components/product/ProductOverview'
+import { buildProductContent } from '@/lib/productContent'
+import { getSolarPanels } from '@/lib/productContentServer'
 import {
   buildTitle, buildDescription, productJsonLd, breadcrumbJsonLd,
   buildProductFaqs, faqJsonLd, productUrl,
@@ -116,7 +119,9 @@ export default async function EcoFlowProductPage({ params }: PageProps) {
   if (!product) notFound()
 
   const related = await getRelatedProducts(product)
-  const faqs = buildProductFaqs(product)
+  // Overview + 2 product-specific FAQs, from specs only (null when specs are missing).
+  const content = buildProductContent(product, ['Power Stations', 'Solar Home Systems'].includes(product.category) ? await getSolarPanels() : [])
+  const faqs = [...buildProductFaqs(product), ...(content?.faqs ?? [])]
 
   return (
     <>
@@ -136,6 +141,7 @@ export default async function EcoFlowProductPage({ params }: PageProps) {
       <ToastContainer />
       <div className="pt-[72px] min-h-screen">
         <ProductDetail product={product} section="ecoflow" />
+        {content && <ProductOverview paragraphs={content.overview} />}
         {related.length > 0 && (
           <section className="max-w-8xl mx-auto px-4 lg:px-8 pb-16">
             <h2 className="font-display font-bold text-gray-900 text-2xl mb-6">
