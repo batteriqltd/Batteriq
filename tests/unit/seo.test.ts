@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildDescription, buildProductFaqs, buildTitle, canonicalUrl, productJsonLd } from '@/lib/seo'
+import { buildDescription, buildProductFaqs, buildTitle, canonicalUrl, productImageAlt, productJsonLd } from '@/lib/seo'
 import type { Product } from '@/lib/supabase/types'
 
 const base = {
@@ -67,5 +67,14 @@ describe('titles and descriptions use the live price', () => {
     const p = { ...base, meta_title: 'EcoFlow DELTA Pro 3 — whole-home backup', meta_description: 'Whole-home backup power.' } as Product
     expect(buildTitle(p)).toBe('EcoFlow DELTA Pro 3 — whole-home backup')
     expect(buildDescription(p)).toBe('Whole-home backup power.')
+  })
+})
+
+describe('productImageAlt', () => {
+  it('describes the product, not the page', () => {
+    expect(productImageAlt(base)).toBe('EcoFlow DELTA Pro 3 portable power station')
+    expect(productImageAlt(base, 1, 4)).toBe('EcoFlow DELTA Pro 3 portable power station, image 2 of 4')
+    expect(productImageAlt({ brand: 'Bluetti', name: 'PV350 Solar Panel 350W', category: 'Solar Panels' } as Product)).toBe('BLUETTI PV350 Solar Panel 350W')
+    expect(productImageAlt({ brand: 'Soundcore', name: 'SOUNDCORE LIBERTY 4 NC BLACK', category: 'Accessories' } as Product)).toBe('SOUNDCORE LIBERTY 4 NC BLACK')
   })
 })

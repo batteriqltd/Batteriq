@@ -8,7 +8,7 @@ import { useUIStore } from '@/store/uiStore'
 import { formatKES, getProductImageUrl, getPrimarySpecs, formatSpecLabel, getDiscountPercent } from '@/lib/utils'
 import { showToast } from '@/components/ui/Toast'
 import type { Product } from '@/lib/supabase/types'
-import { brandedName } from '@/lib/seo'
+import { productImageAlt } from '@/lib/seo'
 import { DiscountTimer } from '@/components/product/DiscountTimer'
 
 type ProductCardProps = {
@@ -73,7 +73,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
               {hasImage ? (
                 <Image
                   src={imageUrl}
-                  alt={`${brandedName(product)} — price in Kenya | Batteriq`}
+                  alt={productImageAlt(product)}
                   fill
                   className="object-contain object-center group-hover:scale-[1.05] transition-transform duration-700 ease-out mix-blend-multiply"
                   style={{ padding: '12px' }}
@@ -172,7 +172,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
             {product.in_stock && (
               <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-1">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logos/mpesa.png" alt="M-Pesa" className="h-3.5 w-auto object-contain inline" /> Pay via M-Pesa · Instant STK Push
+                <img src="/logos/mpesa.png" alt="" className="h-3.5 w-auto object-contain inline" /> Pay via M-Pesa · Instant STK Push
               </p>
             )}
 

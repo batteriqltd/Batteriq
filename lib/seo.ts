@@ -133,6 +133,29 @@ export function brandedName(product: Pick<Product, 'brand' | 'name'>): string {
     : `${brand} ${product.name}`
 }
 
+const PRODUCT_TYPE: Record<string, string> = {
+  'Power Stations': 'portable power station',
+  'Solar Panels': 'solar panel',
+  'Batteries': 'battery',
+  'Solar Home Systems': 'solar home system',
+  'Power Banks': 'power bank',
+}
+
+/**
+ * Describes the picture: "{Brand} {Model} {product type}". Extra gallery images
+ * say which image they are; we have no per-image view data, so we don't guess one.
+ */
+export function productImageAlt(
+  product: Pick<Product, 'brand' | 'name' | 'category'>,
+  index = 0,
+  total = 1
+): string {
+  const name = brandedName(product)
+  const type = PRODUCT_TYPE[product.category]
+  const base = type && !name.toLowerCase().includes(type) ? `${name} ${type}` : name
+  return total > 1 && index > 0 ? `${base}, image ${index + 1} of ${total}` : base
+}
+
 /** Google ignores relative image URLs in structured data and feeds. */
 export function absoluteUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path

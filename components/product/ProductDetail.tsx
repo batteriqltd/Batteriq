@@ -12,7 +12,7 @@ import { showToast } from '@/components/ui/Toast'
 import { SpecBadge } from './SpecBadge'
 import { Modal } from '@/components/ui/Modal'
 import type { Product } from '@/lib/supabase/types'
-import { brandedName, SECTION_PARENT, type ProductSection } from '@/lib/seo'
+import { productImageAlt, SECTION_PARENT, type ProductSection } from '@/lib/seo'
 
 type ProductDetailProps = {
   product: Product
@@ -65,7 +65,7 @@ export function ProductDetail({ product, section }: ProductDetailProps) {
           <div className="relative aspect-square bg-white rounded-[8px] overflow-hidden cursor-zoom-in" onClick={() => setZoomOpen(true)}>
             <Image
               src={images[activeImage]}
-              alt={`${brandedName(product)} — price in Kenya | Batteriq`}
+              alt={productImageAlt(product, activeImage, images.length)}
               fill
               className="object-contain p-8"
               sizes="(max-width: 1024px) 100vw, 50vw"
@@ -218,7 +218,7 @@ export function ProductDetail({ product, section }: ProductDetailProps) {
                     className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-[10px] text-white font-black text-sm transition-all hover:-translate-y-0.5 active:scale-[0.98]"
                     style={{ background: 'linear-gradient(135deg, #25D366, #1da851)', boxShadow: '0 6px 18px rgba(37,211,102,0.28)' }}
                   >
-                    <img src="/logos/whatsapp.png" alt="WhatsApp" width={16} height={16} className="object-contain" />
+                    <img src="/logos/whatsapp.png" alt="" width={16} height={16} className="object-contain" />
                     Reserve via WhatsApp
                   </a>
 
@@ -235,7 +235,7 @@ export function ProductDetail({ product, section }: ProductDetailProps) {
             <span>✓ Authorised Dealer</span>
             <span className="flex items-center gap-1">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logos/mpesa.png" alt="M-Pesa" className="h-4 w-auto object-contain inline" /> M-Pesa Accepted
+              <img src="/logos/mpesa.png" alt="" className="h-4 w-auto object-contain inline" /> M-Pesa Accepted
             </span>
             <span>✓ Nairobi Delivery</span>
             <span>✓ Warranty Included</span>
@@ -265,7 +265,7 @@ export function ProductDetail({ product, section }: ProductDetailProps) {
         <div className="relative aspect-square bg-white rounded-[6px] overflow-hidden">
           <Image
             src={images[activeImage]}
-            alt={product.name}
+            alt={productImageAlt(product, activeImage, images.length)}
             fill
             className="object-contain p-4"
           />
