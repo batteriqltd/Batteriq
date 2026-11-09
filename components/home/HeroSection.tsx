@@ -142,17 +142,20 @@ export function HeroSection() {
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.5 }}
             >
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-4 py-2 mb-5 border border-white/20 rounded-full bg-white/10 backdrop-blur-sm text-[10px] sm:text-xs text-white font-bold uppercase tracking-widest whitespace-nowrap max-w-full overflow-hidden">
-                <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                {slide.badge}
-              </div>
-
-              {/* Headline */}
-              <h1 className="text-white mb-4 text-left"
-                style={{ fontSize: 'clamp(2.1rem, 6vw, 5rem)', letterSpacing: '-0.03em', lineHeight: 1.0, fontWeight: 900, textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
-                {slide.headline}<br />
-                <span style={{ color: '#4d9fff' }}>{slide.headlineAccent}</span>
+              {/* One H1 holds the badge and the headline, so search engines read
+                  "Authorised EcoFlow & Bluetti Dealer — Kenya: Power Through Every
+                  Outage". Each part keeps its exact previous classes and styles; the
+                  h1 itself is unstyled (Tailwind preflight resets its size/weight). */}
+              <h1 className="mb-4 text-left">
+                <span className="inline-flex items-center gap-2 px-4 py-2 mb-5 border border-white/20 rounded-full bg-white/10 backdrop-blur-sm text-[10px] sm:text-xs text-white font-bold uppercase tracking-widest whitespace-nowrap max-w-full overflow-hidden">
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                  {slide.badge}
+                </span>
+                <span className="block text-white text-left"
+                  style={{ fontSize: 'clamp(2.1rem, 6vw, 5rem)', letterSpacing: '-0.03em', lineHeight: 1.0, fontWeight: 900, textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}>
+                  {slide.headline}<br />
+                  <span style={{ color: '#4d9fff' }}>{slide.headlineAccent}</span>
+                </span>
               </h1>
 
               {/* Price tag */}
