@@ -12,7 +12,7 @@
 
 import type { Metadata } from 'next'
 import type { Product } from '@/lib/supabase/types'
-import { SITE_URL } from '@/lib/business'
+import { BUSINESS, SITE_URL } from '@/lib/business'
 
 export { SITE_URL }
 
@@ -199,46 +199,89 @@ export type Faq = { question: string; answer: string }
  * requires FAQ schema to match on-page content, so never emit the JSON-LD
  * without also showing these.
  */
+function specValue(specs: Record<string, unknown>, ...keys: string[]): string | null {
+  for (const key of keys) {
+    const value = specs[key]
+    if (typeof value === 'string' && value.trim()) return value.trim()
+    if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  }
+  return null
+}
+
+/** Joins sentences, skipping any whose data was missing. */
+function sentences(...parts: (string | null | false | undefined)[]): string {
+  return parts.filter(Boolean).join(' ')
+}
+
 export function buildProductFaqs(product: Product): Faq[] {
-  const specs = (product.specs ?? {}) as Record<string, string>
+  const specs = (product.specs ?? {}) as Record<string, unknown>
   const price = kes(product.price_kes)
-  const dealer = `Kenya's authorised ${product.brand} dealer`
+  const brand = product.brand === 'Bluetti' ? 'BLUETTI' : product.brand
+  const dealer = `Kenya's authorised ${brand} dealer`
+  const warrantySentence = `It is covered by a ${BUSINESS.warrantyMonths}-month warranty.`
+
+  // "In stock" only when we actually hold units. A listed product with no
+  // tracked quantity can still be ordered, but we don't claim stock for it.
+  const hasStock = product.in_stock && typeof product.stock_qty === 'number' && product.stock_qty > 0
+  const delivery = 'We deliver across Nairobi and ship nationwide to all 47 counties, and you will get an official eTIMS KRA invoice with your order.'
 
   const faqs: Faq[] = [
     {
       question: `How much is the ${product.name} in Kenya?`,
-      answer: `The ${product.name} costs ${price} at Batteriq, ${dealer}. You can pay instantly with M-Pesa or by Visa/Mastercard at checkout, and every unit ships with its full manufacturer warranty.`,
+      answer: `The ${product.name} costs ${price} at Batteriq, ${dealer}. You can pay instantly with M-Pesa or by Visa/Mastercard at checkout. ${warrantySentence}`,
     },
     {
       question: `Is the ${product.name} available in Nairobi?`,
-      answer: product.in_stock
-        ? `Yes — the ${product.name} is in stock and ready to ship. We deliver across Nairobi and ship nationwide to all 47 counties, and you will get an official eTIMS KRA invoice with your order.`
-        : `The ${product.name} is currently out of stock. Message us on WhatsApp and we will confirm the next delivery date and reserve one for you.`,
+      answer: !product.in_stock
+        ? `The ${product.name} is currently out of stock. Message us on WhatsApp and we will confirm the next delivery date and reserve one for you.`
+        : hasStock
+          ? `Yes — the ${product.name} is in stock and ready to ship. ${delivery}`
+          : `Yes — you can order the ${product.name} now. ${delivery}`,
     },
   ]
 
-  const warranty = specs.warranty
-  const useCase = specs.use_case
-  const chemistry = specs.chemistry
-
   if (product.category === 'Power Stations' || product.category === 'Batteries') {
-    const bits = [
-      useCase ? `It is built for ${useCase.toLowerCase()}` : null,
-      chemistry ? `and uses a ${chemistry} battery for long cycle life` : null,
-    ].filter(Boolean).join(' ')
+    const capacity = specValue(specs, 'capacity')
+    const chemistry = specValue(specs, 'battery_type', 'chemistry')
+    const acOutput = specValue(specs, 'ac_output', 'power_output')
+
+    let storage: string | null = null
+    if (capacity && chemistry) storage = `It stores ${capacity} in a long-life ${chemistry} battery`
+    else if (capacity) storage = `It stores ${capacity}`
+    else if (chemistry) storage = `It uses a long-life ${chemistry} battery`
+
+    const specSentence = storage
+      ? `${storage}${acOutput ? ` and delivers ${acOutput}` : ''}.`
+      : acOutput
+        ? `It delivers ${acOutput}.`
+        : null
+
     faqs.push({
       question: `Can the ${product.name} keep my home running during a KPLC blackout?`,
-      answer: `Yes — that is exactly what it is designed for.${bits ? ` ${bits}.` : ''} What it can run and for how long depends on which appliances you connect, so message us on WhatsApp with your list and we will size it for you.${warranty ? ` It is covered by a ${warranty} warranty.` : ''}`,
+      answer: sentences(
+        'Yes — that is what it is designed for.',
+        specSentence,
+        'Runtime depends on what you connect, so send us your appliance list on WhatsApp and we will size it for you.',
+        warrantySentence,
+      ),
     })
   } else if (product.category === 'Solar Panels') {
     faqs.push({
       question: `Does the ${product.name} work with my power station?`,
-      answer: `It connects to compatible EcoFlow and Bluetti power stations for solar charging. Send us your power station model on WhatsApp and we will confirm the right cable and setup before you buy.${warranty ? ` The panel carries a ${warranty} warranty.` : ''}`,
+      answer: sentences(
+        'It connects to compatible EcoFlow and BLUETTI power stations for solar charging.',
+        'Send us your power station model on WhatsApp and we will confirm the right cable and setup before you buy.',
+        warrantySentence,
+      ),
     })
   } else {
     faqs.push({
       question: `Is the ${product.name} genuine and covered by warranty?`,
-      answer: `Yes. Batteriq is ${dealer}, so every unit is genuine stock supported locally${warranty ? ` with a ${warranty} warranty` : ''}. Keep your Batteriq receipt as proof of purchase for any warranty claim.`,
+      answer: sentences(
+        `Yes. Batteriq is ${dealer}, so every unit is genuine stock supported locally.`,
+        warrantySentence,
+        'Keep your Batteriq receipt as proof of purchase for any warranty claim.',
+      ),
     })
   }
 
