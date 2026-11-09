@@ -2,6 +2,7 @@ import { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { isDeprecatedDelta } from '@/lib/delta-series'
 import { SITE_URL } from '@/lib/business'
+import { publishedNewPages } from '@/lib/newPages'
 
 // Re-read products at most hourly, so lastmod tracks real price/stock edits.
 export const revalidate = 3600
@@ -105,5 +106,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: p.brand === 'EcoFlow' ? 0.9 : 0.8,
   }))
 
-  return [...listings, ...staticEntries, ...productEntries]
+  // Phase 5 pages appear only once published (lib/newPages.ts).
+  const newPages: MetadataRoute.Sitemap = publishedNewPages().map((path) => ({
+    url: `${SITE_URL}${path}`,
+    lastModified: latest(products, '2026-11-09'),
+    changeFrequency: 'weekly' as const,
+    priority: 0.8,
+  }))
+
+  return [...listings, ...staticEntries, ...newPages, ...productEntries]
 }

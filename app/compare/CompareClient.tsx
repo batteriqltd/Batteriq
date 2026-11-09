@@ -10,6 +10,7 @@ import { showToast } from '@/components/ui/Toast'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import type { Product } from '@/lib/supabase/types'
+import { isPublished } from '@/lib/newPages'
 import { X, Plus, ShoppingCart, Check, ArrowLeft } from 'lucide-react'
 
 const MAX_COMPARE = 3
@@ -280,10 +281,17 @@ export function CompareClient({ products }: CompareClientProps) {
             <h2 className="text-lg font-black text-gray-900 mb-4">Popular Comparisons</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { label: 'DELTA 2 vs DELTA 3', desc: 'Our two best-selling mid-range stations', slugs: ['delta-2', 'delta-3'] },
-                { label: 'RIVER 2 vs AC2P', label2: 'EcoFlow vs BLUETTI entry-level', desc: 'Best budget power station in Kenya', slugs: ['river-2', 'bluetti-ac2p'] },
-                { label: 'DELTA Pro vs DELTA Pro 3', desc: 'Top-tier home backup comparison', slugs: ['delta-pro', 'delta-pro-3'] },
-              ].map(({ label, desc, slugs }) => (
+                { label: 'DELTA 2 vs DELTA 3', desc: 'Our two best-selling mid-range stations', slugs: ['delta-2', 'delta-3'], page: '/compare/ecoflow-delta-2-vs-delta-3' },
+                { label: 'RIVER 2 vs AC2P', label2: 'EcoFlow vs BLUETTI entry-level', desc: 'Best budget power station in Kenya', slugs: ['river-2', 'bluetti-ac2p'], page: '/compare/ecoflow-river-2-vs-bluetti-ac2p' },
+                { label: 'DELTA Pro vs DELTA Pro 3', desc: 'Top-tier home backup comparison', slugs: ['delta-pro', 'delta-pro-3'], page: '/compare/ecoflow-delta-pro-vs-delta-pro-3' },
+              ].map(({ label, desc, slugs, page }) => isPublished(page) ? (
+                // Published comparison pages get a real link (same card styling).
+                <Link key={label} href={page}
+                  className="text-left px-5 py-4 bg-white rounded-2xl border border-gray-100 hover:border-blue-300 hover:shadow-sm transition-all group">
+                  <p className="text-sm font-black text-gray-900 group-hover:text-blue-600 transition-colors">{label}</p>
+                  <p className="text-xs text-gray-400 mt-1">{desc}</p>
+                </Link>
+              ) : (
                 <button key={label}
                   onClick={() => {
                     const prods = slugs.map(slug => products.find(p => p.slug === slug)).filter(Boolean) as Product[]

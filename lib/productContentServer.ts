@@ -20,3 +20,32 @@ export async function getPowerStations(): Promise<Product[]> {
     return []
   }
 }
+
+/** Products in any of these categories, in display (sort_order) order. */
+export async function getProductsByCategories(categories: string[]): Promise<Product[]> {
+  try {
+    const { data } = await createAdminClient().from('products').select('*').in('category', categories).order('sort_order')
+    return (data ?? []) as Product[]
+  } catch {
+    return []
+  }
+}
+
+export async function getProductsByBrand(brand: string): Promise<Product[]> {
+  try {
+    const { data } = await createAdminClient().from('products').select('*').eq('brand', brand).order('sort_order')
+    return (data ?? []) as Product[]
+  } catch {
+    return []
+  }
+}
+
+export async function getProductsBySlugs(slugs: string[]): Promise<Product[]> {
+  try {
+    const { data } = await createAdminClient().from('products').select('*').in('slug', slugs)
+    const rows = (data ?? []) as Product[]
+    return slugs.map((s) => rows.find((p) => p.slug === s)).filter(Boolean) as Product[]
+  } catch {
+    return []
+  }
+}

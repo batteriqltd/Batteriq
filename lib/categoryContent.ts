@@ -11,9 +11,15 @@ import type { Product } from '@/lib/supabase/types'
 import type { Faq } from '@/lib/seo'
 import { productDisplayName } from '@/lib/seo'
 import { BUSINESS } from '@/lib/business'
+import { isPublished } from '@/lib/newPages'
 import { parseWatts, parseWh, productHref, runtimeHours, type Paragraph, type Segment } from '@/lib/productContent'
 
 export type CategoryContent = { heading: string; paragraphs: Paragraph[]; faqs: Faq[] }
+
+/** [path, text before, anchor, text after] — rendered only for published Phase 5 pages. */
+function newPageLinks(items: [string, string, string, string][]): Segment[] {
+  return items.filter(([path]) => isPublished(path)).flatMap(([href, before, text, after]) => [before, { text, href }, after])
+}
 
 type Specs = Record<string, unknown>
 const spec = (p: Product, ...keys: string[]) => {
@@ -97,7 +103,14 @@ export function powerStationsContent(products: Product[]): CategoryContent | nul
         { text: 'backup power guide', href: '/answers' },
         `, and pair a station with our `,
         { text: 'solar panels', href: '/solar' },
-        `. ${delivery}`,
+        '. ',
+        // Phase 5 pages are linked only once the owner has published them.
+        ...newPageLinks([
+          ['/answers/what-size-power-station', 'Not sure what size you need? Read our ', 'guide to sizing a power station', '. '],
+          ['/home-backup-power', 'For a whole-home view, see ', 'home backup power by home size', '. '],
+          ['/solar-generators', 'Want solar too? See our ', 'solar generator pairings', '. '],
+        ]),
+        delivery,
       ],
     ],
     faqs: [
@@ -178,6 +191,7 @@ export function solarContent(products: Product[], stations: Product[]): Category
         'Browse our ',
         { text: 'power stations', href: '/power-stations' },
         ' to pair a panel, and ask us on WhatsApp to confirm the right cable. ',
+        ...newPageLinks([['/solar-generators', 'See matched station-and-panel examples in our ', 'solar generator pairings', '. ']]),
         delivery,
       ],
     ],
@@ -352,6 +366,11 @@ export function accessoriesContent(products: Product[]): CategoryContent | null 
         'Extra batteries add capacity to a compatible ',
         { text: 'power station', href: '/power-stations' },
         '; check the expandable spec on your station first. ',
+        ...newPageLinks([
+          ['/anker-kenya', 'Shop by brand: ', 'Anker Kenya', '. '],
+          ['/soundcore-kenya', '', 'Soundcore Kenya', '. '],
+          ['/eufy-kenya', '', 'Eufy Kenya', '. '],
+        ]),
         `${warranty} ${delivery}`,
       ],
     ],

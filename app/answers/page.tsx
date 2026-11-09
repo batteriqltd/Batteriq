@@ -7,6 +7,9 @@ import { PageHero } from '@/components/layout/PageHero'
 import { ToastContainer } from '@/components/ui/Toast'
 import { ANSWER_GROUPS, ALL_ANSWERS, AEO_LAST_REVIEWED, answerText } from '@/lib/aeo'
 import { articleJsonLd, breadcrumbListJsonLd, jsonLdScript } from '@/lib/structuredData'
+import { isPublished } from '@/lib/newPages'
+
+const SIZE_GUIDE = '/answers/what-size-power-station'
 
 /** First published (git history of this page). */
 const AEO_PUBLISHED = '2026-11-02'
@@ -120,7 +123,15 @@ export default function AnswersPage() {
 
           <div className="mt-12 text-center bg-blue-50 rounded-3xl p-10">
             <h2 className="text-2xl font-black text-gray-900 mb-2">Need a system sized for your home?</h2>
-            <p className="text-gray-500 mb-6">Send us your appliance list and we will recommend the right setup — free.</p>
+            <p className="text-gray-500 mb-6">
+              Send us your appliance list and we will recommend the right setup — free.
+              {isPublished(SIZE_GUIDE) && (
+                <>
+                  {' '}Or work it out yourself with our{' '}
+                  <Link href={SIZE_GUIDE} className="text-blue-600 font-semibold hover:underline">guide to sizing a power station</Link>.
+                </>
+              )}
+            </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <a
                 href="https://wa.me/254716822014"
