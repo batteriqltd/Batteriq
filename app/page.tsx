@@ -14,6 +14,7 @@ import { ToastContainer } from '@/components/ui/Toast'
 import { HomepageNewsletter } from '@/components/home/HomepageNewsletter'
 import { ReviewsSection } from '@/components/home/ReviewsSection'
 import { StatsSection } from '@/components/home/StatsSection'
+import { getCatalogPriceStats } from '@/lib/catalogStats'
 import { OffersSection } from '@/components/home/OffersSection'
 import { BulkPricingBanner } from '@/components/home/BulkPricingBanner'
 import { BluettiSpotlight } from '@/components/home/BluettiSpotlight'
@@ -116,6 +117,7 @@ export default async function HomePage() {
     bluettiDb,
     powerBanks,
     accessories,
+    priceStats,
   ] = await Promise.all([
     getDeltaSeries(),
     getProductsByCategory('EcoFlow', 'Power Stations', 8),
@@ -129,6 +131,7 @@ export default async function HomePage() {
     // The Accessories collection includes the wider catalogue imported through
     // the admin database, not only the original EcoFlow accessories.
     getProductsByCategory(undefined, 'Accessories', 8),
+    getCatalogPriceStats(),
   ])
   // Deprecated DELTA variants (100 Air / Max Plus / Ultra Plus) are hidden
   // in code so they never render on the homepage.
@@ -161,7 +164,7 @@ export default async function HomePage() {
 
       <BulkPricingBanner />
 
-      <StatsSection />
+      <StatsSection startingPriceKes={priceStats.powerStationMinKes} />
 
       <OffersSection />
 

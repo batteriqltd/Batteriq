@@ -5,6 +5,7 @@ import { withoutDeprecatedDelta } from '@/lib/delta-series'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
+import { hasCapacity } from '@/lib/catalogStats'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
 import { Shield } from 'lucide-react'
@@ -122,6 +123,9 @@ export default async function EcoFlowKenyaPage() {
   const batteries = allEcoFlow.filter((p) => p.category === 'Batteries')
   const solarHomeSystems = allEcoFlow.filter((p) => p.category === 'Solar Home Systems')
   const accessories = allEcoFlow.filter((p) => p.category === 'Accessories' || p.category === 'Appliances')
+  // Cheapest in-stock EcoFlow power station, from live prices.
+  const stationPrices = powerStations.filter((p) => p.in_stock && Number(p.price_kes) > 1 && hasCapacity(p.specs)).map((p) => Number(p.price_kes))
+  const startingPrice = stationPrices.length ? `KES ${Math.min(...stationPrices).toLocaleString('en-KE')}` : null
 
   return (
     <>
@@ -349,7 +353,7 @@ export default async function EcoFlowKenyaPage() {
               <div className="bg-[#f8f9ff] rounded-2xl p-6 border border-blue-50">
                 <h4 className="font-black text-gray-900 text-base mb-5">Quick Facts</h4>
                 {[
-                  { label: 'Starting Price', value: 'KES 27,259' },
+                  ...(startingPrice ? [{ label: 'Starting Price', value: startingPrice }] : []),
                   { label: 'Warranty', value: '24 months' },
                   { label: 'Delivery', value: 'Same-day Nairobi' },
                   { label: 'Payment', value: 'M-Pesa Accepted' },

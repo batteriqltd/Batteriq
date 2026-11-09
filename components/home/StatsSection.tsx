@@ -154,7 +154,14 @@ function StatCard({ stat, started }: { stat: StatItem; started: boolean }) {
   )
 }
 
-export function StatsSection() {
+/** "Starting price" in thousands, from the cheapest in-stock power station. */
+function withStartingPrice(stats: StatItem[], startingPriceKes?: number | null): StatItem[] {
+  if (!startingPriceKes || startingPriceKes < 1000) return stats
+  return stats.map((s) => (s.label === 'Starting Price' ? { ...s, value: Math.floor(startingPriceKes / 1000) } : s))
+}
+
+export function StatsSection({ startingPriceKes }: { startingPriceKes?: number | null }) {
+  const stats = withStartingPrice(STATS, startingPriceKes)
   const sectionRef = useRef<HTMLElement>(null)
   const [started, setStarted] = useState(false)
 
@@ -211,7 +218,7 @@ export function StatsSection() {
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-7 sm:py-14">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-0 lg:divide-x lg:divide-white/10">
-            {STATS.map((stat) => (
+            {stats.map((stat) => (
               <StatCard key={stat.label} stat={stat} started={started} />
             ))}
           </div>
