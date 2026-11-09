@@ -14,6 +14,7 @@ import type { Metadata } from 'next'
 import type { Product } from '@/lib/supabase/types'
 import { BUSINESS, SITE_URL } from '@/lib/business'
 import { formatSpecLabel } from '@/lib/utils'
+import { productType } from '@/lib/productContent'
 
 export { SITE_URL }
 
@@ -90,39 +91,20 @@ function clamp(text: string, max: number) {
   return (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s,—-]+$/, '')
 }
 
-/** Matches a written-in price such as "KES 291,399" or "Ksh 9,699". */
-const PRICE_IN_TEXT = /\b(?:KES|KSh|Ksh)\s?[\d,]+/i
-
 /**
- * A stored SEO override is used only when it carries no price. Prices written
- * into meta_title / meta_description go stale the moment the live price
- * changes, so those fall back to the generated text, which reads price_kes.
- */
-function storedOverride(value: string | null | undefined): string | null {
-  const v = value?.trim()
-  return v && !PRICE_IN_TEXT.test(v) ? v : null
-}
-
-/**
- * Stored meta_title wins unless it contains a price. The generated fallback leads with the model name and
- * price because that is what Kenyan buyers actually search
- * ("ecoflow delta 2 price kenya"), and drops the brand suffix rather than the
- * model name when it has to fit 60 characters.
+ * "<product> Price in Kenya – KES <price> | Batteriq", generated from the live
+ * row. When that passes 60 characters the price goes first, then the brand
+ * suffix, never the model name. Stored meta_title is no longer used: most of it
+ * carried prices that had gone stale.
  */
 export function buildTitle(product: Product): string {
-  const stored = storedOverride(product.meta_title)
-  if (stored) return clamp(stored, TITLE_MAX)
-
-  // "<product> price in Kenya" is the dominant Kenyan search pattern, so the
-  // fallbacks try that exact phrase first, then shorter variants.
   const name = brandedName(product)
-  const price = kes(product.price_kes)
+  const price = Number(product.price_kes) > 1 ? kes(product.price_kes) : null
   const candidates = [
-    `${name} Price in Kenya — ${price} | Batteriq`,
-    `${name} Price in Kenya — ${price}`,
-    `${name} Kenya — ${price}`,
+    price && `${name} Price in Kenya – ${price} | Batteriq`,
+    `${name} Price in Kenya | Batteriq`,
     `${name} Price in Kenya`,
-  ]
+  ].filter((c): c is string => !!c)
   return candidates.find(c => c.length <= TITLE_MAX) ?? clamp(`${name} Kenya`, TITLE_MAX)
 }
 
@@ -163,16 +145,54 @@ export function absoluteUrl(path: string): string {
   return `${SITE_URL}${path.startsWith('/') ? '' : '/'}${path}`
 }
 
-export function buildDescription(product: Product): string {
-  const stored = storedOverride(product.meta_description)
-  if (stored) return clamp(stored, DESCRIPTION_MAX)
+/** Leading number of a "4096Wh" / "4000W (Surge 8000W)" spec, or null. */
+function leadingNumber(value: unknown, unit: 'Wh' | 'W'): number | null {
+  if (typeof value !== 'string') return null
+  const m = value.match(unit === 'Wh' ? /(\d+(?:\.\d+)?)\s*Wh\b/i : /(\d+(?:\.\d+)?)\s*W\b/i)
+  return m ? Number(m[1]) : null
+}
 
-  const useCase = (product.specs as Record<string, string> | null)?.use_case
-  const tail = useCase ? ` Ideal for ${useCase.toLowerCase()}.` : ''
-  return clamp(
-    `Buy the ${product.name} in Kenya at ${kes(product.price_kes)} from Batteriq, the authorised ${product.brand} dealer. Pay by M-Pesa or card, with fast Nairobi delivery.${tail}`,
-    DESCRIPTION_MAX
-  )
+/** Brands whose products carry the owner-confirmed 24-month warranty. */
+const WARRANTY_BRANDS = ['EcoFlow', 'Bluetti']
+
+/**
+ * "<Name> <type>: <capacity> LiFePO4, <watts> AC output. In stock in Nairobi.
+ * KES <price>, M-Pesa or card, 24-month warranty." Every fact is read from the
+ * live row and left out when missing; optional facts drop off the end until it
+ * fits 160 characters. Stock and price are never stored, so they cannot go stale.
+ */
+export function buildDescription(product: Product): string {
+  const specs = (product.specs ?? {}) as Record<string, unknown>
+  const name = brandedName(product)
+  const rawType = productType(product)?.toLowerCase() ?? null
+  const type = rawType && !name.toLowerCase().includes(rawType) ? rawType : null
+
+  const facts: string[] = []
+  const capacityText = typeof specs.capacity === 'string' ? specs.capacity : ''
+  // "3072Wh with B300S" is the capacity with a battery the price does not include.
+  const wh = /\bwith\b/i.test(capacityText) ? null : leadingNumber(capacityText, 'Wh')
+  const chemistry = /lifepo4|\blfp\b/i.test(String(specs.battery_type ?? specs.chemistry ?? '')) ? 'LiFePO4' : null
+  if (wh) facts.push([`${wh}Wh`, chemistry].filter(Boolean).join(' '))
+  const acW = leadingNumber(specs.ac_output ?? specs.power_output, 'W')
+  if (acW) facts.push(`${acW}W ${product.category === 'Power Stations' ? 'AC output' : 'output'}`)
+  const panelW = product.category === 'Solar Panels' ? leadingNumber(specs.power ?? specs.wattage, 'W') : null
+  if (panelW && !name.includes(`${panelW}W`)) facts.push(`${panelW}W`)
+  if (/^yes/i.test(String(specs.ups_mode ?? specs.ups ?? ''))) facts.push('automatic switch-over')
+
+  const stock = product.in_stock ? 'In stock in Nairobi.' : 'Out of stock – reserve on WhatsApp.'
+  const price = Number(product.price_kes) > 1 ? kes(product.price_kes) : null
+  const after = WARRANTY_BRANDS.includes(product.brand)
+    ? `${BUSINESS.warrantyMonths}-month warranty`
+    : product.in_stock ? 'same-day Nairobi delivery' : null
+  const close = [price, 'M-Pesa or card', after].filter(Boolean).join(', ') + '.'
+
+  for (let n = facts.length; n >= 0; n--) {
+    const head = [name, type].filter(Boolean).join(' ')
+    const lead = n ? `${head}: ${facts.slice(0, n).join(', ')}.` : `${head}.`
+    const text = `${lead} ${stock} ${close}`
+    if (text.length <= DESCRIPTION_MAX || n === 0) return clamp(text, DESCRIPTION_MAX)
+  }
+  return clamp(name, DESCRIPTION_MAX)
 }
 
 // ── JSON-LD ──────────────────────────────────────────────────────────────────

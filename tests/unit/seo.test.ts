@@ -56,17 +56,49 @@ describe('canonicalUrl', () => {
 })
 
 describe('titles and descriptions use the live price', () => {
-  it('ignores stored overrides that carry a price', () => {
+  const dpro3 = {
+    ...base,
+    specs: { capacity: '4096Wh', battery_type: 'LFP (LiFePO4)', ac_output: '4000W (Surge 8000W)', ups_mode: 'Yes (<10ms switchover)' },
+  } as unknown as Product
+
+  it('ignores stored overrides, which go stale', () => {
     const p = { ...base, name: 'DELTA Pro', price_kes: 250799, meta_title: 'EcoFlow DELTA Pro Kenya — KES 291,399 | Batteriq', meta_description: 'Buy it for KES 291,399.' } as Product
-    expect(buildTitle(p)).toBe('EcoFlow DELTA Pro Price in Kenya — KES 250,799 | Batteriq')
+    expect(buildTitle(p)).toBe('EcoFlow DELTA Pro Price in Kenya – KES 250,799 | Batteriq')
     expect(buildDescription(p)).toContain('KES 250,799')
     expect(buildDescription(p)).not.toContain('291,399')
   })
 
-  it('keeps a stored override with no price in it', () => {
-    const p = { ...base, meta_title: 'EcoFlow DELTA Pro 3 — whole-home backup', meta_description: 'Whole-home backup power.' } as Product
-    expect(buildTitle(p)).toBe('EcoFlow DELTA Pro 3 — whole-home backup')
-    expect(buildDescription(p)).toBe('Whole-home backup power.')
+  it('builds the in-stock power station description from specs', () => {
+    expect(buildTitle(dpro3)).toBe('EcoFlow DELTA Pro 3 Price in Kenya – KES 461,799 | Batteriq')
+    expect(buildDescription(dpro3)).toBe(
+      'EcoFlow DELTA Pro 3 portable power station: 4096Wh LiFePO4, 4000W AC output. In stock in Nairobi. KES 461,799, M-Pesa or card, 24-month warranty.'
+    )
+  })
+
+  it('says out of stock and offers WhatsApp reservation', () => {
+    const p = { ...dpro3, in_stock: false } as Product
+    expect(buildDescription(p)).toContain('Out of stock – reserve on WhatsApp.')
+    expect(buildDescription(p)).not.toContain('In stock')
+  })
+
+  it('drops the price before the brand suffix when the title is too long', () => {
+    const p = { ...base, brand: 'Soundcore', category: 'Accessories', name: 'Soundcore Liberty 4 NC Wireless Earbuds', price_kes: 10010, specs: { source_subcategory: 'In Ear' } } as unknown as Product
+    expect(buildTitle(p)).toBe('Soundcore Liberty 4 NC Wireless Earbuds Price in Kenya')
+    const short = { ...p, name: 'Soundcore Liberty 4 NC' } as Product
+    expect(buildTitle(short)).toBe('Soundcore Liberty 4 NC Price in Kenya | Batteriq')
+    expect(buildDescription(short)).toBe(
+      'Soundcore Liberty 4 NC wireless earbuds. In stock in Nairobi. KES 10,010, M-Pesa or card, same-day Nairobi delivery.'
+    )
+  })
+
+  it('leaves out capacity the price does not include', () => {
+    const p = { ...base, brand: 'Bluetti', name: 'Bluetti AC300', price_kes: 68499, specs: { capacity: '3072Wh with B300 (up to 12288Wh)', ac_output: '3000W' } } as unknown as Product
+    expect(buildDescription(p)).not.toContain('3072Wh')
+    expect(buildDescription(p)).toContain('3000W AC output')
+  })
+
+  it('never passes 160 characters', () => {
+    expect(buildDescription(dpro3).length).toBeLessThanOrEqual(160)
   })
 })
 
