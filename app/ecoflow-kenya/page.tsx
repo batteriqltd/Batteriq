@@ -7,7 +7,6 @@ import { PageHero } from '@/components/layout/PageHero'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
 import { Shield } from 'lucide-react'
-import Script from 'next/script'
 
 export const revalidate = 60
 
@@ -88,55 +87,6 @@ const faqSchema = {
   ],
 }
 
-const organizationSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Organization',
-  name: 'Batteriq Solutions Ltd',
-  alternateName: 'Batteriq Kenya',
-  url: 'https://batteriq.com',
-  logo: 'https://batteriq.com/logo.png',
-  description: "Kenya's official authorised EcoFlow and BLUETTI dealer",
-  address: { '@type': 'PostalAddress', addressLocality: 'Nairobi', addressCountry: 'KE' },
-  contactPoint: {
-    '@type': 'ContactPoint',
-    telephone: '+254-716-822-014',
-    contactType: 'customer service',
-    areaServed: 'KE',
-    availableLanguage: ['English', 'Swahili'],
-  },
-  sameAs: [
-    'https://www.instagram.com/batteriq?stkn=aXE2dmNieW5kdWtl',
-    'https://facebook.com/batteriqkenya',
-    'https://tiktok.com/@batteriqkenya',
-    'https://linkedin.com/company/batteriq',
-  ],
-}
-
-const localBusinessSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'LocalBusiness',
-  name: 'Batteriq Solutions Ltd',
-  description: "Kenya's official authorised EcoFlow and BLUETTI dealer. Portable power stations, solar panels, and home battery systems.",
-  url: 'https://batteriq.com',
-  telephone: '+254-716-822-014',
-  email: 'info@batteriq.com',
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Nairobi',
-    addressRegion: 'Nairobi County',
-    addressCountry: 'KE',
-  },
-  geo: { '@type': 'GeoCoordinates', latitude: -1.286389, longitude: 36.817223 },
-  openingHoursSpecification: [
-    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:30', closes: '18:00' },
-    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday'], opens: '09:00', closes: '16:00' },
-  ],
-  priceRange: 'KES 27,259 - KES 1,049,999',
-  paymentAccepted: 'M-Pesa, Cash on Delivery',
-  currenciesAccepted: 'KES',
-  areaServed: { '@type': 'Country', name: 'Kenya' },
-}
-
 const breadcrumbSchema = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -177,10 +127,8 @@ export default async function EcoFlowKenyaPage() {
   return (
     <>
       <Header />
-      <Script id="schema-faq" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <Script id="schema-org" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }} />
-      <Script id="schema-local" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }} />
-      <Script id="schema-breadcrumb" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <ToastContainer />
 
       <PageHero

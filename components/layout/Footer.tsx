@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { WhatsAppIcon, EmailIcon, InstagramIcon, FacebookIcon, TikTokIcon, LinkedInIcon } from '@/components/ui/ContactIcons'
+import { BUSINESS } from '@/lib/business'
 
 const SHOP_LINKS = [
   { href: '/power-stations', label: 'Power Stations' },
@@ -30,11 +31,11 @@ const TRUST_BADGES = [
 ]
 
 const SOCIALS = [
-  { href: 'https://www.instagram.com/batteriq?stkn=aXE2dmNieW5kdWtl', icon: <InstagramIcon size={20} />, label: 'Instagram' },
-  { href: 'https://facebook.com/batteriqkenya', icon: <FacebookIcon size={20} />, label: 'Facebook' },
-  { href: 'https://tiktok.com/@batteriqkenya', icon: <TikTokIcon size={20} />, label: 'TikTok' },
-  { href: 'https://linkedin.com/company/batteriq', icon: <LinkedInIcon size={20} />, label: 'LinkedIn' },
-  { href: 'https://wa.me/254716822014', icon: <WhatsAppIcon size={20} />, label: 'WhatsApp' },
+  { href: BUSINESS.social.instagram, icon: <InstagramIcon size={20} />, label: 'Instagram' },
+  { href: BUSINESS.social.facebook, icon: <FacebookIcon size={20} />, label: 'Facebook' },
+  { href: BUSINESS.social.tiktok, icon: <TikTokIcon size={20} />, label: 'TikTok' },
+  { href: BUSINESS.social.linkedin, icon: <LinkedInIcon size={20} />, label: 'LinkedIn' },
+  { href: BUSINESS.whatsapp, icon: <WhatsAppIcon size={20} />, label: 'WhatsApp' },
 ]
 
 function PhoneGlyph() {

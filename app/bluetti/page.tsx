@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import Script from 'next/script'
 import { Shield } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { withBluettiFallbacks } from '@/lib/bluetti-residential'
@@ -72,8 +71,8 @@ export default async function BluettiCollectionPage() {
   return (
     <>
       <Header />
-      <Script id="bluetti-faq-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <Script id="bluetti-breadcrumb-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
       <ToastContainer />
       <PageHero
         title="Bluetti Kenya"

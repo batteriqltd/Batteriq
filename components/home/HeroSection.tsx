@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Instagram } from 'lucide-react'
+import { BUSINESS } from '@/lib/business'
 
 type Slide = {
   id: number
@@ -189,7 +190,7 @@ export function HeroSection() {
                   ))}
                 </div>
                 <a
-                  href="https://www.instagram.com/batteriq?stkn=aXE2dmNieW5kdWtl"
+                  href={BUSINESS.social.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label="See Batteriq setups on Instagram"

@@ -7,6 +7,7 @@ import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister'
 import { GSAPProvider } from '@/components/animations/GSAPProvider'
 import { AOSProvider } from '@/components/animations/AOSProvider'
 import { ScrollToTop } from '@/components/animations/ScrollToTop'
+import { businessJsonLd, websiteJsonLd } from '@/lib/business'
 import './globals.css'
 
 // Font variables — loaded via CSS globals to avoid build-time Google Fonts failures
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    title: 'Batteriq Admin',
+    title: 'Batteriq',
     statusBarStyle: 'black-translucent',
   },
   verification: {
@@ -95,98 +96,13 @@ export const viewport: Viewport = {
   themeColor: '#0000ff',
 }
 
-const organizationSchema = {
-  '@context': 'https://schema.org',
-  '@type': ['Organization', 'LocalBusiness'],
-  '@id': 'https://batteriq.com/#organization',
-  name: 'Batteriq Solutions Ltd',
-  // AEO: tells answer engines which topics this business is an authority on.
-  knowsAbout: [
-    'EcoFlow power stations',
-    'BLUETTI power stations',
-    'Portable power stations',
-    'Solar panels',
-    'Home battery backup',
-    'Backup power for KPLC power outages',
-    'Off-grid solar power in Kenya',
-  ],
-  alternateName: ['Batteriq Kenya', 'Batteriq'],
-  url: 'https://batteriq.com',
-  logo: 'https://batteriq.com/logo.png',
-  description: "Kenya's official authorised EcoFlow and BLUETTI dealer. Power stations, solar panels, and home battery systems.",
-  telephone: '+254-716-822-014',
-  email: 'info@batteriq.com',
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Nairobi',
-    addressRegion: 'Nairobi County',
-    addressCountry: 'KE',
-  },
-  geo: { '@type': 'GeoCoordinates', latitude: -1.286389, longitude: 36.817223 },
-  openingHoursSpecification: [
-    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:30', closes: '18:00' },
-    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday'], opens: '09:00', closes: '16:00' },
-  ],
-  priceRange: 'KES 27,259+',
-  paymentAccepted: 'M-Pesa, Visa, Mastercard, Cash on Delivery',
-  currenciesAccepted: 'KES',
-  areaServed: { '@type': 'Country', name: 'Kenya' },
-  contactPoint: {
-    '@type': 'ContactPoint',
-    telephone: '+254-716-822-014',
-    contactType: 'customer service',
-    areaServed: 'KE',
-    availableLanguage: ['English', 'Swahili'],
-  },
-  sameAs: [
-    'https://www.instagram.com/batteriq?stkn=aXE2dmNieW5kdWtl',
-    'https://facebook.com/batteriqkenya',
-    'https://tiktok.com/@batteriqkenya',
-    'https://linkedin.com/company/batteriq',
-  ],
-}
-
-const localBusinessSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'Store',
-  name: 'Batteriq Solutions Ltd',
-  image: 'https://batteriq.com/heroes/hero-power-stations.jpg',
-  priceRange: 'KES 27,259 — KES 1,049,999',
-  address: {
-    '@type': 'PostalAddress',
-    addressLocality: 'Nairobi',
-    addressRegion: 'Nairobi County',
-    addressCountry: 'KE',
-  },
-  geo: { '@type': 'GeoCoordinates', latitude: -1.286389, longitude: 36.817223 },
-  url: 'https://batteriq.com',
-  telephone: '+254-716-822-014',
-  email: 'info@batteriq.com',
-  paymentAccepted: 'M-Pesa, Cash on Delivery',
-  currenciesAccepted: 'KES',
-  areaServed: { '@type': 'Country', name: 'Kenya' },
-  openingHoursSpecification: [
-    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:30', closes: '18:00' },
-    { '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday'], opens: '09:00', closes: '16:00' },
-  ],
-}
-
-// AEO: names the site as an entity and links it to the organisation above.
-const websiteSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'WebSite',
-  '@id': 'https://batteriq.com/#website',
-  url: 'https://batteriq.com',
-  name: 'Batteriq Kenya',
-  alternateName: 'Batteriq',
-  inLanguage: 'en-KE',
-  publisher: { '@id': 'https://batteriq.com/#organization' },
-}
+const organizationSchema = businessJsonLd()
+const websiteSchema = websiteJsonLd()
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      lang="en"
+      lang="en-KE"
       className={`${spaceGrotesk.variable} ${dmSans.variable} ${jetbrainsMono.variable}`}
     >
       <head>
@@ -196,10 +112,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
         <script
           type="application/ld+json"

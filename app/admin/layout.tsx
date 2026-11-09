@@ -8,6 +8,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
   robots: 'noindex, nofollow, noarchive',
+  appleWebApp: { capable: true, title: 'Batteriq Admin', statusBarStyle: 'black-translucent' },
 }
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
