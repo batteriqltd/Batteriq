@@ -76,8 +76,8 @@ export function Footer() {
             </span>
 
             <p className="text-sm text-gray-400 leading-relaxed mb-6 max-w-[320px]">
-              Kenya&apos;s official EcoFlow &amp; BLUETTI dealer.
-              Portable power, solar panels, and home battery systems.
+              EcoFlow and Bluetti power stations, solar generators, solar panels and home
+              battery backup in Nairobi, with delivery to all 47 counties.
             </p>
 
             <div className="flex flex-col gap-1">
