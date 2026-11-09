@@ -7,7 +7,6 @@ import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister'
 import { GSAPProvider } from '@/components/animations/GSAPProvider'
 import { AOSProvider } from '@/components/animations/AOSProvider'
 import { ScrollToTop } from '@/components/animations/ScrollToTop'
-import { businessJsonLd, websiteJsonLd } from '@/lib/business'
 import { DEFAULT_OG_IMAGE } from '@/lib/seo'
 import './globals.css'
 
@@ -93,9 +92,6 @@ export const viewport: Viewport = {
   themeColor: '#0000ff',
 }
 
-const organizationSchema = businessJsonLd()
-const websiteSchema = websiteJsonLd()
-
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
@@ -106,14 +102,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <script dangerouslySetInnerHTML={{ __html: "try{if('scrollRestoration' in history)history.scrollRestoration='manual'}catch(e){}" }} />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
+        {/* The business and WebSite JSON-LD live on the home page; every other
+            page refers to them by @id (see lib/structuredData.ts). */}
         <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable site summary" />
       </head>
       <body className="font-sans bg-slate-50 text-slate-900 antialiased selection:bg-blue-600 selection:text-white">

@@ -14,7 +14,8 @@ import { ToastContainer } from '@/components/ui/Toast'
 import { HomepageNewsletter } from '@/components/home/HomepageNewsletter'
 import { ReviewsSection } from '@/components/home/ReviewsSection'
 import { StatsSection } from '@/components/home/StatsSection'
-import { getCatalogPriceStats } from '@/lib/catalogStats'
+import { formatKesRange, getCatalogPriceStats } from '@/lib/catalogStats'
+import { jsonLdScript, organizationJsonLd, websiteJsonLd } from '@/lib/structuredData'
 import { OffersSection } from '@/components/home/OffersSection'
 import { BulkPricingBanner } from '@/components/home/BulkPricingBanner'
 import { BluettiSpotlight } from '@/components/home/BluettiSpotlight'
@@ -154,6 +155,8 @@ export default async function HomePage() {
 
   return (
     <PageWrapper>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(organizationJsonLd({ priceRange: formatKesRange(priceStats.minKes, priceStats.maxKes) }))} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(websiteJsonLd())} />
       <Header />
       <ToastContainer />
 

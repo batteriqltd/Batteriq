@@ -10,11 +10,13 @@ export const SITE_URL = 'https://batteriq.com'
 
 export const BUSINESS = {
   name: 'Batteriq',
-  /** Shown in existing JSON-LD; awaiting owner confirmation of the registered name. */
+  /** Owner-confirmed 2026-11-09. */
   legalName: 'Batteriq Solutions Ltd',
-  alternateNames: ['Batteriq Kenya'],
+  alternateNames: ['Batteriq Kenya', 'BatterIQ'],
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.png`,
+  /** Square PNG for Google (the wide /logo.png is 1832x471). */
+  logo: { url: `${SITE_URL}/brand/batteriq-logo-512.png`, width: 512, height: 512 },
+  image: `${SITE_URL}/heroes/hero-power-stations.jpg`,
   description:
     "Authorised EcoFlow, BLUETTI, Anker, Soundcore and Eufy dealer in Kenya. Portable power stations, solar panels, home battery systems and accessories.",
 
@@ -27,6 +29,13 @@ export const BUSINESS = {
   whatsapp: 'https://wa.me/254716822014',
   email: 'info@batteriq.com',
 
+  /**
+   * Customers cannot be told to visit until the owner confirms a public showroom
+   * with a street address. While false, the business is an OnlineStore: no geo,
+   * no street address, hours on the customer-service contact point.
+   */
+  publicShowroom: false,
+  /** Owner: "central Nairobi". No street address given. */
   address: {
     locality: 'Nairobi',
     region: 'Nairobi County',
@@ -55,79 +64,18 @@ export const BUSINESS = {
   brands: ['EcoFlow', 'BLUETTI', 'Anker', 'Soundcore', 'Eufy'],
   /** Owner-confirmed 2026-11-09: authorised dealer for every brand above. */
   dealerStatus: 'authorised',
-  /** Owner-confirmed 2026-11-09. */
+  /**
+   * Owner-confirmed 2026-11-09 as 24 months. Accessories are still listed as 12
+   * months on the warranty page; awaiting owner confirmation.
+   */
   warrantyMonths: 24,
   /** Owner-confirmed 2026-11-09. Order cut-off time not yet given. */
   sameDayNairobiDelivery: true,
   paymentMethods: ['M-Pesa', 'Visa', 'Mastercard', 'Cash on Delivery'],
   currency: 'KES',
+  /** From the existing contact markup; awaiting owner confirmation. */
   languages: ['English', 'Swahili'],
   // Return policy: not yet provided by the owner — deliberately omitted.
 } as const
 
 export const SOCIAL_URLS: string[] = Object.values(BUSINESS.social)
-
-/** The business as one schema.org node, referenced elsewhere by its @id. */
-export function businessJsonLd() {
-  return {
-    '@context': 'https://schema.org',
-    '@type': ['Organization', 'Store'],
-    '@id': `${SITE_URL}/#organization`,
-    name: BUSINESS.name,
-    legalName: BUSINESS.legalName,
-    alternateName: BUSINESS.alternateNames,
-    url: BUSINESS.url,
-    logo: BUSINESS.logo,
-    image: `${SITE_URL}/heroes/hero-power-stations.jpg`,
-    description: BUSINESS.description,
-    knowsAbout: [
-      'EcoFlow power stations',
-      'BLUETTI power stations',
-      'Portable power stations',
-      'Solar panels',
-      'Home battery backup',
-      'Backup power for KPLC power outages',
-      'Off-grid solar power in Kenya',
-    ],
-    telephone: BUSINESS.phone.e164,
-    email: BUSINESS.email,
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: BUSINESS.address.locality,
-      addressRegion: BUSINESS.address.region,
-      addressCountry: BUSINESS.address.country,
-    },
-    geo: { '@type': 'GeoCoordinates', ...BUSINESS.geo },
-    openingHoursSpecification: BUSINESS.openingHours.map((h) => ({
-      '@type': 'OpeningHoursSpecification',
-      dayOfWeek: h.days,
-      opens: h.opens,
-      closes: h.closes,
-    })),
-    paymentAccepted: BUSINESS.paymentMethods.join(', '),
-    currenciesAccepted: BUSINESS.currency,
-    areaServed: { '@type': 'Country', name: 'Kenya' },
-    contactPoint: {
-      '@type': 'ContactPoint',
-      telephone: BUSINESS.phone.e164,
-      email: BUSINESS.email,
-      contactType: 'customer service',
-      areaServed: 'KE',
-      availableLanguage: BUSINESS.languages,
-    },
-    sameAs: SOCIAL_URLS,
-  }
-}
-
-export function websiteJsonLd() {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    '@id': `${SITE_URL}/#website`,
-    url: SITE_URL,
-    name: 'Batteriq Kenya',
-    alternateName: BUSINESS.name,
-    inLanguage: 'en-KE',
-    publisher: { '@id': `${SITE_URL}/#organization` },
-  }
-}
