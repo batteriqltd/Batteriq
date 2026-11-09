@@ -160,7 +160,7 @@ export const ANSWER_GROUPS: AnswerGroup[] = [
         id: 'contact-batteriq',
         question: 'How do I contact Batteriq?',
         short:
-          'Call or WhatsApp Batteriq on +254 716 822 014, or email info@batteriq.com. The team is available Monday–Friday 8:30am–6pm and Saturday 9am–4pm, Nairobi time.',
+          'Call or WhatsApp Batteriq on +254 716 822 014, or email info@batteriq.com. The team is available Monday to Saturday, 8am–6pm Nairobi time, and you can place an order online at any time.',
         link: { href: '/contact', label: 'Contact Batteriq' },
       },
     ],

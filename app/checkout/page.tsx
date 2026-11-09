@@ -1088,7 +1088,7 @@ export default function CheckoutPage() {
                     <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><Phone size={10} /> +254 716 822 014</p>
                     <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><WhatsAppIcon size={12} /> WhatsApp: +254 716 822 014</p>
                     <p className="text-[11px] text-gray-500 font-bold flex items-center gap-2"><EmailIcon size={12} /> info@batteriq.com</p>
-                    <p className="text-[11px] text-gray-500 font-medium">Mon–Sat, 8:30am–6:00pm</p>
+                    <p className="text-[11px] text-gray-500 font-medium">Mon–Sat, 8:00am–6:00pm</p>
                   </div>
                 </div>
               </div>

@@ -167,7 +167,7 @@ export function Footer() {
             <div className="rounded-2xl border border-gray-100 bg-[#fafafb] px-4 py-3 mb-5 max-w-sm lg:max-w-none">
               <div className="flex items-center justify-between py-1">
                 <span className="text-sm text-gray-500">Mon &ndash; Sat</span>
-                <span className="text-sm font-bold text-gray-900">8:30am &ndash; 6:00pm</span>
+                <span className="text-sm font-bold text-gray-900">8:00am &ndash; 6:00pm</span>
               </div>
               <div className="h-px bg-gray-100 my-1" />
               <div className="flex items-center justify-between py-1">

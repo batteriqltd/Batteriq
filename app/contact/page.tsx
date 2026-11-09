@@ -295,7 +295,7 @@ export default function ContactPage() {
                 <div className="rounded-[2rem] overflow-hidden" style={{ background: 'linear-gradient(160deg, #00004d 0%, #000080 100%)', boxShadow: '0 4px 40px rgba(0,0,77,0.2)' }}>
                   <div className="p-8 sm:p-10">
                     <h3 className="text-xl font-black text-white tracking-tight mb-1">Direct Support</h3>
-                    <p className="text-blue-300 text-xs font-medium mb-8">Available Mon–Sat, 8:30AM–6:00PM</p>
+                    <p className="text-blue-300 text-xs font-medium mb-8">Available Mon–Sat, 8:00AM–6:00PM</p>
 
                     <div className="space-y-4">
                       {[
@@ -304,7 +304,7 @@ export default function ContactPage() {
                           label: 'Call Us',
                           value: '0716 822 014',
                           href: 'tel:+254716822014',
-                          sub: 'Mon–Sat, 8:30AM–6:00PM',
+                          sub: 'Mon–Sat, 8:00AM–6:00PM',
                           external: false,
                         },
                         {
@@ -360,8 +360,8 @@ export default function ContactPage() {
                   <h4 className="font-black text-gray-900 text-base mb-5">Business Hours</h4>
                   <div className="space-y-3">
                     {[
-                      { day: 'Monday – Friday', hours: '8:30 AM – 6:00 PM', active: true },
-                      { day: 'Saturday', hours: '9:00 AM – 4:00 PM', active: true },
+                      { day: 'Monday – Friday', hours: '8:00 AM – 6:00 PM', active: true },
+                      { day: 'Saturday', hours: '8:00 AM – 6:00 PM', active: true },
                       { day: 'Sunday', hours: 'Closed', active: false },
                     ].map((h) => (
                       <div key={h.day} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">

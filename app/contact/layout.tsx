@@ -6,7 +6,7 @@ import { withCanonical } from '@/lib/seo'
 export const metadata: Metadata = withCanonical('/contact', {
   title: 'Contact Us — EcoFlow & BLUETTI Dealer Nairobi',
   description:
-    'Contact Batteriq, the authorised EcoFlow dealer in Kenya. Call or WhatsApp +254 716 822 014, email info@batteriq.com. Based in Nairobi, open Mon–Sat.',
+    'Contact Batteriq, the authorised EcoFlow dealer in Kenya. Call or WhatsApp +254 716 822 014, email info@batteriq.com. Based in Nairobi, open Mon–Sat 8am–6pm; order online any time.',
 })
 
 export default function ContactLayout({ children }: { children: React.ReactNode }) {

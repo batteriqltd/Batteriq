@@ -69,7 +69,7 @@ Key facts:
 - Business: Batteriq Solutions Ltd, Nairobi, Kenya
 - Phone / WhatsApp: +254 716 822 014
 - Email: info@batteriq.com
-- Hours: Mon–Fri 08:30–18:00, Sat 09:00–16:00 (EAT)
+- Hours: Mon–Sat 08:00–18:00 (EAT); online orders any time
 - Brands: EcoFlow (authorised dealer), BLUETTI
 - Warranty: 24 months on EcoFlow power stations, handled locally in Kenya
 - Delivery: Nairobi delivery and nationwide courier to all 47 counties

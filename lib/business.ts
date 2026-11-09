@@ -35,14 +35,14 @@ export const BUSINESS = {
   geo: { latitude: -1.286389, longitude: 36.817223 },
 
   /**
-   * PENDING OWNER CONFIRMATION — three versions exist on the site (footer,
-   * contact page / JSON-LD, FAQ). This is the JSON-LD version, kept unchanged
-   * until the owner says which is right.
+   * Owner-confirmed 2026-11-09: 8am–6pm (Nairobi time). Days follow the site's
+   * existing Monday–Saturday, Sunday closed. Online orders are taken at any time.
    */
   openingHours: [
-    { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'], opens: '08:30', closes: '18:00' },
-    { days: ['Saturday'], opens: '09:00', closes: '16:00' },
+    { days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], opens: '08:00', closes: '18:00' },
   ],
+  hoursLabel: 'Mon–Sat, 8am–6pm',
+  ordersAnyTime: true,
 
   /** Clean profile URLs, no tracking parameters. */
   social: {
