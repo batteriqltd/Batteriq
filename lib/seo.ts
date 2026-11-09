@@ -124,18 +124,9 @@ export function productJsonLd(product: Product, section: ProductSection) {
         : 'https://schema.org/OutOfStock',
       seller: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: 'Batteriq' },
     },
-    // Only emitted when we genuinely have review data — never invented.
-    ...(product.schema_rating && product.schema_review_count && product.schema_review_count > 0
-      ? {
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            ratingValue: product.schema_rating,
-            reviewCount: product.schema_review_count,
-            bestRating: 5,
-            worstRating: 1,
-          },
-        }
-      : {}),
+    // No aggregateRating or review. products.schema_rating / schema_review_count
+    // are seeded defaults, not customer reviews, and no product page shows
+    // reviews. Google requires rating markup to match reviews visible on the page.
   }
 }
 
