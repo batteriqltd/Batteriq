@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -7,10 +8,10 @@ import { ToastContainer } from '@/components/ui/Toast'
 import { HelpCircle, BookOpen, Shield, MessageCircle, Phone, Mail, ChevronRight } from 'lucide-react'
 import { WhatsAppIcon, EmailIcon } from '@/components/ui/ContactIcons'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/support', {
   title: 'Support & Help — EcoFlow & BLUETTI Kenya',
   description: 'Official EcoFlow & Bluetti support hub in Kenya. FAQ, product manuals, and warranty registration.',
-}
+})
 
 export default function SupportPage() {
   return (

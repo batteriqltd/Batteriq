@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { withoutDeprecatedDelta } from '@/lib/delta-series'
 import { Header } from '@/components/layout/Header'
@@ -10,7 +11,7 @@ import { Shield } from 'lucide-react'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/ecoflow-kenya', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'EcoFlow Kenya — Official Authorised EcoFlow Dealer | Batteriq' },
   description: 'Batteriq is the official EcoFlow dealer in Kenya. Buy genuine EcoFlow power stations as an authorised dealer. EcoFlow DELTA Pro, DELTA 2, RIVER 2, solar panels. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty. From KES 27,259.',
@@ -22,11 +23,9 @@ export const metadata: Metadata = {
     'solar power Kenya', 'M-Pesa power station', 'buy power station Nairobi',
     'EcoFlow Nairobi', 'Batteriq Kenya', 'EcoFlow official Kenya',
   ],
-  alternates: { canonical: 'https://batteriq.com/ecoflow-kenya' },
   openGraph: {
     title: 'EcoFlow Kenya — Official Authorised EcoFlow Dealer | Batteriq',
     description: 'Buy genuine EcoFlow in Kenya. M-Pesa accepted. Same-day Nairobi delivery. From KES 27,259.',
-    url: 'https://batteriq.com/ecoflow-kenya',
     siteName: 'Batteriq Kenya',
     locale: 'en_KE',
     type: 'website',
@@ -38,7 +37,7 @@ export const metadata: Metadata = {
     description: 'Buy genuine EcoFlow in Kenya. M-Pesa accepted. Same-day delivery.',
     images: ['https://batteriq.com/heroes/hero-power-stations.jpg'],
   },
-}
+})
 
 const faqSchema = {
   '@context': 'https://schema.org',

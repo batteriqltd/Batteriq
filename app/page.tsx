@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { CATALOG_DELTA_SLUGS, withDeltaFallback, withoutDeprecatedDelta } from '@/lib/delta-series'
 import { withBluettiFallbacks } from '@/lib/bluetti-residential'
@@ -26,7 +27,7 @@ import { SectionObserver } from '@/components/animations/SectionObserver'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/', {
   // Leads with the brands people actually search for; absolute skips the "%s | Batteriq" template.
   title: { absolute: 'EcoFlow & BLUETTI Kenya — Power Stations & Solar | Batteriq' },
   description: "Batteriq is the official EcoFlow dealer and official BLUETTI dealer in Kenya. Buy power stations, solar panels, and home battery systems. Pay with M-Pesa. Same-day Nairobi delivery. From KES 27,259. Official 24-month warranty.",
@@ -38,11 +39,9 @@ export const metadata: Metadata = {
     'Batteriq Kenya', 'EcoFlow DELTA Pro Kenya', 'EcoFlow RIVER 2 Kenya',
     'buy power station M-Pesa', 'solar panel Kenya price', 'home battery Kenya',
   ],
-  alternates: { canonical: 'https://batteriq.com' },
   openGraph: {
     title: "Batteriq Kenya — Kenya's Official EcoFlow & BLUETTI Dealer",
     description: "Buy genuine EcoFlow and BLUETTI in Kenya. M-Pesa accepted. Same-day Nairobi delivery. From KES 27,259.",
-    url: 'https://batteriq.com',
     siteName: 'Batteriq Kenya',
     locale: 'en_KE',
     type: 'website',
@@ -54,7 +53,7 @@ export const metadata: Metadata = {
     description: "Kenya's #1 EcoFlow dealer. M-Pesa accepted. Same-day delivery.",
     images: ['https://batteriq.com/heroes/hero-power-stations.jpg'],
   },
-}
+})
 
 async function getProductsByCategory(brand?: string, category?: string, limit = 8) {
   try {

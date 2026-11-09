@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/privacy', {
   title: 'Privacy Policy',
   description: 'Privacy Policy for Batteriq Solutions Ltd — how we collect, use, and protect your personal data when you shop on batteriq.com.',
   robots: 'index, follow',
-  alternates: { canonical: 'https://batteriq.com/privacy' },
-}
+})
 
 const LAST_UPDATED = 'June 25, 2026'
 const EFFECTIVE_DATE = 'June 25, 2026'

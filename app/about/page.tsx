@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Zap, Shield, Globe, Users } from 'lucide-react'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/about', {
   title: 'About Batteriq — Kenya\'s Authorised EcoFlow Dealer',
   description: 'Batteriq is Kenya\'s authorised EcoFlow and Bluetti dealer. Learn about our mission to guarantee uptime for homes and businesses across Kenya.',
-}
+})
 
 export default function AboutPage() {
   return (

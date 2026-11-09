@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import { Suspense } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Header } from '@/components/layout/Header'
@@ -12,19 +13,17 @@ import type { Product } from '@/lib/supabase/types'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/power-stations', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'Power Stations Price in Kenya — EcoFlow & BLUETTI | Batteriq' },
   description: 'Buy power stations in Kenya. Official EcoFlow dealer. DELTA Pro, DELTA 2, RIVER 2, RIVER 3 in stock. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty. From KES 27,259.',
   keywords: ['power station Kenya', 'buy power station Kenya', 'EcoFlow power station Kenya', 'EcoFlow DELTA Pro Kenya', 'EcoFlow DELTA 2 Kenya', 'EcoFlow RIVER 2 Kenya', 'portable power station Kenya', 'home backup power Kenya', 'power station Nairobi'],
-  alternates: { canonical: 'https://batteriq.com/power-stations' },
   openGraph: {
     title: 'Power Stations Kenya | Batteriq',
     description: 'Official EcoFlow power stations in Kenya. M-Pesa accepted.',
-    url: 'https://batteriq.com/power-stations',
     images: [{ url: 'https://batteriq.com/heroes/hero-power-stations.jpg', width: 1200, height: 630, alt: 'Power Stations Kenya' }],
   },
-}
+})
 
 async function getProducts(): Promise<Product[]> {
   try {

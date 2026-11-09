@@ -10,9 +10,54 @@
 // product row; anything missing is omitted rather than guessed.
 // ─────────────────────────────────────────────────────────────────────────────
 
+import type { Metadata } from 'next'
 import type { Product } from '@/lib/supabase/types'
+import { SITE_URL } from '@/lib/business'
 
-export const SITE_URL = 'https://batteriq.com'
+export { SITE_URL }
+
+/** Used when a page has no image of its own (/og-image.jpg never existed). */
+export const DEFAULT_OG_IMAGE = {
+  url: `${SITE_URL}/heroes/hero-power-stations.jpg`,
+  alt: 'Batteriq Kenya — EcoFlow and BLUETTI power stations',
+}
+
+/** Absolute, no query string, no trailing slash; the home page is the bare origin. */
+export function canonicalUrl(path: string): string {
+  const clean = path.split(/[?#]/)[0].replace(/\/+$/, '')
+  return clean ? `${SITE_URL}${clean.startsWith('/') ? '' : '/'}${clean}` : SITE_URL
+}
+
+function plainTitle(title: Metadata['title']): string | undefined {
+  if (!title) return undefined
+  if (typeof title === 'string') return title
+  if ('absolute' in title && title.absolute) return title.absolute
+  if ('default' in title && title.default) return title.default
+  return undefined
+}
+
+/**
+ * Gives a page a self-referencing canonical and an og:url that always equals it.
+ * Open Graph fields the page sets itself win; the rest fall back to the page's
+ * own title and description, so a share preview never shows the home page's.
+ */
+export function withCanonical(path: string, meta: Metadata): Metadata {
+  const url = canonicalUrl(path)
+  return {
+    ...meta,
+    alternates: { ...meta.alternates, canonical: url },
+    openGraph: {
+      type: 'website',
+      locale: 'en_KE',
+      siteName: 'Batteriq Kenya',
+      title: plainTitle(meta.title),
+      description: meta.description ?? undefined,
+      images: [DEFAULT_OG_IMAGE],
+      ...meta.openGraph,
+      url,
+    },
+  }
+}
 
 /** Google truncates around these lengths in the SERP. */
 export const TITLE_MAX = 60

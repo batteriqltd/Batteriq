@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
 import { ToastContainer } from '@/components/ui/Toast'
 import { ExternalLink, FileText } from 'lucide-react'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/support/manuals', {
   title: 'EcoFlow Product Manuals & Downloads Kenya',
   description: 'Download official EcoFlow user manuals, quick start guides, and product specifications for all EcoFlow models available in Kenya.',
-}
+})
 
 const manualCategories = [
   {

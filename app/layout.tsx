@@ -8,6 +8,7 @@ import { GSAPProvider } from '@/components/animations/GSAPProvider'
 import { AOSProvider } from '@/components/animations/AOSProvider'
 import { ScrollToTop } from '@/components/animations/ScrollToTop'
 import { businessJsonLd, websiteJsonLd } from '@/lib/business'
+import { DEFAULT_OG_IMAGE } from '@/lib/seo'
 import './globals.css'
 
 // Font variables — loaded via CSS globals to avoid build-time Google Fonts failures
@@ -60,18 +61,17 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_KE',
-    url: 'https://batteriq.com',
     siteName: 'Batteriq Kenya',
     title: 'Batteriq Kenya — Official EcoFlow & BLUETTI Dealer',
     description:
       "Kenya's official EcoFlow and BLUETTI dealer. Buy power stations, solar panels, and batteries. M-Pesa accepted. Nairobi delivery.",
-    images: [{ url: '/og-image.jpg', width: 1200, height: 630, alt: 'Batteriq Kenya — EcoFlow & BLUETTI Official Dealer' }],
+    images: [DEFAULT_OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Batteriq Kenya — EcoFlow & BLUETTI Official Dealer',
     description: 'Buy EcoFlow and BLUETTI in Kenya. M-Pesa accepted. Same-day Nairobi delivery.',
-    images: ['/og-image.jpg'],
+    images: [DEFAULT_OG_IMAGE.url],
   },
   robots: {
     index: true,
@@ -83,9 +83,6 @@ export const metadata: Metadata = {
       'max-image-preview': 'large',
       'max-snippet': -1,
     },
-  },
-  alternates: {
-    canonical: 'https://batteriq.com',
   },
 }
 

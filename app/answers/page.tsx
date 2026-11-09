@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -8,18 +9,16 @@ import { ANSWER_GROUPS, ALL_ANSWERS, AEO_LAST_REVIEWED, answerText } from '@/lib
 
 const PAGE_URL = 'https://batteriq.com/answers'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/answers', {
   title: 'Backup Power in Kenya — Straight Answers',
   description:
     'Direct answers on buying EcoFlow and BLUETTI in Kenya: where to buy, M-Pesa payment, what size power station you need for KPLC blackouts, solar charging, warranty and delivery.',
-  alternates: { canonical: PAGE_URL },
   openGraph: {
     title: 'Backup Power in Kenya — Straight Answers | Batteriq',
     description: 'Where to buy EcoFlow in Kenya, sizing a power station for blackouts, M-Pesa payment, solar, warranty and delivery.',
-    url: PAGE_URL,
     type: 'article',
   },
-}
+})
 
 // FAQPage schema must mirror the visible text below (Google policy), which it
 // does because both are rendered from lib/aeo.ts.

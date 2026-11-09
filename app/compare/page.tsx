@@ -3,12 +3,13 @@ import { withoutDeprecatedDelta } from '@/lib/delta-series'
 import { CompareClient } from './CompareClient'
 import type { Product } from '@/lib/supabase/types'
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/compare', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'Compare EcoFlow & BLUETTI Power Stations | Batteriq Kenya' },
   description: 'Compare EcoFlow and BLUETTI power stations side by side. Specs, prices, battery capacity and more. Find the right power station for your needs in Kenya.',
-}
+})
 
 export default async function ComparePage() {
   const supabase = createAdminClient()

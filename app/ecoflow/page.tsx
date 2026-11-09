@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { withCatalogFallback } from '@/lib/delta-series'
 import { Header } from '@/components/layout/Header'
@@ -9,13 +10,12 @@ import { ToastContainer } from '@/components/ui/Toast'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/ecoflow', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'EcoFlow Power Stations Price in Kenya | Batteriq' },
   description:
     'Shop all EcoFlow power stations in Kenya. RIVER series from KES 27,259, DELTA series from KES 85,539. Instant M-Pesa checkout. Authorised EcoFlow dealer.',
-  alternates: { canonical: 'https://batteriq.com/ecoflow' },
-}
+})
 
 async function getEcoFlowAll() {
   try {

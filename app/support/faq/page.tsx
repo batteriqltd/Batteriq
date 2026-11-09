@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import Link from 'next/link'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -6,11 +7,11 @@ import { PageHero } from '@/components/layout/PageHero'
 import { ToastContainer } from '@/components/ui/Toast'
 import { FaqAccordion } from '@/components/support/FaqAccordion'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/support/faq', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'FAQ — EcoFlow & BLUETTI in Kenya | Batteriq' },
   description: 'Answers to common questions about EcoFlow products in Kenya — charging, battery life, solar compatibility, M-Pesa payment, warranty, and delivery.',
-}
+})
 
 const faqCategories = [
   {

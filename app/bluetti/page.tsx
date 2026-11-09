@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import { Shield } from 'lucide-react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { withBluettiFallbacks } from '@/lib/bluetti-residential'
@@ -10,16 +11,14 @@ import { ToastContainer } from '@/components/ui/Toast'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/bluetti', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'BLUETTI Kenya — Official Dealer, Prices & Stock | Batteriq' },
   description: 'Buy genuine Bluetti power stations, residential backup systems, solar panels and batteries in Kenya from Batteriq. New Homestar 3, HV6K, HV10K and HB500 in stock. Official authorised dealer, M-Pesa payments, Nairobi delivery and manufacturer warranty.',
   keywords: ['Bluetti Kenya', 'buy Bluetti Kenya', 'Bluetti dealer Kenya', 'official Bluetti dealer Kenya', 'Bluetti power station Kenya', 'Bluetti solar generator Kenya', 'Bluetti Nairobi', 'Bluetti AC200PL Kenya', 'Bluetti AC300 Kenya', 'Bluetti AC500 Kenya', 'Bluetti Homestar 3 Kenya', 'Bluetti HV6K Kenya', 'Bluetti HV10K Kenya', 'Bluetti HB500 Kenya'],
-  alternates: { canonical: 'https://batteriq.com/bluetti' },
   openGraph: {
     title: 'Bluetti Kenya | Official Bluetti Dealer | Batteriq',
     description: 'Buy genuine Bluetti power stations in Kenya. M-Pesa accepted, Nairobi delivery and local support.',
-    url: 'https://batteriq.com/bluetti',
     images: [{ url: 'https://batteriq.com/heroes/hero-bluetti.jpg', width: 1200, height: 630, alt: 'Bluetti Kenya - Batteriq official dealer' }],
   },
   twitter: {
@@ -28,7 +27,7 @@ export const metadata: Metadata = {
     description: 'Genuine Bluetti power stations, solar panels and batteries in Kenya. M-Pesa accepted.',
     images: ['https://batteriq.com/heroes/hero-bluetti.jpg'],
   },
-}
+})
 
 const faqSchema = {
   '@context': 'https://schema.org',

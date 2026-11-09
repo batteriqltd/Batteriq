@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { withCanonical } from '@/lib/seo'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
@@ -8,13 +9,12 @@ import { ToastContainer } from '@/components/ui/Toast'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
+export const metadata: Metadata = withCanonical('/accessories', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'EcoFlow Extra Batteries & Accessories Kenya | Batteriq' },
   description:
     'Buy EcoFlow extra batteries, cables, appliances and accessories in Kenya. Extra batteries from KES 27,899. M-Pesa checkout. Authorised EcoFlow dealer.',
-  alternates: { canonical: 'https://batteriq.com/accessories' },
-}
+})
 
 async function getAccessoriesData() {
   try {
