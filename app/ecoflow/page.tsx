@@ -10,7 +10,9 @@ import { ToastContainer } from '@/components/ui/Toast'
 
 export const revalidate = 60
 
-export const metadata: Metadata = withCanonical('/ecoflow', {
+// Same catalogue as /ecoflow-kenya, which is the page we want ranked. /ecoflow
+// stays reachable (and every /ecoflow/[slug] product URL is unchanged).
+export const metadata: Metadata = withCanonical('/ecoflow-kenya', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'EcoFlow Power Stations Price in Kenya | Batteriq' },
   description:

@@ -222,7 +222,7 @@ export default async function HomePage() {
             brand="EcoFlow"
             category="Power Stations"
             h2="EcoFlow Power Stations — Buy in Kenya with M-Pesa"
-            seeAllHref="/ecoflow"
+            seeAllHref="/ecoflow-kenya"
             subtitle="Kenya's most popular portable power stations. From KES 27,259."
           />
           <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
@@ -356,7 +356,7 @@ export default async function HomePage() {
                 brand="EcoFlow"
                 category="Solar Home Systems"
                 h2="EcoFlow Solar Home Systems — Whole-Home Energy Systems"
-                seeAllHref="/ecoflow#solar-home-systems"
+                seeAllHref="/ecoflow-kenya#solar-home-systems"
                 subtitle="Modular home energy systems from 5kWh to 15kWh. Solar-ready."
               />
               <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
