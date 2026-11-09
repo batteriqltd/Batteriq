@@ -38,11 +38,11 @@ export function FaqAccordion({ categories }: { categories: FaqCategory[] }) {
         ))}
       </div>
 
-      {/* FAQ items for active category */}
+      {/* Every category and answer is in the server HTML; inactive tabs and
+          closed answers use the hidden attribute, which looks the same as before. */}
       {categories
-        .filter(cat => cat.category === openCategory)
         .map(cat => (
-          <div key={cat.category} className="space-y-3">
+          <div key={cat.category} className="space-y-3" hidden={cat.category !== openCategory}>
             {cat.items.map((item, i) => {
               const key = `${cat.category}-${i}`
               const isOpen = openItem === key
@@ -55,6 +55,7 @@ export function FaqAccordion({ categories }: { categories: FaqCategory[] }) {
                 >
                   <button
                     onClick={() => setOpenItem(isOpen ? null : key)}
+                    aria-expanded={isOpen}
                     className="w-full flex items-center justify-between gap-4 px-6 py-5 text-left bg-white hover:bg-gray-50 transition-colors"
                   >
                     <span className={`font-semibold text-sm leading-snug ${isOpen ? 'text-blue-600' : 'text-gray-900'}`}>
@@ -65,13 +66,11 @@ export function FaqAccordion({ categories }: { categories: FaqCategory[] }) {
                       className={`flex-shrink-0 text-gray-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-600' : ''}`}
                     />
                   </button>
-                  {isOpen && (
-                    <div className="px-6 pb-6 pt-0 bg-white border-t border-gray-50">
-                      <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
-                        {item.answer}
-                      </p>
-                    </div>
-                  )}
+                  <div className="px-6 pb-6 pt-0 bg-white border-t border-gray-50" hidden={!isOpen}>
+                    <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
+                      {item.answer}
+                    </p>
+                  </div>
                 </div>
               )
             })}

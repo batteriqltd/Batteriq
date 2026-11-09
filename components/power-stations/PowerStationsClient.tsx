@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Zap } from 'lucide-react'
@@ -11,14 +11,20 @@ interface PowerStationsClientProps {
   products: Product[]
 }
 
-export function PowerStationsClient({ products }: PowerStationsClientProps) {
+// Reads ?filter= after hydration. Isolated in its own Suspense boundary because
+// useSearchParams on a static page otherwise drops the whole grid out of the
+// server HTML.
+function FilterFromUrl({ onFilter }: { onFilter: (filter: string) => void }) {
   const searchParams = useSearchParams()
-  const [activeFilter, setActiveFilter] = useState(searchParams.get('filter') ?? 'all')
-
   useEffect(() => {
     const f = searchParams.get('filter')
-    if (f) setActiveFilter(f)
-  }, [searchParams])
+    if (f) onFilter(f)
+  }, [searchParams, onFilter])
+  return null
+}
+
+export function PowerStationsClient({ products }: PowerStationsClientProps) {
+  const [activeFilter, setActiveFilter] = useState('all')
 
   const deltaCount = products.filter(
     (p) => p.name.toLowerCase().includes('delta') && p.brand === 'EcoFlow'
@@ -48,6 +54,9 @@ export function PowerStationsClient({ products }: PowerStationsClientProps) {
 
   return (
     <div>
+      <Suspense fallback={null}>
+        <FilterFromUrl onFilter={setActiveFilter} />
+      </Suspense>
       {/* Filter tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
