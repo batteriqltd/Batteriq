@@ -287,7 +287,7 @@ function getRuleBasedResponse(message: string): string | null {
   }
 
   if (/warranty|guarantee|genuine|fake|original/.test(m)) {
-    return 'All EcoFlow products from Batteriq come with the official manufacturer warranty — 24 months for power stations and 12 months for accessories. Batteriq is EcoFlow\'s authorised distributor in Kenya, so every product is 100% genuine.'
+    return 'All EcoFlow products from Batteriq come with the official manufacturer warranty — 24 months for power stations and accessories. Batteriq is EcoFlow\'s authorised distributor in Kenya, so every product is 100% genuine.'
   }
 
   if (/solar panel|solar/.test(m) && /price|cost|how much|bei/.test(m)) {

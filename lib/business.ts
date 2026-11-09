@@ -65,8 +65,7 @@ export const BUSINESS = {
   /** Owner-confirmed 2026-11-09: authorised dealer for every brand above. */
   dealerStatus: 'authorised',
   /**
-   * Owner-confirmed 2026-11-09 as 24 months. Accessories are still listed as 12
-   * months on the warranty page; awaiting owner confirmation.
+   * Owner-confirmed 2026-11-09: 24 months for every product, accessories included.
    */
   warrantyMonths: 24,
   /** Owner-confirmed 2026-11-09. Order cut-off time not yet given. */

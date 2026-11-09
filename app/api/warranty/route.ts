@@ -9,7 +9,7 @@ const WARRANTY_MONTHS: Record<string, number> = {
   'Extra Battery': 24,
   'Smart Generator': 24,
   'Appliance': 24,
-  'Accessory': 12,
+  'Accessory': 24,
 }
 
 const PRODUCT_TYPE_MAP: Record<string, string> = {
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
     }
 
     const productType = getProductType(data.productName)
-    const warrantyMonths = WARRANTY_MONTHS[productType] ?? 12
+    const warrantyMonths = WARRANTY_MONTHS[productType] ?? 24
     const purchaseDateObj = new Date(data.purchaseDate)
     const warrantyEnd = new Date(purchaseDateObj)
     warrantyEnd.setMonth(warrantyEnd.getMonth() + warrantyMonths)

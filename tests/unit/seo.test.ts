@@ -87,7 +87,7 @@ describe('titles and descriptions use the live price', () => {
     const short = { ...p, name: 'Soundcore Liberty 4 NC' } as Product
     expect(buildTitle(short)).toBe('Soundcore Liberty 4 NC Price in Kenya | Batteriq')
     expect(buildDescription(short)).toBe(
-      'Soundcore Liberty 4 NC wireless earbuds. In stock in Nairobi. KES 10,010, M-Pesa or card, same-day Nairobi delivery.'
+      'Soundcore Liberty 4 NC wireless earbuds. In stock in Nairobi. KES 10,010, M-Pesa or card, 24-month warranty.'
     )
   })
 

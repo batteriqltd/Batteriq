@@ -130,7 +130,7 @@ const faqCategories = [
     items: [
       {
         question: 'What is the warranty period for EcoFlow products bought from Batteriq?',
-        answer: 'Batteriq honours the full official EcoFlow warranty:\n\n• Power Stations: 24 months (2 years)\n• Solar Panels: 24 months product warranty + 5-year power output guarantee (≥90% at year 5)\n• Extra Batteries: 24 months\n• Accessories & Cables: 12 months\n• Smart Generators: 24 months\n\nWarranty starts from the date of purchase from Batteriq.',
+        answer: 'Batteriq honours the full official EcoFlow warranty:\n\n• Power Stations: 24 months (2 years)\n• Solar Panels: 24 months product warranty + 5-year power output guarantee (≥90% at year 5)\n• Extra Batteries: 24 months\n• Accessories & Cables: 24 months\n• Smart Generators: 24 months\n\nWarranty starts from the date of purchase from Batteriq.',
       },
       {
         question: 'How do I make a warranty claim in Kenya?',

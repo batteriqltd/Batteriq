@@ -347,7 +347,7 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
   // WARRANTY
   if (/warrant|guarantee|return|broken|repair|dhamana/.test(msg)) {
     return {
-      message: `Great question — warranty is actually one of our biggest selling points! 🛡️\n\nBecause we're Kenya's **official authorised EcoFlow distributor**, you don't have to send anything abroad if something goes wrong. We handle it all here.\n\n**Our warranty periods:**\n• ⚡ Power Stations — **24 months**\n• ☀️ Solar Panels — **24 months** + 5yr power output\n• 🔋 Extra Batteries — **24 months**\n• 🔌 Accessories — **12 months**\n\nTo make a claim: just WhatsApp us with a photo or video of the issue. We sort it out! 🤝`,
+      message: `Great question — warranty is actually one of our biggest selling points! 🛡️\n\nBecause we're Kenya's **official authorised EcoFlow distributor**, you don't have to send anything abroad if something goes wrong. We handle it all here.\n\n**Our warranty periods:**\n• ⚡ Power Stations — **24 months**\n• ☀️ Solar Panels — **24 months** + 5yr power output\n• 🔋 Extra Batteries — **24 months**\n• 🔌 Accessories — **24 months**\n\nTo make a claim: just WhatsApp us with a photo or video of the issue. We sort it out! 🤝`,
       type: 'text',
       quickReplies: ['Register my warranty', 'How to make a claim', 'Back to shopping'],
     }

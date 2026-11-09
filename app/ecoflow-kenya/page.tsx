@@ -64,7 +64,7 @@ const ECOFLOW_FAQS = [
   },
   {
     q: 'What is the EcoFlow warranty in Kenya?',
-    a: 'All EcoFlow products come with the official manufacturer warranty — typically 24 months for power stations, 12 months for accessories. Batteriq is the authorised warranty service partner in Kenya.',
+    a: 'All EcoFlow products come with the official manufacturer warranty — 24 months for power stations and accessories. Batteriq is the authorised warranty service partner in Kenya.',
   },
 ]
 

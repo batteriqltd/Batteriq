@@ -54,7 +54,7 @@ const WARRANTY_DISPLAY: Record<string, string> = {
   'Extra Battery': '24 months (2 years)',
   'Smart Generator': '24 months (2 years)',
   'Appliance': '24 months (2 years)',
-  'Accessory': '12 months (1 year)',
+  'Accessory': '24 months (2 years)',
 }
 
 function getProductType(name: string): string {
@@ -420,7 +420,7 @@ export default function WarrantyPage() {
                     { type: 'Solar Panels', period: '24 months + 5yr power' },
                     { type: 'Extra Batteries', period: '24 months' },
                     { type: 'Smart Generators', period: '24 months' },
-                    { type: 'Accessories', period: '12 months' },
+                    { type: 'Accessories', period: '24 months' },
                   ].map(w => (
                     <div key={w.type} className="flex justify-between items-center py-2 border-b border-white/10">
                       <span className="text-blue-200 text-sm">{w.type}</span>

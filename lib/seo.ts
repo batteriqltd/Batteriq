@@ -160,9 +160,6 @@ function leadingNumber(value: unknown, unit: 'Wh' | 'W'): number | null {
   return m ? Number(m[1]) : null
 }
 
-/** Brands whose products carry the owner-confirmed 24-month warranty. */
-const WARRANTY_BRANDS = ['EcoFlow', 'Bluetti']
-
 /**
  * "<Name> <type>: <capacity> LiFePO4, <watts> AC output. In stock in Nairobi.
  * KES <price>, M-Pesa or card, 24-month warranty." Every fact is read from the
@@ -189,9 +186,8 @@ export function buildDescription(product: Product): string {
 
   const stock = product.in_stock ? 'In stock in Nairobi.' : 'Out of stock – reserve on WhatsApp.'
   const price = Number(product.price_kes) > 1 ? kes(product.price_kes) : null
-  const after = WARRANTY_BRANDS.includes(product.brand)
-    ? `${BUSINESS.warrantyMonths}-month warranty`
-    : product.in_stock ? 'same-day Nairobi delivery' : null
+  // Owner-confirmed: every product, accessories included, has the same warranty.
+  const after = `${BUSINESS.warrantyMonths}-month warranty`
   const close = [price, 'M-Pesa or card', after].filter(Boolean).join(', ') + '.'
 
   for (let n = facts.length; n >= 0; n--) {
