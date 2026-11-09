@@ -41,7 +41,16 @@ const nextConfig = {
     ],
   },
   async headers() {
+    // Search, sort and filter variants of a page are kept out of the index
+    // (links still followed). A header, because the pages are static and the
+    // query string is only read in the browser.
+    const noindexParams = ['q', 'search', 'sort', 'filter'].map((key) => ({
+      source: '/:path*',
+      has: [{ type: 'query', key }],
+      headers: [{ key: 'X-Robots-Tag', value: 'noindex, follow' }],
+    }))
     return [
+      ...noindexParams,
       {
         source: '/admin/:path*',
         headers: [
