@@ -12,13 +12,16 @@ import { showToast } from '@/components/ui/Toast'
 import { SpecBadge } from './SpecBadge'
 import { Modal } from '@/components/ui/Modal'
 import type { Product } from '@/lib/supabase/types'
-import { brandedName } from '@/lib/seo'
+import { brandedName, SECTION_PARENT, type ProductSection } from '@/lib/seo'
 
 type ProductDetailProps = {
   product: Product
+  /** Which product route this is; drives the breadcrumb so it matches the BreadcrumbList JSON-LD. */
+  section: ProductSection
 }
 
-export function ProductDetail({ product }: ProductDetailProps) {
+export function ProductDetail({ product, section }: ProductDetailProps) {
+  const parent = SECTION_PARENT[section]
   const addItem = useCartStore((s) => s.addItem)
   const openCart = useUIStore((s) => s.openCart)
   const [activeImage, setActiveImage] = useState(0)
@@ -50,7 +53,7 @@ export function ProductDetail({ product }: ProductDetailProps) {
         <ol className="breadcrumb">
           <li><Link href="/">Home</Link></li>
           <li><ChevronRight size={14} className="text-gray-400" /></li>
-          <li><Link href="/ecoflow-kenya">EcoFlow Kenya</Link></li>
+          <li><Link href={parent.path}>{parent.name}</Link></li>
           <li><ChevronRight size={14} className="text-gray-400" /></li>
           <li className="text-gray-900">{product.name}</li>
         </ol>

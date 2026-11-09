@@ -129,7 +129,7 @@ export default async function BluesttiProductPage({ params }: PageProps) {
       <Header />
       <ToastContainer />
       <div className="pt-[72px] min-h-screen">
-        <ProductDetail product={product} />
+        <ProductDetail product={product} section="bluetti" />
         {related && related.length > 0 && (
           <section className="max-w-8xl mx-auto px-4 lg:px-8 pb-16">
             <h2 className="font-display font-bold text-gray-900 text-2xl mb-6">Related Bluetti Products</h2>

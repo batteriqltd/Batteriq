@@ -65,10 +65,11 @@ export const DESCRIPTION_MAX = 160
 
 export type ProductSection = 'ecoflow' | 'bluetti' | 'accessories'
 
-const SECTION_LABEL: Record<ProductSection, { name: string; href: string }> = {
-  ecoflow: { name: 'EcoFlow Kenya', href: `${SITE_URL}/ecoflow-kenya` },
-  bluetti: { name: 'Bluetti Kenya', href: `${SITE_URL}/bluetti` },
-  accessories: { name: 'Accessories', href: `${SITE_URL}/accessories` },
+/** Parent page of each product section — shared by the visible breadcrumb and BreadcrumbList. */
+export const SECTION_PARENT: Record<ProductSection, { name: string; path: string }> = {
+  ecoflow: { name: 'EcoFlow Kenya', path: '/ecoflow-kenya' },
+  bluetti: { name: 'Bluetti Kenya', path: '/bluetti' },
+  accessories: { name: 'Accessories', path: '/accessories' },
 }
 
 export function productUrl(section: ProductSection, slug: string) {
@@ -176,13 +177,13 @@ export function productJsonLd(product: Product, section: ProductSection) {
 }
 
 export function breadcrumbJsonLd(product: Product, section: ProductSection) {
-  const parent = SECTION_LABEL[section]
+  const parent = SECTION_PARENT[section]
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
-      { '@type': 'ListItem', position: 2, name: parent.name, item: parent.href },
+      { '@type': 'ListItem', position: 2, name: parent.name, item: `${SITE_URL}${parent.path}` },
       { '@type': 'ListItem', position: 3, name: product.name, item: productUrl(section, product.slug) },
     ],
   }
