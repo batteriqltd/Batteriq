@@ -14,7 +14,7 @@
 //   4. Only state facts that are true today (warranty, payment, delivery).
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const AEO_LAST_REVIEWED = '2026-11-02'
+export const AEO_LAST_REVIEWED = '2026-11-09'
 
 export type Answer = {
   id: string

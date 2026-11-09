@@ -6,8 +6,10 @@ import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
 import { ToastContainer } from '@/components/ui/Toast'
 import { ANSWER_GROUPS, ALL_ANSWERS, AEO_LAST_REVIEWED, answerText } from '@/lib/aeo'
+import { articleJsonLd, breadcrumbListJsonLd, jsonLdScript } from '@/lib/structuredData'
 
-const PAGE_URL = 'https://batteriq.com/answers'
+/** First published (git history of this page). */
+const AEO_PUBLISHED = '2026-11-02'
 
 export const metadata: Metadata = withCanonical('/answers', {
   title: 'Backup Power in Kenya — Straight Answers',
@@ -32,32 +34,27 @@ const faqSchema = {
   })),
 }
 
-const pageSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'WebPage',
-  '@id': PAGE_URL,
-  url: PAGE_URL,
-  name: 'Backup Power in Kenya — Straight Answers',
-  dateModified: AEO_LAST_REVIEWED,
-  inLanguage: 'en-KE',
-  publisher: { '@id': 'https://batteriq.com/#organization' },
+// The page is a buyer's guide: an Article, dated by its visible "Last reviewed" line.
+const articleSchema = {
+  ...articleJsonLd({
+    path: '/answers',
+    headline: 'Backup Power in Kenya — Straight Answers',
+    description:
+      'Direct answers on buying EcoFlow and BLUETTI in Kenya: where to buy, M-Pesa payment, sizing a power station for KPLC blackouts, solar charging, warranty and delivery.',
+    datePublished: AEO_PUBLISHED,
+    dateModified: AEO_LAST_REVIEWED,
+  }),
   about: ['Portable power stations', 'EcoFlow', 'BLUETTI', 'Solar power in Kenya', 'KPLC power outages'],
   // Voice assistants read these elements aloud as the answer.
   speakable: { '@type': 'SpeakableSpecification', cssSelector: ['.aeo-short'] },
-  breadcrumb: {
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://batteriq.com' },
-      { '@type': 'ListItem', position: 2, name: 'Answers', item: PAGE_URL },
-    ],
-  },
 }
 
 export default function AnswersPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pageSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(articleSchema)} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(breadcrumbListJsonLd([{ name: 'Home', path: '/' }, { name: 'Answers', path: '/answers' }]))} />
       <Header />
       <ToastContainer />
 
