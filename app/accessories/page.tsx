@@ -13,7 +13,7 @@ export const metadata: Metadata = withCanonical('/accessories', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'EcoFlow Extra Batteries & Accessories Kenya | Batteriq' },
   description:
-    'Buy EcoFlow extra batteries, cables, appliances and accessories in Kenya. Extra batteries from KES 27,899. M-Pesa checkout. Authorised EcoFlow dealer.',
+    'Buy EcoFlow extra batteries, cables, appliances and accessories in Kenya. M-Pesa checkout. Authorised EcoFlow dealer.',
 })
 
 async function getAccessoriesData() {

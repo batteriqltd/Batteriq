@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildProductFaqs, canonicalUrl, productJsonLd } from '@/lib/seo'
+import { buildDescription, buildProductFaqs, buildTitle, canonicalUrl, productJsonLd } from '@/lib/seo'
 import type { Product } from '@/lib/supabase/types'
 
 const base = {
@@ -52,5 +52,20 @@ describe('canonicalUrl', () => {
     expect(canonicalUrl('/')).toBe('https://batteriq.com')
     expect(canonicalUrl('/power-stations/?filter=delta')).toBe('https://batteriq.com/power-stations')
     expect(canonicalUrl('support/faq')).toBe('https://batteriq.com/support/faq')
+  })
+})
+
+describe('titles and descriptions use the live price', () => {
+  it('ignores stored overrides that carry a price', () => {
+    const p = { ...base, name: 'DELTA Pro', price_kes: 250799, meta_title: 'EcoFlow DELTA Pro Kenya — KES 291,399 | Batteriq', meta_description: 'Buy it for KES 291,399.' } as Product
+    expect(buildTitle(p)).toBe('EcoFlow DELTA Pro Price in Kenya — KES 250,799 | Batteriq')
+    expect(buildDescription(p)).toContain('KES 250,799')
+    expect(buildDescription(p)).not.toContain('291,399')
+  })
+
+  it('keeps a stored override with no price in it', () => {
+    const p = { ...base, meta_title: 'EcoFlow DELTA Pro 3 — whole-home backup', meta_description: 'Whole-home backup power.' } as Product
+    expect(buildTitle(p)).toBe('EcoFlow DELTA Pro 3 — whole-home backup')
+    expect(buildDescription(p)).toBe('Whole-home backup power.')
   })
 })

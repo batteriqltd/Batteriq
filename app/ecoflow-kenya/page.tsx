@@ -14,7 +14,7 @@ export const revalidate = 60
 export const metadata: Metadata = withCanonical('/ecoflow-kenya', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'EcoFlow Kenya — Official Authorised EcoFlow Dealer | Batteriq' },
-  description: 'Batteriq is the official EcoFlow dealer in Kenya. Buy genuine EcoFlow power stations as an authorised dealer. EcoFlow DELTA Pro, DELTA 2, RIVER 2, solar panels. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty. From KES 27,259.',
+  description: 'Batteriq is the official EcoFlow dealer in Kenya. Buy genuine EcoFlow power stations as an authorised dealer. EcoFlow DELTA Pro, DELTA 2, RIVER 2, solar panels. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty.',
   keywords: [
     'EcoFlow Kenya', 'official EcoFlow dealer', 'official EcoFlow dealer Kenya', 'buy EcoFlow Kenya', 'EcoFlow dealer Kenya', 'EcoFlow authorised dealer Kenya', 'authorised EcoFlow dealer',
     'EcoFlow distributor Kenya', 'EcoFlow power station Kenya', 'EcoFlow DELTA Pro Kenya',
@@ -25,7 +25,7 @@ export const metadata: Metadata = withCanonical('/ecoflow-kenya', {
   ],
   openGraph: {
     title: 'EcoFlow Kenya — Official Authorised EcoFlow Dealer | Batteriq',
-    description: 'Buy genuine EcoFlow in Kenya. M-Pesa accepted. Same-day Nairobi delivery. From KES 27,259.',
+    description: 'Buy genuine EcoFlow in Kenya. M-Pesa accepted. Same-day Nairobi delivery.',
     siteName: 'Batteriq Kenya',
     locale: 'en_KE',
     type: 'website',

@@ -89,14 +89,27 @@ function clamp(text: string, max: number) {
   return (lastSpace > max * 0.6 ? cut.slice(0, lastSpace) : cut).replace(/[\s,—-]+$/, '')
 }
 
+/** Matches a written-in price such as "KES 291,399" or "Ksh 9,699". */
+const PRICE_IN_TEXT = /\b(?:KES|KSh|Ksh)\s?[\d,]+/i
+
 /**
- * Stored meta_title wins. The generated fallback leads with the model name and
+ * A stored SEO override is used only when it carries no price. Prices written
+ * into meta_title / meta_description go stale the moment the live price
+ * changes, so those fall back to the generated text, which reads price_kes.
+ */
+function storedOverride(value: string | null | undefined): string | null {
+  const v = value?.trim()
+  return v && !PRICE_IN_TEXT.test(v) ? v : null
+}
+
+/**
+ * Stored meta_title wins unless it contains a price. The generated fallback leads with the model name and
  * price because that is what Kenyan buyers actually search
  * ("ecoflow delta 2 price kenya"), and drops the brand suffix rather than the
  * model name when it has to fit 60 characters.
  */
 export function buildTitle(product: Product): string {
-  const stored = product.meta_title?.trim()
+  const stored = storedOverride(product.meta_title)
   if (stored) return clamp(stored, TITLE_MAX)
 
   // "<product> price in Kenya" is the dominant Kenyan search pattern, so the
@@ -127,7 +140,7 @@ export function absoluteUrl(path: string): string {
 }
 
 export function buildDescription(product: Product): string {
-  const stored = product.meta_description?.trim()
+  const stored = storedOverride(product.meta_description)
   if (stored) return clamp(stored, DESCRIPTION_MAX)
 
   const useCase = (product.specs as Record<string, string> | null)?.use_case

@@ -14,7 +14,7 @@ export const metadata: Metadata = withCanonical('/ecoflow', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'EcoFlow Power Stations Price in Kenya | Batteriq' },
   description:
-    'Shop all EcoFlow power stations in Kenya. RIVER series from KES 27,259, DELTA series from KES 85,539. Instant M-Pesa checkout. Authorised EcoFlow dealer.',
+    'Shop all EcoFlow power stations in Kenya: the RIVER and DELTA series, live prices and stock. Instant M-Pesa checkout. Authorised EcoFlow dealer.',
 })
 
 async function getEcoFlowAll() {

@@ -16,7 +16,7 @@ export const revalidate = 60
 export const metadata: Metadata = withCanonical('/power-stations', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
   title: { absolute: 'Power Stations Price in Kenya — EcoFlow & BLUETTI | Batteriq' },
-  description: 'Buy power stations in Kenya. Official EcoFlow dealer. DELTA Pro, DELTA 2, RIVER 2, RIVER 3 in stock. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty. From KES 27,259.',
+  description: 'Buy power stations in Kenya. Official EcoFlow dealer. DELTA Pro, DELTA 2, RIVER 2, RIVER 3 and BLUETTI. Pay with M-Pesa. Same-day Nairobi delivery. 24-month warranty.',
   keywords: ['power station Kenya', 'buy power station Kenya', 'EcoFlow power station Kenya', 'EcoFlow DELTA Pro Kenya', 'EcoFlow DELTA 2 Kenya', 'EcoFlow RIVER 2 Kenya', 'portable power station Kenya', 'home backup power Kenya', 'power station Nairobi'],
   openGraph: {
     title: 'Power Stations Kenya | Batteriq',
