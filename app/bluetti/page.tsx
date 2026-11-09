@@ -91,7 +91,7 @@ export default async function BluettiCollectionPage() {
             <div className="inline-flex items-center gap-2 bg-white/15 px-4 py-2 rounded-full text-sm font-semibold mb-4">
               <Shield className="w-4 h-4" /> Official authorised dealer
             </div>
-            <h1 id="bluetti-kenya-heading" className="text-3xl lg:text-4xl font-black mb-3">Bluetti Power Stations in Kenya</h1>
+            <h2 id="bluetti-kenya-heading" className="text-3xl lg:text-4xl font-black mb-3">Bluetti Power Stations in Kenya</h2>
             <p className="text-violet-100 text-lg max-w-3xl">Shop genuine Bluetti portable power stations, new residential backup systems (Homestar 3, HV6K, HV10K, HB500), solar panels and expansion batteries from Batteriq. Pay with M-Pesa, get Nairobi delivery, and receive local support for your backup-power setup.</p>
           </section>
         </div>

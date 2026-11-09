@@ -143,13 +143,6 @@ export default async function EcoFlowKenyaPage() {
         align="left"
       />
 
-      {/* Hidden SEO content */}
-      <div className="sr-only">
-        <h1>EcoFlow Kenya — Authorised Dealer &amp; Distributor</h1>
-        <p>Nairobi Delivery &amp; Nationwide Shipping</p>
-        <p>Official EcoFlow Warranty in Kenya</p>
-      </div>
-
       <div className="min-h-screen">
         {/* Official distributor badge */}
         <div className="max-w-8xl mx-auto px-4 lg:px-8 pt-12">

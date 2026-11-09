@@ -209,9 +209,9 @@ export default async function PowerStationsPage() {
             <p className="text-xs font-black text-blue-600 uppercase tracking-[0.2em] mb-2">
               EcoFlow Kenya — Official Dealer
             </p>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 leading-tight">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 leading-tight">
               EcoFlow Power Stations
-            </h1>
+            </h2>
             <p className="text-gray-500 text-sm mt-2 max-w-md">
               Kenya's full range. Pay with M-Pesa. Genuine warranty.
             </p>
