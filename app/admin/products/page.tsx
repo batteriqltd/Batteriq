@@ -12,6 +12,9 @@ function ProductEditRow({ product, onSave }: { product: any; onSave: () => void 
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState('')
+  const initialBarcode = String(product.specs?.barcode ?? '')
+  const [barcode, setBarcode] = useState(initialBarcode)
+  const [saveError, setSaveError] = useState('')
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -36,11 +39,22 @@ function ProductEditRow({ product, onSave }: { product: any; onSave: () => void 
 
   async function handleSave() {
     setSaving(true)
-    await fetch(`/api/admin/products/${product.id}`, {
+    setSaveError('')
+    const res = await fetch(`/api/admin/products/${product.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ price_kes: Number(price), featured_image: imageUrl || undefined }),
+      body: JSON.stringify({
+        price_kes: Number(price),
+        featured_image: imageUrl || undefined,
+        ...(barcode.trim() !== initialBarcode ? { barcode: barcode.trim() } : {}),
+      }),
     })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setSaveError(data.error ?? 'Could not save')
+      setSaving(false)
+      return
+    }
     setSaving(false); setEditing(false); onSave()
   }
 
@@ -108,6 +122,11 @@ function ProductEditRow({ product, onSave }: { product: any; onSave: () => void 
             <input type="number" value={price} onChange={e => setPrice(e.target.value)}
               className="w-full pl-14 pr-6 h-12 rounded-2xl border border-gray-100 text-sm font-mono font-black focus:outline-none focus:ring-4 focus:ring-blue-600/10 focus:border-blue-600 shadow-sm" />
           </div>
+          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] block ml-1 pt-3">BARCODE (GTIN / EAN)</label>
+          <input type="text" inputMode="numeric" value={barcode} onChange={e => setBarcode(e.target.value.replace(/[^0-9]/g, ''))} placeholder="The 13 digits under the barcode on the box"
+            className="w-full px-5 h-12 rounded-2xl border border-gray-100 text-sm font-mono font-black focus:outline-none focus:ring-4 focus:ring-blue-600/10 focus:border-blue-600 shadow-sm" />
+          <p className="text-[10px] text-gray-400 ml-1">Optional. Shown to Google so it can match this exact product. Leave empty if unknown.</p>
+          {saveError && <p className="text-xs text-red-500 font-black ml-1">{saveError}</p>}
         </div>
         <div className="space-y-2">
           <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] block ml-1">FEATURED IMAGE ASSET</label>

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@supabase/supabase-js'
 import { getAdminSession } from '@/lib/admin-auth'
+import { validGtin } from '@/lib/seo'
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   const session = getAdminSession()
@@ -9,7 +10,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   try {
     const body = await req.json()
-    const { price_kes, featured_image, name, in_stock } = body
+    const { price_kes, featured_image, name, in_stock, barcode } = body
 
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -31,6 +32,21 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (featured_image !== undefined) {
       updates.featured_image = featured_image
       updates.images = [featured_image]
+    }
+
+    // Barcode (GTIN) lives in specs.barcode — there is no barcode column, and
+    // this way no database migration is needed. Empty string removes it.
+    if (barcode !== undefined) {
+      const raw = String(barcode ?? '').replace(/\s/g, '')
+      if (raw && !validGtin(raw)) {
+        return NextResponse.json({ error: 'Barcode must be a valid 8, 12, 13 or 14-digit GTIN (check the last digit).' }, { status: 400 })
+      }
+      const { data: current, error: readError } = await supabase.from('products').select('specs').eq('id', params.id).single()
+      if (readError) return NextResponse.json({ error: readError.message }, { status: 500 })
+      const specs = { ...((current?.specs as Record<string, unknown>) ?? {}) }
+      if (raw) specs.barcode = raw
+      else delete specs.barcode
+      updates.specs = specs
     }
 
     const { data, error } = await supabase

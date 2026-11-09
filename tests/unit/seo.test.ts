@@ -78,3 +78,49 @@ describe('productImageAlt', () => {
     expect(productImageAlt({ brand: 'Soundcore', name: 'SOUNDCORE LIBERTY 4 NC BLACK', category: 'Accessories' } as Product)).toBe('SOUNDCORE LIBERTY 4 NC BLACK')
   })
 })
+
+describe('Product JSON-LD fields', () => {
+  const ld = (p: Partial<Product>) => productJsonLd({ ...base, ...p } as Product, 'ecoflow') as Record<string, any>
+
+  it('names the product "{Brand} {Model}" without doubling the brand', () => {
+    expect(ld({}).name).toBe('EcoFlow DELTA Pro 3')
+    expect(ld({ brand: 'Bluetti', name: 'Bluetti Homestar 3' }).name).toBe('BLUETTI Homestar 3')
+    expect(ld({ brand: 'Bluetti', name: 'AC180P' }).name).toBe('BLUETTI AC180P')
+  })
+
+  it('only emits an MPN that is a real manufacturer code', () => {
+    expect(ld({ sku: 'BLUETTI-HOMESTAR-3', brand: 'Bluetti' }).mpn).toBeUndefined()
+    expect(ld({ sku: '5013701013' }).mpn).toBeUndefined()
+    expect(ld({ sku: 'A3947H11', brand: 'Soundcore' }).mpn).toBe('A3947H11')
+    expect(ld({ sku: 'T8910021', brand: 'Eufy' }).mpn).toBe('T8910021')
+    expect(ld({ sku: 'SKU-1785160827939', brand: 'Anker' }).mpn).toBeUndefined()
+    expect(ld({ specs: { mpn: 'EFD521' } as never }).mpn).toBe('EFD521')
+  })
+
+  it('emits a GTIN only when a valid barcode is stored', () => {
+    expect(ld({ specs: { barcode: '4006381333931' } as never }).gtin13).toBe('4006381333931')
+    expect(ld({ specs: { barcode: '4006381333932' } as never }).gtin13).toBeUndefined()
+    expect(ld({}).gtin13).toBeUndefined()
+  })
+
+  it('lists spec rows as PropertyValue, skipping identifiers and bookkeeping', () => {
+    const props = ld({ specs: { capacity: '4096Wh', ac_output: '4000W', source_category: 'X', barcode: '4006381333931' } as never }).additionalProperty
+    expect(props).toEqual([
+      { '@type': 'PropertyValue', name: 'Capacity', value: '4096Wh' },
+      { '@type': 'PropertyValue', name: 'Ac Output', value: '4000W' },
+    ])
+  })
+
+  it('prices the offer as a number and marks stock honestly', () => {
+    const o = ld({ price_kes: '461799' as never, in_stock: false }).offers
+    expect(o.price).toBe(461799)
+    expect(o.availability).toBe('https://schema.org/OutOfStock')
+    expect(o.seller['@id']).toBe('https://batteriq.com/#organization')
+  })
+
+  it('keeps the description plain and under 500 characters', () => {
+    const d = ld({ description: '**Bold** <b>html</b> ' + 'x '.repeat(400) }).description
+    expect(d.length).toBeLessThanOrEqual(500)
+    expect(d).not.toMatch(/[<*]/)
+  })
+})

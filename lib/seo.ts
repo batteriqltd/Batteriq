@@ -13,6 +13,7 @@
 import type { Metadata } from 'next'
 import type { Product } from '@/lib/supabase/types'
 import { BUSINESS, SITE_URL } from '@/lib/business'
+import { formatSpecLabel } from '@/lib/utils'
 
 export { SITE_URL }
 
@@ -176,35 +177,110 @@ export function buildDescription(product: Product): string {
 
 // ── JSON-LD ──────────────────────────────────────────────────────────────────
 
+/** How each brand writes its own name. */
+function brandDisplay(brand: string): string {
+  return brand === 'Bluetti' ? 'BLUETTI' : brand
+}
+
+/** "{Brand} {Model}" with the brand spelled the brand's way, never doubled. */
+export function productDisplayName(product: Pick<Product, 'brand' | 'name'>): string {
+  const brand = brandDisplay(product.brand)
+  const name = product.name.trim()
+  return name.toLowerCase().startsWith(product.brand.toLowerCase())
+    ? `${brand}${name.slice(product.brand.length)}`
+    : `${brand} ${name}`
+}
+
+/** Plain text for schema.org: no HTML, no markdown markers, collapsed spaces. */
+export function plainText(text: string, max: number): string {
+  const t = text
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/[*_#`>]+/g, '')
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+  return clamp(t, max)
+}
+
+/** Spec keys that are bookkeeping or identifiers, not product properties. */
+const NON_PROPERTY_SPEC = /^(source_|barcode$|gtin|ean$|upc$|mpn$)/i
+
+/** Spec value under any of these keys, as a trimmed string. */
+function specString(specs: Record<string, unknown>, keys: string[]): string | null {
+  for (const k of keys) {
+    const v = specs[k]
+    if ((typeof v === 'string' || typeof v === 'number') && String(v).trim()) return String(v).trim()
+  }
+  return null
+}
+
+/** GTIN-8/12/13/14 with a valid check digit, or null. */
+export function validGtin(raw: string | null): { key: 'gtin8' | 'gtin12' | 'gtin13' | 'gtin14'; value: string } | null {
+  const digits = (raw ?? '').replace(/\s/g, '')
+  if (!/^(\d{8}|\d{12}|\d{13}|\d{14})$/.test(digits)) return null
+  const body = digits.slice(0, -1).split('').reverse().map(Number)
+  const sum = body.reduce((acc, d, i) => acc + d * (i % 2 === 0 ? 3 : 1), 0)
+  if ((10 - (sum % 10)) % 10 !== Number(digits.at(-1))) return null
+  return { key: `gtin${digits.length}` as 'gtin8' | 'gtin12' | 'gtin13' | 'gtin14', value: digits }
+}
+
+/**
+ * The manufacturer part number. Anker, Soundcore and Eufy SKUs are their own
+ * model codes (A3947H11, T8910021); our EcoFlow numeric codes and BLUETTI-…,
+ * PKIT-…, SKU-… values are internal, so they are not an MPN. A code stored as
+ * specs.mpn always wins.
+ */
+export function manufacturerPartNumber(product: Pick<Product, 'brand' | 'sku' | 'specs'>): string | null {
+  const stored = specString((product.specs ?? {}) as Record<string, unknown>, ['mpn'])
+  if (stored) return stored
+  const sku = product.sku?.trim() ?? ''
+  if (['Anker', 'Soundcore', 'Eufy'].includes(product.brand) && /^[A-Z][A-Z0-9]{6,9}$/.test(sku) && /\d/.test(sku)) {
+    return sku
+  }
+  return null
+}
+
 export function productJsonLd(product: Product, section: ProductSection) {
   const url = productUrl(section, product.slug)
+  const specs = (product.specs ?? {}) as Record<string, unknown>
   // Google warns when an Offer has no priceValidUntil. Prices are re-read from
   // the database on every request, so a rolling one-year window is accurate.
   const validUntil = new Date()
   validUntil.setFullYear(validUntil.getFullYear() + 1)
+
+  const mpn = manufacturerPartNumber(product)
+  const gtin = validGtin(specString(specs, ['barcode', 'gtin', 'gtin13', 'ean']))
+  const properties = Object.entries(specs)
+    .filter(([key, value]) => !NON_PROPERTY_SPEC.test(key) && (typeof value === 'string' || typeof value === 'number') && String(value).trim())
+    .map(([key, value]) => ({ '@type': 'PropertyValue', name: formatSpecLabel(key), value: String(value).trim() }))
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
     '@id': `${url}#product`,
-    name: product.name,
+    name: productDisplayName(product),
     url,
-    image: (product.images ?? []).map(absoluteUrl),
-    description: product.description ?? buildDescription(product),
-    brand: { '@type': 'Brand', name: product.brand === 'Bluetti' ? 'BLUETTI' : product.brand },
+    // The same gallery the page shows.
+    image: Array.from(new Set((product.images ?? []).filter(Boolean).map(absoluteUrl))),
+    description: plainText(product.description || buildDescription(product), 500),
+    brand: { '@type': 'Brand', name: brandDisplay(product.brand) },
     category: product.category,
     sku: product.sku,
-    mpn: product.sku,
+    ...(mpn ? { mpn } : {}),
+    ...(gtin ? { [gtin.key]: gtin.value } : {}),
+    ...(properties.length ? { additionalProperty: properties } : {}),
     offers: {
       '@type': 'Offer',
       url,
       priceCurrency: 'KES',
-      price: product.price_kes,
+      // A number, exactly the price the page shows.
+      price: Number(product.price_kes),
       priceValidUntil: validUntil.toISOString().slice(0, 10),
       itemCondition: 'https://schema.org/NewCondition',
       availability: product.in_stock
         ? 'https://schema.org/InStock'
         : 'https://schema.org/OutOfStock',
-      seller: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: 'Batteriq' },
+      seller: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: BUSINESS.name },
+      // shippingDetails: omitted until delivery times per county are confirmed.
+      // hasMerchantReturnPolicy: belongs on the organization once the policy is supplied.
     },
     // No aggregateRating or review. products.schema_rating / schema_review_count
     // are seeded defaults, not customer reviews, and no product page shows
