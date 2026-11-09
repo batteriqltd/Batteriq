@@ -9,6 +9,8 @@ import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
 import { FilteredProductGrid } from '@/components/product/FilteredProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
+import { CategoryAbout } from '@/components/seo/CategoryAbout'
+import { bluettiContent } from '@/lib/categoryContent'
 
 export const revalidate = 60
 
@@ -48,6 +50,7 @@ async function getBluettiData() {
 export default async function BluettiCollectionPage() {
   // Code fallbacks fill any residential row missing from the DB, newest first.
   const products = withBluettiFallbacks(await getBluettiData())
+  const about = bluettiContent(products)
 
   return (
     <>
@@ -107,6 +110,8 @@ export default async function BluettiCollectionPage() {
                   ['Is Batteriq a Bluetti dealer in Kenya?', 'Yes. Batteriq supplies genuine Bluetti products in Kenya and provides local pre-sale and after-sales support.'],
                   ['Can I pay for a Bluetti power station with M-Pesa?', 'Yes. M-Pesa payment is available for Bluetti purchases through Batteriq.'],
                   ['Do you deliver Bluetti products outside Nairobi?', 'Yes. We arrange nationwide delivery across Kenya, with Nairobi delivery options available.'],
+                  // Page-specific questions built from live data (lib/categoryContent.ts).
+                  ...(about?.faqs ?? []).map((f) => [f.question, f.answer]),
                 ].map(([question, answer]) => (
                   <details key={question} className="group border border-slate-200 rounded-xl">
                     <summary className="cursor-pointer list-none px-5 py-4 font-bold text-slate-900">{question}</summary>
@@ -117,6 +122,8 @@ export default async function BluettiCollectionPage() {
             </div>
           </div>
         </section>
+        {/* About — below the grid; its FAQs join the list above */}
+        <CategoryAbout content={about} showFaqs={false} />
       </div>
       <Footer />
     </>

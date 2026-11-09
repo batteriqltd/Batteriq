@@ -8,17 +8,21 @@ import { Footer } from '@/components/layout/Footer'
 import { FilteredProductGrid } from '@/components/product/FilteredProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
 import { SolarSelectionGuide } from '@/components/solar/SolarSelectionGuide'
+import { CategoryAbout } from '@/components/seo/CategoryAbout'
+import { solarContent } from '@/lib/categoryContent'
+import { getPowerStations } from '@/lib/productContentServer'
 
 export const revalidate = 60
 
 export const metadata: Metadata = withCanonical('/solar', {
   // absolute: skips the root "%s | Batteriq" template, which doubled the brand
-  title: { absolute: 'EcoFlow Solar Panels Price in Kenya — 45W to 400W | Batteriq' },
-  description: 'Buy EcoFlow solar panels in Kenya. 45W to 400W. IP68 waterproof. Compatible with all EcoFlow power stations. Pay with M-Pesa. Official EcoFlow dealer. Same-day Nairobi delivery.',
+  // The page sells EcoFlow and BLUETTI panels, so the title names both.
+  title: { absolute: 'EcoFlow & BLUETTI Solar Panels Price in Kenya | Batteriq' },
+  description: 'Buy EcoFlow and BLUETTI solar panels in Kenya: foldable, rigid and flexible, 45W to 400W. Pay with M-Pesa. Authorised dealer. Same-day Nairobi delivery.',
   keywords: ['solar panels Kenya', 'EcoFlow solar panel Kenya', 'buy solar panel Kenya', 'portable solar panel Kenya', 'solar panel Nairobi', 'EcoFlow 400W solar Kenya', 'solar power Kenya'],
   openGraph: {
-    title: 'EcoFlow Solar Panels Kenya | Batteriq',
-    description: 'Official EcoFlow solar panels in Kenya. M-Pesa accepted.',
+    title: 'EcoFlow & BLUETTI Solar Panels Kenya | Batteriq',
+    description: 'EcoFlow and BLUETTI solar panels in Kenya. M-Pesa accepted.',
     images: [{ url: 'https://batteriq.com/heroes/hero-solar.jpg', width: 1200, height: 630, alt: 'EcoFlow Solar Panels Kenya' }],
   },
 })
@@ -40,7 +44,7 @@ async function getSolarProducts() {
 }
 
 export default async function SolarPanelsPage() {
-  const products = await getSolarProducts()
+  const [products, stations] = await Promise.all([getSolarProducts(), getPowerStations()])
 
   return (
     <>
@@ -153,6 +157,8 @@ export default async function SolarPanelsPage() {
         </div>
         <FilteredProductGrid products={products} filterType="solar" />
       </div>
+      {/* About + FAQ — below the grid only */}
+      <CategoryAbout content={solarContent(products, stations)} />
       <Footer />
     </>
   )

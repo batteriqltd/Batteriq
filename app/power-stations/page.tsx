@@ -11,6 +11,8 @@ import { PageWrapper } from '@/components/animations/PageWrapper'
 import { PowerStationsAnimation } from '@/components/animations/PowerStationsAnimation'
 import { withCatalogFallback } from '@/lib/delta-series'
 import type { Product } from '@/lib/supabase/types'
+import { CategoryAbout } from '@/components/seo/CategoryAbout'
+import { powerStationsContent } from '@/lib/categoryContent'
 
 export const revalidate = 60
 
@@ -221,6 +223,9 @@ export default async function PowerStationsPage() {
       <Suspense fallback={<GridSkeleton />}>
         <PowerStationsClient products={products} />
       </Suspense>
+
+      {/* About + FAQ — below the grid only */}
+      <CategoryAbout content={powerStationsContent(products)} />
 
       {/* Bottom SEO section */}
       <section className="bg-gray-50 border-t border-gray-100 py-16">

@@ -7,6 +7,8 @@ import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
 import { FilteredProductGrid } from '@/components/product/FilteredProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
+import { CategoryAbout } from '@/components/seo/CategoryAbout'
+import { accessoriesContent } from '@/lib/categoryContent'
 
 export const revalidate = 60
 
@@ -69,6 +71,8 @@ export default async function AccessoriesPage() {
       <div className="max-w-8xl mx-auto px-4 lg:px-8 py-12">
         <FilteredProductGrid products={products} filterType="accessories" />
       </div>
+      {/* About + FAQ — below the grid only */}
+      <CategoryAbout content={accessoriesContent(products)} />
       <Footer />
     </>
   )

@@ -11,3 +11,12 @@ export async function getSolarPanels(): Promise<Product[]> {
     return []
   }
 }
+
+export async function getPowerStations(): Promise<Product[]> {
+  try {
+    const { data } = await createAdminClient().from('products').select('*').eq('category', 'Power Stations').order('sort_order')
+    return (data ?? []) as Product[]
+  } catch {
+    return []
+  }
+}

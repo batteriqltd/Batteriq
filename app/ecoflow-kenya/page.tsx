@@ -10,6 +10,8 @@ import { breadcrumbListJsonLd, collectionPageJsonLd, jsonLdScript } from '@/lib/
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
 import { Shield } from 'lucide-react'
+import { CategoryAbout } from '@/components/seo/CategoryAbout'
+import { ecoflowContent } from '@/lib/categoryContent'
 
 export const revalidate = 60
 
@@ -102,6 +104,7 @@ export default async function EcoFlowKenyaPage() {
   const batteries = allEcoFlow.filter((p) => p.category === 'Batteries')
   const solarHomeSystems = allEcoFlow.filter((p) => p.category === 'Solar Home Systems')
   const accessories = allEcoFlow.filter((p) => p.category === 'Accessories' || p.category === 'Appliances')
+  const about = ecoflowContent(allEcoFlow)
   // Cheapest in-stock EcoFlow power station, from live prices.
   const stationPrices = powerStations.filter((p) => p.in_stock && Number(p.price_kes) > 1 && hasCapacity(p.specs)).map((p) => Number(p.price_kes))
   const startingPrice = stationPrices.length ? `KES ${Math.min(...stationPrices).toLocaleString('en-KE')}` : null
@@ -232,11 +235,14 @@ export default async function EcoFlowKenyaPage() {
             </section>
           )}
 
+          {/* About — below the product sections */}
+          <CategoryAbout content={about} showFaqs={false} />
+
           {/* FAQ Section */}
           <section id="faq">
             <h2 className="h2-fluid text-gray-900 mb-8">Frequently Asked Questions — EcoFlow Kenya</h2>
             <div className="space-y-3 max-w-3xl">
-              {ECOFLOW_FAQS.map(({ q, a }) => (
+              {[...ECOFLOW_FAQS, ...(about?.faqs ?? []).map((f) => ({ q: f.question, a: f.answer }))].map(({ q, a }) => (
                 <details
                   key={q}
                   className="group bg-white border border-gray-200 rounded-[8px] overflow-hidden"
