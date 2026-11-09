@@ -8,6 +8,7 @@ import {
   verifyWebhookSignature,
 } from '@/lib/paystack'
 import { calculateCardFee, isCardPaymentMethod, parsePaymentLinkAmount } from '@/lib/cardFee'
+import { LINK_DEFAULT_NAME, LINK_DEFAULT_PHONE, normalizeLinkPhone, parseLinkClient } from '@/lib/paymentLink'
 
 const BODY = JSON.stringify({ event: 'charge.success', data: { reference: 'BQ-1-abcd' } })
 const WHSEC = 'whsec_test_secret'
@@ -144,6 +145,29 @@ describe('parsePaymentLinkAmount', () => {
     for (const bad of ['', null, undefined, 0, 9, -100, 1_000_001, 100.5, 'abc', NaN, true, [], {}]) {
       expect(parsePaymentLinkAmount(bad)).toBeNull()
     }
+  })
+})
+
+describe('payment link client details', () => {
+  it('normalises Kenyan and international phones', () => {
+    expect(normalizeLinkPhone('0712 345 678')).toBe('254712345678')
+    expect(normalizeLinkPhone('0112345678')).toBe('254112345678')
+    expect(normalizeLinkPhone('712345678')).toBe('254712345678')
+    expect(normalizeLinkPhone('+254 712 345 678')).toBe('254712345678')
+    expect(normalizeLinkPhone('+44 7700 900123')).toBe('447700900123')
+  })
+
+  it('rejects numbers it cannot place', () => {
+    for (const bad of ['', '12345', '0812345678', '447700900123', 'abc']) {
+      expect(normalizeLinkPhone(bad)).toBeNull()
+    }
+  })
+
+  it('saves what was entered and falls back when blank', () => {
+    expect(parseLinkClient({ name: ' Jane Wanjiku ', phone: '0712345678' })).toEqual({ name: 'Jane Wanjiku', phone: '254712345678' })
+    expect(parseLinkClient({})).toEqual({ name: LINK_DEFAULT_NAME, phone: LINK_DEFAULT_PHONE })
+    expect(parseLinkClient({ name: 'J' })).toHaveProperty('error')
+    expect(parseLinkClient({ phone: '12345' })).toHaveProperty('error')
   })
 })
 

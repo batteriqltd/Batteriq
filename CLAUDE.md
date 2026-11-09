@@ -344,9 +344,9 @@ Key modules:
 - `lib/orderPayments.ts` — `markOrderPaid()`, card flow only (M-Pesa has its own inline copy)
 
 **Admin payment links:** the Card Payment Link form on `/admin/prompt` calls
-`POST /api/admin/paystack/payment-link`. It takes only an amount, creates a pending
-order with placeholder client details, and returns a Paystack link. Receipts go to
-`sales@batteriq.com`.
+`POST /api/admin/paystack/payment-link`. It takes an amount plus an optional client
+name and phone (`lib/paymentLink.ts`), creates a pending order, and returns a
+Paystack link. Receipts go to `sales@batteriq.com`.
 
 **Column names are historical.** Paystack reuses the card columns from migration
 005, so `pesapal_card` and `pesapal_*` are live for every card order, not just old

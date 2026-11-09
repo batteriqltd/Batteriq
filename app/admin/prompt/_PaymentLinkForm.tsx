@@ -1,19 +1,24 @@
 'use client'
 
 import { useState } from 'react'
-import { AlertCircle, Check, Copy, CreditCard, ExternalLink, Link2, Loader2 } from 'lucide-react'
+import { AlertCircle, Check, Copy, CreditCard, ExternalLink, Link2, Loader2, Smartphone, User } from 'lucide-react'
 import { calculateCardFee, formatKesExact, parsePaymentLinkAmount, PAYMENT_LINK_MAX_KES, PAYMENT_LINK_MIN_KES } from '@/lib/cardFee'
+import { LINK_DEFAULT_PHONE, normalizeLinkPhone } from '@/lib/paymentLink'
 
 type LinkResult = {
   authorizationUrl: string
   orderId: string
   orderNumber: string
+  clientName: string
+  clientPhone: string
   subtotalKes: number
   cardFeeKes: number
   totalChargedKes: number
 }
 
 export function PaymentLinkForm() {
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
   const [amount, setAmount] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<LinkResult | null>(null)
@@ -21,7 +26,10 @@ export function PaymentLinkForm() {
   const [copied, setCopied] = useState(false)
 
   const validAmount = parsePaymentLinkAmount(amount) !== null
-  const canSubmit = validAmount && !loading
+  const nameOk = name.trim().length !== 1
+  const phoneOk = !phone.trim() || normalizeLinkPhone(phone) !== null
+  const validPhone = phone.trim() !== '' && phoneOk
+  const canSubmit = validAmount && nameOk && phoneOk && !loading
   const preview = validAmount ? calculateCardFee(amount) : null
 
   async function handleSubmit(e: React.FormEvent) {
@@ -35,11 +43,13 @@ export function PaymentLinkForm() {
       const res = await fetch('/api/admin/paystack/payment-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: Number(amount) }),
+        body: JSON.stringify({ amount: Number(amount), name, phone }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Could not create the link')
       setResult(data)
+      setName('')
+      setPhone('')
       setAmount('')
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
@@ -59,8 +69,10 @@ export function PaymentLinkForm() {
     }
   }
 
+  // Opens the client's own chat when a real phone was entered.
+  const whatsappTo = result && result.clientPhone !== LINK_DEFAULT_PHONE ? result.clientPhone : ''
   const whatsappUrl = result
-    ? `https://wa.me/?text=${encodeURIComponent(
+    ? `https://wa.me/${whatsappTo}?text=${encodeURIComponent(
         `Batteriq card payment of ${formatKesExact(result.totalChargedKes)} (order ${result.orderNumber}). Pay securely here: ${result.authorizationUrl}`
       )}`
     : ''
@@ -79,6 +91,44 @@ export function PaymentLinkForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div className="space-y-2">
+              <label htmlFor="payment-link-name" className="text-[11px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Client Name</label>
+              <div className="relative group">
+                <input
+                  id="payment-link-name"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Jane Wanjiku"
+                  autoComplete="off"
+                  maxLength={100}
+                  className={`w-full h-12 pl-11 pr-4 rounded-[16px] text-[14px] font-medium outline-none border-2 transition-all ${name.trim().length >= 2 ? 'bg-green-50/50 border-green-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10' : 'bg-white border-gray-100 focus:border-[#0000ff] focus:ring-4 focus:ring-blue-500/10'}`}
+                />
+                <User size={16} className={`absolute left-4 top-1/2 -translate-y-1/2 ${name.trim().length >= 2 ? 'text-green-500' : 'text-gray-300 group-focus-within:text-blue-600'}`} />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="payment-link-phone" className="text-[11px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Client Phone</label>
+              <div className="relative group">
+                <input
+                  id="payment-link-phone"
+                  value={phone}
+                  onChange={e => setPhone(e.target.value)}
+                  placeholder="0712 345 678"
+                  inputMode="tel"
+                  autoComplete="off"
+                  className={`w-full h-12 pl-11 pr-4 rounded-[16px] text-[14px] font-medium outline-none border-2 transition-all ${!phoneOk ? 'bg-red-50/50 border-red-200 focus:border-red-500' : validPhone ? 'bg-green-50/50 border-green-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10' : 'bg-white border-gray-100 focus:border-[#0000ff] focus:ring-4 focus:ring-blue-500/10'}`}
+                />
+                <Smartphone size={16} className={`absolute left-4 top-1/2 -translate-y-1/2 ${validPhone ? 'text-green-500' : 'text-gray-300 group-focus-within:text-blue-600'}`} />
+              </div>
+              <p className={`text-[11px] font-medium ml-1 ${phoneOk ? 'text-gray-400' : 'text-red-600'}`}>
+                {phoneOk ? '07…, 01…, 2547… or +country code.' : 'Not a valid phone number.'}
+              </p>
+            </div>
+          </div>
+          <p className="text-[11px] font-medium text-gray-400 ml-1 -mt-3">Name and phone are saved on the order. Leave blank if you don't have them yet.</p>
+
           <div className="space-y-2">
             <label htmlFor="payment-link-amount" className="text-[11px] font-black uppercase tracking-[0.15em] text-gray-500 ml-1">Amount — KES</label>
             <div className="relative group">
@@ -110,7 +160,12 @@ export function PaymentLinkForm() {
             <div className="bg-green-50 border border-green-200 rounded-2xl p-5 space-y-4">
               <div>
                 <p className="text-[13px] font-black text-green-800">Link ready: client pays {formatKesExact(result.totalChargedKes)}</p>
-                <a href={`/admin/orders/${result.orderId}`} className="text-[12px] font-bold text-green-700 underline mt-1 inline-block">Order {result.orderNumber}</a>
+                <p className="text-[12px] font-bold text-green-700 mt-1">
+                  {result.clientName}
+                  {result.clientPhone !== LINK_DEFAULT_PHONE && <> · +{result.clientPhone}</>}
+                  {' · '}
+                  <a href={`/admin/orders/${result.orderId}`} className="underline">Order {result.orderNumber}</a>
+                </p>
               </div>
               <p className="text-[12px] font-mono font-bold text-green-900 break-all bg-white rounded-xl px-3 py-2 border border-green-100">{result.authorizationUrl}</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -118,7 +173,7 @@ export function PaymentLinkForm() {
                   {copied ? <><Check size={15} /> Copied</> : <><Copy size={15} /> Copy link</>}
                 </button>
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="h-11 rounded-[14px] text-[12px] font-black uppercase tracking-widest flex items-center justify-center gap-2 bg-white text-green-700 border-2 border-green-200 hover:border-green-400 transition-colors">
-                  <ExternalLink size={15} /> Share on WhatsApp
+                  <ExternalLink size={15} /> {whatsappTo ? 'Send on WhatsApp' : 'Share on WhatsApp'}
                 </a>
               </div>
             </div>

@@ -8,18 +8,15 @@ import { randomInt } from 'crypto'
 import { NextResponse } from 'next/server'
 import { getAdminSession } from '@/lib/admin-auth'
 import { CARD_PAYMENT_METHOD, parsePaymentLinkAmount, PAYMENT_LINK_MAX_KES, PAYMENT_LINK_MIN_KES } from '@/lib/cardFee'
+import { parseLinkClient } from '@/lib/paymentLink'
 import { resolveSiteUrl, startCardPayment } from '@/lib/paystackStart'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const runtime = 'nodejs'
 
-// A link has no client details, and Paystack requires an email. Receipts for these
-// orders therefore go to the sales inbox.
-const LINK_CLIENT = {
-  guest_name: 'Payment link client',
-  guest_email: 'sales@batteriq.com',
-  guest_phone: '254716822014',
-}
+// Paystack requires an email and the link form doesn't ask for one, so receipts
+// for these orders go to the sales inbox.
+const LINK_EMAIL = 'sales@batteriq.com'
 
 function orderNumber(): string {
   const now = new Date()
@@ -47,11 +44,16 @@ export async function POST(req: Request) {
     )
   }
 
+  const client = parseLinkClient({ name: body?.name, phone: body?.phone })
+  if ('error' in client) return NextResponse.json({ error: client.error }, { status: 400 })
+
   const supabase = createAdminClient()
   const { data, error } = await supabase
     .from('orders')
     .insert({
-      ...LINK_CLIENT,
+      guest_name: client.name,
+      guest_email: LINK_EMAIL,
+      guest_phone: client.phone,
       order_number: orderNumber(),
       items: [{ id: '', name: 'Card payment', brand: 'Batteriq', price_kes: amount, quantity: 1, image: null }],
       subtotal_kes: amount,
@@ -81,7 +83,7 @@ export async function POST(req: Request) {
 
   try {
     const { authorizationUrl, reference, fee } = await startCardPayment(
-      { id: order.id, order_number: order.order_number, guest_email: LINK_CLIENT.guest_email, total_kes: amount },
+      { id: order.id, order_number: order.order_number, guest_email: LINK_EMAIL, total_kes: amount },
       resolveSiteUrl(req.url)
     )
     return NextResponse.json({
@@ -89,6 +91,8 @@ export async function POST(req: Request) {
       reference,
       orderId: order.id,
       orderNumber: order.order_number,
+      clientName: client.name,
+      clientPhone: client.phone,
       subtotalKes: fee.subtotalKes,
       cardFeeKes: fee.feeKes,
       totalChargedKes: fee.totalChargedKes,
