@@ -39,6 +39,7 @@ const NAV = [
   { href: '/admin/customers', label: 'Customers', icon: Users },
   { href: '/admin/payments', label: 'Payments', icon: CreditCard },
   { href: '/admin/invoices', label: 'Invoices', icon: FileText },
+  { href: '/admin/delivery-notes', label: 'Delivery Notes', icon: FileText },
   { href: '/admin/products', label: 'Products', icon: Package },
   { href: '/admin/images', label: 'Images', icon: ImageIcon },
   { href: '/admin/stock', label: 'Stock & Prices', icon: BarChart3 },

@@ -1,8 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { formatKES, getProductImageUrl } from '@/lib/utils'
-import { applyBlackNovemberOverride, BLACK_NOVEMBER_OVERRIDES, FALLBACK_BLUETTI_PRODUCTS } from '@/lib/bluetti-residential'
-import { withoutDeprecatedDelta } from '@/lib/delta-series'
+import { applyBlackNovemberOverride, BLACK_NOVEMBER_SLUGS, FALLBACK_BLUETTI_PRODUCTS } from '@/lib/bluetti-residential'
 import type { Product } from '@/lib/supabase/types'
 
 export async function OffersSection() {
@@ -10,27 +9,26 @@ export async function OffersSection() {
 
   let offerProducts: Product[] = []
   try {
-    const bnSlugs = Object.keys(BLACK_NOVEMBER_OVERRIDES)
+    const bnSlugs = [...BLACK_NOVEMBER_SLUGS]
     const { data } = await supabase
       .from('products')
       .select('*')
-      .eq('in_stock', true)
-      .or(`discount_badge.not.is.null,discount_percent.gt.0,slug.in.(${bnSlugs.join(',')})`)
-      .limit(16)
-    const list = withoutDeprecatedDelta(((data as Product[]) ?? []).map(applyBlackNovemberOverride))
+      .eq('brand', 'Bluetti')
+      .in('slug', bnSlugs)
+    const list = ((data as Product[]) ?? []).map(applyBlackNovemberOverride)
     if (!list.some((p) => p.slug === 'bluetti-pv100') && FALLBACK_BLUETTI_PRODUCTS['bluetti-pv100']) {
       list.push(applyBlackNovemberOverride(FALLBACK_BLUETTI_PRODUCTS['bluetti-pv100']))
     }
+    const order = new Map(bnSlugs.map((s, i) => [s as string, i]))
     offerProducts = list
-      .filter((p) => p.discount_badge != null || (p.discount_percent ?? 0) > 0)
-      .sort((a, b) => (b.discount_percent ?? 0) - (a.discount_percent ?? 0))
-      .slice(0, 8)
+      .filter((p) => p.in_stock)
+      .sort((a, b) => (order.get(a.slug) ?? 99) - (order.get(b.slug) ?? 99))
   } catch {
     return null
   }
 
   if (!offerProducts.length) return null
-  const blackNovember = offerProducts.some((p) => /black november/i.test(p.discount_badge ?? ''))
+  const blackNovember = true
 
   return (
     <section className="py-10 sm:py-14" style={{ background: 'linear-gradient(135deg, #1a0000 0%, #3d0000 50%, #1a0000 100%)' }}>
@@ -44,15 +42,15 @@ export async function OffersSection() {
               <span className="text-white font-black text-[11px] uppercase tracking-[0.2em]">{blackNovember ? 'Black November' : 'Flash Sale'}</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white" style={{ letterSpacing: '-0.02em' }}>
-              {blackNovember ? 'Black November Deals' : 'Current Offers'}
+              {blackNovember ? 'Black November Bluetti Deals' : 'Current Offers'}
             </h2>
           </div>
           <Link
-            href="/power-stations"
-            className="text-[11px] font-black uppercase tracking-widest transition-colors"
-            style={{ color: 'rgba(255,150,150,0.8)' }}
+            href="/bluetti?filter=black-november"
+            className="px-4 py-2 rounded-full text-[11px] font-black uppercase tracking-widest text-white transition-all hover:scale-105"
+            style={{ background: '#cc0000' }}
           >
-            View All →
+            View All Bluetti Deals →
           </Link>
         </div>
 

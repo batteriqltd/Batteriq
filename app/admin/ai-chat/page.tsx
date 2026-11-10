@@ -9,6 +9,7 @@ export default async function AdminChatMonitorPage() {
   const { data: rawSessions } = await supabase
     .from('ai_chat_sessions')
     .select('*')
+    .not('session_token', 'like', 'dn:%')
     .order('last_active', { ascending: false })
     .limit(50)
   const sessions = rawSessions as unknown as AiChatSession[]

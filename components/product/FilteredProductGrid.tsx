@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ProductCard } from './ProductCard'
+import { BLACK_NOVEMBER_OVERRIDES } from '@/lib/bluetti-residential'
 import type { Product } from '@/lib/supabase/types'
 
 type FilterDef = { label: string; value: string }
@@ -44,6 +45,7 @@ function matchesFilter(product: Product, filterValue: string, filterType: string
   }
 
   if (filterType === 'bluetti') {
+    if (filterValue === 'black-november') return product.slug in BLACK_NOVEMBER_OVERRIDES || product.discount_badge === 'BLACK NOVEMBER'
     if (filterValue === 'residential') return product.subcategory === 'Residential Backup' || /homestar|hv6k|hv10k|hb500/i.test(product.name) || /homestar|hv6k|hv10k|hb500/i.test(product.slug)
     if (filterValue === 'ac') return name.startsWith('ac') || name.includes(' ac')
     if (filterValue === 'eb') return name.startsWith('eb') || name.includes(' eb')
@@ -80,6 +82,7 @@ const FILTER_SETS: Record<string, FilterDef[]> = {
   ],
   bluetti: [
     { label: 'All', value: 'all' },
+    { label: 'Black November Deals', value: 'black-november' },
     { label: 'Residential Backup', value: 'residential' },
     { label: 'AC Series', value: 'ac' },
     { label: 'EB Series', value: 'eb' },
@@ -96,6 +99,14 @@ interface FilteredProductGridProps {
 export function FilteredProductGrid({ products, filterType }: FilteredProductGridProps) {
   const filters = FILTER_SETS[filterType] ?? FILTER_SETS['power-stations']
   const [activeFilter, setActiveFilter] = useState('all')
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const q = new URLSearchParams(window.location.search).get('filter')
+    if (q && filters.some((f) => f.value === q)) {
+      setActiveFilter(q)
+    }
+  }, [filters])
 
   const filtered = products.filter((p) => matchesFilter(p, activeFilter, filterType))
 

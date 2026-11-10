@@ -100,6 +100,14 @@ export async function POST() {
       }
     }
 
+    // Clear old non-Black-November discount badges/slashes so only the 7 Bluetti items show on Black November
+    const bnSlugs = BLACK_NOVEMBER_PRICES.map((b) => b.slug)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase.from('products') as any)
+      .update({ compare_price_kes: null, discount_percent: null, discount_badge: null })
+      .not('slug', 'in', `(${bnSlugs.join(',')})`)
+      .neq('discount_badge', 'NEW')
+
     // Also remove discontinued EcoFlow PowerKit rows from the database if present
     await supabase
       .from('products')

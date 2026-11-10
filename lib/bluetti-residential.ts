@@ -384,6 +384,16 @@ function quoteSystems(): Record<string, Product> {
 }
 
 /** Black November 2026 Bluetti sale prices (KES). */
+export const BLACK_NOVEMBER_SLUGS = [
+  'bluetti-ac70p',
+  'bluetti-ac180p',
+  'bluetti-premium-30-v2',
+  'bluetti-premium-100-v2',
+  'bluetti-premium-200-v2',
+  'bluetti-ac50p',
+  'bluetti-pv100',
+] as const
+
 export const BLACK_NOVEMBER_OVERRIDES: Record<string, number> = {
   'bluetti-ac70p': 55000,
   'bluetti-ac180p': 72150,
@@ -396,7 +406,15 @@ export const BLACK_NOVEMBER_OVERRIDES: Record<string, number> = {
 
 export function applyBlackNovemberOverride(p: Product): Product {
   const salePrice = BLACK_NOVEMBER_OVERRIDES[p.slug]
-  if (salePrice == null) return p
+  if (salePrice == null) {
+    // Strip any non-Black-November sale slash/badge so only the 7 Black November Bluetti items show as on sale
+    return {
+      ...p,
+      compare_price_kes: null,
+      discount_percent: null,
+      discount_badge: p.discount_badge === 'NEW' ? 'NEW' : null,
+    }
+  }
   const original = Math.max(p.compare_price_kes ?? 0, p.price_kes ?? 0)
   const isCut = original > salePrice
   const kesStr = `KES ${salePrice.toLocaleString('en-KE')}`
@@ -415,7 +433,7 @@ export function applyBlackNovemberOverride(p: Product): Product {
  * Merge DB rows with the code fallbacks. Fallback specs/descriptions/images
  * always win (they are the corrected data); live DB price/stock win when the
  * row exists. Missing rows are filled from fallback so they always render.
- * New residential items lead, the rest keep DB sort_order.
+ * Slashed Black November items lead first, then new residential items, then DB sort_order.
  */
 export function withBluettiFallbacks(dbProducts: Product[]): Product[] {
   const list = dbProducts ?? []
@@ -437,12 +455,14 @@ export function withBluettiFallbacks(dbProducts: Product[]): Product[] {
   for (const slug of BLUETTI_NEW_SLUGS) {
     if (!bySlug.has(slug)) merged.push(applyBlackNovemberOverride(FALLBACK_BLUETTI_PRODUCTS[slug]))
   }
+  const bnOrder = new Map(BLACK_NOVEMBER_SLUGS.map((s, i) => [s as string, i]))
   const lead = new Map(BLUETTI_NEW_SLUGS.map((s, i) => [s as string, i]))
   return merged.sort((a, b) => {
-    const ai = lead.has(a.slug) ? 0 : 1
-    const bi = lead.has(b.slug) ? 0 : 1
-    if (ai !== bi) return ai - bi
-    if (ai === 0) return (lead.get(a.slug) ?? 0) - (lead.get(b.slug) ?? 0)
+    const aTier = bnOrder.has(a.slug) ? 0 : lead.has(a.slug) ? 1 : 2
+    const bTier = bnOrder.has(b.slug) ? 0 : lead.has(b.slug) ? 1 : 2
+    if (aTier !== bTier) return aTier - bTier
+    if (aTier === 0) return (bnOrder.get(a.slug) ?? 0) - (bnOrder.get(b.slug) ?? 0)
+    if (aTier === 1) return (lead.get(a.slug) ?? 0) - (lead.get(b.slug) ?? 0)
     return (a.sort_order ?? 0) - (b.sort_order ?? 0)
   })
 }
