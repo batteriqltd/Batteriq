@@ -254,6 +254,28 @@ export default async function OrderDetailPage({ params }: { params: { orderId: s
             <h3 className="font-black text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-2">
               {order.guest_phone && (
+                <a
+                  href={`https://wa.me/${(() => {
+                    const d = (order.guest_phone as string).replace(/\D/g, '')
+                    return d.startsWith('0') && d.length === 10 ? '254' + d.slice(1) : d.startsWith('7') && d.length === 9 ? '254' + d : d
+                  })()}?text=${encodeURIComponent(
+                    `Hello ${order.guest_name || ''}, please confirm and sign your Batteriq Delivery Note for Order ${order.order_number}:\nhttps://batteriq.com/delivery-note?order=${encodeURIComponent(order.order_number || order.id)}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-bold text-white transition-all bg-[#1e4e87] hover:bg-[#163b68]"
+                >
+                  <Send size={15} /> Send Delivery Note (WhatsApp)
+                </a>
+              )}
+              <Link
+                href={`/delivery-note?order=${encodeURIComponent(order.order_number || order.id)}`}
+                target="_blank"
+                className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-bold text-[#1e4e87] bg-blue-50 hover:bg-blue-100 transition-all"
+              >
+                Open Prefilled Delivery Note
+              </Link>
+              {order.guest_phone && (
                 <a href={`https://wa.me/${(order.guest_phone as string).replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl text-sm font-bold text-white transition-all"
                   style={{ background: '#25D366' }}>

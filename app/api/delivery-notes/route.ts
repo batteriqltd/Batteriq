@@ -61,9 +61,61 @@ function unpackRow(row: {
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url)
   const docParam = searchParams.get('doc') || searchParams.get('id')
+  const orderParam = searchParams.get('order')
   const supabase = createAdminClient()
 
   try {
+    if (orderParam) {
+      const cleanOrder = orderParam.trim()
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanOrder)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const query = (supabase.from('orders') as any).select('*')
+      const { data: order } = await (isUuid
+        ? query.eq('id', cleanOrder).maybeSingle()
+        : query.ilike('order_number', cleanOrder).maybeSingle())
+
+      if (!order) {
+        return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+      }
+
+      const addr = order.delivery_address ?? {}
+      const siteParts = [addr.street, addr.city, addr.county].filter(Boolean)
+      const deliverySite = siteParts.join(', ')
+      const todayFormatted = new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const orderItems = Array.isArray(order.items) ? order.items : []
+      const mappedItems =
+        orderItems.length > 0
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            orderItems.map((it: any) => ({
+              description: String(it.name ?? '').trim(),
+              subtext: String(it.brand ?? '').trim(),
+              qtySent: String(it.quantity ?? 1),
+              qtyReceived: String(it.quantity ?? 1),
+            }))
+          : [{ description: '', subtext: '', qtySent: '1', qtyReceived: '1' }]
+
+      const prefilledNote: Partial<DeliveryNoteRecord> = {
+        docType: 'delivery',
+        lpoReference: order.order_number ?? '',
+        date: todayFormatted,
+        customerName: order.guest_name ?? '',
+        receiverName: order.guest_name ?? '',
+        contactPerson: order.guest_name ?? '',
+        customerPhone: order.guest_phone ?? '',
+        deliverySite,
+        items: mappedItems,
+        workDescription: `Delivery & handover for Order ${order.order_number ?? ''}`.trim(),
+        worksCompleted: mappedItems.map((i: { description: string; qtySent: string }) => `${i.description} (x${i.qtySent})`).join(', '),
+      }
+
+      return NextResponse.json({ note: prefilledNote, orderId: order.id, orderNumber: order.order_number })
+    }
+
     if (docParam) {
       const token = docParam.startsWith(TOKEN_PREFIX) ? docParam : `${TOKEN_PREFIX}${docParam}`
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -200,7 +252,8 @@ export async function POST(req: Request) {
     let companionPdf: string | null = null
     if (body.createBoth) {
       const otherType: NoteDocType = docType === 'delivery' ? 'installation' : 'delivery'
-      const otherNum = genDocNumber(otherType, suffix)
+      const matchedSuffix = docNumber.match(/(\d+)$/)?.[1] || suffix
+      const otherNum = genDocNumber(otherType, matchedSuffix)
       companionNote = buildRecord(otherType, otherNum)
       await saveRecord(companionNote)
       companionPdf = await generateDeliveryNotePDF(companionNote)

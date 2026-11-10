@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle, FileText, Loader2 } from 'lucide-react'
+import { Bell, Eye, Search, Download, CheckCircle, Clock, AlertCircle, FileText, Loader2, FileCheck2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAdminNotify } from '@/components/admin/AdminNotify'
 import { isCardPaymentMethod } from '@/lib/cardFee'
@@ -236,6 +236,25 @@ export default function AdminOrdersPage() {
     }
   }
 
+  function sendDeliveryNoteWhatsApp(order: Order) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://batteriq.com'
+    const link = `${origin}/delivery-note?order=${encodeURIComponent(order.order_number || order.id)}`
+    const digits = (order.guest_phone ?? '').replace(/\D/g, '')
+    const waPhone =
+      digits.startsWith('0') && digits.length === 10
+        ? '254' + digits.slice(1)
+        : digits.startsWith('7') && digits.length === 9
+        ? '254' + digits
+        : digits
+    const msg = `Hello ${order.guest_name || ''}, please confirm and sign your Batteriq Delivery Note for Order ${order.order_number}:\n${link}`
+    if (waPhone) {
+      window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(msg)}`, '_blank', 'noopener,noreferrer')
+    } else {
+      navigator.clipboard.writeText(link)
+      notify('success', 'Delivery Note Link Copied', 'Share this link with the client to sign')
+    }
+  }
+
     const filtered = orders.filter(o => {
     const matchFilter =
       filter === 'all' ? true
@@ -436,6 +455,14 @@ export default function AdminOrdersPage() {
                         >
                           <Download size={15} />
                         </button>
+                        <button
+                          onClick={() => sendDeliveryNoteWhatsApp(order)}
+                          title="Send autofilled Delivery Note link to client on WhatsApp"
+                          className="h-9 px-3 rounded-xl flex items-center gap-1.5 transition-all bg-blue-50 text-[#1e4e87] hover:bg-[#1e4e87] hover:text-white text-[10px] font-black uppercase tracking-wider whitespace-nowrap"
+                        >
+                          <FileCheck2 size={14} />
+                          Delivery Note
+                        </button>
                         {(order.payment_status === 'pending' || order.payment_status === 'failed') && (
                           <button
                             onClick={() => sendStkPush(order)}
@@ -568,6 +595,13 @@ export default function AdminOrdersPage() {
                   <button onClick={() => downloadReceipt(order)} title="Download PDF receipt"
                     className="w-11 h-11 rounded-xl flex items-center justify-center bg-green-50 text-green-600 active:scale-95 transition-transform">
                     <Download size={16} />
+                  </button>
+                  <button
+                    onClick={() => sendDeliveryNoteWhatsApp(order)}
+                    title="Send Delivery Note on WhatsApp"
+                    className="h-11 px-3.5 rounded-xl flex items-center justify-center gap-1.5 bg-blue-50 text-[#1e4e87] text-[11px] font-black uppercase tracking-wider active:scale-95 transition-transform"
+                  >
+                    <FileCheck2 size={15} /> Note
                   </button>
                 </div>
 

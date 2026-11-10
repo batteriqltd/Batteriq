@@ -3,9 +3,21 @@
 import { useEffect, useState, useCallback } from 'react'
 import {
   FileCheck2, Plus, Trash2, Download, Copy, Share2, RefreshCw,
-  CheckCircle2, Clock, Wrench, FileText, ExternalLink,
+  CheckCircle2, Clock, Wrench, FileText, ExternalLink, Package,
 } from 'lucide-react'
 import type { DeliveryNoteItem, DeliveryNoteRecord, NoteDocType } from '@/lib/delivery-note-pdf'
+
+interface AdminOrderSummary {
+  id: string
+  order_number: string
+  guest_name: string | null
+  guest_phone: string | null
+  created_at: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  delivery_address?: any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  items?: any[]
+}
 
 function downloadBase64Pdf(base64: string, filename: string) {
   const bytes = atob(base64)
@@ -32,12 +44,14 @@ function cleanWaPhone(phone: string): string {
 
 export default function AdminDeliveryNotesPage() {
   const [notes, setNotes] = useState<DeliveryNoteRecord[]>([])
+  const [orders, setOrders] = useState<AdminOrderSummary[]>([])
+  const [selectedOrderId, setSelectedOrderId] = useState('')
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'all' | 'delivery' | 'installation'>('all')
   const [toast, setToast] = useState<string | null>(null)
   const [quickWaPhone, setQuickWaPhone] = useState('')
 
-  // Form state for creating / editing a note in Admin
+  // Form state for creating / pre-filling a note in Admin
   const [docNumber, setDocNumber] = useState('')
   const [docType, setDocType] = useState<NoteDocType>('delivery')
   const [createBoth, setCreateBoth] = useState(true)
@@ -68,9 +82,16 @@ export default function AdminDeliveryNotesPage() {
   const loadNotes = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/delivery-notes', { cache: 'no-store' })
-      const data = await res.json()
-      setNotes(data.notes ?? [])
+      const [notesRes, ordersRes] = await Promise.all([
+        fetch('/api/delivery-notes', { cache: 'no-store' }),
+        fetch('/api/admin/orders/list', { cache: 'no-store' }),
+      ])
+      const notesData = await notesRes.json()
+      setNotes(notesData.notes ?? [])
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json()
+        setOrders((ordersData.orders ?? []).slice(0, 50))
+      }
     } catch {
       /* ignore */
     } finally {
@@ -114,6 +135,45 @@ export default function AdminDeliveryNotesPage() {
     setReceiverSignature('')
   }
 
+  function autofillFromOrder(order: AdminOrderSummary) {
+    setDocNumber('')
+    setCustomerName(order.guest_name || '')
+    setReceiverName(order.guest_name || '')
+    setContactPerson(order.guest_name || '')
+    setCustomerPhone(order.guest_phone || '')
+    setQuickWaPhone(order.guest_phone || '')
+    const addr = order.delivery_address ?? {}
+    const site = [addr.street, addr.city, addr.county].filter(Boolean).join(', ')
+    setDeliverySite(site)
+    setLpoReference(order.order_number || '')
+    setDate(new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }))
+    const mapped =
+      Array.isArray(order.items) && order.items.length > 0
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          order.items.map((it: any) => ({
+            description: String(it.name ?? ''),
+            subtext: String(it.brand ?? ''),
+            qtySent: String(it.quantity ?? 1),
+            qtyReceived: String(it.quantity ?? 1),
+          }))
+        : [{ description: '', subtext: '', qtySent: '1', qtyReceived: '1' }]
+    setItems(mapped)
+    showMsg(`Autofilled from Order ${order.order_number}`)
+  }
+
+  function sendOrderDeliveryNoteWhatsApp(order: AdminOrderSummary, type: NoteDocType = 'delivery') {
+    const typeQuery = type === 'installation' ? '&type=installation' : ''
+    const link = `${publicFormUrl}?order=${encodeURIComponent(order.order_number || order.id)}${typeQuery}`
+    const waPhone = cleanWaPhone(order.guest_phone || quickWaPhone)
+    const docLabel = type === 'installation' ? 'Installation Completion Note' : 'Delivery Note'
+    const text = `Hello ${order.guest_name || ''}, please confirm your name and sign your Batteriq ${docLabel} for Order ${order.order_number}:\n${link}`
+    if (waPhone) {
+      window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
+    } else {
+      copyLink(link, `Copied ${docLabel} link for Order ${order.order_number}!`)
+    }
+  }
+
   function loadIntoEditor(n: DeliveryNoteRecord) {
     setDocNumber(n.docNumber)
     setDocType(n.docType)
@@ -132,6 +192,58 @@ export default function AdminDeliveryNotesPage() {
     setReceiverName(n.receiverName || '')
     setReceiverSignature(n.receiverSignature || '')
     showMsg(`Loaded ${n.docNumber} into editor`)
+  }
+
+  async function handleSaveAndSendLink() {
+    if (!customerName.trim() && !items.some((i) => i.description.trim())) {
+      showMsg('Enter Customer Name or Materials to pre-fill')
+      return
+    }
+    setSaving(true)
+    try {
+      const res = await fetch('/api/delivery-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          docNumber: docNumber || undefined,
+          docType,
+          createBoth: false,
+          customerName,
+          customerPhone,
+          deliverySite,
+          contactPerson,
+          lpoReference,
+          date,
+          items,
+          workDescription,
+          worksCompleted,
+          remarks,
+          batteriqPersonName,
+          receiverName,
+          receiverSignature,
+          status: receiverSignature ? 'signed' : 'draft',
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed')
+
+      const link = `${publicFormUrl}?doc=${encodeURIComponent(data.note.docNumber)}`
+      const waPhone = cleanWaPhone(customerPhone || quickWaPhone)
+      const label = docType === 'installation' ? 'Installation Completion Note' : 'Delivery Note'
+      const text = `Hello ${contactPerson || customerName || ''}, please confirm your name and sign your Batteriq ${label} (${data.note.docNumber}):\n${link}`
+      navigator.clipboard.writeText(link)
+      loadNotes()
+      if (waPhone) {
+        window.open(`https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer')
+        showMsg(`Saved ${data.note.docNumber} & opened WhatsApp!`)
+      } else {
+        showMsg(`Saved ${data.note.docNumber} & copied client signing link!`)
+      }
+    } catch (err) {
+      showMsg(err instanceof Error ? err.message : 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
   }
 
   async function handleSaveAndDownload() {
@@ -187,9 +299,10 @@ export default function AdminDeliveryNotesPage() {
   }
 
   const filteredNotes = notes.filter((n) => (tab === 'all' ? true : n.docType === tab))
+  const selectedOrder = orders.find((o) => o.id === selectedOrderId)
 
   return (
-    <div className="p-6 sm:p-8 pb-16 min-h-screen space-y-6">
+    <div className="p-4 sm:p-8 pb-16 min-h-screen space-y-6">
       {toast && (
         <div className="fixed bottom-6 right-6 z-50 px-5 py-3 rounded-2xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider shadow-xl">
           {toast}
@@ -203,7 +316,7 @@ export default function AdminDeliveryNotesPage() {
             Delivery &amp; Installation Notes
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Send the client receiver link on WhatsApp, receive signed Delivery &amp; Installation Completion Notes, and download A4 PDFs.
+            Send a pre-filled order link on WhatsApp — client only confirms their name &amp; signs. Both PDFs are generated automatically.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -213,7 +326,7 @@ export default function AdminDeliveryNotesPage() {
             rel="noopener noreferrer"
             className="h-10 px-4 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5 hover:bg-slate-50"
           >
-            <ExternalLink size={14} /> Open Public Form
+            <ExternalLink size={14} /> Open Client Form
           </a>
           <button
             onClick={loadNotes}
@@ -224,50 +337,96 @@ export default function AdminDeliveryNotesPage() {
         </div>
       </div>
 
-      {/* Quick Share Client Form Link Banner */}
-      <div className="bg-gradient-to-r from-[#00004d] to-[#1e4e87] rounded-3xl p-6 text-white flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-lg">
-        <div>
-          <p className="text-[11px] font-black uppercase tracking-widest text-blue-200">
-            1. Send Link to Client / Receiver
-          </p>
-          <p className="text-base font-black mt-0.5">
-            Client fills in Name, Site, Materials Delivered &amp; Signature — automatically creates both Delivery &amp; Installation Notes
-          </p>
-          <p className="text-xs font-mono text-blue-200 mt-1 break-all">{publicFormUrl}</p>
+      {/* 1. One-Click Send from Existing Order */}
+      <div className="bg-gradient-to-r from-[#00004d] to-[#1e4e87] rounded-3xl p-5 sm:p-6 text-white space-y-4 shadow-lg">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-widest text-blue-200 flex items-center gap-1.5">
+              <Package size={13} /> Autofill from Client Order
+            </p>
+            <p className="text-base font-black mt-0.5">
+              Pick a client&apos;s order — all items, site &amp; contact details autofill automatically so the client just signs
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={selectedOrderId}
+              onChange={(e) => {
+                const id = e.target.value
+                setSelectedOrderId(id)
+                const ord = orders.find((o) => o.id === id)
+                if (ord) autofillFromOrder(ord)
+              }}
+              className="h-11 px-3.5 rounded-2xl bg-white text-slate-900 text-xs font-bold focus:outline-none min-w-[240px]"
+            >
+              <option value="">— Select a Customer Order ({orders.length}) —</option>
+              {orders.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.order_number} · {o.guest_name || 'Customer'} ({o.guest_phone || 'No phone'})
+                </option>
+              ))}
+            </select>
+
+            {selectedOrder && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => sendOrderDeliveryNoteWhatsApp(selectedOrder, 'delivery')}
+                  className="h-11 px-4 rounded-2xl bg-green-500 hover:bg-green-600 text-white text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5"
+                >
+                  <Share2 size={14} /> WhatsApp Delivery Note
+                </button>
+                <button
+                  type="button"
+                  onClick={() => sendOrderDeliveryNoteWhatsApp(selectedOrder, 'installation')}
+                  className="h-11 px-4 rounded-2xl bg-white/15 hover:bg-white/25 border border-white/25 text-white text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5"
+                >
+                  <Wrench size={14} /> WhatsApp Installation Note
+                </button>
+              </>
+            )}
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <button
-            onClick={() => copyLink(publicFormUrl, 'Copied public Delivery Note link!')}
-            className="h-11 px-4 rounded-2xl bg-white text-[#00004d] text-xs font-black uppercase tracking-wider inline-flex items-center gap-2 hover:bg-blue-50"
-          >
-            <Copy size={14} /> Copy Client Link
-          </button>
-          <input
-            type="tel"
-            value={quickWaPhone}
-            onChange={(e) => setQuickWaPhone(e.target.value)}
-            placeholder="Client WhatsApp (07XX...)"
-            className="h-11 px-3.5 rounded-2xl bg-white/15 border border-white/25 text-white placeholder:text-blue-200 text-xs font-semibold focus:outline-none"
-          />
-          <a
-            href={`https://wa.me/${cleanWaPhone(quickWaPhone)}?text=${encodeURIComponent(
-              `Hello! Please fill in and sign your Batteriq Delivery & Installation Completion Note here:\n${publicFormUrl}`
-            )}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="h-11 px-4 rounded-2xl bg-green-500 hover:bg-green-600 text-white text-xs font-black uppercase tracking-wider inline-flex items-center gap-2"
-          >
-            <Share2 size={14} /> Send Link on WhatsApp
-          </a>
+
+        {/* Or Send Blank Link */}
+        <div className="pt-3 border-t border-white/15 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <span className="text-xs text-blue-100 font-medium">
+            Or send a blank link to any WhatsApp number: <code className="font-mono text-white">{publicFormUrl}</code>
+          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => copyLink(publicFormUrl, 'Copied Delivery Note link!')}
+              className="h-9 px-3.5 rounded-xl bg-white text-[#00004d] text-[11px] font-black uppercase tracking-wider inline-flex items-center gap-1.5"
+            >
+              <Copy size={12} /> Copy Link
+            </button>
+            <input
+              type="tel"
+              value={quickWaPhone}
+              onChange={(e) => setQuickWaPhone(e.target.value)}
+              placeholder="Client Phone (07XX...)"
+              className="h-9 px-3 rounded-xl bg-white/15 border border-white/25 text-white placeholder:text-blue-200 text-xs font-semibold focus:outline-none"
+            />
+            <a
+              href={`https://wa.me/${cleanWaPhone(quickWaPhone)}?text=${encodeURIComponent(
+                `Hello! Please fill in and sign your Batteriq Delivery Note here:\n${publicFormUrl}`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-9 px-3.5 rounded-xl bg-green-500 hover:bg-green-600 text-white text-[11px] font-black uppercase tracking-wider inline-flex items-center gap-1.5"
+            >
+              <Share2 size={12} /> Send on WhatsApp
+            </a>
+          </div>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-12 gap-6">
-        {/* Left: Create / Edit Note Generator */}
+        {/* Left: Create / Pre-fill Note for Client */}
         <div className="lg:col-span-5 bg-white rounded-3xl border border-slate-200/80 p-6 space-y-4 self-start">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-black text-slate-900">
-              {docNumber ? `Edit ${docNumber}` : 'Create / Pre-fill Note'}
+              {docNumber ? `Edit ${docNumber}` : 'Pre-fill Note for Client'}
             </h2>
             {docNumber && (
               <button
@@ -299,18 +458,6 @@ export default function AdminDeliveryNotesPage() {
               <Wrench size={13} /> Installation Note
             </button>
           </div>
-
-          {!docNumber && (
-            <label className="flex items-center gap-2 text-xs font-bold text-slate-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={createBoth}
-                onChange={(e) => setCreateBoth(e.target.checked)}
-                className="w-4 h-4 rounded border-slate-300 text-[#1e4e87]"
-              />
-              Generate both Delivery Note &amp; Installation Note copies
-            </label>
-          )}
 
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
@@ -434,26 +581,27 @@ export default function AdminDeliveryNotesPage() {
             </div>
           </div>
 
-          <div>
-            <label className="block text-[11px] font-bold text-slate-600 mb-1">Remarks / Notes</label>
-            <input
-              type="text"
-              value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
-              placeholder="Condition / shortages / remarks"
-              className="w-full h-9 px-3 rounded-xl border border-slate-200 text-xs text-slate-900"
-            />
-          </div>
+          <div className="space-y-2 pt-2">
+            <button
+              type="button"
+              onClick={handleSaveAndSendLink}
+              disabled={saving}
+              className="w-full h-11 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-60"
+            >
+              <Share2 size={15} />
+              {saving ? 'Saving...' : 'Save & Send Signing Link on WhatsApp'}
+            </button>
 
-          <button
-            type="button"
-            onClick={handleSaveAndDownload}
-            disabled={saving}
-            className="w-full h-11 rounded-2xl bg-[#1e4e87] hover:bg-[#163b68] text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-60"
-          >
-            <Download size={15} />
-            {saving ? 'Generating PDF...' : docNumber ? 'Save & Download PDF' : 'Generate & Download PDF'}
-          </button>
+            <button
+              type="button"
+              onClick={handleSaveAndDownload}
+              disabled={saving}
+              className="w-full h-10 rounded-2xl bg-[#1e4e87] hover:bg-[#163b68] text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-60"
+            >
+              <Download size={14} />
+              {docNumber ? 'Save & Download PDF' : 'Generate & Download PDF Now'}
+            </button>
+          </div>
         </div>
 
         {/* Right: Submitted & Generated Notes List */}
@@ -483,7 +631,7 @@ export default function AdminDeliveryNotesPage() {
               <FileCheck2 size={32} className="text-slate-300 mx-auto mb-3" />
               <p className="text-sm font-black text-slate-800">No notes yet</p>
               <p className="text-xs text-slate-500 mt-1">
-                Copy the client link above and send it via WhatsApp — once the client signs and submits, both their Delivery Note and Installation Completion Note appear here ready to download.
+                Pick a customer order above and send the link on WhatsApp — once the client signs, both their Delivery Note and Installation Completion Note appear here ready to download.
               </p>
             </div>
           ) : (
@@ -492,10 +640,15 @@ export default function AdminDeliveryNotesPage() {
                 const pdfUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://batteriq.com'}/api/delivery-notes/pdf?doc=${encodeURIComponent(n.docNumber)}`
                 const prefillUrl = `${publicFormUrl}?doc=${encodeURIComponent(n.docNumber)}`
                 const waNumber = cleanWaPhone(n.customerPhone)
+                const isSigned = n.status === 'signed' || Boolean(n.receiverSignature)
                 const waText = encodeURIComponent(
-                  `Hello ${n.contactPerson || n.customerName}, here is your signed Batteriq ${
-                    n.docType === 'installation' ? 'Installation Completion Note' : 'Delivery Note'
-                  } (${n.docNumber}):\n${pdfUrl}`
+                  isSigned
+                    ? `Hello ${n.contactPerson || n.customerName}, here is your signed Batteriq ${
+                        n.docType === 'installation' ? 'Installation Completion Note' : 'Delivery Note'
+                      } (${n.docNumber}):\n${pdfUrl}`
+                    : `Hello ${n.contactPerson || n.customerName}, please confirm your name and sign your Batteriq ${
+                        n.docType === 'installation' ? 'Installation Completion Note' : 'Delivery Note'
+                      } (${n.docNumber}):\n${prefillUrl}`
                 )
 
                 return (
@@ -515,7 +668,7 @@ export default function AdminDeliveryNotesPage() {
                           {n.docType === 'installation' ? 'Installation Note' : 'Delivery Note'}
                         </span>
                         <span className="font-mono text-xs font-black text-slate-900">{n.docNumber}</span>
-                        {n.status === 'signed' || n.receiverSignature ? (
+                        {isSigned ? (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase bg-green-50 text-green-700 border border-green-200">
                             <CheckCircle2 size={11} /> Signed
                           </span>
@@ -559,7 +712,7 @@ export default function AdminDeliveryNotesPage() {
                           rel="noopener noreferrer"
                           className="h-9 px-3.5 rounded-xl bg-green-600 hover:bg-green-700 text-white text-[11px] font-black uppercase tracking-wider inline-flex items-center gap-1.5"
                         >
-                          <Share2 size={13} /> WhatsApp Client
+                          <Share2 size={13} /> {isSigned ? 'Send PDF on WA' : 'Send Sign Link'}
                         </a>
                       </div>
                       <div className="flex items-center gap-2">
