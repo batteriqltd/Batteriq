@@ -291,7 +291,7 @@ export function productJsonLd(product: Product, section: ProductSection) {
     ...(mpn ? { mpn } : {}),
     ...(gtin ? { [gtin.key]: gtin.value } : {}),
     ...(properties.length ? { additionalProperty: properties } : {}),
-    offers: {
+    ...(Number(product.price_kes) > 0 ? { offers: {
       '@type': 'Offer',
       url,
       priceCurrency: 'KES',
@@ -305,7 +305,7 @@ export function productJsonLd(product: Product, section: ProductSection) {
       seller: { '@type': 'Organization', '@id': `${SITE_URL}/#organization`, name: BUSINESS.name },
       // shippingDetails: omitted until delivery times per county are confirmed.
       // hasMerchantReturnPolicy: belongs on the organization once the policy is supplied.
-    },
+    } } : {}),
     // No aggregateRating or review. products.schema_rating / schema_review_count
     // are seeded defaults, not customer reviews, and no product page shows
     // reviews. Google requires rating markup to match reviews visible on the page.
@@ -351,7 +351,7 @@ function sentences(...parts: (string | null | false | undefined)[]): string {
 
 export function buildProductFaqs(product: Product): Faq[] {
   const specs = (product.specs ?? {}) as Record<string, unknown>
-  const price = kes(product.price_kes)
+  const price = Number(product.price_kes) > 0 ? kes(product.price_kes) : 'a price quoted for your site'
   const brand = product.brand === 'Bluetti' ? 'BLUETTI' : product.brand
   const dealer = `Kenya's authorised ${brand} dealer`
   const warrantySentence = `It is covered by a ${BUSINESS.warrantyMonths}-month warranty.`

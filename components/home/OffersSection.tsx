@@ -21,6 +21,7 @@ export async function OffersSection() {
   }
 
   if (!offerProducts.length) return null
+  const blackNovember = offerProducts.some((p) => /black november/i.test(p.discount_badge ?? ''))
 
   return (
     <section className="py-10 sm:py-14" style={{ background: 'linear-gradient(135deg, #1a0000 0%, #3d0000 50%, #1a0000 100%)' }}>
@@ -31,10 +32,10 @@ export async function OffersSection() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 px-4 py-2 rounded-full" style={{ background: '#cc0000' }}>
               <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-              <span className="text-white font-black text-[11px] uppercase tracking-[0.2em]">Flash Sale</span>
+              <span className="text-white font-black text-[11px] uppercase tracking-[0.2em]">{blackNovember ? 'Black November' : 'Flash Sale'}</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-white" style={{ letterSpacing: '-0.02em' }}>
-              Current Offers
+              {blackNovember ? 'Black November Deals' : 'Current Offers'}
             </h2>
           </div>
           <Link
@@ -111,9 +112,13 @@ export async function OffersSection() {
                   <div className="p-3">
                     <p className="text-[9px] font-black uppercase tracking-widest text-gray-400 mb-0.5">{product.brand}</p>
                     <p className="text-[12px] font-black text-gray-900 leading-snug line-clamp-2 mb-2">{product.name}</p>
-                    <p className="text-[14px] font-black font-mono text-gray-900">{formatKES(product.price_kes)}</p>
-                    {product.compare_price_kes && product.compare_price_kes > product.price_kes && (
-                      <p className="text-[11px] font-mono text-gray-400 line-through">{formatKES(product.compare_price_kes)}</p>
+                    {product.compare_price_kes && product.compare_price_kes > product.price_kes ? (
+                      <>
+                        <p className="text-[11px] text-gray-500 font-semibold">Was <span className="font-mono line-through decoration-red-600 decoration-2">{formatKES(product.compare_price_kes)}</span></p>
+                        <p className="text-[15px] font-black font-mono text-red-600"><span className="text-[9px] font-sans uppercase tracking-widest mr-1">Now</span>{formatKES(product.price_kes)}</p>
+                      </>
+                    ) : (
+                      <p className="text-[14px] font-black font-mono text-gray-900">{formatKES(product.price_kes)}</p>
                     )}
                   </div>
                 </div>

@@ -157,16 +157,26 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
           )}
 
           <div className="mt-auto">
-            <div className="flex items-baseline gap-2">
+            {discount > 0 && product.compare_price_kes ? (
+              <div>
+                <p className="text-[11px] sm:text-xs text-slate-500 font-semibold">
+                  Was <span className="font-mono line-through decoration-red-600 decoration-2">{formatKES(product.compare_price_kes)}</span>
+                </p>
+                <p className="flex flex-wrap items-baseline gap-x-1.5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-red-600">Now</span>
+                  <span className="text-lg sm:text-xl font-bold text-red-600 font-mono tracking-tighter">
+                    {formatKES(product.price_kes)}
+                  </span>
+                </p>
+                <p className="inline-block mt-1 text-[10px] font-black uppercase tracking-wide text-white bg-red-600 rounded px-1.5 py-0.5">
+                  Save {formatKES(product.compare_price_kes - product.price_kes)}
+                </p>
+              </div>
+            ) : (
               <span className="text-lg sm:text-xl font-bold text-slate-900 font-mono tracking-tighter">
                 {formatKES(product.price_kes)}
               </span>
-              {discount > 0 && product.compare_price_kes && (
-                <span className="text-sm text-slate-400 line-through font-mono tracking-tighter opacity-70">
-                  {formatKES(product.compare_price_kes)}
-                </span>
-              )}
-            </div>
+            )}
 
             {/* M-Pesa installment hint for expensive products */}
             {product.in_stock && (

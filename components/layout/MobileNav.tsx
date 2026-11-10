@@ -26,10 +26,10 @@ const POWER_ITEMS = {
   ],
   systems: [
     { name: 'Homestar 3', sub: '2kW inverter · 3kWh battery', href: '/bluetti/bluetti-homestar-3' },
-    { name: 'Homestar 5', sub: '3.68kW inverter · 5kWh battery', href: '/bluetti' },
-    { name: 'EP2000 10kW', sub: '10kW inverter · 14.6kWh battery', href: '/bluetti' },
-    { name: 'EP2000 15kW', sub: '15kW inverter · 21.9kWh battery', href: '/bluetti' },
-    { name: 'EP2000 20kW', sub: '20kW inverter · 29–51kWh battery', href: '/bluetti' },
+    { name: 'Homestar 5', sub: '3.68kW inverter · 5kWh battery', href: '/bluetti/bluetti-homestar-5' },
+    { name: 'EP2000 10kW', sub: '10kW inverter · 14.6kWh battery', href: '/bluetti/bluetti-ep2000-10kw' },
+    { name: 'EP2000 15kW', sub: '15kW inverter · 21.9kWh battery', href: '/bluetti/bluetti-ep2000-15kw' },
+    { name: 'EP2000 20kW', sub: '20kW inverter · 29–51kWh battery', href: '/bluetti/bluetti-ep2000-20kw' },
     { name: 'All Bluetti Models', sub: 'AC Series · EB Series', href: '/bluetti' },
   ],
 }

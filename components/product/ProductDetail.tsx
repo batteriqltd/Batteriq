@@ -32,6 +32,9 @@ export function ProductDetail({ product, section }: ProductDetailProps) {
   const images = product.images?.length > 0 ? product.images : ['/placeholder-product.jpg']
   const specs = product.specs as Record<string, string>
   const discount = getDiscountPercent(product.price_kes, product.compare_price_kes)
+  // Installed systems are quoted per site and carry no shelf price.
+  const quoteOnly = !(Number(product.price_kes) > 0)
+  const quoteHref = `https://wa.me/254716822014?text=${encodeURIComponent(`Hi Batteriq! I would like a quote for the ${product.name}.`)}`
   const specRows = buildSpecRows(product)
 
   function handleAddToCart() {
@@ -112,11 +115,29 @@ export function ProductDetail({ product, section }: ProductDetailProps) {
 
           {/* Price */}
           <div>
-            <p className="font-mono font-bold text-4xl text-bq-blue">{formatKES(product.price_kes)}</p>
-            {discount > 0 && product.compare_price_kes && (
-              <p className="font-mono text-lg text-gray-400 line-through mt-1">
-                {formatKES(product.compare_price_kes)}
-              </p>
+            {quoteOnly ? (
+              <>
+                <p className="font-display font-bold text-3xl text-bq-blue">Price on request</p>
+                <p className="text-sm text-gray-500 mt-1">Sized and quoted for your home or business.</p>
+              </>
+            ) : discount > 0 && product.compare_price_kes ? (
+              <div className="rounded-[12px] border-2 border-red-600 overflow-hidden">
+                <div className="bg-red-600 text-white px-4 py-2 flex items-center justify-between gap-3">
+                  <span className="font-black text-xs uppercase tracking-[0.2em]">{product.discount_badge || 'Sale'}</span>
+                  <span className="font-black text-xs uppercase tracking-wider">Save {formatKES(product.compare_price_kes - product.price_kes)} · -{discount}%</span>
+                </div>
+                <div className="px-4 py-3 bg-red-50">
+                  <p className="text-sm text-gray-500 font-semibold">
+                    Was <span className="font-mono line-through decoration-red-600 decoration-2">{formatKES(product.compare_price_kes)}</span>
+                  </p>
+                  <p className="font-mono font-bold text-4xl text-red-600 leading-tight">
+                    <span className="text-sm font-sans font-black uppercase tracking-widest text-gray-900 mr-2 align-middle">Now</span>
+                    {formatKES(product.price_kes)}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="font-mono font-bold text-4xl text-bq-blue">{formatKES(product.price_kes)}</p>
             )}
           </div>
 
@@ -141,7 +162,7 @@ export function ProductDetail({ product, section }: ProductDetailProps) {
 
           {/* Quantity + Add to cart */}
           <div className="space-y-3">
-            <div className="flex items-center gap-4">
+            <div className={quoteOnly ? 'hidden' : 'flex items-center gap-4'}>
               <div className="flex items-center border border-gray-300 rounded-[6px] overflow-hidden">
                 <button
                   onClick={() => setQty(Math.max(1, qty - 1))}
@@ -172,7 +193,19 @@ export function ProductDetail({ product, section }: ProductDetailProps) {
               )}
             </div>
 
-            {product.in_stock ? (
+            {quoteOnly ? (
+              <a
+                href={quoteHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center gap-3 py-4 text-white font-bold text-lg rounded-[8px] transition-all min-h-[56px] hover:-translate-y-0.5"
+                style={{ background: 'linear-gradient(135deg, #25D366, #1da851)', boxShadow: '0 6px 18px rgba(37,211,102,0.28)' }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logos/whatsapp.png" alt="" width={20} height={20} className="object-contain" />
+                GET A QUOTE ON WHATSAPP
+              </a>
+            ) : product.in_stock ? (
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}

@@ -7,7 +7,7 @@ import { ProductDetail } from '@/components/product/ProductDetail'
 import { ProductGrid } from '@/components/product/ProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
 import type { Product } from '@/lib/supabase/types'
-import { BLUETTI_NEW_SLUGS, FALLBACK_BLUETTI_PRODUCTS, withBluettiFallbacks } from '@/lib/bluetti-residential'
+import { BLUETTI_NEW_SLUGS, BLUETTI_QUOTE_SLUGS, FALLBACK_BLUETTI_PRODUCTS, withBluettiFallbacks } from '@/lib/bluetti-residential'
 import { ProductFaq } from '@/components/product/ProductFaq'
 import { ProductOverview } from '@/components/product/ProductOverview'
 import { buildProductContent } from '@/lib/productContent'
@@ -37,10 +37,10 @@ export async function generateStaticParams() {
       .select('slug')
       .eq('brand', 'Bluetti')
     const slugs = new Set((data ?? []).map((p) => p.slug))
-    for (const s of BLUETTI_NEW_SLUGS) slugs.add(s as string)
+    for (const s of [...BLUETTI_NEW_SLUGS, ...BLUETTI_QUOTE_SLUGS]) slugs.add(s as string)
     return Array.from(slugs).map((slug) => ({ slug }))
   } catch {
-    return (BLUETTI_NEW_SLUGS as readonly string[]).map((slug) => ({ slug }))
+    return ([...BLUETTI_NEW_SLUGS, ...BLUETTI_QUOTE_SLUGS] as string[]).map((slug) => ({ slug }))
   }
 }
 
