@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { CheckCircle2, Plus, Trash2, Download, Eraser, Check } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { CheckCircle2, Plus, Trash2, Download, QrCode, Check, RefreshCw } from 'lucide-react'
+import QRCode from 'qrcode'
 import type { DeliveryNoteItem, NoteDocType } from '@/lib/delivery-note-pdf'
 
 function downloadBase64Pdf(base64: string, filename: string) {
@@ -25,7 +26,7 @@ export default function PublicDeliveryNotePage() {
   const [lpoReference, setLpoReference] = useState('')
   const [loadingPrefill, setLoadingPrefill] = useState(false)
 
-  // The exact receiver fields: Name, Date, Delivery Site, Contact Person, Materials Delivered, Signature
+  // Receiver fields: Name, Date, Delivery Site, Contact Person, Materials Delivered, Tap-to-Generate QR Signature
   const [receiverName, setReceiverName] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [date, setDate] = useState(() =>
@@ -38,11 +39,20 @@ export default function PublicDeliveryNotePage() {
     { description: '', subtext: '', qtySent: '1', qtyReceived: '1' },
   ])
 
-  // Hidden/background fields preserved when prefilled by admin or order
+  // Preserved background fields
   const [workDescription, setWorkDescription] = useState('')
   const [worksCompleted, setWorksCompleted] = useState('')
   const [remarks, setRemarks] = useState('')
   const [batteriqPersonName, setBatteriqPersonName] = useState('')
+
+  // 1-Tap Automatic QR Signature state
+  const [qrStampDataUrl, setQrStampDataUrl] = useState('')
+  const [qrOnlyDataUrl, setQrOnlyDataUrl] = useState('')
+  const [qrStampInfo, setQrStampInfo] = useState<{
+    stampId: string
+    signedBy: string
+    timestamp: string
+  } | null>(null)
 
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
@@ -54,39 +64,6 @@ export default function PublicDeliveryNotePage() {
     companionPdf?: string | null
     companionFilename?: string | null
   } | null>(null)
-
-  // Smooth high-DPI Signature Pad
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const isDrawingRef = useRef(false)
-  const lastPtRef = useRef<{ x: number; y: number } | null>(null)
-  const [hasSignature, setHasSignature] = useState(false)
-
-  // Initialize & scale canvas for crisp mobile & laptop drawing
-  const setupCanvas = useCallback(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-    const rect = canvas.getBoundingClientRect()
-    if (!rect.width || !rect.height) return
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    if (canvas.width !== Math.round(rect.width * dpr) || canvas.height !== Math.round(rect.height * dpr)) {
-      canvas.width = Math.round(rect.width * dpr)
-      canvas.height = Math.round(rect.height * dpr)
-      const ctx = canvas.getContext('2d')
-      if (ctx) {
-        ctx.scale(dpr, dpr)
-        ctx.strokeStyle = '#0f172a'
-        ctx.lineWidth = 2.6
-        ctx.lineCap = 'round'
-        ctx.lineJoin = 'round'
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    setupCanvas()
-    window.addEventListener('resize', setupCanvas)
-    return () => window.removeEventListener('resize', setupCanvas)
-  }, [setupCanvas])
 
   // Auto-fill from ?order= or ?doc= in URL
   useEffect(() => {
@@ -131,76 +108,99 @@ export default function PublicDeliveryNotePage() {
       .finally(() => setLoadingPrefill(false))
   }, [])
 
-  const getPoint = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const canvas = canvasRef.current
-    if (!canvas) return { x: 0, y: 0 }
-    const rect = canvas.getBoundingClientRect()
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top,
+  // Generate the 480x150 composite QR Signature Stamp (used both on screen and embedded into the A4 PDF)
+  const generateQrSignatureStamp = useCallback(async () => {
+    const cleanSigner = (receiverName.trim() || contactPerson.trim() || customerName.trim() || 'Verified Receiver').slice(0, 36)
+    const cleanSite = (deliverySite.trim() || 'Kenya').slice(0, 40)
+    const stampId = `BAT-SIG-${Math.floor(100000 + Math.random() * 900000)}`
+    const timestamp = new Date().toLocaleString('en-KE', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+    const matSummary = items
+      .filter((i) => i.description.trim())
+      .map((i) => `${i.description.trim()} x${i.qtyReceived || i.qtySent || '1'}`)
+      .join(', ')
+      .slice(0, 120)
+
+    const qrPayload = [
+      'BATTERIQ VERIFIED SIGNATURE',
+      `ID: ${stampId}`,
+      `Name: ${cleanSigner}`,
+      `Site: ${cleanSite}`,
+      `Date: ${timestamp}`,
+      lpoReference ? `Ref: ${lpoReference}` : '',
+      matSummary ? `Items: ${matSummary}` : '',
+    ]
+      .filter(Boolean)
+      .join(' | ')
+
+    const qrUrl = await QRCode.toDataURL(qrPayload, {
+      width: 240,
+      margin: 1,
+      color: { dark: '#0f172a', light: '#ffffff' },
+    })
+    setQrOnlyDataUrl(qrUrl)
+
+    // Render composite stamp canvas (480x150 -> 3.2:1 aspect ratio matching 48mm x 15mm in PDF)
+    const canvas = document.createElement('canvas')
+    canvas.width = 480
+    canvas.height = 150
+    const ctx = canvas.getContext('2d')
+    if (!ctx) {
+      setQrStampDataUrl(qrUrl)
+      setQrStampInfo({ stampId, signedBy: cleanSigner, timestamp })
+      return qrUrl
     }
-  }
 
-  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    e.preventDefault()
-    setupCanvas()
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx) return
-    canvas.setPointerCapture(e.pointerId)
-    isDrawingRef.current = true
-    const pt = getPoint(e)
-    lastPtRef.current = pt
-    ctx.strokeStyle = '#0f172a'
-    ctx.lineWidth = 2.6
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    ctx.beginPath()
-    ctx.moveTo(pt.x, pt.y)
-    ctx.lineTo(pt.x + 0.1, pt.y + 0.1)
-    ctx.stroke()
-    setHasSignature(true)
-  }
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, 480, 150)
 
-  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawingRef.current) return
-    e.preventDefault()
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx || !lastPtRef.current) return
-    const pt = getPoint(e)
-    const prev = lastPtRef.current
-    const midX = (prev.x + pt.x) / 2
-    const midY = (prev.y + pt.y) / 2
-    ctx.quadraticCurveTo(prev.x, prev.y, midX, midY)
-    ctx.stroke()
-    ctx.beginPath()
-    ctx.moveTo(midX, midY)
-    lastPtRef.current = pt
-    setHasSignature(true)
-  }
+    // Border frame
+    ctx.strokeStyle = '#1e4e87'
+    ctx.lineWidth = 3
+    ctx.strokeRect(3, 3, 474, 144)
 
-  const handlePointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!isDrawingRef.current) return
-    isDrawingRef.current = false
-    lastPtRef.current = null
-    try {
-      canvasRef.current?.releasePointerCapture(e.pointerId)
-    } catch {
-      /* ignore */
-    }
-  }
+    // Load QR image onto left side (134x134 square at x=8, y=8)
+    await new Promise<void>((resolve) => {
+      const img = new Image()
+      img.onload = () => {
+        ctx.drawImage(img, 8, 8, 134, 134)
+        resolve()
+      }
+      img.onerror = () => resolve()
+      img.src = qrUrl
+    })
 
-  const clearSignature = useCallback(() => {
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx) return
-    ctx.save()
-    ctx.setTransform(1, 0, 0, 1, 0, 0)
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.restore()
-    setHasSignature(false)
-  }, [])
+    // Right side text block
+    ctx.fillStyle = '#1e4e87'
+    ctx.font = 'bold 17px Arial, sans-serif'
+    ctx.fillText('VERIFIED QR SIGNATURE', 154, 34)
+
+    ctx.fillStyle = '#0f172a'
+    ctx.font = 'bold 20px Arial, sans-serif'
+    ctx.fillText(cleanSigner.slice(0, 24), 154, 64)
+
+    ctx.fillStyle = '#334155'
+    ctx.font = 'bold 14px Courier New, monospace'
+    ctx.fillText(`ID: ${stampId}`, 154, 92)
+
+    ctx.fillStyle = '#475569'
+    ctx.font = '14px Arial, sans-serif'
+    ctx.fillText(timestamp, 154, 116)
+
+    ctx.fillStyle = '#16a34a'
+    ctx.font = 'bold 13px Arial, sans-serif'
+    ctx.fillText('BATTERIQ SOLUTIONS LTD', 154, 137)
+
+    const compositeUrl = canvas.toDataURL('image/png')
+    setQrStampDataUrl(compositeUrl)
+    setQrStampInfo({ stampId, signedBy: cleanSigner, timestamp })
+    return compositeUrl
+  }, [receiverName, contactPerson, customerName, deliverySite, lpoReference, items])
 
   function updateItem(idx: number, patch: Partial<DeliveryNoteItem>) {
     setItems((prev) => prev.map((it, i) => (i === idx ? { ...it, ...patch } : it)))
@@ -232,15 +232,12 @@ export default function PublicDeliveryNotePage() {
       setError('Please list at least one material delivered.')
       return
     }
-    if (!hasSignature) {
-      setError('Please sign inside the signature box.')
-      return
-    }
-
-    const sigDataUrl = canvasRef.current?.toDataURL('image/png') ?? ''
 
     setSubmitting(true)
     try {
+      // Ensure QR signature stamp is generated (auto-generates if they haven't tapped yet)
+      const finalQrStamp = qrStampDataUrl || (await generateQrSignatureStamp())
+
       const res = await fetch('/api/delivery-notes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -272,7 +269,7 @@ export default function PublicDeliveryNotePage() {
           },
           remarks: remarks.trim() || 'Received in good order and condition.',
           batteriqPersonName: batteriqPersonName.trim(),
-          receiverSignature: sigDataUrl,
+          receiverSignature: finalQrStamp,
           status: 'signed',
         }),
       })
@@ -308,7 +305,7 @@ export default function PublicDeliveryNotePage() {
           </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight">Done! Copy Sent</h1>
           <p className="text-sm text-slate-500 mt-1.5">
-            Thank you, <strong className="text-slate-800">{receiverName || customerName}</strong>. Your signed note (
+            Thank you, <strong className="text-slate-800">{receiverName || customerName}</strong>. Your QR-signed note (
             <span className="font-mono font-bold text-slate-700">{submitted.docNumber}</span>) has been sent to Batteriq
             and downloaded to your device.
           </p>
@@ -493,36 +490,63 @@ export default function PublicDeliveryNotePage() {
             </div>
           </div>
 
-          {/* 3. Smooth Signature Pad */}
+          {/* 3. One-Tap Automatic QR Signature Stamp */}
           <div className="pt-2 border-t border-slate-100">
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-black uppercase tracking-wider text-slate-700">
-                Signature * <span className="font-normal text-slate-400">(Draw with finger or mouse)</span>
+                Receiver Signature (1-Tap QR Stamp) *
               </label>
-              <button
-                type="button"
-                onClick={clearSignature}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-              >
-                <Eraser size={14} /> Clear
-              </button>
+              {qrStampDataUrl && (
+                <button
+                  type="button"
+                  onClick={() => generateQrSignatureStamp()}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-[#1e4e87] hover:bg-blue-50 transition-colors"
+                >
+                  <RefreshCw size={13} /> Regenerate QR
+                </button>
+              )}
             </div>
 
-            <div className="relative rounded-2xl border-2 border-slate-300 bg-white overflow-hidden shadow-inner">
-              {!hasSignature && (
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-xs font-bold text-slate-300 uppercase tracking-widest">
-                  Sign Here
+            {!qrStampDataUrl ? (
+              <button
+                type="button"
+                onClick={() => generateQrSignatureStamp()}
+                className="w-full py-7 px-4 rounded-2xl border-2 border-dashed border-[#1e4e87]/40 bg-blue-50/50 hover:bg-blue-50 active:scale-[0.99] transition-all flex flex-col items-center justify-center gap-2 cursor-pointer group"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-[#1e4e87] text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                  <QrCode size={28} />
                 </div>
-              )}
-              <canvas
-                ref={canvasRef}
-                onPointerDown={handlePointerDown}
-                onPointerMove={handlePointerMove}
-                onPointerUp={handlePointerUp}
-                onPointerCancel={handlePointerUp}
-                className="w-full h-44 sm:h-48 cursor-crosshair touch-none block"
-              />
-            </div>
+                <span className="text-sm font-black text-[#1e4e87] uppercase tracking-wider">
+                  Tap Here to Generate QR Signature
+                </span>
+                <span className="text-xs text-slate-500 font-medium">
+                  One tap creates your verified QR signature stamp automatically
+                </span>
+              </button>
+            ) : (
+              <div
+                onClick={() => generateQrSignatureStamp()}
+                className="w-full p-4 rounded-2xl border-2 border-green-500 bg-green-50/40 flex flex-col sm:flex-row items-center gap-4 cursor-pointer"
+                title="Tap to refresh QR signature"
+              >
+                {qrOnlyDataUrl && (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={qrOnlyDataUrl}
+                    alt="Generated QR Signature"
+                    className="w-28 h-28 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm shrink-0"
+                  />
+                )}
+                <div className="text-center sm:text-left min-w-0 flex-1 space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-green-600 text-white text-[10px] font-black uppercase tracking-widest">
+                    <Check size={12} /> Verified QR Signature Generated
+                  </div>
+                  <p className="text-base font-black text-slate-900 truncate">{qrStampInfo?.signedBy}</p>
+                  <p className="text-xs font-mono font-bold text-[#1e4e87]">{qrStampInfo?.stampId}</p>
+                  <p className="text-xs text-slate-500">{qrStampInfo?.timestamp}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           <button

@@ -431,35 +431,36 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
   }
   doc.line(rightX + 22, nameY + 0.5, rightEdge, nameY + 0.5)
 
-  // Row 2: Signature
-  const sigY = nameY + 11
-  doc.text(isInstall ? 'Signature / date:' : 'Signature:', leftX, sigY)
+  // Row 2: Signature (QR Stamp)
+  const sigY = nameY + 14
+  doc.text(isInstall ? 'Signature / QR:' : 'Signature / QR:', leftX, sigY)
   if (note.batteriqSignature && note.batteriqSignature.startsWith('data:image/')) {
     try {
-      doc.addImage(note.batteriqSignature, 'PNG', leftX + 26, sigY - 8, 36, 9)
+      doc.addImage(note.batteriqSignature, 'PNG', leftX + 26, sigY - 10, 42, 13)
     } catch { /* ignore */ }
   } else if (note.batteriqSignature) {
     doc.setFont('helvetica', 'italic')
     doc.text(note.batteriqSignature, leftX + 26, sigY - 1)
     doc.setFont('helvetica', 'normal')
   }
-  doc.line(leftX + 25, sigY + 0.5, leftX + 82, sigY + 0.5)
+  doc.line(leftX + 25, sigY + 3.5, leftX + 82, sigY + 3.5)
 
-  doc.text(isInstall ? 'Signature / date:' : 'Signature:', rightX, sigY)
+  doc.text(isInstall ? 'Signature / QR:' : 'Signature / QR:', rightX, sigY)
   if (note.receiverSignature && note.receiverSignature.startsWith('data:image/')) {
     try {
-      doc.addImage(note.receiverSignature, 'PNG', rightX + 26, sigY - 8.5, 42, 9.5)
+      // 48mm x 15mm matches the 480x150 (3.2:1) QR stamp canvas so the QR code stays 100% square
+      doc.addImage(note.receiverSignature, 'PNG', rightX + 25, sigY - 11, 48, 15)
     } catch { /* ignore */ }
   } else if (note.receiverSignature) {
     doc.setFont('helvetica', 'italic')
     doc.text(note.receiverSignature, rightX + 26, sigY - 1)
     doc.setFont('helvetica', 'normal')
   }
-  doc.line(rightX + 25, sigY + 0.5, rightEdge, sigY + 0.5)
+  doc.line(rightX + 25, sigY + 4.5, rightEdge, sigY + 4.5)
 
   // Row 3: Date / time
   if (!isInstall) {
-    const dtY = sigY + 10
+    const dtY = sigY + 12
     doc.text('Date / time:', leftX, dtY)
     if (note.batteriqDateTime) doc.text(note.batteriqDateTime, leftX + 24, dtY - 0.5)
     doc.line(leftX + 22, dtY + 0.5, leftX + 82, dtY + 0.5)
@@ -470,7 +471,7 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
   } else if (note.receiverDateTime) {
     doc.setFontSize(7.5)
     doc.setTextColor(...MUTED)
-    doc.text(`Signed: ${note.receiverDateTime}`, rightX + 26, sigY + 4.5)
+    doc.text(`Signed: ${note.receiverDateTime}`, rightX + 25, sigY + 8.5)
   }
 
   // ─── FOOTER ──────────────────────────────────────────────────────
