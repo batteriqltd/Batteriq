@@ -98,11 +98,11 @@ export function Header() {
                       {[
                         { name: 'DELTA Pro 3', sub: '4096Wh · 4000W', href: '/ecoflow/delta-pro-3' },
                         { name: 'DELTA Pro', sub: '3600Wh · 3600W', href: '/ecoflow/delta-pro' },
+                        { name: 'DELTA 3 Ultra', sub: '3072Wh · 3600W', href: '/ecoflow/delta-3-ultra' },
                         { name: 'DELTA 3 Max', sub: '2048Wh · 2400W', href: '/ecoflow/delta-3-max' },
-                        { name: 'DELTA 2 Max', sub: '2048Wh · 2400W', href: '/ecoflow/delta-2-max' },
-                        { name: 'DELTA 2', sub: '1024Wh · 1800W', href: '/ecoflow/delta-2' },
-                        { name: 'DELTA 3 Plus', sub: '1024Wh · 1800W', href: '/ecoflow/delta-3-plus' },
-                        { name: 'DELTA 3', sub: '1024Wh · 1800W', href: '/ecoflow/delta-3' },
+                        { name: 'DELTA 3 2000 Air', sub: '1920Wh · 1000W', href: '/ecoflow/delta-3-2000-air' },
+                        { name: 'DELTA 3 Classic', sub: '1024Wh · 1800W', href: '/ecoflow/delta-3-classic' },
+                        { name: 'DELTA 3 1000 Air', sub: '960Wh · 500W (1000W X-Boost)', href: '/ecoflow/delta-3-1000-air' },
                       ].map((item) => (
                         <Link key={item.href} href={item.href} onClick={() => setOpenMenu(null)}
                           className="flex flex-col py-2.5 px-3 -mx-3 rounded-xl hover:bg-slate-50 transition-all duration-200 group"

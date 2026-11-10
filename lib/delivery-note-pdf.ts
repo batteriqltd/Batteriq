@@ -118,6 +118,20 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
   const metaLabelX = margin
   const metaValX = margin + 36
 
+  const todayStr = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+  const effectiveDate = (note.date && note.date.trim()) || todayStr
+  const effectiveCustomer = (note.customerName || note.receiverName || 'Valued Client').trim()
+  const effectiveReceiver = (note.receiverName || note.contactPerson || note.customerName || '').trim()
+  const effectiveContact = (note.contactPerson || note.receiverName || note.customerName || '').trim()
+  const effectiveSite = (note.deliverySite || 'Nairobi, Kenya').trim()
+  const effectiveRef = (note.lpoReference || note.docNumber || genDocNumber(note.docType)).trim()
+  const effectiveStaff = (note.batteriqPersonName || 'Batteriq Delivery Team').trim()
+  const effectiveDateTime = (note.receiverDateTime || note.batteriqDateTime || effectiveDate).trim()
+
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(7.8)
   doc.setTextColor(...MUTED)
@@ -135,7 +149,7 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9.5)
   doc.setTextColor(...DARK)
-  doc.text(note.lpoReference || '—', metaValX, y)
+  doc.text(effectiveRef, metaValX, y)
 
   y += 6.5
   doc.setFont('helvetica', 'bold')
@@ -145,9 +159,7 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(9.5)
   doc.setTextColor(...DARK)
-  if (note.date) {
-    doc.text(note.date, metaValX, y)
-  }
+  doc.text(effectiveDate, metaValX, y)
   doc.setDrawColor(...DARK)
   doc.setLineWidth(0.25)
   doc.line(metaValX, y + 1, metaValX + 46, y + 1)
@@ -172,18 +184,18 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
   doc.setFontSize(10.5)
   doc.setTextColor(...DARK)
   doc.text('BATTERIQ SOLUTIONS LTD', margin, y)
-  doc.text(note.customerName || 'Customer', colRightX, y)
+  doc.text(effectiveCustomer, colRightX, y)
 
   y += 5.5
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(8.8)
   doc.setTextColor(...DARK)
   doc.text('P.O. Box 430-00600, Nairobi, Kenya', margin, y)
-  doc.text(`Delivery / work site: ${note.deliverySite || '_______________________'}`, colRightX, y)
+  doc.text(`Delivery / work site: ${effectiveSite}`, colRightX, y)
 
   y += 5.2
   doc.text('Tel: +254 716 822014', margin, y)
-  doc.text(`Contact person: ${note.contactPerson || '___________________________'}`, colRightX, y)
+  doc.text(`Contact person: ${effectiveContact}`, colRightX, y)
 
   y += 5.2
   doc.text('info@batteriq.com | batteriq.com', margin, y)
@@ -241,10 +253,8 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
         }
         doc.setFontSize(9)
         doc.setTextColor(...DARK)
-        doc.text(String(row.qtySent || ''), margin + 128, textY)
-        if (row.qtyReceived) {
-          doc.text(String(row.qtyReceived), margin + 156, textY)
-        }
+        doc.text(String(row.qtySent || row.qtyReceived || '1'), margin + 128, textY)
+        doc.text(String(row.qtyReceived || row.qtySent || '1'), margin + 156, textY)
       } else {
         // Blank lined row matching template
         doc.setDrawColor(...MUTED)
@@ -272,14 +282,13 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
     doc.text('CONDITION / SHORTAGES / REMARKS', margin, y)
 
     y += 8
-    if (note.remarks && note.remarks.trim()) {
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.setTextColor(...DARK)
-      const remLines = doc.splitTextToSize(note.remarks.trim(), contentW - 4)
-      if (remLines[0]) doc.text(remLines[0], margin + 1, y - 1.5)
-      if (remLines[1]) doc.text(remLines[1], margin + 1, y + 7.5)
-    }
+    const defaultRemarks = (note.remarks && note.remarks.trim()) || 'Received in good order and condition.'
+    doc.setFont('helvetica', 'normal')
+    doc.setFontSize(9)
+    doc.setTextColor(...DARK)
+    const remLines = doc.splitTextToSize(defaultRemarks, contentW - 4)
+    if (remLines[0]) doc.text(remLines[0], margin + 1, y - 1.5)
+    if (remLines[1]) doc.text(remLines[1], margin + 1, y + 7.5)
     doc.setDrawColor(...MUTED)
     doc.setLineWidth(0.25)
     doc.line(margin, y, rightEdge, y)
@@ -416,17 +425,15 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
   doc.setFontSize(8.5)
   doc.setTextColor(...DARK)
   doc.text('Name:', leftX, nameY)
-  if (note.batteriqPersonName) {
-    doc.text(note.batteriqPersonName, leftX + 24, nameY - 0.5)
-  }
+  doc.text(effectiveStaff, leftX + 24, nameY - 0.5)
   doc.setDrawColor(...MUTED)
   doc.setLineWidth(0.25)
   doc.line(leftX + 22, nameY + 0.5, leftX + 82, nameY + 0.5)
 
   doc.text('Name:', rightX, nameY)
-  if (note.receiverName) {
+  if (effectiveReceiver) {
     doc.setFont('helvetica', 'bold')
-    doc.text(note.receiverName, rightX + 24, nameY - 0.5)
+    doc.text(effectiveReceiver, rightX + 24, nameY - 0.5)
     doc.setFont('helvetica', 'normal')
   }
   doc.line(rightX + 22, nameY + 0.5, rightEdge, nameY + 0.5)
@@ -438,9 +445,9 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
     try {
       doc.addImage(note.batteriqSignature, 'PNG', leftX + 26, sigY - 10, 42, 13)
     } catch { /* ignore */ }
-  } else if (note.batteriqSignature) {
+  } else {
     doc.setFont('helvetica', 'italic')
-    doc.text(note.batteriqSignature, leftX + 26, sigY - 1)
+    doc.text(note.batteriqSignature || 'Batteriq Verified', leftX + 26, sigY - 1)
     doc.setFont('helvetica', 'normal')
   }
   doc.line(leftX + 25, sigY + 3.5, leftX + 82, sigY + 3.5)
@@ -462,16 +469,16 @@ export async function generateDeliveryNotePDF(note: DeliveryNoteRecord): Promise
   if (!isInstall) {
     const dtY = sigY + 12
     doc.text('Date / time:', leftX, dtY)
-    if (note.batteriqDateTime) doc.text(note.batteriqDateTime, leftX + 24, dtY - 0.5)
+    doc.text(note.batteriqDateTime || effectiveDateTime, leftX + 24, dtY - 0.5)
     doc.line(leftX + 22, dtY + 0.5, leftX + 82, dtY + 0.5)
 
     doc.text('Date / time:', rightX, dtY)
-    if (note.receiverDateTime) doc.text(note.receiverDateTime, rightX + 24, dtY - 0.5)
+    doc.text(effectiveDateTime, rightX + 24, dtY - 0.5)
     doc.line(rightX + 22, dtY + 0.5, rightEdge, dtY + 0.5)
-  } else if (note.receiverDateTime) {
+  } else {
     doc.setFontSize(7.5)
     doc.setTextColor(...MUTED)
-    doc.text(`Signed: ${note.receiverDateTime}`, rightX + 25, sigY + 8.5)
+    doc.text(`Signed: ${effectiveDateTime}`, rightX + 25, sigY + 8.5)
   }
 
   // ─── FOOTER ──────────────────────────────────────────────────────

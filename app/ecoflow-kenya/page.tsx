@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { withCanonical } from '@/lib/seo'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { withoutDeprecatedDelta } from '@/lib/delta-series'
+import { CATALOG_DELTA_SLUGS, withDeltaFallback, withoutDeprecatedDelta } from '@/lib/delta-series'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
@@ -98,7 +98,10 @@ async function getEcoFlowProducts() {
 }
 
 export default async function EcoFlowKenyaPage() {
-  const allEcoFlow = withoutDeprecatedDelta(await getEcoFlowProducts())
+  const rawEcoFlow = withoutDeprecatedDelta(await getEcoFlowProducts())
+  const deltaMerged = withDeltaFallback(rawEcoFlow, CATALOG_DELTA_SLUGS)
+  const restEcoFlow = rawEcoFlow.filter((p) => !(CATALOG_DELTA_SLUGS as readonly string[]).includes(p.slug))
+  const allEcoFlow = [...deltaMerged, ...restEcoFlow].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 
   const powerStations = allEcoFlow.filter((p) => p.category === 'Power Stations')
   const solarPanels = allEcoFlow.filter((p) => p.category === 'Solar Panels')

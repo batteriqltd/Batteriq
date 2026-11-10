@@ -11,18 +11,93 @@ import { applyBlackNovemberOverride, BLUETTI_SYSTEM_SLUGS, getBluettiHomeSystems
  */
 
 export const APPROVED_DELTA_SLUGS = [
+  'delta-3-1000-air',
   'delta-3-classic',
+  'delta-3-2000-air',
+  'delta-3-max',
   'delta-3-ultra',
   'delta-pro',
   'delta-pro-3',
 ] as const
 
-/** Full DELTA catalogue incl. DELTA 3 Max (homepage heroes stay the 4 above). */
-export const CATALOG_DELTA_SLUGS = [...APPROVED_DELTA_SLUGS, 'delta-3-max'] as const
+/** Full DELTA catalogue incl. DELTA 3 1000 Air, DELTA 3 2000 Air, and DELTA 3 Max. */
+export const CATALOG_DELTA_SLUGS = [...APPROVED_DELTA_SLUGS] as const
 
 const STAMP = '2026-10-02T00:00:00.000Z'
 
 export const FALLBACK_DELTA_PRODUCTS: Record<string, Product> = {
+  'delta-3-1000-air': {
+    id: 'fallback-delta-3-1000-air',
+    sku: 'EFD3A1000-UK',
+    brand: 'EcoFlow',
+    category: 'Power Stations',
+    subcategory: 'DELTA Series',
+    name: 'EcoFlow DELTA 3 1000 Air',
+    slug: 'delta-3-1000-air',
+    description:
+      'The EcoFlow DELTA 3 1000 Air is a compact, lightweight 960Wh LiFePO4 portable power station built for Kenyan homes, apartments, remote work and everyday outage backup. Delivering 500W pure sine wave AC output (expandable to 1000W with X-Boost), it keeps Wi‑Fi routers, laptops, TVs, lighting and small appliances running reliably during blackouts.',
+    specs: {
+      capacity: '960Wh',
+      ac_output: '500W (Expandable to 1000W with X-Boost)',
+      x_boost: '1000W',
+      chemistry: 'LFP (LiFePO4)',
+      battery_life: '3000+ cycles to 80%',
+      ups_mode: 'Yes',
+      warranty: '24 months',
+    },
+    images: ['/products/ecoflow/delta-3-100-air.png'],
+    price_kes: 54065,
+    compare_price_kes: null,
+    discount_percent: null,
+    discount_badge: null,
+    in_stock: true,
+    stock_qty: 10,
+    featured: false,
+    sort_order: 9,
+    meta_title: 'EcoFlow DELTA 3 1000 Air Kenya — 960Wh | 500W (1000W X-Boost) KES 54,065 | Batteriq',
+    meta_description:
+      'Buy the EcoFlow DELTA 3 1000 Air in Kenya for KES 54,065. 960Wh LFP capacity, 500W AC output expandable to 1000W with X-Boost. Authorised EcoFlow dealer. M-Pesa checkout.',
+    schema_rating: 0,
+    schema_review_count: 0,
+    created_at: STAMP,
+    updated_at: STAMP,
+  },
+  'delta-3-2000-air': {
+    id: 'fallback-delta-3-2000-air',
+    sku: 'EFD3A2000-UK',
+    brand: 'EcoFlow',
+    category: 'Power Stations',
+    subcategory: 'DELTA Series',
+    name: 'EcoFlow DELTA 3 2000 Air (EFD3A2000-UK)',
+    slug: 'delta-3-2000-air',
+    description:
+      'The EcoFlow DELTA 3 2000 Air (EFD3A2000-UK) packs a massive 1920Wh LiFePO4 battery with a 1000W pure sine wave AC inverter for long-runtime backup in Kenyan homes and offices. Ideal for powering fridges, TVs, workstations, lighting and internet routers through extended grid outages.',
+    specs: {
+      capacity: '1920Wh',
+      ac_output: '1000W',
+      model_number: 'EFD3A2000-UK',
+      chemistry: 'LFP (LiFePO4)',
+      battery_life: '3000+ cycles to 80%',
+      ups_mode: 'Yes',
+      warranty: '24 months',
+    },
+    images: ['/products/ecoflow/delta-3-2000-air.jpg'],
+    price_kes: 106725,
+    compare_price_kes: null,
+    discount_percent: null,
+    discount_badge: null,
+    in_stock: true,
+    stock_qty: 10,
+    featured: false,
+    sort_order: 10,
+    meta_title: 'EcoFlow DELTA 3 2000 Air (EFD3A2000-UK) Kenya — 1920Wh 1000W KES 106,725 | Batteriq',
+    meta_description:
+      'Buy the EcoFlow DELTA 3 2000 Air (EFD3A2000-UK) in Kenya for KES 106,725. 1920Wh LFP capacity, 1000W AC output. Authorised EcoFlow dealer. M-Pesa checkout.',
+    schema_rating: 0,
+    schema_review_count: 0,
+    created_at: STAMP,
+    updated_at: STAMP,
+  },
   'delta-3-classic': {
     id: 'fallback-delta-3-classic',
     sku: '5025901009',
@@ -231,6 +306,7 @@ export function withDeltaFallback(
   slugs: readonly string[] = APPROVED_DELTA_SLUGS
 ): Product[] {
   const bySlug = new Map((dbProducts ?? []).map((p) => [p.slug, p]))
+  const FIXED_PRICE_SLUGS = new Set(['delta-3-1000-air', 'delta-3-2000-air'])
   return slugs.map((slug) => {
     const fallback = FALLBACK_DELTA_PRODUCTS[slug]
     const live = bySlug.get(slug)
@@ -238,7 +314,7 @@ export function withDeltaFallback(
     return {
       ...fallback,
       id: live.id,
-      price_kes: live.price_kes ?? fallback.price_kes,
+      price_kes: FIXED_PRICE_SLUGS.has(slug) ? fallback.price_kes : (live.price_kes ?? fallback.price_kes),
       compare_price_kes: live.compare_price_kes ?? null,
       discount_percent: live.discount_percent ?? null,
       discount_badge: live.discount_badge ?? null,

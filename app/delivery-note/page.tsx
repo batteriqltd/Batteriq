@@ -316,8 +316,17 @@ export default function PublicDeliveryNotePage() {
               className="w-full py-3.5 px-5 rounded-2xl bg-[#1e4e87] hover:bg-[#163b68] text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
             >
               <Download size={16} />
-              Download Signed Copy Again (PDF)
+              Download Signed {docType === 'installation' ? 'Installation Note' : 'Delivery Note'} (PDF)
             </button>
+            {submitted.companionPdf && submitted.companionFilename && (
+              <button
+                onClick={() => downloadBase64Pdf(submitted.companionPdf!, submitted.companionFilename!)}
+                className="w-full py-3.5 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+              >
+                <Download size={16} />
+                Download Signed {docType === 'installation' ? 'Delivery Note' : 'Installation Completion Note'} (PDF)
+              </button>
+            )}
           </div>
         </div>
       </div>
