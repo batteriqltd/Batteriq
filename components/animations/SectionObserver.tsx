@@ -5,7 +5,6 @@ const SECTION_IDS = [
   'power-stations',
   'solar-panels',
   'batteries',
-  'powerkits',
   'appliances',
   'bluetti',
 ]

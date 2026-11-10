@@ -226,12 +226,10 @@ export function ecoflowContent(products: Product[]): CategoryContent | null {
   const river = series(products, (p) => /\briver\b/i.test(p.name) && p.category === 'Power Stations')
   const deltaPro = series(products, (p) => /\bdelta pro\b/i.test(p.name) && p.category === 'Power Stations')
   const delta = series(products, (p) => /\bdelta\b/i.test(p.name) && !/\bdelta pro\b/i.test(p.name) && p.category === 'Power Stations')
-  const powerkit = series(products, (p) => /powerkit/i.test(p.name))
   const groups: { name: string; items: Product[]; blurb: string }[] = [
     { name: 'RIVER', items: river, blurb: 'compact and light, for Wi-Fi, laptops, lights and travel' },
     { name: 'DELTA', items: delta, blurb: 'home backup for a TV, fridge, Wi-Fi and lights' },
     { name: 'DELTA Pro', items: deltaPro, blurb: 'high-capacity, expandable whole-home backup' },
-    { name: 'PowerKit', items: powerkit, blurb: 'installed solar home systems' },
   ].filter((g) => g.items.length)
   if (groups.length < 2) return null
 

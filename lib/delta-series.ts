@@ -1,4 +1,5 @@
 import type { Product } from '@/lib/supabase/types'
+import { applyBlackNovemberOverride } from '@/lib/bluetti-residential'
 
 /**
  * Single source of truth for the approved EcoFlow DELTA range.
@@ -253,7 +254,7 @@ export function withDeltaFallback(
  * missing DELTA rows filled from fallback — ordered by sort_order.
  */
 export function withCatalogFallback(dbProducts: Product[]): Product[] {
-  const list = withoutDeprecatedDelta(dbProducts ?? [])
+  const list = withoutDeprecatedDelta(dbProducts ?? []).map(applyBlackNovemberOverride)
   const merged = withDeltaFallback(list, CATALOG_DELTA_SLUGS)
   const rest = list.filter(
     (p) => !(CATALOG_DELTA_SLUGS as readonly string[]).includes(p.slug)
@@ -261,7 +262,7 @@ export function withCatalogFallback(dbProducts: Product[]): Product[] {
   return [...merged, ...rest].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 }
 
-/** Deprecated DELTA variants hidden from the storefront in code (DB untouched). */
+/** Deprecated DELTA variants and discontinued PowerKit items hidden from the storefront in code (DB untouched). */
 export function isDeprecatedDelta(product: Pick<Product, 'slug' | 'name' | 'brand'>): boolean {
   if (product.brand !== 'EcoFlow') return false
   if ((CATALOG_DELTA_SLUGS as readonly string[]).includes(product.slug)) return false
@@ -272,7 +273,10 @@ export function isDeprecatedDelta(product: Pick<Product, 'slug' | 'name' | 'bran
     hay.includes('max-plus') ||
     hay.includes('max plus') ||
     hay.includes('ultra-plus') ||
-    hay.includes('ultra plus')
+    hay.includes('ultra plus') ||
+    hay.includes('powerkit') ||
+    hay.includes('power kit') ||
+    hay.includes('power-kit')
   )
 }
 

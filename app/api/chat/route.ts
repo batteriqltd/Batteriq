@@ -15,8 +15,8 @@ const PRODUCTS = [
   { id: 'bluetti-ac500', brand: 'Bluetti', name: 'AC500', category: 'Power Station', price: 84499, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac500', inStock: true },
   { id: 'bluetti-ac300', brand: 'Bluetti', name: 'AC300', category: 'Power Station', price: 68499, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac300', inStock: true },
   { id: 'bluetti-eb3a', brand: 'Bluetti', name: 'EB3A', category: 'Power Station', price: 24999, specs: { capacity: 'Compact', output: 'AC Output' }, slug: 'bluetti/eb3a', inStock: true },
-  { id: 'bluetti-ac70p', brand: 'Bluetti', name: 'AC70P', category: 'Power Station', price: 60000, specs: { capacity: 'Mid range', output: 'AC Output' }, slug: 'bluetti/ac70p', inStock: true },
-  { id: 'bluetti-ac180p', brand: 'Bluetti', name: 'AC180P', category: 'Power Station', price: 76000, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/ac180p', inStock: true },
+  { id: 'bluetti-ac70p', brand: 'Bluetti', name: 'AC70P', category: 'Power Station', price: 55000, specs: { capacity: 'Mid range', output: 'AC Output' }, slug: 'bluetti/bluetti-ac70p', inStock: true },
+  { id: 'bluetti-ac180p', brand: 'Bluetti', name: 'AC180P', category: 'Power Station', price: 72150, specs: { capacity: 'High capacity', output: 'AC Output' }, slug: 'bluetti/bluetti-ac180p', inStock: true },
 ]
 
 // ============================================================
@@ -121,7 +121,7 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
       }
     }
     return {
-      message: `Sawa! Bei zinaanza KES 7,599 (solar panel ndogo) hadi KES 1,399,999 (PowerKit ya nyumba nzima).\n\nUnataka bei ya bidhaa gani hasa?`,
+      message: `Sawa! Bei zinaanza KES 7,599 (solar panel ndogo) hadi KES 461,799 (DELTA Pro 3).\n\nUnataka bei ya bidhaa gani hasa?`,
       type: 'text',
       quickReplies: ['Bei ya DELTA Pro', 'Bei ya DELTA 3 Classic', 'Bei ya solar panels'],
     }
@@ -372,9 +372,9 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
   }
 
   // SOLAR HOME SYSTEMS
-  if (/powerkit|power kit|solar home|whole.?home|solar system|full system|off.?grid/.test(msg)) {
+  if (/homestar|ep2000|solar home|whole.?home|solar system|full system|off.?grid/.test(msg)) {
     return {
-      message: `🏠 **Solar Home Systems** — Whole-Home Solar Energy\n\nFor complete home energy independence:\n\n• **5kWh Solar Home System** — KES 759,999\n• **10kWh Solar Home System** — KES 1,049,999\n• **15kWh Solar Home System** — KES 1,399,999\n\nThese require a site assessment. Please contact our team for a consultation — we'll design the right system for your home.`,
+      message: `🏠 **Bluetti Residential Home Systems**\n\nFor installed home and small-business backup:\n\n• **Bluetti Homestar 3** (2kW · 3kWh) — KES 111,500\n• **Bluetti Homestar 5** (3.68kW · 5kWh) — Price on request\n• **Bluetti EP2000 10kW** (14.6kWh) — Price on request\n• **Bluetti EP2000 15kW** (21.9kWh) — Price on request\n• **Bluetti EP2000 20kW** (29–51kWh) — Price on request\n\nSend us your load list on WhatsApp (0716 822 014) for a tailored quote!`,
       type: 'text',
       quickReplies: ['Contact for a Solar Home System quote', 'Tell me about DELTA Pro', 'Back to portable stations'],
     }

@@ -113,7 +113,6 @@ export default async function HomePage() {
     deltaSeries,
     ecoflowPowerStationsRaw,
     ecoflowSolar,
-    ecoflowSolarHomeSystems,
     ecoflowAppliances,
     bluettiDb,
     powerBanks,
@@ -123,7 +122,6 @@ export default async function HomePage() {
     getDeltaSeries(),
     getProductsByCategory('EcoFlow', 'Power Stations', 8),
     getProductsByCategory('EcoFlow', 'Solar Panels', 8),
-    getProductsByCategory('EcoFlow', 'Solar Home Systems', 3),
     getProductsByCategory('EcoFlow', 'Appliances', 2),
     // Bluetti rail shows the full Bluetti range with code fallbacks merged in,
     // so the latest Residential Backup systems lead even before any DB sync.
@@ -304,69 +302,6 @@ export default async function HomePage() {
       <ReviewsSection />
 
       <div className="max-w-8xl mx-auto px-4 lg:px-8">
-
-        {/* ── Solar Home Systems ── */}
-        {ecoflowSolarHomeSystems.length > 0 && (
-          <>
-            {DIVIDER}
-            <SectionTransition id="powerkits" className="py-10 sm:py-14 lg:py-20">
-              <div
-                className="relative w-full rounded-3xl overflow-hidden mb-8 group"
-                style={{ height: '280px', background: 'linear-gradient(135deg, #00001a 0%, #000d33 100%)' }}
-              >
-                {ecoflowSolarHomeSystems[0]?.images?.[0] && (
-                  <div style={{ position: 'absolute', top: 0, right: 0, width: '55%', height: '100%', overflow: 'hidden' }}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={ecoflowSolarHomeSystems[0].images[0]}
-                      alt="EcoFlow Solar Home System"
-                      className="absolute right-0 top-0 w-full h-full transition-transform duration-700 group-hover:scale-105"
-                      style={{ objectFit: 'cover', objectPosition: 'center center', width: '100%', height: '100%', position: 'absolute', top: 0, right: 0 }}
-                    />
-                  </div>
-                )}
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(90deg, rgba(0,0,26,1) 0%, rgba(0,0,26,0.98) 30%, rgba(0,0,26,0.85) 45%, rgba(0,0,26,0.4) 60%, rgba(0,0,26,0) 75%)' }} />
-                <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,13,51,0.6) 0%, transparent 50%)' }} />
-                <div className="absolute top-0 left-0 w-64 h-full opacity-20 pointer-events-none" style={{ background: 'radial-gradient(ellipse at left center, #0066ff, transparent)' }} />
-                <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12 lg:px-14" style={{ maxWidth: '480px' }}>
-                  <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#6699ff' }}>EcoFlow Solar Home Systems &middot; Whole-Home</p>
-                  <h3 className="font-black text-white mb-3 leading-tight" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.03em' }}>Solar Home Systems</h3>
-                  <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
-                    Modular home energy from 5kWh to 15kWh. Solar-ready. 24/7 monitoring.
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <a
-                      href="/power-stations"
-                      className="inline-flex items-center px-6 py-3 rounded-xl font-black text-sm text-white transition-all duration-200 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(0,102,255,0.55)]"
-                      style={{ background: 'linear-gradient(135deg, #0066ff, #000d33)', boxShadow: '0 4px 20px rgba(0,102,255,0.35)' }}
-                    >
-                      Shop Solar Home Systems
-                    </a>
-                    <span className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.4)' }}>{ecoflowSolarHomeSystems.length} products</span>
-                  </div>
-                </div>
-                {ecoflowSolarHomeSystems.length > 0 && (
-                  <div className="absolute bottom-5 right-6 text-right">
-                    <p className="text-xs font-bold" style={{ color: 'rgba(255,255,255,0.4)' }}>Starting from</p>
-                    <p className="text-xl font-black font-mono text-white">KES {Math.min(...ecoflowSolarHomeSystems.map(p => p.price_kes)).toLocaleString('en-KE')}</p>
-                  </div>
-                )}
-              </div>
-              <BrandAnchor
-                brand="EcoFlow"
-                category="Solar Home Systems"
-                h2="EcoFlow Solar Home Systems — Whole-Home Energy Systems"
-                seeAllHref="/ecoflow-kenya#solar-home-systems"
-                subtitle="Modular home energy systems from 5kWh to 15kWh. Solar-ready."
-              />
-              <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
-                {ecoflowSolarHomeSystems.map((product) => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </CardReveal>
-            </SectionTransition>
-          </>
-        )}
 
         {/* ── EcoFlow Appliances ── */}
         {ecoflowAppliances.length > 0 && (

@@ -383,6 +383,34 @@ function quoteSystems(): Record<string, Product> {
   }
 }
 
+/** Black November 2026 Bluetti sale prices (KES). */
+export const BLACK_NOVEMBER_OVERRIDES: Record<string, number> = {
+  'bluetti-ac70p': 55000,
+  'bluetti-ac180p': 72150,
+  'bluetti-premium-30-v2': 29900,
+  'bluetti-premium-100-v2': 63750,
+  'bluetti-premium-200-v2': 114400,
+  'bluetti-pv100': 15600,
+  'bluetti-ac50p': 33750,
+}
+
+export function applyBlackNovemberOverride(p: Product): Product {
+  const salePrice = BLACK_NOVEMBER_OVERRIDES[p.slug]
+  if (salePrice == null) return p
+  const original = Math.max(p.compare_price_kes ?? 0, p.price_kes ?? 0)
+  const isCut = original > salePrice
+  const kesStr = `KES ${salePrice.toLocaleString('en-KE')}`
+  return {
+    ...p,
+    price_kes: salePrice,
+    compare_price_kes: isCut ? original : p.compare_price_kes,
+    discount_percent: isCut ? Math.round(((original - salePrice) / original) * 100) : p.discount_percent,
+    discount_badge: 'BLACK NOVEMBER',
+    meta_title: p.meta_title ? p.meta_title.replace(/KES [0-9,]+/g, kesStr) : p.meta_title,
+    meta_description: p.meta_description ? p.meta_description.replace(/KES [0-9,]+/g, kesStr) : p.meta_description,
+  }
+}
+
 /**
  * Merge DB rows with the code fallbacks. Fallback specs/descriptions/images
  * always win (they are the corrected data); live DB price/stock win when the
@@ -394,20 +422,20 @@ export function withBluettiFallbacks(dbProducts: Product[]): Product[] {
   const bySlug = new Map(list.map((p) => [p.slug, p]))
   const merged: Product[] = list.map((p) => {
     const fallback = FALLBACK_BLUETTI_PRODUCTS[p.slug]
-    if (!fallback) return p
-    return {
+    if (!fallback) return applyBlackNovemberOverride(p)
+    return applyBlackNovemberOverride({
       ...fallback,
       id: p.id,
       price_kes: p.price_kes ?? fallback.price_kes,
-      compare_price_kes: p.compare_price_kes ?? null,
-      discount_percent: p.discount_percent ?? null,
+      compare_price_kes: p.compare_price_kes ?? fallback.compare_price_kes ?? null,
+      discount_percent: p.discount_percent ?? fallback.discount_percent ?? null,
       discount_badge: p.discount_badge ?? fallback.discount_badge,
       in_stock: p.in_stock ?? true,
       stock_qty: p.stock_qty ?? fallback.stock_qty,
-    }
+    })
   })
   for (const slug of BLUETTI_NEW_SLUGS) {
-    if (!bySlug.has(slug)) merged.push(FALLBACK_BLUETTI_PRODUCTS[slug])
+    if (!bySlug.has(slug)) merged.push(applyBlackNovemberOverride(FALLBACK_BLUETTI_PRODUCTS[slug]))
   }
   const lead = new Map(BLUETTI_NEW_SLUGS.map((s, i) => [s as string, i]))
   return merged.sort((a, b) => {

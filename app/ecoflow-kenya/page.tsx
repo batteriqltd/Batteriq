@@ -285,16 +285,11 @@ export default async function EcoFlowKenyaPage() {
                 <h3 className="text-xl font-black text-gray-900 tracking-tight mb-4">
                   EcoFlow Products Available in Kenya
                 </h3>
-                <p className="text-gray-600 leading-relaxed mb-4">
+                <p className="text-gray-600 leading-relaxed">
                   Batteriq stocks the full EcoFlow range in Kenya including the DELTA Pro, DELTA 2, DELTA 3, RIVER 2,
                   RIVER 3, PowerStream, and the complete EcoFlow solar panel range from 45W to 400W. We also stock
                   EcoFlow smart home appliances, portable air conditioners, extra battery packs, and all official
                   EcoFlow accessories.
-                </p>
-                <p className="text-gray-600 leading-relaxed">
-                  For businesses and homes looking for a complete energy independence solution, we offer the EcoFlow
-                  PowerKit — a modular whole-home energy system from 5kWh to 15kWh that combines solar panels,
-                  battery storage, and smart home integration into one seamless system.
                 </p>
               </div>
               <div>
@@ -305,7 +300,7 @@ export default async function EcoFlowKenyaPage() {
                   Batteriq makes buying EcoFlow in Kenya simple. Add your chosen EcoFlow product to cart, proceed to
                   checkout, and pay using M-Pesa STK Push — you receive a payment prompt directly on your phone and
                   confirm with your PIN. No bank transfers, no running to an ATM. M-Pesa checkout is available for
-                  all EcoFlow products from KES 7,599 to KES 1,049,999.
+                  all EcoFlow products from KES 7,599 to KES 461,799.
                 </p>
                 <p className="text-gray-600 leading-relaxed">
                   For large purchases, we also offer M-Pesa at doorstep delivery, proforma invoicing for corporate

@@ -100,8 +100,15 @@ export async function POST() {
       }
     }
 
+    // Also remove discontinued EcoFlow PowerKit rows from the database if present
+    await supabase
+      .from('products')
+      .delete()
+      .eq('brand', 'EcoFlow')
+      .in('slug', ['powerkit-5kwh', 'powerkit-10kwh', 'powerkit-15kwh'])
+
     revalidatePath('/', 'layout')
-    for (const p of ['/bluetti', '/power-stations', '/solar', '/compare']) revalidatePath(p)
+    for (const p of ['/bluetti', '/power-stations', '/solar', '/compare', '/ecoflow-kenya']) revalidatePath(p)
 
     return NextResponse.json({ success: true, results })
   } catch (err: unknown) {

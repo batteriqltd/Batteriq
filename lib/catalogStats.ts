@@ -2,6 +2,7 @@
 // would otherwise hard-code a price ("from KES 27,259", priceRange).
 
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isDeprecatedDelta } from '@/lib/delta-series'
 
 export type CatalogPriceStats = {
   /** Cheapest published product, KES. */
@@ -24,9 +25,10 @@ export const hasCapacity = (specs: unknown) =>
 
 export async function getCatalogPriceStats(): Promise<CatalogPriceStats> {
   try {
-    const { data, error } = await createAdminClient().from('products').select('price_kes, category, in_stock, specs')
+    const { data, error } = await createAdminClient().from('products').select('slug, name, brand, price_kes, category, in_stock, specs')
     if (error || !data) return { minKes: null, maxKes: null, powerStationMinKes: null }
-    const rows = data as { price_kes: number; category: string; in_stock: boolean; specs: Record<string, unknown> | null }[]
+    const rows = (data as { slug: string; name: string; brand: 'EcoFlow' | 'Bluetti'; price_kes: number; category: string; in_stock: boolean; specs: Record<string, unknown> | null }[])
+      .filter((r) => !isDeprecatedDelta({ slug: r.slug ?? '', name: r.name ?? '', brand: r.brand }))
     const prices = rows.filter((r) => isRealPrice(r.price_kes)).map((r) => Number(r.price_kes))
     const stations = rows
       .filter((r) => r.category === 'Power Stations' && r.in_stock && isRealPrice(r.price_kes) && hasCapacity(r.specs))
@@ -72,12 +74,12 @@ const watts = (v: unknown) => {
  */
 export async function getListingStats(opts: { categories: string[]; brand?: string; needsCapacity?: boolean }): Promise<ListingStats> {
   try {
-    let q = createAdminClient().from('products').select('price_kes, brand, in_stock, specs').in('category', opts.categories)
+    let q = createAdminClient().from('products').select('slug, name, brand, price_kes, in_stock, specs').in('category', opts.categories)
     if (opts.brand) q = q.eq('brand', opts.brand)
     const { data, error } = await q
     if (error || !data) return EMPTY_LISTING
-    const rows = (data as { price_kes: number; in_stock: boolean; specs: Record<string, unknown> | null }[])
-      .filter((r) => isRealPrice(r.price_kes) && (!opts.needsCapacity || hasCapacity(r.specs)))
+    const rows = (data as { slug: string; name: string; brand: 'EcoFlow' | 'Bluetti'; price_kes: number; in_stock: boolean; specs: Record<string, unknown> | null }[])
+      .filter((r) => !isDeprecatedDelta({ slug: r.slug ?? '', name: r.name ?? '', brand: r.brand }) && isRealPrice(r.price_kes) && (!opts.needsCapacity || hasCapacity(r.specs)))
     const live = rows.filter((r) => r.in_stock)
     const prices = live.map((r) => Number(r.price_kes))
     const w = live.map((r) => watts(r.specs?.power ?? r.specs?.wattage)).filter((n): n is number => n != null)

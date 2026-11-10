@@ -1,6 +1,8 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { formatKES, getProductImageUrl } from '@/lib/utils'
+import { applyBlackNovemberOverride, BLACK_NOVEMBER_OVERRIDES, FALLBACK_BLUETTI_PRODUCTS } from '@/lib/bluetti-residential'
+import { withoutDeprecatedDelta } from '@/lib/delta-series'
 import type { Product } from '@/lib/supabase/types'
 
 export async function OffersSection() {
@@ -8,14 +10,21 @@ export async function OffersSection() {
 
   let offerProducts: Product[] = []
   try {
+    const bnSlugs = Object.keys(BLACK_NOVEMBER_OVERRIDES)
     const { data } = await supabase
       .from('products')
       .select('*')
       .eq('in_stock', true)
-      .or('discount_badge.not.is.null,discount_percent.gt.0')
-      .order('discount_percent', { ascending: false })
-      .limit(8)
-    offerProducts = (data as Product[]) ?? []
+      .or(`discount_badge.not.is.null,discount_percent.gt.0,slug.in.(${bnSlugs.join(',')})`)
+      .limit(16)
+    const list = withoutDeprecatedDelta(((data as Product[]) ?? []).map(applyBlackNovemberOverride))
+    if (!list.some((p) => p.slug === 'bluetti-pv100') && FALLBACK_BLUETTI_PRODUCTS['bluetti-pv100']) {
+      list.push(applyBlackNovemberOverride(FALLBACK_BLUETTI_PRODUCTS['bluetti-pv100']))
+    }
+    offerProducts = list
+      .filter((p) => p.discount_badge != null || (p.discount_percent ?? 0) > 0)
+      .sort((a, b) => (b.discount_percent ?? 0) - (a.discount_percent ?? 0))
+      .slice(0, 8)
   } catch {
     return null
   }
