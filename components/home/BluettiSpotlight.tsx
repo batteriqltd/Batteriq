@@ -17,7 +17,7 @@ export function BluettiSpotlight({ products }: { products: Product[] }) {
           category="Power Stations"
           h2="Bluetti"
           seeAllHref="/bluetti"
-          subtitle="Homestar 3, HB500, AC50P and AC200PL — genuine Bluetti backup, pay with M-Pesa."
+          subtitle="Homestar 3, Homestar 5, AC50P and AC200PL — genuine Bluetti backup, pay with M-Pesa."
         />
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 lg:gap-6 items-stretch">

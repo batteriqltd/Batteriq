@@ -25,6 +25,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
   const imageUrl = getProductImageUrl(product)
   const specs = getPrimarySpecs(product.specs as Record<string, string>, 3)
   const discount = getDiscountPercent(product.price_kes, product.compare_price_kes)
+  const quoteOnly = !(Number(product.price_kes) > 0)
 
   const displayName = showKenyaContext ? `${product.name} — Kenya` : product.name
   const hasImage = !imgError && imageUrl !== '/placeholder-product.jpg'
@@ -157,7 +158,16 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
           )}
 
           <div className="mt-auto">
-            {discount > 0 && product.compare_price_kes ? (
+            {quoteOnly ? (
+              <div>
+                <span className="text-base sm:text-lg font-bold text-bq-blue tracking-tight">
+                  Price on Request
+                </span>
+                <p className="text-[10px] text-slate-500 font-semibold mt-0.5">
+                  Sized &amp; quoted for your site
+                </p>
+              </div>
+            ) : discount > 0 && product.compare_price_kes ? (
               <div>
                 <p className="text-[11px] sm:text-xs text-slate-500 font-semibold">
                   Was <span className="font-mono line-through decoration-red-600 decoration-2">{formatKES(product.compare_price_kes)}</span>
@@ -179,7 +189,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
             )}
 
             {/* M-Pesa installment hint for expensive products */}
-            {product.in_stock && (
+            {product.in_stock && !quoteOnly && (
               <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-1">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logos/mpesa.png" alt="" className="h-3.5 w-auto object-contain inline" /> Pay via M-Pesa · Instant STK Push
@@ -199,7 +209,14 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
 
       {/* CTA */}
       <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-        {product.in_stock ? (
+        {quoteOnly ? (
+          <Link
+            href={productHref}
+            className="w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest text-white bg-bq-blue hover:bg-blue-700 shadow-sm hover:shadow-blue-600/20 hover:-translate-y-0.5 transition-all flex items-center justify-center"
+          >
+            Request a Quote
+          </Link>
+        ) : product.in_stock ? (
           <button
             onClick={handleAddToCart}
             className={`w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all active:translate-y-0 active:scale-[0.98] ${

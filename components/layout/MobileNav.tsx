@@ -25,11 +25,11 @@ const POWER_ITEMS = {
     { name: 'RIVER 3', sub: '245Wh · 300W', href: '/ecoflow/river-3' },
   ],
   systems: [
-    { name: 'Homestar 3', sub: '2kW inverter · 3kWh battery', href: '/bluetti/bluetti-homestar-3' },
-    { name: 'Homestar 5', sub: '3.68kW inverter · 5kWh battery', href: '/bluetti/bluetti-homestar-5' },
-    { name: 'EP2000 10kW', sub: '10kW inverter · 14.6kWh battery', href: '/bluetti/bluetti-ep2000-10kw' },
-    { name: 'EP2000 15kW', sub: '15kW inverter · 21.9kWh battery', href: '/bluetti/bluetti-ep2000-15kw' },
-    { name: 'EP2000 20kW', sub: '20kW inverter · 29–51kWh battery', href: '/bluetti/bluetti-ep2000-20kw' },
+    { name: 'Homestar 3 solution', sub: '2 kW Inverter + 3 kWh battery energy storage', href: '/bluetti/bluetti-homestar-3' },
+    { name: 'Homestar 5 solution', sub: '3.68 kW Inverter + 5 kWh battery energy storage', href: '/bluetti/bluetti-homestar-5' },
+    { name: 'EP2000 solution (10kW)', sub: '10 kW inverter + 14.6 kWh battery energy storage', href: '/bluetti/bluetti-ep2000-10kw' },
+    { name: 'EP2000 solution (15kW)', sub: '15 kW inverter + 21.9 kWh battery energy storage', href: '/bluetti/bluetti-ep2000-15kw' },
+    { name: 'EP2000 solution (20kW)', sub: '20 kW inverter + 29 kWh – 51 kWh battery energy storage', href: '/bluetti/bluetti-ep2000-20kw' },
     { name: 'All Bluetti Models', sub: 'AC Series · EB Series', href: '/bluetti' },
   ],
 }

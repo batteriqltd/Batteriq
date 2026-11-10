@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { withCanonical } from '@/lib/seo'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { CATALOG_DELTA_SLUGS, withDeltaFallback, withoutDeprecatedDelta } from '@/lib/delta-series'
-import { withBluettiFallbacks } from '@/lib/bluetti-residential'
+import { getBluettiHomeSystems, withBluettiFallbacks } from '@/lib/bluetti-residential'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { HeroSection } from '@/components/home/HeroSection'
@@ -138,9 +138,10 @@ export default async function HomePage() {
   // New Bluetti residential items always lead this rail (homepage shows top 8).
   const bluettiAll = withBluettiFallbacks(bluettiDb)
   const bluettiStations = bluettiAll.slice(0, 8)
+  const bluettiSystems = getBluettiHomeSystems()
   // First Bluetti rail: two new systems plus AC50P and AC200PL.
   const bluettiSpotlightProducts = (
-    ['bluetti-homestar-3', 'bluetti-hb500', 'bluetti-ac50p', 'bluetti-ac200pl'] as const
+    ['bluetti-homestar-3', 'bluetti-homestar-5', 'bluetti-ac50p', 'bluetti-ac200pl'] as const
   )
     .map((slug) => bluettiAll.find((p) => p.slug === slug))
     .filter((p): p is (typeof bluettiAll)[number] => Boolean(p))
@@ -302,6 +303,27 @@ export default async function HomePage() {
       <ReviewsSection />
 
       <div className="max-w-8xl mx-auto px-4 lg:px-8">
+
+        {/* ── Systems (Homestar 3, Homestar 5, EP2000 10kW / 15kW / 20kW) ── */}
+        {bluettiSystems.length > 0 && (
+          <>
+            {DIVIDER}
+            <SectionTransition id="systems" className="py-10 sm:py-14 lg:py-20">
+              <BrandAnchor
+                brand="Bluetti Systems"
+                category="Solar Home Systems"
+                h2="Home & Commercial Backup Systems"
+                seeAllHref="/power-stations?filter=solar-home-system"
+                subtitle="Homestar 3 (2kW + 3kWh) · Homestar 5 (3.68kW + 5kWh) · EP2000 (10kW / 15kW / 20kW)"
+              />
+              <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-6">
+                {bluettiSystems.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </CardReveal>
+            </SectionTransition>
+          </>
+        )}
 
         {/* ── EcoFlow Appliances ── */}
         {ecoflowAppliances.length > 0 && (

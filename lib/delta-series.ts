@@ -1,5 +1,5 @@
 import type { Product } from '@/lib/supabase/types'
-import { applyBlackNovemberOverride } from '@/lib/bluetti-residential'
+import { applyBlackNovemberOverride, BLUETTI_SYSTEM_SLUGS, getBluettiHomeSystems } from '@/lib/bluetti-residential'
 
 /**
  * Single source of truth for the approved EcoFlow DELTA range.
@@ -253,13 +253,28 @@ export function withDeltaFallback(
  * product renders with corrected DELTA data, deprecated variants excluded,
  * missing DELTA rows filled from fallback — ordered by sort_order.
  */
+const HIDDEN_BLUETTI_SYSTEM_SLUGS = new Set([
+  'bluetti-hv6k',
+  'bluetti-hv10k',
+  'bluetti-hb500',
+  'bluetti-ep760',
+  'bluetti-b500',
+  'bluetti-base-b500',
+  'bluetti-meter-ep760',
+  'bluetti-ems-ep760',
+])
+
 export function withCatalogFallback(dbProducts: Product[]): Product[] {
-  const list = withoutDeprecatedDelta(dbProducts ?? []).map(applyBlackNovemberOverride)
+  const sysSet = new Set<string>(BLUETTI_SYSTEM_SLUGS)
+  const list = withoutDeprecatedDelta(dbProducts ?? [])
+    .filter((p) => !HIDDEN_BLUETTI_SYSTEM_SLUGS.has(p.slug) && (p.category !== 'Solar Home Systems' || sysSet.has(p.slug)))
+    .map(applyBlackNovemberOverride)
   const merged = withDeltaFallback(list, CATALOG_DELTA_SLUGS)
   const rest = list.filter(
-    (p) => !(CATALOG_DELTA_SLUGS as readonly string[]).includes(p.slug)
+    (p) => !(CATALOG_DELTA_SLUGS as readonly string[]).includes(p.slug) && !sysSet.has(p.slug)
   )
-  return [...merged, ...rest].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+  const systems = getBluettiHomeSystems()
+  return [...merged, ...rest, ...systems].sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
 }
 
 /** Deprecated DELTA variants and discontinued PowerKit items hidden from the storefront in code (DB untouched). */

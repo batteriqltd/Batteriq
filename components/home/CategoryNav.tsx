@@ -8,7 +8,7 @@ const CATEGORIES = [
   { label: 'Extra Batteries', href: '/accessories', from: 'From KES 27,899', img: '/categories/extra-batteries.jpg', gradient: 'linear-gradient(135deg, #7c3aed, #0000ff)' },
   { label: 'Accessories', href: '/accessories', from: 'From KES 3,799', img: '/categories/accessories.jpg', gradient: 'linear-gradient(135deg, #0000ff, #4f46e5)' },
   { label: 'Appliances', href: '/accessories', from: 'From KES 149,469', img: '/categories/appliances.jpg', gradient: 'linear-gradient(135deg, #00004d, #0000ff)' },
-  { label: 'Solar Home Systems', href: '/bluetti', from: 'From KES 111,500', img: '/products/bluetti/bluetti-homestar-3.webp', gradient: 'linear-gradient(135deg, #1e3a8a, #0000ff)' },
+  { label: 'Solar Home Systems', href: '/power-stations?filter=solar-home-system', from: 'From KES 111,500', img: '/products/bluetti/bluetti-homestar-3.webp', gradient: 'linear-gradient(135deg, #1e3a8a, #0000ff)' },
 ]
 
 export function CategoryNav() {

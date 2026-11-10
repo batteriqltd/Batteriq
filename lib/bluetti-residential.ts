@@ -16,38 +16,51 @@ import type { Product } from '@/lib/supabase/types'
 
 const STAMP = '2026-10-12T00:00:00.000Z'
 
+/** The 5 official Bluetti Home & Commercial Systems shown in all System sections. */
+export const BLUETTI_SYSTEM_SLUGS = [
+  'bluetti-homestar-3',
+  'bluetti-homestar-5',
+  'bluetti-ep2000-10kw',
+  'bluetti-ep2000-15kw',
+  'bluetti-ep2000-20kw',
+] as const
+
 /** Newest-first display order on the Bluetti hub + homepage rail. */
 export const BLUETTI_NEW_SLUGS = [
-  'bluetti-homestar-3',
+  ...BLUETTI_SYSTEM_SLUGS,
+  'bluetti-pv100',
+] as const
+
+/** Old residential component slugs hidden so only the 5 complete solutions show in Systems. */
+const REMOVED_BLUETTI_SYSTEM_COMPONENTS = new Set([
   'bluetti-hv6k',
   'bluetti-hv10k',
   'bluetti-hb500',
-  'bluetti-pv100',
+  'bluetti-ep760',
+  'bluetti-b500',
   'bluetti-base-b500',
   'bluetti-meter-ep760',
   'bluetti-ems-ep760',
-] as const
+])
 
 export const FALLBACK_BLUETTI_PRODUCTS: Record<string, Product> = {
   'bluetti-homestar-3': {
     id: 'fallback-bluetti-homestar-3',
     sku: 'BLUETTI-HOMESTAR-3',
     brand: 'Bluetti',
-    category: 'Power Stations',
+    category: 'Solar Home Systems',
     subcategory: 'Residential Backup',
-    name: 'Bluetti Homestar 3',
+    name: 'Homestar 3 Solution',
     slug: 'bluetti-homestar-3',
     description:
-      'The Bluetti Homestar 3 is an all-in-one residential backup system with 2.0kW continuous output and 3.01kWh battery storage. A fixed home backup unit — not a portable box — that keeps lights, fridge, WiFi, TV and phone charging running through KPLC outages in Kenya. Installs as part of the house, switches over automatically when the grid drops, and recharges from mains or up to 2000W of solar.',
+      'The Bluetti Homestar 3 solution pairs a 2kW inverter with 3kWh (3,014Wh) of LiFePO4 battery energy storage. An all-in-one residential backup system that keeps lights, fridge, WiFi, TV and phone charging running through KPLC outages in Kenya. Switches over automatically when the grid drops and recharges from mains or up to 2000W of solar.',
     specs: {
-      capacity: '3014Wh',
-      ac_output: '2000W (Surge 3000W)',
+      ac_output: '2kW Inverter',
+      capacity: '3kWh Battery',
       chemistry: 'LFP (LiFePO4)',
       solar_input: '2000W Max',
       voltage: '230V single-phase',
-      grid_protection: '140V–280V',
-      noise: '≤50dB',
-      type: 'All-in-One ESS',
+      type: '2kW Inverter + 3kWh Battery Storage',
     },
     images: ['/products/bluetti/bluetti-homestar-3.webp'],
     price_kes: 111500,
@@ -58,9 +71,9 @@ export const FALLBACK_BLUETTI_PRODUCTS: Record<string, Product> = {
     stock_qty: 10,
     featured: true,
     sort_order: 80,
-    meta_title: 'Buy Bluetti Homestar 3 in Kenya — Price KES 111,500 | Batteriq',
+    meta_title: 'Buy Bluetti Homestar 3 Solution in Kenya — Price KES 111,500 | Batteriq',
     meta_description:
-      'Buy the Bluetti Homestar 3 in Kenya for KES 111,500. 2.0kW all-in-one residential backup with 3.01kWh storage. Authorised Bluetti dealer. M-Pesa payment. Nairobi delivery. Batteriq.',
+      'Buy the Bluetti Homestar 3 Solution in Kenya for KES 111,500. 2kW inverter + 3kWh battery energy storage. Authorised Bluetti dealer. M-Pesa payment. Nairobi delivery. Batteriq.',
     schema_rating: 4.9,
     schema_review_count: 6,
     created_at: STAMP,
@@ -341,19 +354,19 @@ function quoteSystems(): Record<string, Product> {
     ...base,
     id: `fallback-bluetti-ep2000-${kw}kw`,
     sku: `BLUETTI-EP2000-${kw}KW`,
-    name: `Bluetti EP2000 ${kw}kW Solution`,
+    name: `EP2000 Solution (${kw}kW Inverter + ${kwh} Battery)`,
     slug: `bluetti-ep2000-${kw}kw`,
-    description: `The Bluetti EP2000 ${kw}kW solution pairs a ${kw}kW inverter with ${kwh} of LiFePO4 battery energy storage for whole-home and small-business backup in Kenya. A modular, stackable system that is sized, supplied and installed for your site. Send us your load list on WhatsApp for a quote.`,
+    description: `The Bluetti EP2000 ${kw}kW solution pairs a ${kw}kW inverter with ${kwh} of LiFePO4 battery energy storage for whole-home and commercial backup in Kenya. A modular, stackable system that is sized, supplied and installed for your site. Send us your load list on WhatsApp for a quote.`,
     specs: {
-      ac_output: `${kw}kW`,
-      capacity: kwh,
+      ac_output: `${kw}kW Inverter`,
+      capacity: `${kwh} Battery`,
       chemistry: 'LiFePO4',
       batteries: modules,
-      type: 'Modular home energy storage',
+      type: `${kw}kW Inverter + ${kwh} Battery Storage`,
     },
     images: [`/products/bluetti/bluetti-ep2000-${kw}kw.png`],
     sort_order: sort,
-    meta_title: `Bluetti EP2000 ${kw}kW Solution in Kenya | Batteriq`,
+    meta_title: `Bluetti EP2000 ${kw}kW Solution (${kwh}) in Kenya | Batteriq`,
     meta_description: `Bluetti EP2000 ${kw}kW inverter with ${kwh} battery energy storage in Kenya. Supplied and installed by Batteriq, authorised Bluetti dealer. Request a quote on WhatsApp.`,
   } as Product)
 
@@ -362,25 +375,31 @@ function quoteSystems(): Record<string, Product> {
       ...base,
       id: 'fallback-bluetti-homestar-5',
       sku: 'BLUETTI-HOMESTAR-5',
-      name: 'Bluetti Homestar 5',
+      name: 'Homestar 5 Solution',
       slug: 'bluetti-homestar-5',
       description:
-        'The Bluetti Homestar 5 solution pairs a 3.68kW inverter with 5kWh of battery energy storage for home backup in Kenya. The larger sibling of the Homestar 3, for homes that need more power and longer runtime through KPLC outages. Send us your load list on WhatsApp for a quote.',
+        'The Bluetti Homestar 5 solution pairs a 3.68kW inverter with 5kWh of LiFePO4 battery energy storage for home backup in Kenya. The larger sibling of the Homestar 3, for homes that need more power and longer runtime through KPLC outages. Send us your load list on WhatsApp for a quote.',
       specs: {
-        ac_output: '3.68kW',
-        capacity: '5kWh',
-        type: 'Residential energy storage',
+        ac_output: '3.68kW Inverter',
+        capacity: '5kWh Battery',
+        chemistry: 'LFP (LiFePO4)',
+        type: '3.68kW Inverter + 5kWh Battery Storage',
       },
-      images: [],
-      sort_order: 84,
-      meta_title: 'Bluetti Homestar 5 in Kenya | Batteriq',
+      images: ['/products/bluetti/bluetti-homestar-5.webp'],
+      sort_order: 81,
+      meta_title: 'Bluetti Homestar 5 Solution in Kenya | Batteriq',
       meta_description:
-        'Bluetti Homestar 5 in Kenya: 3.68kW inverter with 5kWh battery energy storage. Supplied by Batteriq, authorised Bluetti dealer. Request a quote on WhatsApp.',
+        'Bluetti Homestar 5 Solution in Kenya: 3.68kW inverter with 5kWh battery energy storage. Supplied by Batteriq, authorised Bluetti dealer. Request a quote on WhatsApp.',
     } as Product,
-    'bluetti-ep2000-10kw': ep2000(10, '14.6kWh', 'B700 modules', 85),
-    'bluetti-ep2000-15kw': ep2000(15, '21.9kWh', 'B700 modules', 86),
-    'bluetti-ep2000-20kw': ep2000(20, '29kWh – 51kWh', 'B700 modules', 87),
+    'bluetti-ep2000-10kw': ep2000(10, '14.6kWh', 'B700 modules', 82),
+    'bluetti-ep2000-15kw': ep2000(15, '21.9kWh', 'B700 modules', 83),
+    'bluetti-ep2000-20kw': ep2000(20, '29kWh – 51kWh', 'B700 modules', 84),
   }
+}
+
+/** Returns ONLY the 5 official Bluetti Systems in exact order 1–5. */
+export function getBluettiHomeSystems(): Product[] {
+  return BLUETTI_SYSTEM_SLUGS.map((slug) => FALLBACK_BLUETTI_PRODUCTS[slug])
 }
 
 /** Black November 2026 Bluetti sale prices (KES). */
@@ -436,7 +455,7 @@ export function applyBlackNovemberOverride(p: Product): Product {
  * Slashed Black November items lead first, then new residential items, then DB sort_order.
  */
 export function withBluettiFallbacks(dbProducts: Product[]): Product[] {
-  const list = dbProducts ?? []
+  const list = (dbProducts ?? []).filter((p) => !REMOVED_BLUETTI_SYSTEM_COMPONENTS.has(p.slug))
   const bySlug = new Map(list.map((p) => [p.slug, p]))
   const merged: Product[] = list.map((p) => {
     const fallback = FALLBACK_BLUETTI_PRODUCTS[p.slug]
