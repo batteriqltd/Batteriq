@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { CheckCircle2, Plus, Trash2, Download, QrCode, Check, RefreshCw } from 'lucide-react'
+import { CheckCircle2, Plus, Trash2, Download, QrCode, Check, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
 import QRCode from 'qrcode'
 import type { DeliveryNoteItem, NoteDocType } from '@/lib/delivery-note-pdf'
 
@@ -25,8 +25,10 @@ export default function PublicDeliveryNotePage() {
   const [docNumber, setDocNumber] = useState('')
   const [lpoReference, setLpoReference] = useState('')
   const [loadingPrefill, setLoadingPrefill] = useState(false)
+  const [isPrefilled, setIsPrefilled] = useState(false)
+  const [showEditDetails, setShowEditDetails] = useState(false)
 
-  // Receiver fields: Name, Date, Delivery Site, Contact Person, Materials Delivered, Tap-to-Generate QR Signature
+  // Client fills Name + taps QR Verify; everything else is populated from the Order / Admin
   const [receiverName, setReceiverName] = useState('')
   const [customerName, setCustomerName] = useState('')
   const [date, setDate] = useState(() =>
@@ -45,7 +47,7 @@ export default function PublicDeliveryNotePage() {
   const [remarks, setRemarks] = useState('')
   const [batteriqPersonName, setBatteriqPersonName] = useState('')
 
-  // 1-Tap Automatic QR Signature state
+  // 1-Tap Automatic QR Verification state
   const [qrStampDataUrl, setQrStampDataUrl] = useState('')
   const [qrOnlyDataUrl, setQrOnlyDataUrl] = useState('')
   const [qrStampInfo, setQrStampInfo] = useState<{
@@ -86,6 +88,7 @@ export default function PublicDeliveryNotePage() {
       .then((d) => {
         if (!d?.note) return
         const n = d.note
+        setIsPrefilled(true)
         if (n.docNumber) setDocNumber(n.docNumber)
         if (n.docType === 'installation' || n.docType === 'delivery') {
           if (!t) setDocType(n.docType)
@@ -95,7 +98,7 @@ export default function PublicDeliveryNotePage() {
         setCustomerName(n.customerName || nameVal)
         setContactPerson(n.contactPerson || nameVal)
         setCustomerPhone(n.customerPhone || '')
-        setDeliverySite(n.deliverySite || '')
+        setDeliverySite(n.deliverySite || 'Nairobi, Kenya')
         setLpoReference(n.lpoReference || '')
         if (n.date) setDate(n.date)
         if (Array.isArray(n.items) && n.items.length > 0) setItems(n.items)
@@ -108,11 +111,11 @@ export default function PublicDeliveryNotePage() {
       .finally(() => setLoadingPrefill(false))
   }, [])
 
-  // Generate the 480x150 composite QR Signature Stamp (used both on screen and embedded into the A4 PDF)
+  // Generate the 480x150 composite QR Verification Stamp (embedded into the ready A4 PDF)
   const generateQrSignatureStamp = useCallback(async () => {
     const cleanSigner = (receiverName.trim() || contactPerson.trim() || customerName.trim() || 'Verified Receiver').slice(0, 36)
-    const cleanSite = (deliverySite.trim() || 'Kenya').slice(0, 40)
-    const stampId = `BAT-SIG-${Math.floor(100000 + Math.random() * 900000)}`
+    const cleanSite = (deliverySite.trim() || 'Nairobi, Kenya').slice(0, 40)
+    const stampId = `BAT-QR-${Math.floor(100000 + Math.random() * 900000)}`
     const timestamp = new Date().toLocaleString('en-KE', {
       day: '2-digit',
       month: 'short',
@@ -127,9 +130,9 @@ export default function PublicDeliveryNotePage() {
       .slice(0, 120)
 
     const qrPayload = [
-      'BATTERIQ VERIFIED SIGNATURE',
+      'BATTERIQ VERIFIED DELIVERY',
       `ID: ${stampId}`,
-      `Name: ${cleanSigner}`,
+      `Receiver: ${cleanSigner}`,
       `Site: ${cleanSite}`,
       `Date: ${timestamp}`,
       lpoReference ? `Ref: ${lpoReference}` : '',
@@ -159,12 +162,10 @@ export default function PublicDeliveryNotePage() {
     ctx.fillStyle = '#ffffff'
     ctx.fillRect(0, 0, 480, 150)
 
-    // Border frame
     ctx.strokeStyle = '#1e4e87'
     ctx.lineWidth = 3
     ctx.strokeRect(3, 3, 474, 144)
 
-    // Load QR image onto left side (134x134 square at x=8, y=8)
     await new Promise<void>((resolve) => {
       const img = new Image()
       img.onload = () => {
@@ -175,10 +176,9 @@ export default function PublicDeliveryNotePage() {
       img.src = qrUrl
     })
 
-    // Right side text block
     ctx.fillStyle = '#1e4e87'
     ctx.font = 'bold 17px Arial, sans-serif'
-    ctx.fillText('VERIFIED QR SIGNATURE', 154, 34)
+    ctx.fillText('QR VERIFIED & SIGNED', 154, 34)
 
     ctx.fillStyle = '#0f172a'
     ctx.font = 'bold 20px Arial, sans-serif'
@@ -223,19 +223,29 @@ export default function PublicDeliveryNotePage() {
       setError('Please enter your Name.')
       return
     }
-    if (!deliverySite.trim()) {
-      setError('Please enter the Delivery Site / Location.')
-      return
-    }
+
     const validItems = items.filter((i) => i.description.trim())
-    if (validItems.length === 0) {
-      setError('Please list at least one material delivered.')
-      return
-    }
+    const finalItems =
+      validItems.length > 0
+        ? validItems.map((it) => ({
+            description: it.description.trim(),
+            subtext: it.subtext || '',
+            qtySent: it.qtySent || it.qtyReceived || '1',
+            qtyReceived: it.qtyReceived || it.qtySent || '1',
+          }))
+        : [
+            {
+              description: lpoReference
+                ? `Order / Delivery items per ${lpoReference}`
+                : 'Power Backup Equipment & Accessories',
+              subtext: '',
+              qtySent: '1 lot',
+              qtyReceived: '1 lot',
+            },
+          ]
 
     setSubmitting(true)
     try {
-      // Ensure QR signature stamp is generated (auto-generates if they haven't tapped yet)
       const finalQrStamp = qrStampDataUrl || (await generateQrSignatureStamp())
 
       const res = await fetch('/api/delivery-notes', {
@@ -249,26 +259,21 @@ export default function PublicDeliveryNotePage() {
           receiverName: cleanName,
           contactPerson: contactPerson.trim() || cleanName,
           customerPhone: customerPhone.trim(),
-          deliverySite: deliverySite.trim(),
+          deliverySite: deliverySite.trim() || 'Nairobi, Kenya',
           lpoReference: lpoReference.trim(),
           date: date.trim(),
-          items: validItems.map((it) => ({
-            description: it.description.trim(),
-            subtext: it.subtext || '',
-            qtySent: it.qtySent || it.qtyReceived || '1',
-            qtyReceived: it.qtyReceived || it.qtySent || '1',
-          })),
+          items: finalItems,
           workDescription: workDescription.trim(),
           worksCompleted:
             worksCompleted.trim() ||
-            validItems.map((i) => `${i.description.trim()} (x${i.qtyReceived || i.qtySent || '1'})`).join(', '),
+            finalItems.map((i) => `${i.description} (x${i.qtyReceived || i.qtySent || '1'})`).join(', '),
           checks: {
             visuallyInspected: true,
             functionalChecks: true,
             customerHandover: true,
           },
           remarks: remarks.trim() || 'Received in good order and condition.',
-          batteriqPersonName: batteriqPersonName.trim(),
+          batteriqPersonName: batteriqPersonName.trim() || 'Batteriq Delivery Team',
           receiverSignature: finalQrStamp,
           status: 'signed',
         }),
@@ -276,7 +281,7 @@ export default function PublicDeliveryNotePage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Submission failed')
 
-      // Automatically trigger download of the client's signed copy
+      // Automatically trigger download of the ready PDF
       if (data.pdf && data.filename) {
         downloadBase64Pdf(data.pdf, data.filename)
       }
@@ -296,6 +301,8 @@ export default function PublicDeliveryNotePage() {
     }
   }
 
+  const populatedItems = items.filter((i) => i.description.trim())
+
   if (submitted) {
     return (
       <div className="min-h-screen bg-slate-50 py-10 px-4 flex items-center justify-center">
@@ -303,11 +310,10 @@ export default function PublicDeliveryNotePage() {
           <div className="w-16 h-16 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 size={36} />
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Done! Copy Sent</h1>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Verified &amp; Ready!</h1>
           <p className="text-sm text-slate-500 mt-1.5">
-            Thank you, <strong className="text-slate-800">{receiverName || customerName}</strong>. Your QR-signed note (
-            <span className="font-mono font-bold text-slate-700">{submitted.docNumber}</span>) has been sent to Batteriq
-            and downloaded to your device.
+            Thank you, <strong className="text-slate-800">{receiverName || customerName}</strong>. Your QR-verified{' '}
+            <strong>Delivery Note ({submitted.docNumber})</strong> has been downloaded and saved with Batteriq.
           </p>
 
           <div className="mt-6 space-y-2.5">
@@ -316,7 +322,7 @@ export default function PublicDeliveryNotePage() {
               className="w-full py-3.5 px-5 rounded-2xl bg-[#1e4e87] hover:bg-[#163b68] text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
             >
               <Download size={16} />
-              Download Signed {docType === 'installation' ? 'Installation Note' : 'Delivery Note'} (PDF)
+              Download Ready {docType === 'installation' ? 'Installation Note' : 'Delivery Note'} (PDF)
             </button>
             {submitted.companionPdf && submitted.companionFilename && (
               <button
@@ -324,7 +330,7 @@ export default function PublicDeliveryNotePage() {
                 className="w-full py-3.5 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
               >
                 <Download size={16} />
-                Download Signed {docType === 'installation' ? 'Delivery Note' : 'Installation Completion Note'} (PDF)
+                Download Ready {docType === 'installation' ? 'Delivery Note' : 'Installation Completion Note'} (PDF)
               </button>
             )}
           </div>
@@ -335,9 +341,9 @@ export default function PublicDeliveryNotePage() {
 
   return (
     <div className="min-h-screen bg-slate-100 py-5 sm:py-10 px-3 sm:px-4">
-      <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200/80 overflow-hidden">
-        {/* Clean Minimal Header */}
-        <div className="px-5 sm:px-8 py-5 bg-[#1e4e87] text-white flex items-center justify-between gap-3">
+      <div className="max-w-lg mx-auto bg-white rounded-3xl shadow-xl border border-slate-200/80 overflow-hidden">
+        {/* Clean Header */}
+        <div className="px-5 sm:px-7 py-5 bg-[#1e4e87] text-white flex items-center justify-between gap-3">
           <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-blue-200">BATTERIQ SOLUTIONS LTD</p>
             <h1 className="text-lg sm:text-xl font-black tracking-tight uppercase mt-0.5">
@@ -357,161 +363,182 @@ export default function PublicDeliveryNotePage() {
         </div>
 
         {loadingPrefill && (
-          <div className="px-5 sm:px-8 py-3 bg-blue-50 text-[#1e4e87] text-xs font-bold text-center">
-            Loading your order details...
+          <div className="px-5 py-3 bg-blue-50 text-[#1e4e87] text-xs font-bold text-center">
+            Loading your delivery details...
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="p-5 sm:p-8 space-y-5">
+        <form onSubmit={handleSubmit} className="p-5 sm:p-7 space-y-5">
           {error && (
             <div className="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold">
               {error}
             </div>
           )}
 
-          {/* 1. Receiver Details */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            <div className="sm:col-span-2">
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
-                Receiver Full Name *
-              </label>
-              <input
-                type="text"
-                value={receiverName}
-                onChange={(e) => {
-                  setReceiverName(e.target.value)
-                  if (!customerName) setCustomerName(e.target.value)
-                  if (!contactPerson) setContactPerson(e.target.value)
-                }}
-                placeholder="Enter your full name"
-                className="w-full h-12 px-4 rounded-2xl border border-slate-300 text-base text-slate-900 font-semibold focus:outline-none focus:border-[#1e4e87] focus:ring-2 focus:ring-[#1e4e87]/15"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
-                Delivery Site / Location *
-              </label>
-              <input
-                type="text"
-                value={deliverySite}
-                onChange={(e) => setDeliverySite(e.target.value)}
-                placeholder="e.g. Westlands, Nairobi"
-                className="w-full h-11 px-3.5 rounded-xl border border-slate-300 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#1e4e87]"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
-                Date *
-              </label>
-              <input
-                type="text"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                placeholder="10 Nov 2026"
-                className="w-full h-11 px-3.5 rounded-xl border border-slate-300 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#1e4e87]"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
-                Contact Person *
-              </label>
-              <input
-                type="text"
-                value={contactPerson}
-                onChange={(e) => setContactPerson(e.target.value)}
-                placeholder="Contact person name"
-                className="w-full h-11 px-3.5 rounded-xl border border-slate-300 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#1e4e87]"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-black uppercase tracking-wider text-slate-700 mb-1.5">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="07XX XXX XXX"
-                className="w-full h-11 px-3.5 rounded-xl border border-slate-300 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#1e4e87]"
-              />
-            </div>
-          </div>
-
-          {/* 2. Materials Delivered */}
-          <div className="pt-2 border-t border-slate-100">
-            <div className="flex items-center justify-between mb-2.5">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700">
-                Materials Delivered *
-              </label>
+          {/* Auto-Populated Order / Delivery Summary */}
+          <div className="rounded-2xl bg-slate-50 border border-slate-200/80 p-4 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#1e4e87]">
+                Populated Delivery Details
+              </span>
               <button
                 type="button"
-                onClick={addItem}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-blue-50 text-[#1e4e87] text-xs font-black uppercase tracking-wider hover:bg-blue-100 transition-colors"
+                onClick={() => setShowEditDetails((v) => !v)}
+                className="text-[11px] font-bold text-slate-500 hover:text-[#1e4e87] inline-flex items-center gap-1"
               >
-                <Plus size={14} /> Add Item
+                {showEditDetails ? (
+                  <>
+                    Hide Details <ChevronUp size={13} />
+                  </>
+                ) : (
+                  <>
+                    Edit Details <ChevronDown size={13} />
+                  </>
+                )}
               </button>
             </div>
 
-            <div className="space-y-2">
-              {items.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-2 bg-slate-50 p-2 rounded-2xl border border-slate-200/80"
-                >
-                  <span className="w-6 text-center text-xs font-black text-slate-400 shrink-0">{idx + 1}.</span>
-                  <input
-                    type="text"
-                    value={item.description}
-                    onChange={(e) => updateItem(idx, { description: e.target.value })}
-                    placeholder="Item / Material name"
-                    className="flex-1 min-w-0 h-10 px-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#1e4e87]"
-                  />
-                  <input
-                    type="text"
-                    value={item.qtyReceived}
-                    onChange={(e) =>
-                      updateItem(idx, { qtyReceived: e.target.value, qtySent: item.qtySent || e.target.value })
-                    }
-                    placeholder="Qty"
-                    aria-label="Quantity"
-                    className="w-16 sm:w-20 h-10 px-2.5 rounded-xl bg-white border border-slate-200 text-sm text-center text-slate-900 font-bold focus:outline-none focus:border-[#1e4e87] shrink-0"
-                  />
-                  {items.length > 1 && (
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div>
+                <span className="text-slate-400 font-semibold block">Customer:</span>
+                <span className="font-bold text-slate-800">{customerName || receiverName || 'Client'}</span>
+              </div>
+              <div>
+                <span className="text-slate-400 font-semibold block">Date:</span>
+                <span className="font-bold text-slate-800">{date}</span>
+              </div>
+              <div className="col-span-2">
+                <span className="text-slate-400 font-semibold block">Delivery Site:</span>
+                <span className="font-bold text-slate-800">{deliverySite || 'Nairobi, Kenya'}</span>
+              </div>
+            </div>
+
+            {populatedItems.length > 0 && (
+              <div className="pt-2 border-t border-slate-200/70">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-1">
+                  Materials Delivered
+                </span>
+                <ul className="space-y-1">
+                  {populatedItems.map((it, i) => (
+                    <li key={i} className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                      <span>
+                        {i + 1}. {it.description}
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-white border border-slate-200 font-mono text-[11px]">
+                        Qty: {it.qtyReceived || it.qtySent || '1'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Collapsible editor if client or staff wants to adjust populated details */}
+            {(showEditDetails || (!isPrefilled && populatedItems.length === 0)) && (
+              <div className="pt-3 border-t border-slate-200 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">
+                      Delivery / Work Site
+                    </label>
+                    <input
+                      type="text"
+                      value={deliverySite}
+                      onChange={(e) => setDeliverySite(e.target.value)}
+                      placeholder="e.g. Westlands, Nairobi"
+                      className="w-full h-10 px-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase text-slate-500 mb-1">Date</label>
+                    <input
+                      type="text"
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      className="w-full h-10 px-3 rounded-xl bg-white border border-slate-300 text-xs text-slate-900 font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[10px] font-black uppercase text-slate-500">Materials Delivered</label>
                     <button
                       type="button"
-                      onClick={() => removeItem(idx)}
-                      className="p-2 text-slate-400 hover:text-red-600 rounded-xl shrink-0"
-                      aria-label="Remove item"
+                      onClick={addItem}
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-[#1e4e87] text-[10px] font-black uppercase"
                     >
-                      <Trash2 size={16} />
+                      <Plus size={12} /> Add
                     </button>
-                  )}
+                  </div>
+                  <div className="space-y-1.5">
+                    {items.map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5">
+                        <input
+                          type="text"
+                          value={item.description}
+                          onChange={(e) => updateItem(idx, { description: e.target.value })}
+                          placeholder="Material / Item name"
+                          className="flex-1 min-w-0 h-9 px-2.5 rounded-lg bg-white border border-slate-300 text-xs text-slate-900"
+                        />
+                        <input
+                          type="text"
+                          value={item.qtyReceived}
+                          onChange={(e) =>
+                            updateItem(idx, { qtyReceived: e.target.value, qtySent: item.qtySent || e.target.value })
+                          }
+                          placeholder="Qty"
+                          className="w-16 h-9 px-2 rounded-lg bg-white border border-slate-300 text-xs text-center font-bold text-slate-900"
+                        />
+                        {items.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removeItem(idx)}
+                            className="p-1.5 text-slate-400 hover:text-red-600"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
 
-          {/* 3. One-Tap Automatic QR Signature Stamp */}
-          <div className="pt-2 border-t border-slate-100">
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-xs font-black uppercase tracking-wider text-slate-700">
-                Receiver Signature (1-Tap QR Stamp) *
+          {/* Step 1: Client enters Name */}
+          <div>
+            <label className="block text-xs font-black uppercase tracking-wider text-slate-800 mb-1.5">
+              1. Enter Your Full Name *
+            </label>
+            <input
+              type="text"
+              value={receiverName}
+              onChange={(e) => {
+                setReceiverName(e.target.value)
+                if (!customerName) setCustomerName(e.target.value)
+                if (!contactPerson) setContactPerson(e.target.value)
+              }}
+              placeholder="Type your full name"
+              className="w-full h-12 px-4 rounded-2xl border-2 border-slate-300 text-base text-slate-900 font-bold focus:outline-none focus:border-[#1e4e87] focus:ring-2 focus:ring-[#1e4e87]/15"
+              required
+            />
+          </div>
+
+          {/* Step 2: Client taps to verify via QR Code */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-black uppercase tracking-wider text-slate-800">
+                2. Select to Verify via QR Code *
               </label>
               {qrStampDataUrl && (
                 <button
                   type="button"
                   onClick={() => generateQrSignatureStamp()}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-[#1e4e87] hover:bg-blue-50 transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-bold text-[#1e4e87] hover:bg-blue-50"
                 >
-                  <RefreshCw size={13} /> Regenerate QR
+                  <RefreshCw size={12} /> Refresh QR
                 </button>
               )}
             </div>
@@ -520,35 +547,34 @@ export default function PublicDeliveryNotePage() {
               <button
                 type="button"
                 onClick={() => generateQrSignatureStamp()}
-                className="w-full py-7 px-4 rounded-2xl border-2 border-dashed border-[#1e4e87]/40 bg-blue-50/50 hover:bg-blue-50 active:scale-[0.99] transition-all flex flex-col items-center justify-center gap-2 cursor-pointer group"
+                className="w-full py-6 px-4 rounded-2xl border-2 border-dashed border-[#1e4e87]/50 bg-blue-50/50 hover:bg-blue-50 active:scale-[0.99] transition-all flex flex-col items-center justify-center gap-2 cursor-pointer group"
               >
-                <div className="w-14 h-14 rounded-2xl bg-[#1e4e87] text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
-                  <QrCode size={28} />
+                <div className="w-13 h-13 p-3 rounded-2xl bg-[#1e4e87] text-white flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+                  <QrCode size={26} />
                 </div>
                 <span className="text-sm font-black text-[#1e4e87] uppercase tracking-wider">
-                  Tap Here to Generate QR Signature
+                  Tap to Verify via QR Code
                 </span>
                 <span className="text-xs text-slate-500 font-medium">
-                  One tap creates your verified QR signature stamp automatically
+                  Generates your instant QR verification stamp on the Delivery Note
                 </span>
               </button>
             ) : (
               <div
                 onClick={() => generateQrSignatureStamp()}
                 className="w-full p-4 rounded-2xl border-2 border-green-500 bg-green-50/40 flex flex-col sm:flex-row items-center gap-4 cursor-pointer"
-                title="Tap to refresh QR signature"
               >
                 {qrOnlyDataUrl && (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     src={qrOnlyDataUrl}
-                    alt="Generated QR Signature"
-                    className="w-28 h-28 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm shrink-0"
+                    alt="Verified QR Code"
+                    className="w-24 h-24 rounded-xl border border-slate-200 bg-white p-1.5 shadow-sm shrink-0"
                   />
                 )}
                 <div className="text-center sm:text-left min-w-0 flex-1 space-y-1">
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-green-600 text-white text-[10px] font-black uppercase tracking-widest">
-                    <Check size={12} /> Verified QR Signature Generated
+                    <Check size={12} /> Verified via QR Code
                   </div>
                   <p className="text-base font-black text-slate-900 truncate">{qrStampInfo?.signedBy}</p>
                   <p className="text-xs font-mono font-bold text-[#1e4e87]">{qrStampInfo?.stampId}</p>
@@ -558,13 +584,14 @@ export default function PublicDeliveryNotePage() {
             )}
           </div>
 
+          {/* Step 3: Download Ready Delivery Note */}
           <button
             type="submit"
             disabled={submitting}
             className="w-full h-14 rounded-2xl bg-[#1e4e87] hover:bg-[#163b68] active:scale-[0.99] text-white font-black text-sm uppercase tracking-widest shadow-lg flex items-center justify-center gap-2 transition-all disabled:opacity-60"
           >
-            <Check size={18} />
-            {submitting ? 'Submitting...' : 'Submit & Download Copy'}
+            <Download size={18} />
+            {submitting ? 'Generating Ready PDF...' : '3. Download Ready Delivery Note (PDF)'}
           </button>
         </form>
       </div>
