@@ -404,6 +404,7 @@ export default function AdminProductsPage() {
   const [syncMsg, setSyncMsg] = useState('')
   const [bsyncing, setBsyncing] = useState(false)
   const [bsyncMsg, setBsyncMsg] = useState('')
+  const [bnMsg, setBnMsg] = useState('')
 
   const loadProducts = useCallback(async (q = '') => {
     setLoading(true)
@@ -473,6 +474,25 @@ export default function AdminProductsPage() {
       setBsyncMsg(`DB has ${(data.products ?? []).length} Bluetti rows — missing: ${missing}`)
     } catch (e) {
       setBsyncMsg(`✕ ${e instanceof Error ? e.message : 'Status check failed'}`)
+    } finally {
+      setBsyncing(false)
+    }
+  }
+
+  async function runBlackNovember() {
+    if (bsyncing) return
+    if (!confirm('Apply Black November prices?\n\nAC70P 55,000 · AC180P 72,150 · Premium 30 V2 29,900 · Premium 100 V2 63,750 · Premium 200 V2 114,400 · PV100 15,600 · AC50P 33,750')) return
+    setBsyncing(true)
+    setBnMsg('')
+    try {
+      const res = await fetch('/api/admin/black-november', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed')
+      const parts = (data.results ?? []).map((r: { slug: string; action: string }) => `${r.slug}: ${r.action}`)
+      setBnMsg(`✓ Done — ${parts.join(' · ')}`)
+      loadProducts(query.trim())
+    } catch (e) {
+      setBnMsg(`✕ ${e instanceof Error ? e.message : 'Failed'}`)
     } finally {
       setBsyncing(false)
     }
@@ -579,6 +599,23 @@ export default function AdminProductsPage() {
           <Zap size={14} />{syncing ? 'Applying…' : 'Apply DELTA fix'}
         </button>
         </div>
+      </div>
+
+      {/* One-click Black November 2026 Bluetti prices */}
+      <div className="mb-6 bg-gray-900 rounded-[24px] px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-black text-white tracking-tight">Black November prices <span className="ml-1 text-[10px] font-black uppercase tracking-widest text-white bg-red-600 rounded-full px-2 py-0.5 align-middle">Sale</span></p>
+          <p className="text-xs text-gray-400 font-medium mt-0.5">AC70P 55,000 · AC180P 72,150 · Premium 30 V2 29,900 · Premium 100 V2 63,750 · Premium 200 V2 114,400 · PV100 15,600 · AC50P 33,750</p>
+          {bnMsg && <p className="text-xs font-bold mt-1.5 text-red-300">{bnMsg}</p>}
+        </div>
+        <button
+          onClick={runBlackNovember}
+          disabled={bsyncing}
+          className="h-11 px-6 rounded-2xl flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest text-white transition-all disabled:opacity-60 shrink-0"
+          style={{ background: '#cc0000' }}
+        >
+          <Zap size={14} />{bsyncing ? 'Applying…' : 'Apply Black November prices'}
+        </button>
       </div>
 
       {/* One-click Bluetti Sept-2026 sync — no SQL Editor needed */}

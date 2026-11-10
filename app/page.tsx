@@ -19,7 +19,6 @@ import { jsonLdScript, organizationJsonLd, websiteJsonLd } from '@/lib/structure
 import { OffersSection } from '@/components/home/OffersSection'
 import { BulkPricingBanner } from '@/components/home/BulkPricingBanner'
 import { BluettiSpotlight } from '@/components/home/BluettiSpotlight'
-import { NewArrivalsPopup } from '@/components/home/NewArrivalsPopup'
 import { PageWrapper } from '@/components/animations/PageWrapper'
 import { HomeAnimations } from '@/components/animations/HomeAnimations'
 import { SectionTransition } from '@/components/animations/SectionTransition'
@@ -141,12 +140,6 @@ export default async function HomePage() {
   // New Bluetti residential items always lead this rail (homepage shows top 8).
   const bluettiAll = withBluettiFallbacks(bluettiDb)
   const bluettiStations = bluettiAll.slice(0, 8)
-  // The 4 newest Bluetti systems, featured in the first-visit popup.
-  const bluettiNewArrivals = (
-    ['bluetti-homestar-3', 'bluetti-hv6k', 'bluetti-hv10k', 'bluetti-hb500'] as const
-  )
-    .map((slug) => bluettiStations.find((p) => p.slug === slug))
-    .filter((p): p is (typeof bluettiStations)[number] => Boolean(p))
   // First Bluetti rail: two new systems plus AC50P and AC200PL.
   const bluettiSpotlightProducts = (
     ['bluetti-homestar-3', 'bluetti-hb500', 'bluetti-ac50p', 'bluetti-ac200pl'] as const
@@ -676,7 +669,6 @@ export default async function HomePage() {
       </section>
 
       <Footer />
-      <NewArrivalsPopup products={bluettiNewArrivals} />
       <HomeAnimations />
       <SectionObserver />
     </PageWrapper>

@@ -25,7 +25,11 @@ const POWER_ITEMS = {
     { name: 'RIVER 3', sub: '245Wh · 300W', href: '/ecoflow/river-3' },
   ],
   systems: [
-    { name: 'Solar Home Systems', sub: 'Whole-home 5–15kWh', href: '/ecoflow-kenya#solar-home-systems' },
+    { name: 'Homestar 3', sub: '2kW inverter · 3kWh battery', href: '/bluetti/bluetti-homestar-3' },
+    { name: 'Homestar 5', sub: '3.68kW inverter · 5kWh battery', href: '/bluetti' },
+    { name: 'EP2000 10kW', sub: '10kW inverter · 14.6kWh battery', href: '/bluetti' },
+    { name: 'EP2000 15kW', sub: '15kW inverter · 21.9kWh battery', href: '/bluetti' },
+    { name: 'EP2000 20kW', sub: '20kW inverter · 29–51kWh battery', href: '/bluetti' },
     { name: 'All Bluetti Models', sub: 'AC Series · EB Series', href: '/bluetti' },
   ],
 }
@@ -183,7 +187,7 @@ export function MobileNav() {
                         ))}
                         <p className="text-xs font-bold text-bq-blue uppercase tracking-widest pt-2 pb-1">SYSTEMS</p>
                         {POWER_ITEMS.systems.map((item) => (
-                          <Link key={item.href} href={item.href} onClick={handleNav}
+                          <Link key={item.name} href={item.href} onClick={handleNav}
                             className="flex flex-col py-1.5 px-2 rounded-[6px] hover:bg-bq-blue-light group"
                           >
                             <span className="text-sm font-medium text-gray-800 group-hover:text-bq-blue">{item.name}</span>

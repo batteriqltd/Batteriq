@@ -134,9 +134,11 @@ export function Header() {
                     <div>
                       <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.06em] mb-4">SYSTEMS</p>
                       {[
-                        { name: 'PowerKit 5kWh', sub: 'Whole-home system', href: '/ecoflow-kenya#powerkits' },
-                        { name: 'PowerKit 10kWh', sub: 'Whole-home system', href: '/ecoflow-kenya#powerkits' },
-                        { name: 'PowerKit 15kWh', sub: 'Whole-home system', href: '/ecoflow-kenya#powerkits' },
+                        { name: 'Homestar 3', sub: '2kW inverter · 3kWh battery', href: '/bluetti/bluetti-homestar-3' },
+                        { name: 'Homestar 5', sub: '3.68kW inverter · 5kWh battery', href: '/bluetti' },
+                        { name: 'EP2000 10kW', sub: '10kW inverter · 14.6kWh battery', href: '/bluetti' },
+                        { name: 'EP2000 15kW', sub: '15kW inverter · 21.9kWh battery', href: '/bluetti' },
+                        { name: 'EP2000 20kW', sub: '20kW inverter · 29–51kWh battery', href: '/bluetti' },
                       ].map((item) => (
                         <Link key={item.name} href={item.href} onClick={() => setOpenMenu(null)}
                           className="flex flex-col py-2.5 px-3 -mx-3 rounded-xl hover:bg-slate-50 transition-all duration-200 group"
