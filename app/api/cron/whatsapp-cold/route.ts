@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import { NextResponse } from 'next/server'
 import { getAdminSession } from '@/lib/admin-auth'
 import { logOutreachEvent } from '@/lib/outreach/logger'
+import { createOutreachAdminClient } from '@/lib/outreach/supabase'
 import { maybeTopUpLeads, runWahaColdTick } from '@/lib/outreach/waha-queue'
 import { runAfterResponse } from '@/lib/outreach/whatsapp-transport'
 
@@ -21,10 +22,35 @@ function bearerMatches(header: string, secret: string | undefined): boolean {
  * Called every minute by Supabase pg_cron (Bearer WHATSAPP_QUEUE_SECRET), by
  * Vercel cron (Bearer CRON_SECRET), or by a logged-in admin's open console.
  */
+/**
+ * Token generated inside the outreach database (table whatsapp_cron_auth,
+ * RLS on, service role only) and sent by its pg_cron job. Read with the
+ * service role and cached briefly so the per-minute tick stays cheap.
+ */
+let dbTokenCache: { value: string | null; at: number } | null = null
+async function dbCronToken(): Promise<string | null> {
+  if (dbTokenCache && Date.now() - dbTokenCache.at < 5 * 60 * 1000) return dbTokenCache.value
+  try {
+    const supabase = createOutreachAdminClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data } = await (supabase.from('whatsapp_cron_auth') as any)
+      .select('token')
+      .eq('id', 1)
+      .maybeSingle()
+    const value = typeof data?.token === 'string' && data.token.length >= 32 ? data.token : null
+    dbTokenCache = { value, at: Date.now() }
+    return value
+  } catch {
+    return null
+  }
+}
+
 async function handle(req: Request) {
   const auth = req.headers.get('authorization') || ''
   const isMachine =
-    bearerMatches(auth, process.env.WHATSAPP_QUEUE_SECRET) || bearerMatches(auth, process.env.CRON_SECRET)
+    bearerMatches(auth, process.env.WHATSAPP_QUEUE_SECRET) ||
+    bearerMatches(auth, process.env.CRON_SECRET) ||
+    (auth.startsWith('Bearer ') && bearerMatches(auth, (await dbCronToken()) ?? undefined))
   if (!isMachine && !getAdminSession()) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
