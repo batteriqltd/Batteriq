@@ -55,6 +55,7 @@ import {
   type OutreachSettings,
 } from '@/lib/outreach/types'
 import { WhatsAppInboxTab } from './WhatsAppInboxTab'
+import { WhatsAppColdTicker, WhatsAppConnectCard } from './WhatsAppConnectCard'
 import { CommandPalette, type CommandItem, InstallPrompt, ThemeToggle, useConsoleTheme } from './ui'
 import { NotificationCenter } from './ui/NotificationCenter'
 import { Dialer } from './voice/Dialer'
@@ -1106,6 +1107,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                 <div className="flex items-center gap-2 sm:gap-3">
                   <CommandPalette items={paletteItems} />
 
+                  <WhatsAppColdTicker />
+
                   <InstallPrompt />
 
                   <div className="hidden sm:block">
@@ -2092,6 +2095,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
               {/* ─────────── TAB: SETTINGS ─────────── */}
               {activeTab === 'settings' && (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                  <WhatsAppConnectCard />
+
                   <div className={`${cardCls} p-5 space-y-1`}>
                     <h3 className="text-sm font-extrabold mb-2">Automation</h3>
                     {[

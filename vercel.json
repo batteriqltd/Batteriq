@@ -47,6 +47,12 @@
       "maxDuration": 60
     },
     "app/api/whatsapp/webhook/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/cron/whatsapp-cold/route.ts": {
+      "maxDuration": 30
+    },
+    "app/api/admin/outreach/whatsapp/send/route.ts": {
       "maxDuration": 30
     }
   },

@@ -8,10 +8,10 @@ import { isSuppressed, recordPermanentOptOut } from './compliance'
 import { logOutreachEvent } from './logger'
 import { createOutreachAdminClient, fetchStoreCatalogProductsSafe } from './supabase'
 import type { OutreachConversation, OutreachLead, OutreachMessage } from './types'
-import {
-  assertWhatsAppOutboundCompliance,
-  sendWhatsAppCloudText,
-} from './whatsapp'
+import { assertWhatsAppOutboundCompliance } from './whatsapp'
+import { sendWhatsAppText } from './whatsapp-transport'
+
+type ConversationWithChat = OutreachConversation & { wa_chat_id?: string | null }
 
 export async function notifyAdminEscalation(params: {
   leadName: string
@@ -156,8 +156,9 @@ export async function handleAiTakeoverForInboundMessage(params: {
 
     // Send polite one-time opt-out confirmation (customer just messaged, so within 24h window)
     try {
-      const { waMessageId } = await sendWhatsAppCloudText({
+      const { waMessageId, provider } = await sendWhatsAppText({
         toPhoneE164: conversation.phone_e164,
+        chatId: (conversation as ConversationWithChat).wa_chat_id,
         body: decision.reply,
         fetchImpl,
       })
@@ -171,6 +172,7 @@ export async function handleAiTakeoverForInboundMessage(params: {
         body: decision.reply,
         wa_message_id: waMessageId,
         delivery_status: 'sent',
+        ...(provider === 'waha' ? { provider: 'waha' } : {}),
         ai_metadata: {
           model: decision.model,
           newStatus: 'opted_out',
@@ -255,9 +257,11 @@ export async function handleAiTakeoverForInboundMessage(params: {
     messageType: 'text',
   })
 
-  const { waMessageId } = await sendWhatsAppCloudText({
+  const { waMessageId, provider } = await sendWhatsAppText({
     toPhoneE164: conversation.phone_e164,
+    chatId: (conversation as ConversationWithChat).wa_chat_id,
     body: decision.reply,
+    humanize: true,
     fetchImpl,
   })
 
@@ -271,6 +275,7 @@ export async function handleAiTakeoverForInboundMessage(params: {
     body: decision.reply,
     wa_message_id: waMessageId,
     delivery_status: 'sent',
+    ...(provider === 'waha' ? { provider: 'waha' } : {}),
     ai_metadata: {
       model: decision.model,
       newStatus: decision.newStatus,

@@ -10,6 +10,13 @@ import {
   WhatsAppComplianceError,
 } from '@/lib/outreach/whatsapp'
 import { normalizeKenyanPhone } from '@/lib/outreach/validators'
+import { recordOutboundWahaMessage, wahaErrorResponse } from '@/lib/outreach/waha-admin'
+import { MANUAL_DAILY_CAP, MANUAL_MIN_GAP_SECONDS, claimSendSlot } from '@/lib/outreach/waha-queue'
+import {
+  activeWhatsAppProvider,
+  sendWhatsAppText,
+  toWhatsAppChatId,
+} from '@/lib/outreach/whatsapp-transport'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,6 +76,53 @@ export async function POST(req: NextRequest) {
       phoneE164,
       email: lead?.email || null,
     })
+
+    // ── WAHA (self-hosted WhatsApp): free-form text, opt-outs still enforced.
+    // A staff reply takes over the thread (AI auto-replies pause until switched back).
+    if (activeWhatsAppProvider() === 'waha') {
+      if (suppressed || conversation.status === 'opted_out' || lead?.status === 'opted_out') {
+        return NextResponse.json(
+          { error: 'Contact has opted out and cannot be messaged.', code: 'OPTED_OUT' },
+          { status: 403 }
+        )
+      }
+      const text = messageType === 'template' ? textBody || templateParams.join(' ') : textBody
+      if (!text) {
+        return NextResponse.json({ error: 'Message text is required' }, { status: 400 })
+      }
+      const slot = await claimSendSlot(supabase, 'manual', MANUAL_MIN_GAP_SECONDS, MANUAL_DAILY_CAP)
+      if (!slot.allowed) {
+        return NextResponse.json(
+          { error: 'Sending too fast — try again in a moment.', retryAfterSeconds: slot.retryAfterSeconds },
+          { status: 429 }
+        )
+      }
+      const chatId: string | null = conversation.wa_chat_id || toWhatsAppChatId(phoneE164)
+      if (!chatId) {
+        return NextResponse.json({ error: 'No WhatsApp chat id for this contact' }, { status: 400 })
+      }
+      try {
+        const { waMessageId } = await sendWhatsAppText({ toPhoneE164: phoneE164, chatId, body: text })
+        const stored = await recordOutboundWahaMessage({
+          phoneE164,
+          chatId,
+          body: text,
+          waMessageId,
+          adminEmail: session.email,
+          takeover: true,
+          conversation,
+        })
+        if (conversation.lead_id) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase.from('outreach_leads') as any)
+            .update({ human_contacted_at: new Date().toISOString() })
+            .eq('id', conversation.lead_id)
+        }
+        return NextResponse.json({ success: true, waMessageId, messageId: stored.messageId, mode: 'human' })
+      } catch (err) {
+        return wahaErrorResponse(err, 'WhatsApp send failed')
+      }
+    }
 
     // Enforce cold-outbound prohibition, opt-out check, and 24-hour template rule
     assertWhatsAppOutboundCompliance({

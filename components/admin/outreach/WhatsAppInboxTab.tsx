@@ -69,6 +69,15 @@ export function WhatsAppInboxTab({
   )
   const [templateParam1, setTemplateParam1] = useState('')
   const [feedback, setFeedback] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  // Self-hosted WhatsApp (WAHA): no Meta 24h/template rules, free-form replies only
+  const [wahaMode, setWahaMode] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/admin/outreach/whatsapp/waha/status?lite=1', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setWahaMode(Boolean(d?.configured)))
+      .catch(() => {})
+  }, [])
 
   const loadConversations = useCallback(async () => {
     try {
@@ -109,13 +118,23 @@ export function WhatsAppInboxTab({
       return
     }
     loadMessages(selectedId)
+    // Keep the open thread live so replies appear without clicking Sync
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetch(`/api/admin/outreach/conversations/${selectedId}`, { cache: 'no-store' })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => d && setMessages((d.messages ?? []) as OutreachMessage[]))
+          .catch(() => {})
+      }
+    }, 10_000)
+    return () => clearInterval(timer)
   }, [selectedId, loadMessages])
 
   const activeConv = conversations.find((c) => c.id === selectedId) || null
-  const windowOpen = activeConv ? isWithin24Hours(activeConv.last_inbound_at) : false
+  const windowOpen = activeConv ? wahaMode || isWithin24Hours(activeConv.last_inbound_at) : false
   const canMessageAtAll = activeConv
     ? activeConv.status !== 'opted_out' &&
-      (activeConv.opted_in || Boolean(activeConv.last_inbound_at))
+      (wahaMode || activeConv.opted_in || Boolean(activeConv.last_inbound_at))
     : false
 
   useEffect(() => {
@@ -125,9 +144,9 @@ export function WhatsAppInboxTab({
           activeConv.outreach_leads?.business_name ||
           'there'
       )
-      setUseTemplate(!isWithin24Hours(activeConv.last_inbound_at))
+      setUseTemplate(!wahaMode && !isWithin24Hours(activeConv.last_inbound_at))
     }
-  }, [activeConv])
+  }, [activeConv, wahaMode])
 
   async function handleToggleMode(nextMode: 'ai' | 'human') {
     if (!activeConv) return
@@ -211,6 +230,9 @@ export function WhatsAppInboxTab({
         setFeedback({ type: 'err', text: data.error || 'WhatsApp send failed' })
       } else {
         setTextDraft('')
+        if (data.mode === 'human' && activeConv.mode !== 'human') {
+          setFeedback({ type: 'ok', text: 'You took over this chat — AI auto-replies paused. Switch back to AI Mode anytime.' })
+        }
         await loadMessages(activeConv.id)
         await loadConversations()
         onStatsChange?.()
@@ -227,9 +249,18 @@ export function WhatsAppInboxTab({
         <div className="flex items-center gap-2.5 text-xs font-medium text-[#1d4ed8]">
           <ShieldCheck className="w-4 h-4 text-[#2563eb] flex-shrink-0" />
           <span>
-            <strong className="text-[#00004d]">WhatsApp Cloud &amp; AI Takeover:</strong> Free-form
-            AI/staff replies inside 24h window · Approved Meta templates outside 24h · Permanent
-            Kenya DPA opt-out guard.
+            {wahaMode ? (
+              <>
+                <strong className="text-[#00004d]">WhatsApp &amp; AI Takeover:</strong> AI replies
+                instantly in AI Mode · your reply takes the chat over (Human) · STOP always opts out.
+              </>
+            ) : (
+              <>
+                <strong className="text-[#00004d]">WhatsApp Cloud &amp; AI Takeover:</strong> Free-form
+                AI/staff replies inside 24h window · Approved Meta templates outside 24h · Permanent
+                Kenya DPA opt-out guard.
+              </>
+            )}
           </span>
         </div>
         <button
@@ -315,7 +346,11 @@ export function WhatsAppInboxTab({
                     >
                       {conv.status === 'opted_out'
                         ? 'Opted Out'
-                        : isOpen24h
+                        : wahaMode
+                          ? conv.last_inbound_at
+                            ? '● Replied'
+                            : 'Awaiting reply'
+                          : isOpen24h
                           ? '● 24h Window Open'
                           : 'Template Mode (>24h)'}
                     </span>
@@ -460,7 +495,9 @@ export function WhatsAppInboxTab({
                                 : m.sender_type === 'ai'
                                   ? 'Gemini AI'
                                   : m.sender_type === 'system_template'
-                                    ? `Template (${m.template_name || 'approved'})`
+                                    ? m.template_name === 'cold_intro'
+                                      ? 'Cold intro'
+                                      : `Template (${m.template_name || 'approved'})`
                                     : 'Batteriq Staff'}
                             </span>
                             <span>·</span>
@@ -497,11 +534,15 @@ export function WhatsAppInboxTab({
                     <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                       <span className="flex items-center gap-1.5 font-medium text-slate-400">
                         <Clock className="w-3.5 h-3.5 text-[#2563eb]" />
-                        {windowOpen
-                          ? '24-hour customer care window active — free-form reply allowed'
-                          : 'Outside 24-hour window — approved Meta template required'}
+                        {wahaMode
+                          ? activeConv.mode === 'ai'
+                            ? 'AI is answering this chat — sending a reply takes it over'
+                            : 'You are handling this chat (AI paused)'
+                          : windowOpen
+                            ? '24-hour customer care window active — free-form reply allowed'
+                            : 'Outside 24-hour window — approved Meta template required'}
                       </span>
-                      {windowOpen && (
+                      {windowOpen && !wahaMode && (
                         <button
                           type="button"
                           onClick={() => setUseTemplate((v) => !v)}
