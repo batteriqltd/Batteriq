@@ -49,20 +49,29 @@ export function proformaFilename(p: OutreachProformaPackage): string {
   return `Batteriq-Proforma-${p.proformaNumber}.pdf`
 }
 
+/** "EcoFlow DELTA 2 Portable Power Station (1024Wh LiFePO4, …)" → "EcoFlow DELTA 2 Portable Power Station" */
+function shortProductName(name: string): string {
+  return name.replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s{2,}/g, ' ').trim()
+}
+
+/** Reads like a sales person's note, not a system notification. */
 export function buildProformaWhatsAppCaption(p: OutreachProformaPackage): string {
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').trim().replace(/\/+$/, '')
+  const names = p.items.map((it) => shortProductName(it.name))
+  const recommendation =
+    names.length > 1 ? `${names.slice(0, -1).join(', ')} with the ${names[names.length - 1]}` : names[0] || 'this setup'
   const lines = p.items.map(
-    (it) => `${it.name} x${it.quantity}: KES ${it.total.toLocaleString('en-KE')}`
+    (it) => `${shortProductName(it.name)} x${it.quantity}: KES ${it.total.toLocaleString('en-KE')}`
   )
   return [
-    `Batteriq Proforma Quotation #${p.proformaNumber}`,
-    p.systemTitle,
+    `Here is the quotation for ${p.customerName}.`,
+    '',
+    `I'd recommend the ${recommendation}. It keeps your essentials running the moment the power goes off, with no fuel, no noise and nothing to maintain.`,
     '',
     ...lines,
+    `Total KES ${p.total.toLocaleString('en-KE')}, including VAT, delivery and a 24-month warranty.`,
     '',
-    `Total: KES ${p.total.toLocaleString('en-KE')} (incl. 16% VAT, 24-month warranty, delivery)`,
-    'Valid for 14 days. Let me know if you would like any changes or want to go ahead with delivery.',
-    '',
-    `You can also order online here: ${(process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').trim().replace(/\/+$/, '')}`,
+    `These prices are held for 14 days. Reply here to confirm and we'll arrange delivery, or order directly at ${site}`,
   ].join('\n')
 }
 

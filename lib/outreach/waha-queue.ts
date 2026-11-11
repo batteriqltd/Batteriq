@@ -36,12 +36,13 @@ export interface WahaCampaignSettings {
 }
 
 export const DEFAULT_WAHA_COLD_MESSAGE =
-  '{Hello|Good day} {business},\n\n' +
-  "{I'm reaching out from|This is} Batteriq, Kenya's authorised EcoFlow & BLUETTI dealer. " +
-  '{We help|We support} businesses stay open through blackouts with silent battery backup and solar, with no fuel and no noise.\n\n' +
-  "I've attached a quotation made for {business} below. Reply here to adjust it or ask anything.\n\n" +
-  "{You can also|You're welcome to} check out our full range and order directly on our website: {website}\n\n" +
-  'Reply STOP to opt out.'
+  '{Hello|Hi|Good day} {business},\n\n' +
+  '{What does a blackout cost you in a day?|When KPLC goes off, how much does it cost you?} ' +
+  'Lost sales, spoilt stock and downtime add up fast.\n\n' +
+  "We're the authorised EcoFlow and BLUETTI dealer in Kenya. Our backup systems take over the instant the power goes, " +
+  'silently, with no fuel to buy and no generator to service. Every unit comes with a 24-month warranty and same-day delivery in Nairobi.\n\n' +
+  "I've attached a quotation sized for {a business like yours|you}. You can also see the full range and order directly at {website}\n\n" +
+  '{Shall I reserve one for you?|Would you like me to set this up for you?}'
 
 export const DEFAULT_WAHA_CAMPAIGN: WahaCampaignSettings = {
   waha_cold_enabled: false,

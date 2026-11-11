@@ -208,8 +208,10 @@ describe('WhatsApp proforma + wider targeting', () => {
         phone_e164: null,
       })
     )
-    expect(caption).toMatch(/Proforma Quotation #BQ-PRO-/)
-    expect(caption).toMatch(/Total: KES/)
+    expect(caption).toMatch(/^Here is the quotation for Acme\./)
+    expect(caption).toMatch(/I'd recommend the /)
+    expect(caption).toMatch(/Total KES [\d,]+, including VAT/)
+    expect(caption).not.toMatch(/\(/) // spec brackets stripped from product names
   })
 
   it('sends the PDF as a WhatsApp document with X-Api-Key', async () => {
@@ -261,14 +263,18 @@ describe('website links in WhatsApp messages', () => {
   it('puts the order link in the cold intro and the proforma caption', async () => {
     const { DEFAULT_WAHA_COLD_MESSAGE, renderColdMessage } = await import('@/lib/outreach/waha-queue')
     const intro = renderColdMessage(DEFAULT_WAHA_COLD_MESSAGE, { business: 'Acme Bar', city: 'Nairobi' })
-    expect(intro).toMatch(/order directly on our website: https:\/\/[^\s]+/)
-    expect(intro).not.toMatch(/\{website\}/)
+    expect(intro).toMatch(/order directly at https:\/\/[^\s]+/)
+    expect(intro).not.toMatch(/[{}]/)
+    // reads as us, sells, and has no opt-out footer
+    expect(intro).not.toMatch(/from Batteriq/i)
+    expect(intro).not.toMatch(/opt out|STOP/)
+    expect(intro).toMatch(/\?$/)
     const { buildProformaWhatsAppCaption } = await import('@/lib/outreach/whatsapp-proforma')
     const { recommendBatteriqProformaForLead } = await import('@/lib/outreach/proforma')
     const caption = buildProformaWhatsAppCaption(
       recommendBatteriqProformaForLead({ business_name: 'Acme', category: 'retail', city: 'Nairobi', address: null, email: null, phone_e164: null })
     )
-    expect(caption).toMatch(/order online here: https:\/\//)
+    expect(caption).toMatch(/order directly at https:\/\//)
   })
 
   it('builds product page links for EcoFlow and BLUETTI only', async () => {
