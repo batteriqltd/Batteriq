@@ -47,14 +47,14 @@ export const DEFAULT_WAHA_COLD_MESSAGE =
 export const DEFAULT_WAHA_CAMPAIGN: WahaCampaignSettings = {
   waha_cold_enabled: false,
   waha_cold_message: DEFAULT_WAHA_COLD_MESSAGE,
-  waha_cold_daily_cap: 150,
+  waha_cold_daily_cap: 40,
   waha_cold_start_hour: 8,
   waha_cold_end_hour: 18,
   waha_cold_paused_until: null,
 }
 
-/** Minimum seconds between two cold messages. pg_cron fires every 60s. */
-export const COLD_MIN_GAP_SECONDS = 55
+/** Minimum seconds between two cold messages: 1 every 2 minutes (pg_cron fires every 60s). */
+export const COLD_MIN_GAP_SECONDS = 115
 /** Manual (inbox / test) sends: tiny gap that only stops accidental floods. */
 export const MANUAL_MIN_GAP_SECONDS = 2
 export const MANUAL_DAILY_CAP = 1000

@@ -194,7 +194,7 @@ export function WhatsAppConnectCard() {
     if (!ok) return setNote({ type: 'err', text: data.error || 'Could not save campaign' })
     campaignDirty.current = false
     setCampaign({ ...next, ...data.campaign })
-    setNote({ type: 'ok', text: next.waha_cold_enabled ? 'Cold campaign ON — 1 message per minute.' : 'Campaign saved.' })
+    setNote({ type: 'ok', text: next.waha_cold_enabled ? 'Cold campaign ON — 1 message every 2 minutes.' : 'Campaign saved.' })
   }
 
   async function sendNextNow() {
@@ -395,7 +395,7 @@ export function WhatsAppConnectCard() {
             <div className="rounded-2xl border border-[#e3e9f5] p-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs font-extrabold flex items-center gap-1.5">
-                  <Megaphone className="w-4 h-4 text-[#2563eb]" /> Cold outreach · 1 message per minute
+                  <Megaphone className="w-4 h-4 text-[#2563eb]" /> Cold outreach · 1 message every 2 minutes
                 </p>
                 <button
                   type="button"
@@ -500,7 +500,7 @@ export function WhatsAppConnectCard() {
 
 /**
  * Backup trigger for the cold queue while the console is open (the primary
- * trigger is Supabase pg_cron). Server-side DB slots keep it to 1/minute.
+ * trigger is Supabase pg_cron). Server-side DB slots keep it to 1 every 2 minutes.
  */
 export function WhatsAppColdTicker() {
   useEffect(() => {
