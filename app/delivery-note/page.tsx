@@ -2,8 +2,24 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { CheckCircle2, Plus, Trash2, Download, QrCode, Check, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react'
-import QRCode from 'qrcode'
 import type { DeliveryNoteItem, NoteDocType } from '@/lib/delivery-note-pdf'
+import { createQrVerificationStamp } from '@/lib/delivery-note-stamp'
+
+/** A note the admin already filled & signed — the client only downloads it. */
+interface ReadyNote {
+  docNumber: string
+  docType: NoteDocType
+  customerName: string
+  receiverName: string
+  date: string
+  deliverySite: string
+  items: DeliveryNoteItem[]
+  companionDocNumber?: string
+}
+
+function docLabel(t: NoteDocType): string {
+  return t === 'installation' ? 'Installation Completion Note' : 'Delivery Note'
+}
 
 function downloadBase64Pdf(base64: string, filename: string) {
   const bytes = atob(base64)
@@ -66,6 +82,7 @@ export default function PublicDeliveryNotePage() {
     companionPdf?: string | null
     companionFilename?: string | null
   } | null>(null)
+  const [readyNote, setReadyNote] = useState<ReadyNote | null>(null)
 
   // Auto-fill from ?order= or ?doc= in URL
   useEffect(() => {
@@ -88,6 +105,21 @@ export default function PublicDeliveryNotePage() {
       .then((d) => {
         if (!d?.note) return
         const n = d.note
+        // Already filled & signed by Batteriq → just offer the download
+        if (prefillDoc && !orderParam && n.status === 'signed' && n.receiverSignature) {
+          const also = params.get('also')
+          setReadyNote({
+            docNumber: n.docNumber,
+            docType: n.docType === 'installation' ? 'installation' : 'delivery',
+            customerName: n.customerName || n.receiverName || '',
+            receiverName: n.receiverName || n.contactPerson || n.customerName || '',
+            date: n.date || '',
+            deliverySite: n.deliverySite || '',
+            items: Array.isArray(n.items) ? n.items : [],
+            companionDocNumber: also && /^[\w-]{3,40}$/.test(also) ? also : undefined,
+          })
+          return
+        }
         setIsPrefilled(true)
         if (n.docNumber) setDocNumber(n.docNumber)
         if (n.docType === 'installation' || n.docType === 'delivery') {
@@ -113,93 +145,16 @@ export default function PublicDeliveryNotePage() {
 
   // Generate the 480x150 composite QR Verification Stamp (embedded into the ready A4 PDF)
   const generateQrSignatureStamp = useCallback(async () => {
-    const cleanSigner = (receiverName.trim() || contactPerson.trim() || customerName.trim() || 'Verified Receiver').slice(0, 36)
-    const cleanSite = (deliverySite.trim() || 'Nairobi, Kenya').slice(0, 40)
-    const stampId = `BAT-QR-${Math.floor(100000 + Math.random() * 900000)}`
-    const timestamp = new Date().toLocaleString('en-KE', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
+    const stamp = await createQrVerificationStamp({
+      signer: receiverName.trim() || contactPerson.trim() || customerName.trim(),
+      site: deliverySite,
+      lpoReference,
+      items,
     })
-    const matSummary = items
-      .filter((i) => i.description.trim())
-      .map((i) => `${i.description.trim()} x${i.qtyReceived || i.qtySent || '1'}`)
-      .join(', ')
-      .slice(0, 120)
-
-    const qrPayload = [
-      'BATTERIQ VERIFIED DELIVERY',
-      `ID: ${stampId}`,
-      `Receiver: ${cleanSigner}`,
-      `Site: ${cleanSite}`,
-      `Date: ${timestamp}`,
-      lpoReference ? `Ref: ${lpoReference}` : '',
-      matSummary ? `Items: ${matSummary}` : '',
-    ]
-      .filter(Boolean)
-      .join(' | ')
-
-    const qrUrl = await QRCode.toDataURL(qrPayload, {
-      width: 240,
-      margin: 1,
-      color: { dark: '#0f172a', light: '#ffffff' },
-    })
-    setQrOnlyDataUrl(qrUrl)
-
-    // Render composite stamp canvas (480x150 -> 3.2:1 aspect ratio matching 48mm x 15mm in PDF)
-    const canvas = document.createElement('canvas')
-    canvas.width = 480
-    canvas.height = 150
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      setQrStampDataUrl(qrUrl)
-      setQrStampInfo({ stampId, signedBy: cleanSigner, timestamp })
-      return qrUrl
-    }
-
-    ctx.fillStyle = '#ffffff'
-    ctx.fillRect(0, 0, 480, 150)
-
-    ctx.strokeStyle = '#1e4e87'
-    ctx.lineWidth = 3
-    ctx.strokeRect(3, 3, 474, 144)
-
-    await new Promise<void>((resolve) => {
-      const img = new Image()
-      img.onload = () => {
-        ctx.drawImage(img, 8, 8, 134, 134)
-        resolve()
-      }
-      img.onerror = () => resolve()
-      img.src = qrUrl
-    })
-
-    ctx.fillStyle = '#1e4e87'
-    ctx.font = 'bold 17px Arial, sans-serif'
-    ctx.fillText('QR VERIFIED & SIGNED', 154, 34)
-
-    ctx.fillStyle = '#0f172a'
-    ctx.font = 'bold 20px Arial, sans-serif'
-    ctx.fillText(cleanSigner.slice(0, 24), 154, 64)
-
-    ctx.fillStyle = '#334155'
-    ctx.font = 'bold 14px Courier New, monospace'
-    ctx.fillText(`ID: ${stampId}`, 154, 92)
-
-    ctx.fillStyle = '#475569'
-    ctx.font = '14px Arial, sans-serif'
-    ctx.fillText(timestamp, 154, 116)
-
-    ctx.fillStyle = '#16a34a'
-    ctx.font = 'bold 13px Arial, sans-serif'
-    ctx.fillText('BATTERIQ SOLUTIONS LTD', 154, 137)
-
-    const compositeUrl = canvas.toDataURL('image/png')
-    setQrStampDataUrl(compositeUrl)
-    setQrStampInfo({ stampId, signedBy: cleanSigner, timestamp })
-    return compositeUrl
+    setQrOnlyDataUrl(stamp.qrUrl)
+    setQrStampDataUrl(stamp.compositeUrl)
+    setQrStampInfo({ stampId: stamp.stampId, signedBy: stamp.signedBy, timestamp: stamp.timestamp })
+    return stamp.compositeUrl
   }, [receiverName, contactPerson, customerName, deliverySite, lpoReference, items])
 
   function updateItem(idx: number, patch: Partial<DeliveryNoteItem>) {
@@ -302,6 +257,95 @@ export default function PublicDeliveryNotePage() {
   }
 
   const populatedItems = items.filter((i) => i.description.trim())
+
+  if (readyNote) {
+    const readyItems = readyNote.items.filter((i) => i.description.trim())
+    const otherType: NoteDocType = readyNote.docType === 'installation' ? 'delivery' : 'installation'
+    return (
+      <div className="min-h-screen bg-slate-50 py-10 px-4 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+          <div className="px-6 py-5 bg-[#1e4e87] text-white flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-blue-200">BATTERIQ SOLUTIONS LTD</p>
+              <h1 className="text-lg font-black tracking-tight uppercase mt-0.5">{docLabel(readyNote.docType)}</h1>
+            </div>
+            <div className="text-xl font-black tracking-tight leading-none">
+              BATTERIQ<sup className="text-[9px] font-bold text-blue-200">™</sup>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-7 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 size={36} />
+            </div>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Your document is ready</h2>
+            <p className="text-sm text-slate-500 mt-1.5">
+              {readyNote.receiverName ? (
+                <>
+                  Hello <strong className="text-slate-800">{readyNote.receiverName}</strong>, your{' '}
+                </>
+              ) : (
+                'Your '
+              )}
+              signed <strong>{docLabel(readyNote.docType)} ({readyNote.docNumber})</strong> is ready to download.
+            </p>
+
+            <div className="mt-5 rounded-2xl bg-slate-50 border border-slate-200/80 p-4 text-left space-y-2 text-xs">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-slate-400 font-semibold block">Customer:</span>
+                  <span className="font-bold text-slate-800">{readyNote.customerName || 'Client'}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-semibold block">Date:</span>
+                  <span className="font-bold text-slate-800">{readyNote.date}</span>
+                </div>
+                {readyNote.deliverySite && (
+                  <div className="col-span-2">
+                    <span className="text-slate-400 font-semibold block">Site:</span>
+                    <span className="font-bold text-slate-800">{readyNote.deliverySite}</span>
+                  </div>
+                )}
+              </div>
+              {readyItems.length > 0 && (
+                <ul className="pt-2 border-t border-slate-200/70 space-y-1">
+                  {readyItems.map((it, i) => (
+                    <li key={i} className="font-bold text-slate-800 flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate">
+                        {i + 1}. {it.description}
+                      </span>
+                      <span className="px-2 py-0.5 rounded bg-white border border-slate-200 font-mono text-[11px] shrink-0">
+                        Qty: {it.qtyReceived || it.qtySent || '1'}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="mt-6 space-y-2.5">
+              <a
+                href={`/api/delivery-notes/pdf?doc=${encodeURIComponent(readyNote.docNumber)}`}
+                className="w-full py-4 px-5 rounded-2xl bg-[#1e4e87] hover:bg-[#163b68] text-white font-black text-sm uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+              >
+                <Download size={18} />
+                Download {docLabel(readyNote.docType)} (PDF)
+              </a>
+              {readyNote.companionDocNumber && (
+                <a
+                  href={`/api/delivery-notes/pdf?doc=${encodeURIComponent(readyNote.companionDocNumber)}`}
+                  className="w-full py-3.5 px-5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all"
+                >
+                  <Download size={16} />
+                  Download {docLabel(otherType)} (PDF)
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (submitted) {
     return (

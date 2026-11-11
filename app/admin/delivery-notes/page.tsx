@@ -6,6 +6,7 @@ import {
   CheckCircle2, Clock, Wrench, FileText, ExternalLink, Package,
 } from 'lucide-react'
 import type { DeliveryNoteItem, DeliveryNoteRecord, NoteDocType } from '@/lib/delivery-note-pdf'
+import { createQrVerificationStamp } from '@/lib/delivery-note-stamp'
 
 interface AdminOrderSummary {
   id: string
@@ -241,6 +242,88 @@ export default function AdminDeliveryNotesPage() {
       }
     } catch (err) {
       showMsg(err instanceof Error ? err.message : 'Failed to save')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  /**
+   * Admin fills everything, signs with the QR verification stamp on the
+   * client's behalf, and sends a link that opens straight to "ready to download".
+   */
+  async function handleSignAndSendReady() {
+    const signer = (receiverName || contactPerson || customerName).trim()
+    if (!customerName.trim() || !signer) {
+      showMsg('Enter Customer Name (and Receiver Name)')
+      return
+    }
+    if (!items.some((i) => i.description.trim())) {
+      showMsg('Add at least one item')
+      return
+    }
+    const waPhone = cleanWaPhone(customerPhone || quickWaPhone)
+    // Open the tab now (inside the click) so popup blockers allow it
+    const waWindow = waPhone ? window.open('', '_blank') : null
+    setSaving(true)
+    try {
+      const stamp = await createQrVerificationStamp({
+        signer,
+        site: deliverySite,
+        lpoReference,
+        items,
+      })
+      const res = await fetch('/api/delivery-notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          docNumber: docNumber || undefined,
+          docType,
+          createBoth: !docNumber && createBoth,
+          customerName,
+          customerPhone,
+          deliverySite,
+          contactPerson: contactPerson || signer,
+          lpoReference,
+          date,
+          items: items.filter((i) => i.description.trim()),
+          workDescription,
+          worksCompleted:
+            worksCompleted ||
+            items
+              .filter((i) => i.description.trim())
+              .map((i) => `${i.description} (x${i.qtyReceived || i.qtySent || '1'})`)
+              .join(', '),
+          checks: { visuallyInspected: true, functionalChecks: true, customerHandover: true },
+          remarks: remarks || 'Received in good order and condition.',
+          batteriqPersonName: batteriqPersonName || 'Batteriq Delivery Team',
+          receiverName: signer,
+          receiverSignature: stamp.compositeUrl,
+          status: 'signed',
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed')
+
+      const docNum: string = data.note.docNumber
+      const also: string | undefined = data.companionNote?.docNumber
+      const link = `${publicFormUrl}?doc=${encodeURIComponent(docNum)}${also ? `&also=${encodeURIComponent(also)}` : ''}`
+      const label = docType === 'installation' ? 'Installation Completion Note' : 'Delivery Note'
+      const text = `Hello ${signer}, your Batteriq ${label} (${docNum}) is ready. You can download it here:\n${link}`
+
+      setReceiverSignature(stamp.compositeUrl)
+      setDocNumber(docNum)
+      loadNotes()
+      if (waWindow) {
+        waWindow.opener = null
+        waWindow.location.href = `https://wa.me/${waPhone}?text=${encodeURIComponent(text)}`
+        showMsg(`${docNum} signed & ready — WhatsApp opened`)
+      } else {
+        await navigator.clipboard.writeText(link).catch(() => {})
+        showMsg(`${docNum} signed & ready — download link copied`)
+      }
+    } catch (err) {
+      waWindow?.close()
+      showMsg(err instanceof Error ? err.message : 'Failed to prepare the ready note')
     } finally {
       setSaving(false)
     }
@@ -520,6 +603,16 @@ export default function AdminDeliveryNotesPage() {
               />
             </div>
             <div>
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">Received By (client name)</label>
+              <input
+                type="text"
+                value={receiverName}
+                onChange={(e) => setReceiverName(e.target.value)}
+                placeholder="Who received it"
+                className="w-full h-9 px-3 rounded-xl border border-slate-200 text-xs text-slate-900"
+              />
+            </div>
+            <div>
               <label className="block text-[11px] font-bold text-slate-600 mb-1">Batteriq Staff / Tech Name</label>
               <input
                 type="text"
@@ -584,6 +677,19 @@ export default function AdminDeliveryNotesPage() {
           <div className="space-y-2 pt-2">
             <button
               type="button"
+              onClick={handleSignAndSendReady}
+              disabled={saving}
+              className="w-full h-12 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-60"
+            >
+              <CheckCircle2 size={16} />
+              {saving ? 'Preparing...' : 'Fill & Sign Myself → Send Ready Note'}
+            </button>
+            <p className="text-[11px] text-slate-500 text-center -mt-0.5">
+              Client just opens the link and downloads — nothing to fill or sign.
+            </p>
+
+            <button
+              type="button"
               onClick={handleSaveAndSendLink}
               disabled={saving}
               className="w-full h-11 rounded-2xl bg-green-600 hover:bg-green-700 text-white text-xs font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all disabled:opacity-60"
@@ -637,15 +743,14 @@ export default function AdminDeliveryNotesPage() {
           ) : (
             <div className="space-y-3">
               {filteredNotes.map((n) => {
-                const pdfUrl = `${typeof window !== 'undefined' ? window.location.origin : 'https://batteriq.com'}/api/delivery-notes/pdf?doc=${encodeURIComponent(n.docNumber)}`
                 const prefillUrl = `${publicFormUrl}?doc=${encodeURIComponent(n.docNumber)}`
                 const waNumber = cleanWaPhone(n.customerPhone)
                 const isSigned = n.status === 'signed' || Boolean(n.receiverSignature)
                 const waText = encodeURIComponent(
                   isSigned
-                    ? `Hello ${n.contactPerson || n.customerName}, here is your signed Batteriq ${
+                    ? `Hello ${n.receiverName || n.contactPerson || n.customerName}, your Batteriq ${
                         n.docType === 'installation' ? 'Installation Completion Note' : 'Delivery Note'
-                      } (${n.docNumber}):\n${pdfUrl}`
+                      } (${n.docNumber}) is ready. You can download it here:\n${prefillUrl}`
                     : `Hello ${n.contactPerson || n.customerName}, please confirm your name and sign your Batteriq ${
                         n.docType === 'installation' ? 'Installation Completion Note' : 'Delivery Note'
                       } (${n.docNumber}):\n${prefillUrl}`
