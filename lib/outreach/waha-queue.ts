@@ -143,7 +143,8 @@ export interface ColdTickResult {
   proformaVia?: 'file' | 'link' | 'failed' | 'off'
 }
 
-const MAX_CANDIDATE_CHECKS = 3
+// Try several numbers per minute so a few non-WhatsApp numbers never waste a minute
+const MAX_CANDIDATE_CHECKS = 10
 
 /**
  * Sends the next cold intro (if allowed right now). Safe to call any number of
@@ -181,7 +182,7 @@ export async function runWahaColdTick(
     .not('phone_e164', 'is', null)
     .is('whatsapp_cold_attempted_at', null)
     .order('created_at', { ascending: true })
-    .limit(25)
+    .limit(60)
   if (candErr) throw new Error(`lead query failed: ${candErr.message}`)
 
   const suppression = await loadSuppressionSets(supabase)
