@@ -1,18 +1,22 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   Ban,
   Bot,
+  Check,
   CheckCheck,
   Clock,
   FileText,
   Flame,
+  MessageSquare,
+  Paperclip,
   RefreshCw,
+  Search,
   Send,
-  ShieldCheck,
   UserCheck,
+  AlertCircle,
 } from 'lucide-react'
 import {
   LEAD_STATUSES,
@@ -42,10 +46,129 @@ const APPROVED_TEMPLATES = [
   },
 ]
 
+// ── Chat-app palette (WhatsApp-style, defined here so it stays scoped) ──
+const WA = {
+  panel: '#ffffff',
+  header: '#f0f2f5',
+  chatBg: '#efeae2',
+  outBubble: '#d9fdd3',
+  inBubble: '#ffffff',
+  text: '#111b21',
+  muted: '#667781',
+  green: '#00a884',
+  greenDark: '#008069',
+  chipActive: '#d9fdd3',
+  readTick: '#53bdeb',
+  divider: '#e9edef',
+}
+
+type Filter = 'all' | 'unread' | 'ai' | 'human' | 'hot'
+
 function isWithin24Hours(lastInboundAt: string | null): boolean {
   if (!lastInboundAt) return false
   const diffMs = Date.now() - new Date(lastInboundAt).getTime()
   return diffMs >= 0 && diffMs < 24 * 60 * 60 * 1000
+}
+
+function convName(c: OutreachConversation): string {
+  return c.contact_name || c.outreach_leads?.business_name || c.phone_e164
+}
+
+function lastActivity(c: OutreachConversation): string | null {
+  const a = c.last_inbound_at ? Date.parse(c.last_inbound_at) : 0
+  const b = c.last_outbound_at ? Date.parse(c.last_outbound_at) : 0
+  const t = Math.max(a, b)
+  return t ? new Date(t).toISOString() : null
+}
+
+function sameDay(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
+
+/** "10:42" today, "Yesterday", weekday within a week, else "11/11/2026" */
+function listTime(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  const now = new Date()
+  if (sameDay(d, now)) return d.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })
+  const y = new Date(now)
+  y.setDate(now.getDate() - 1)
+  if (sameDay(d, y)) return 'Yesterday'
+  if (now.getTime() - d.getTime() < 6 * 24 * 3600 * 1000) return d.toLocaleDateString('en-KE', { weekday: 'long' })
+  return d.toLocaleDateString('en-GB')
+}
+
+function dayLabel(iso: string): string {
+  const d = new Date(iso)
+  const now = new Date()
+  if (sameDay(d, now)) return 'Today'
+  const y = new Date(now)
+  y.setDate(now.getDate() - 1)
+  if (sameDay(d, y)) return 'Yesterday'
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+const AVATAR_COLORS = ['#25d366', '#53bdeb', '#ff7a59', '#a78bfa', '#f59e0b', '#06b6d4', '#ef4444', '#10b981', '#6366f1']
+function avatarColor(seed: string): string {
+  let h = 0
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0
+  return AVATAR_COLORS[h % AVATAR_COLORS.length]
+}
+function initials(name: string): string {
+  const parts = name.replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '#'
+  return (parts[0][0] + (parts[1]?.[0] || '')).toUpperCase()
+}
+
+function Avatar({ name, size = 49 }: { name: string; size?: number }) {
+  return (
+    <div
+      className="flex-shrink-0 rounded-full flex items-center justify-center text-white font-semibold"
+      style={{ width: size, height: size, background: avatarColor(name), fontSize: size * 0.36 }}
+      aria-hidden
+    >
+      {initials(name)}
+    </div>
+  )
+}
+
+/** Who sent an outbound message, shown like a quoted name inside the bubble. */
+function senderLabel(m: OutreachMessage): { text: string; color: string } | null {
+  if (m.direction === 'inbound') return null
+  if (m.sender_type === 'ai') return { text: 'AI assistant', color: '#027eb5' }
+  if (m.sender_type === 'human') return { text: 'You', color: '#c4302b' }
+  if (m.template_name === 'cold_intro') return { text: 'Auto intro', color: '#008069' }
+  if (m.template_name === 'proforma_pdf') return { text: 'Quotation', color: '#008069' }
+  return { text: 'Template', color: '#008069' }
+}
+
+/** Splits "Attached: file.pdf" off a message so it can render as a document chip. */
+function splitAttachment(body: string): { text: string; file: string | null } {
+  const m = body.match(/\n*Attached:\s*(\S+\.pdf)\s*$/i)
+  if (!m) return { text: body, file: null }
+  return { text: body.slice(0, m.index).trimEnd(), file: m[1] }
+}
+
+function Ticks({ status }: { status: OutreachMessage['delivery_status'] }) {
+  if (status === 'failed') return <AlertCircle className="w-3.5 h-3.5 text-red-500" aria-label="Failed" />
+  if (status === 'queued') return <Clock className="w-3 h-3" style={{ color: WA.muted }} aria-label="Sending" />
+  if (status === 'sent') return <Check className="w-3.5 h-3.5" style={{ color: WA.muted }} aria-label="Sent" />
+  return (
+    <CheckCheck
+      className="w-4 h-4"
+      style={{ color: status === 'read' ? WA.readTick : WA.muted }}
+      aria-label={status === 'read' ? 'Read' : 'Delivered'}
+    />
+  )
+}
+
+// Subtle, original background texture for the chat area (dots + soft diagonal)
+const CHAT_BG_STYLE: React.CSSProperties = {
+  backgroundColor: WA.chatBg,
+  backgroundImage:
+    'radial-gradient(rgba(0,0,0,0.035) 1px, transparent 1px), radial-gradient(rgba(0,0,0,0.025) 1px, transparent 1px)',
+  backgroundSize: '22px 22px, 22px 22px',
+  backgroundPosition: '0 0, 11px 11px',
 }
 
 export function WhatsAppInboxTab({
@@ -64,13 +187,15 @@ export function WhatsAppInboxTab({
   const [sending, setSending] = useState(false)
   const [textDraft, setTextDraft] = useState('')
   const [useTemplate, setUseTemplate] = useState(false)
-  const [templateName, setTemplateName] = useState(
-    defaultTemplateName || APPROVED_TEMPLATES[0].name
-  )
+  const [templateName, setTemplateName] = useState(defaultTemplateName || APPROVED_TEMPLATES[0].name)
   const [templateParam1, setTemplateParam1] = useState('')
   const [feedback, setFeedback] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
+  const [query, setQuery] = useState('')
+  const [filter, setFilter] = useState<Filter>('all')
   // Self-hosted WhatsApp (WAHA): no Meta 24h/template rules, free-form replies only
   const [wahaMode, setWahaMode] = useState(false)
+  const feedRef = useRef<HTMLDivElement>(null)
+  const lastCountRef = useRef(0)
 
   useEffect(() => {
     fetch('/api/admin/outreach/whatsapp/waha/status?lite=1', { cache: 'no-store' })
@@ -95,9 +220,7 @@ export function WhatsAppInboxTab({
   const loadMessages = useCallback(async (convId: string) => {
     setLoadingThread(true)
     try {
-      const res = await fetch(`/api/admin/outreach/conversations/${convId}`, {
-        cache: 'no-store',
-      })
+      const res = await fetch(`/api/admin/outreach/conversations/${convId}`, { cache: 'no-store' })
       if (!res.ok) return
       const data = await res.json()
       setMessages((data.messages ?? []) as OutreachMessage[])
@@ -117,8 +240,9 @@ export function WhatsAppInboxTab({
       setMessages([])
       return
     }
+    lastCountRef.current = 0
     loadMessages(selectedId)
-    // Keep the open thread live so replies appear without clicking Sync
+    // Keep the open thread live so replies appear on their own
     const timer = setInterval(() => {
       if (document.visibilityState === 'visible') {
         fetch(`/api/admin/outreach/conversations/${selectedId}`, { cache: 'no-store' })
@@ -130,26 +254,57 @@ export function WhatsAppInboxTab({
     return () => clearInterval(timer)
   }, [selectedId, loadMessages])
 
+  // Stick to the newest message when the thread opens or a message arrives
+  useEffect(() => {
+    if (messages.length !== lastCountRef.current && feedRef.current) {
+      feedRef.current.scrollTop = feedRef.current.scrollHeight
+    }
+    lastCountRef.current = messages.length
+  }, [messages])
+
   const activeConv = conversations.find((c) => c.id === selectedId) || null
   const windowOpen = activeConv ? wahaMode || isWithin24Hours(activeConv.last_inbound_at) : false
   const canMessageAtAll = activeConv
-    ? activeConv.status !== 'opted_out' &&
-      (wahaMode || activeConv.opted_in || Boolean(activeConv.last_inbound_at))
+    ? activeConv.status !== 'opted_out' && (wahaMode || activeConv.opted_in || Boolean(activeConv.last_inbound_at))
     : false
 
   useEffect(() => {
     if (activeConv) {
-      setTemplateParam1(
-        activeConv.contact_name ||
-          activeConv.outreach_leads?.business_name ||
-          'there'
-      )
+      setTemplateParam1(activeConv.contact_name || activeConv.outreach_leads?.business_name || 'there')
       setUseTemplate(!wahaMode && !isWithin24Hours(activeConv.last_inbound_at))
     }
   }, [activeConv, wahaMode])
 
+  const counts = useMemo(
+    () => ({
+      unread: conversations.filter((c) => c.unread_count > 0).length,
+      ai: conversations.filter((c) => c.mode === 'ai').length,
+      human: conversations.filter((c) => c.mode === 'human').length,
+      hot: conversations.filter((c) => c.outreach_leads?.status === 'hot').length,
+    }),
+    [conversations]
+  )
+
+  const visibleConversations = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return conversations
+      .filter((c) => {
+        if (filter === 'unread' && !(c.unread_count > 0)) return false
+        if (filter === 'ai' && c.mode !== 'ai') return false
+        if (filter === 'human' && c.mode !== 'human') return false
+        if (filter === 'hot' && c.outreach_leads?.status !== 'hot') return false
+        if (!q) return true
+        return (
+          convName(c).toLowerCase().includes(q) ||
+          (c.phone_e164 || '').includes(q.replace(/\s/g, '')) ||
+          (c.last_message_preview || '').toLowerCase().includes(q)
+        )
+      })
+      .sort((a, b) => (Date.parse(lastActivity(b) || '0') || 0) - (Date.parse(lastActivity(a) || '0') || 0))
+  }, [conversations, filter, query])
+
   async function handleToggleMode(nextMode: 'ai' | 'human') {
-    if (!activeConv) return
+    if (!activeConv || activeConv.mode === nextMode) return
     setFeedback(null)
     const res = await fetch(`/api/admin/outreach/conversations/${activeConv.id}`, {
       method: 'PATCH',
@@ -160,17 +315,12 @@ export function WhatsAppInboxTab({
     if (res.ok) {
       setConversations((prev) =>
         prev.map((c) =>
-          c.id === activeConv.id
-            ? { ...c, mode: nextMode, status: nextMode === 'ai' ? 'open' : c.status }
-            : c
+          c.id === activeConv.id ? { ...c, mode: nextMode, status: nextMode === 'ai' ? 'open' : c.status } : c
         )
       )
       setFeedback({
         type: 'ok',
-        text:
-          nextMode === 'ai'
-            ? 'AI Takeover active — Gemini 3.5 Flash handles incoming WhatsApp replies automatically.'
-            : 'Human Mode active — AI auto-replies paused for this thread.',
+        text: nextMode === 'ai' ? 'AI is now replying in this chat.' : 'You are handling this chat. AI replies are paused.',
       })
       onStatsChange?.()
     } else {
@@ -183,11 +333,7 @@ export function WhatsAppInboxTab({
     const res = await fetch('/api/admin/outreach/leads', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id: activeConv.lead_id,
-        status: nextStatus,
-        mark_human_contacted: true,
-      }),
+      body: JSON.stringify({ id: activeConv.lead_id, status: nextStatus, mark_human_contacted: true }),
     })
     if (res.ok) {
       await loadConversations()
@@ -207,11 +353,11 @@ export function WhatsAppInboxTab({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        setFeedback({ type: 'err', text: data.error || 'Could not send the proforma' })
+        setFeedback({ type: 'err', text: data.error || 'Could not send the quotation' })
       } else {
         setFeedback({
           type: 'ok',
-          text: `Proforma #${data.proformaNumber} (KES ${Number(data.total || 0).toLocaleString('en-KE')}) sent${data.via === 'link' ? ' as a download link' : ' as a PDF'}. You are now handling this chat.`,
+          text: `Quotation #${data.proformaNumber} (KES ${Number(data.total || 0).toLocaleString('en-KE')}) sent${data.via === 'link' ? ' as a download link' : ' as a PDF'}.`,
         })
         await loadMessages(activeConv.id)
         await loadConversations()
@@ -240,12 +386,7 @@ export function WhatsAppInboxTab({
             templateName,
             templateParams: [templateParam1 || 'there'],
           }
-        : {
-            conversationId: activeConv.id,
-            phoneE164: activeConv.phone_e164,
-            type: 'text',
-            text: textDraft.trim(),
-          }
+        : { conversationId: activeConv.id, phoneE164: activeConv.phone_e164, type: 'text', text: textDraft.trim() }
 
       const res = await fetch('/api/admin/outreach/whatsapp/send', {
         method: 'POST',
@@ -258,7 +399,7 @@ export function WhatsAppInboxTab({
       } else {
         setTextDraft('')
         if (data.mode === 'human' && activeConv.mode !== 'human') {
-          setFeedback({ type: 'ok', text: 'You took over this chat — AI auto-replies paused. Switch back to AI Mode anytime.' })
+          setFeedback({ type: 'ok', text: 'You took over this chat. AI replies are paused.' })
         }
         await loadMessages(activeConv.id)
         await loadConversations()
@@ -269,276 +410,342 @@ export function WhatsAppInboxTab({
     }
   }
 
-  return (
-    <div className="rounded-3xl bg-white border border-[#e5e8ed] shadow-[0_12px_32px_-18px_rgba(0,20,53,0.15)] overflow-hidden text-[#001435]">
-      {/* Top Telemetry & Compliance Strip */}
-      <div className="px-4 sm:px-6 py-3.5 bg-[#f7f8fa] border-b border-[#e5e8ed] flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5 text-xs font-medium text-[#0059b8]">
-          <ShieldCheck className="w-4 h-4 text-[#0070e0] flex-shrink-0" />
-          <span>
-            {wahaMode ? (
-              <>
-                <strong className="text-[#001435]">WhatsApp &amp; AI Takeover:</strong> AI replies
-                instantly in AI Mode · your reply takes the chat over (Human) · STOP always opts out.
-              </>
-            ) : (
-              <>
-                <strong className="text-[#001435]">WhatsApp Cloud &amp; AI Takeover:</strong> Free-form
-                AI/staff replies inside 24h window · Approved Meta templates outside 24h · Permanent
-                Kenya DPA opt-out guard.
-              </>
-            )}
-          </span>
-        </div>
-        <button
-          onClick={loadConversations}
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0070e0] hover:text-[#001435] transition-colors"
-        >
-          <RefreshCw className="w-3.5 h-3.5" /> Sync
-        </button>
-      </div>
+  const filters: Array<{ id: Filter; label: string; count?: number }> = [
+    { id: 'all', label: 'All' },
+    { id: 'unread', label: 'Unread', count: counts.unread },
+    { id: 'ai', label: 'AI', count: counts.ai },
+    { id: 'human', label: 'Human', count: counts.human },
+    { id: 'hot', label: 'Hot', count: counts.hot },
+  ]
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[560px]">
-        {/* Left Pane: Thread List (visible on desktop or when mobileShowThread is false) */}
-        <div
-          className={`lg:col-span-4 border-b lg:border-b-0 lg:border-r border-[#e5e8ed] flex flex-col max-h-[620px] overflow-y-auto ${
-            mobileShowThread ? 'hidden lg:flex' : 'flex'
-          }`}
+  return (
+    <div
+      className="rounded-[20px] overflow-hidden border border-[#e5e8ed] shadow-[0_1px_2px_rgba(0,20,53,0.04),0_8px_24px_-16px_rgba(0,20,53,0.10)] bg-white"
+      style={{ color: WA.text }}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,400px)_1fr] h-[calc(100dvh-190px)] min-h-[540px]">
+        {/* ─── Chat list ─── */}
+        <aside
+          className={`min-h-0 flex-col border-r ${mobileShowThread ? 'hidden lg:flex' : 'flex'}`}
+          style={{ borderColor: WA.divider, background: WA.panel }}
         >
-          {loadingList ? (
-            <div className="p-8 text-center text-sm text-slate-400">Loading conversations…</div>
-          ) : conversations.length === 0 ? (
-            <div className="p-10 text-center">
-              <p className="text-sm font-bold text-[#001435]">No WhatsApp threads yet</p>
-              <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                Inbound messages to your WhatsApp Cloud webhook, template dispatches, and consented
-                follow-ups appear here in real time.
+          <div className="px-4 pt-4 pb-2 flex items-center justify-between">
+            <h2 className="text-[22px] font-bold tracking-tight" style={{ color: WA.greenDark }}>
+              Chats
+            </h2>
+            <button
+              type="button"
+              onClick={loadConversations}
+              className="h-10 w-10 rounded-full flex items-center justify-center hover:bg-[#f0f2f5] transition"
+              style={{ color: WA.muted }}
+              aria-label="Refresh chats"
+              title="Refresh"
+            >
+              <RefreshCw className="w-[18px] h-[18px]" />
+            </button>
+          </div>
+
+          <div className="px-3 pb-2">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2" style={{ color: WA.muted }} />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search name, number or message"
+                className="w-full h-10 pl-11 pr-4 rounded-full text-[14px] outline-none focus:ring-2 focus:ring-[#00a884]/30"
+                style={{ background: WA.header, color: WA.text }}
+              />
+            </div>
+          </div>
+
+          <div className="px-3 pb-2 flex gap-2 overflow-x-auto no-scrollbar">
+            {filters.map((f) => {
+              const active = filter === f.id
+              return (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFilter(f.id)}
+                  className="h-8 px-3.5 rounded-full text-[14px] whitespace-nowrap border transition"
+                  style={
+                    active
+                      ? { background: WA.chipActive, color: WA.greenDark, borderColor: WA.chipActive }
+                      : { background: '#fff', color: WA.muted, borderColor: WA.divider }
+                  }
+                >
+                  {f.label}
+                  {f.count ? <span className="ml-1 text-[12px]">{f.count}</span> : null}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {loadingList ? (
+              <div className="p-8 text-center text-sm" style={{ color: WA.muted }}>
+                Loading chats…
+              </div>
+            ) : visibleConversations.length === 0 ? (
+              <div className="p-10 text-center">
+                <MessageSquare className="w-8 h-8 mx-auto mb-2" style={{ color: '#c4cbd2' }} />
+                <p className="text-sm font-semibold">{conversations.length === 0 ? 'No chats yet' : 'No chats match'}</p>
+                <p className="text-xs mt-1" style={{ color: WA.muted }}>
+                  {conversations.length === 0
+                    ? 'Replies and messages you send appear here.'
+                    : 'Try another filter or search.'}
+                </p>
+              </div>
+            ) : (
+              visibleConversations.map((conv) => {
+                const selected = conv.id === selectedId
+                const name = convName(conv)
+                const hot = conv.outreach_leads?.status === 'hot'
+                const unread = conv.unread_count > 0
+                return (
+                  <button
+                    key={conv.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedId(conv.id)
+                      setMobileShowThread(true)
+                      setFeedback(null)
+                    }}
+                    className={`w-full text-left flex items-center gap-3 pl-3 pr-4 transition ${
+                      selected ? 'bg-[#f0f2f5]' : 'hover:bg-[#f5f6f6]'
+                    }`}
+                  >
+                    <Avatar name={name} />
+                    <div className="flex-1 min-w-0 py-3 border-b" style={{ borderColor: WA.divider }}>
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span className="text-[16px] truncate" style={{ color: WA.text }}>
+                          {name}
+                        </span>
+                        <span
+                          className="text-[12px] flex-shrink-0"
+                          style={{ color: unread ? WA.green : WA.muted }}
+                        >
+                          {listTime(lastActivity(conv))}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 mt-0.5">
+                        <span className="text-[14px] truncate flex items-center gap-1" style={{ color: WA.muted }}>
+                          {conv.status === 'opted_out' ? (
+                            <span className="text-red-500">Opted out</span>
+                          ) : (
+                            conv.last_message_preview || 'No messages yet'
+                          )}
+                        </span>
+                        <span className="flex items-center gap-1.5 flex-shrink-0">
+                          {hot && <Flame className="w-3.5 h-3.5 text-orange-500" aria-label="Hot lead" />}
+                          <span
+                            className="text-[10px] font-semibold px-1.5 py-0.5 rounded"
+                            style={
+                              conv.mode === 'ai'
+                                ? { background: '#e7f3fb', color: '#027eb5' }
+                                : { background: '#fdf0e6', color: '#b45309' }
+                            }
+                          >
+                            {conv.mode === 'ai' ? 'AI' : 'You'}
+                          </span>
+                          {unread && (
+                            <span
+                              className="min-w-[20px] h-5 px-1.5 rounded-full text-[12px] font-semibold text-white flex items-center justify-center"
+                              style={{ background: '#25d366' }}
+                            >
+                              {conv.unread_count}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                )
+              })
+            )}
+          </div>
+        </aside>
+
+        {/* ─── Conversation ─── */}
+        <section className={`min-h-0 flex-col ${!mobileShowThread ? 'hidden lg:flex' : 'flex'}`} style={CHAT_BG_STYLE}>
+          {!activeConv ? (
+            <div className="flex-1 flex flex-col items-center justify-center text-center p-10" style={{ background: '#f8f9fa' }}>
+              <div className="h-20 w-20 rounded-full flex items-center justify-center mb-4" style={{ background: '#e7f8f2' }}>
+                <MessageSquare className="w-9 h-9" style={{ color: WA.green }} />
+              </div>
+              <p className="text-[22px] font-light" style={{ color: '#41525d' }}>
+                Batteriq WhatsApp
+              </p>
+              <p className="text-sm mt-2 max-w-sm" style={{ color: WA.muted }}>
+                Pick a chat to read the conversation, reply, send a quotation, or switch between AI and you.
               </p>
             </div>
           ) : (
-            conversations.map((conv) => {
-              const selected = conv.id === selectedId
-              const isOpen24h = isWithin24Hours(conv.last_inbound_at)
-              const leadStatus = conv.outreach_leads?.status
-              return (
-                <button
-                  key={conv.id}
-                  type="button"
-                  onClick={() => {
-                    setSelectedId(conv.id)
-                    setMobileShowThread(true)
-                  }}
-                  className={`w-full text-left px-5 py-4 border-b border-[#eaf3fe] transition-colors ${
-                    selected ? 'bg-[#f7f8fa] border-l-2 border-l-[#0070e0]' : 'hover:bg-[#f7f8fa]'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-sm text-[#001435] truncate">
-                      {conv.contact_name ||
-                        conv.outreach_leads?.business_name ||
-                        conv.phone_e164}
-                    </span>
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {leadStatus === 'hot' && (
-                        <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[10px] font-bold uppercase">
-                          <Flame className="w-3 h-3" /> Hot
-                        </span>
-                      )}
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                          conv.mode === 'ai'
-                            ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                            : 'bg-amber-50 text-amber-700 border border-amber-200'
-                        }`}
-                      >
-                        {conv.mode === 'ai' ? 'AI' : 'Human'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <p className="text-xs font-mono text-slate-400 mt-0.5">{conv.phone_e164}</p>
-                  <p className="text-xs text-slate-500 truncate mt-1.5">
-                    {conv.last_message_preview || 'No messages'}
-                  </p>
-
-                  <div className="flex items-center justify-between mt-2">
-                    <span
-                      className={`text-[10px] font-bold ${
-                        conv.status === 'opted_out'
-                          ? 'text-red-600'
-                          : isOpen24h
-                            ? 'text-emerald-600'
-                            : 'text-slate-500'
-                      }`}
-                    >
-                      {conv.status === 'opted_out'
-                        ? 'Opted Out'
-                        : wahaMode
-                          ? conv.last_inbound_at
-                            ? '● Replied'
-                            : 'Awaiting reply'
-                          : isOpen24h
-                          ? '● 24h Window Open'
-                          : 'Template Mode (>24h)'}
-                    </span>
-                    {conv.unread_count > 0 && (
-                      <span className="px-2 py-0.5 rounded-full bg-blue-500 text-white text-[10px] font-bold">
-                        {conv.unread_count}
-                      </span>
-                    )}
-                  </div>
-                </button>
-              )
-            })
-          )}
-        </div>
-
-        {/* Right Pane: Active Thread */}
-        <div
-          className={`lg:col-span-8 flex flex-col justify-between bg-[#f7f8fa] ${
-            !mobileShowThread ? 'hidden lg:flex' : 'flex'
-          }`}
-        >
-          {!activeConv ? (
-            <div className="flex-1 flex items-center justify-center p-12 text-sm text-slate-500">
-              Select a WhatsApp conversation to view live messages and AI Takeover controls.
-            </div>
-          ) : (
             <>
-              {/* Conversation Top Bar */}
-              <div className="px-4 sm:px-6 py-4 bg-white border-b border-[#e5e8ed] flex flex-wrap items-center justify-between gap-3">
+              {/* Header */}
+              <div
+                className="h-[60px] flex-shrink-0 flex items-center justify-between gap-2 px-3 sm:px-4 border-l"
+                style={{ background: WA.header, borderColor: WA.divider }}
+              >
                 <div className="flex items-center gap-3 min-w-0">
                   <button
                     type="button"
                     onClick={() => setMobileShowThread(false)}
-                    className="lg:hidden p-2 rounded-xl bg-[#f7f8fa] text-slate-600 hover:text-[#001435]"
+                    className="lg:hidden h-9 w-9 rounded-full flex items-center justify-center hover:bg-black/5"
+                    style={{ color: '#54656f' }}
+                    aria-label="Back to chats"
                   >
-                    <ArrowLeft className="w-4 h-4" />
+                    <ArrowLeft className="w-5 h-5" />
                   </button>
+                  <Avatar name={convName(activeConv)} size={40} />
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-extrabold text-sm sm:text-base text-[#001435] truncate">
-                        {activeConv.contact_name ||
-                          activeConv.outreach_leads?.business_name ||
-                          activeConv.phone_e164}
-                      </h3>
-                      <span className="text-xs font-mono text-slate-400">
-                        {activeConv.phone_e164}
-                      </span>
-                    </div>
-                    {activeConv.escalated_reason && activeConv.mode === 'human' && (
-                      <p className="text-xs font-semibold text-amber-700 mt-0.5">
-                        Escalated to Human: {activeConv.escalated_reason}
-                      </p>
-                    )}
+                    <p className="text-[16px] truncate leading-tight">{convName(activeConv)}</p>
+                    <p className="text-[13px] truncate leading-tight" style={{ color: WA.muted }}>
+                      {activeConv.phone_e164}
+                      {' · '}
+                      {activeConv.status === 'opted_out'
+                        ? 'opted out'
+                        : activeConv.mode === 'ai'
+                          ? 'AI is replying'
+                          : 'you are replying'}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
                   {activeConv.lead_id && (
                     <select
                       value={activeConv.outreach_leads?.status || 'replied'}
                       onChange={(e) => handleLeadStatusChange(e.target.value as LeadStatus)}
-                      className="h-9 px-3 rounded-xl border border-[#e5e8ed] bg-[#f7f8fa] text-xs font-bold text-[#001435] outline-none focus:border-[#0070e0]"
+                      className="hidden sm:block h-8 px-2.5 rounded-full text-[12px] font-medium outline-none border bg-white capitalize"
+                      style={{ borderColor: WA.divider, color: '#41525d' }}
+                      aria-label="Lead status"
                     >
                       {LEAD_STATUSES.map((st) => (
-                        <option key={st} value={st} className="bg-white text-[#001435]">
-                          {st.replace('_', ' ').toUpperCase()}
+                        <option key={st} value={st}>
+                          {st.replace('_', ' ')}
                         </option>
                       ))}
                     </select>
                   )}
-
-                  <div className="inline-flex rounded-xl p-1 bg-[#f7f8fa] border border-[#e5e8ed]">
+                  <div className="inline-flex rounded-full p-0.5 bg-white border" style={{ borderColor: WA.divider }}>
                     <button
                       type="button"
                       onClick={() => handleToggleMode('ai')}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        activeConv.mode === 'ai'
-                          ? 'bg-blue-600 text-white shadow-sm'
-                          : 'text-slate-500 hover:text-[#001435]'
-                      }`}
+                      className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[12px] font-medium transition"
+                      style={activeConv.mode === 'ai' ? { background: '#027eb5', color: '#fff' } : { color: WA.muted }}
+                      title="Let the AI reply"
                     >
-                      <Bot className="w-3.5 h-3.5" /> AI Mode
+                      <Bot className="w-3.5 h-3.5" /> <span className="hidden sm:inline">AI</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => handleToggleMode('human')}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                        activeConv.mode === 'human'
-                          ? 'bg-amber-600 text-white shadow-sm'
-                          : 'text-slate-500 hover:text-[#001435]'
-                      }`}
+                      className="inline-flex items-center gap-1 h-7 px-2.5 rounded-full text-[12px] font-medium transition"
+                      style={activeConv.mode === 'human' ? { background: WA.greenDark, color: '#fff' } : { color: WA.muted }}
+                      title="Reply yourself"
                     >
-                      <UserCheck className="w-3.5 h-3.5" /> Human
+                      <UserCheck className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Me</span>
                     </button>
                   </div>
                 </div>
               </div>
 
-              {feedback && (
-                <div
-                  className={`mx-4 sm:mx-6 mt-3 px-4 py-2.5 rounded-xl text-xs font-semibold ${
-                    feedback.type === 'ok'
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'bg-red-50 text-red-600 border border-red-200'
-                  }`}
-                >
-                  {feedback.text}
-                </div>
-              )}
+              {/* Messages */}
+              <div ref={feedRef} className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-[6%] py-4">
+                {activeConv.escalated_reason && activeConv.mode === 'human' && (
+                  <div className="flex justify-center mb-3">
+                    <span className="px-3 py-1.5 rounded-lg text-[12.5px] text-center shadow-sm" style={{ background: '#ffeecd', color: '#54656f' }}>
+                      Handed to you: {activeConv.escalated_reason}
+                    </span>
+                  </div>
+                )}
 
-              {/* Messages Feed */}
-              <div className="flex-1 p-4 sm:p-6 space-y-3 overflow-y-auto max-h-[390px]">
-                {loadingThread ? (
-                  <p className="text-center text-xs text-slate-500 py-8">Loading messages…</p>
-                ) : messages.length === 0 ? (
-                  <p className="text-center text-xs text-slate-500 py-8">
-                    No messages in this conversation yet.
+                {loadingThread && messages.length === 0 ? (
+                  <p className="text-center text-xs py-8" style={{ color: WA.muted }}>
+                    Loading messages…
                   </p>
+                ) : messages.length === 0 ? (
+                  <div className="flex justify-center">
+                    <span className="px-3 py-1.5 rounded-lg text-[12.5px] bg-white shadow-sm" style={{ color: WA.muted }}>
+                      No messages in this chat yet
+                    </span>
+                  </div>
                 ) : (
-                  messages.map((m) => {
+                  messages.map((m, i) => {
                     const inbound = m.direction === 'inbound'
+                    const prev = messages[i - 1]
+                    const newDay = !prev || !sameDay(new Date(prev.created_at), new Date(m.created_at))
+                    const firstInGroup = newDay || !prev || prev.direction !== m.direction || prev.sender_type !== m.sender_type
+                    const label = senderLabel(m)
+                    const { text, file } = splitAttachment(m.body || '')
                     return (
-                      <div
-                        key={m.id}
-                        className={`flex ${inbound ? 'justify-start' : 'justify-end'}`}
-                      >
-                        <div
-                          className={`max-w-[85%] sm:max-w-[78%] rounded-2xl px-4 py-3 text-sm shadow-md ${
-                            inbound
-                              ? 'bg-white border border-[#e5e8ed] text-[#001435]'
-                              : m.sender_type === 'ai'
-                                ? 'bg-[#0070e0] text-white'
-                                : m.sender_type === 'system_template'
-                                  ? 'bg-emerald-600/90 text-white'
-                                  : 'bg-[#001435] text-white'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 mb-1 opacity-75 text-[10px] font-bold uppercase tracking-wider">
-                            <span>
-                              {inbound
-                                ? 'Client'
-                                : m.sender_type === 'ai'
-                                  ? 'Gemini AI'
-                                  : m.sender_type === 'system_template'
-                                    ? m.template_name === 'cold_intro'
-                                      ? 'Cold intro'
-                                      : `Template (${m.template_name || 'approved'})`
-                                    : 'Batteriq Staff'}
+                      <div key={m.id}>
+                        {newDay && (
+                          <div className="flex justify-center my-3">
+                            <span
+                              className="px-3 py-1 rounded-lg text-[12.5px] bg-white shadow-[0_1px_0.5px_rgba(11,20,26,0.13)]"
+                              style={{ color: '#54656f' }}
+                            >
+                              {dayLabel(m.created_at)}
                             </span>
-                            <span>·</span>
-                            <span>
-                              {new Date(m.created_at).toLocaleTimeString('en-KE', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </span>
-                            {!inbound && <CheckCheck className="w-3 h-3" />}
                           </div>
-                          <p className="whitespace-pre-wrap leading-relaxed text-[13px]">
-                            {m.body}
-                          </p>
+                        )}
+                        <div className={`flex ${inbound ? 'justify-start' : 'justify-end'} ${firstInGroup ? 'mt-2.5' : 'mt-0.5'}`}>
+                          <div
+                            className={`relative max-w-[88%] sm:max-w-[65%] rounded-lg px-2 pt-1.5 pb-1 shadow-[0_1px_0.5px_rgba(11,20,26,0.13)] ${
+                              firstInGroup ? (inbound ? 'rounded-tl-none' : 'rounded-tr-none') : ''
+                            }`}
+                            style={{ background: inbound ? WA.inBubble : WA.outBubble }}
+                          >
+                            {firstInGroup && (
+                              <span
+                                aria-hidden
+                                className="absolute top-0 w-2 h-3"
+                                style={
+                                  inbound
+                                    ? { left: -8, background: WA.inBubble, clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }
+                                    : { right: -8, background: WA.outBubble, clipPath: 'polygon(0 0, 100% 0, 0 100%)' }
+                                }
+                              />
+                            )}
+                            {label && firstInGroup && (
+                              <p className="text-[12.5px] font-medium px-1 pb-0.5" style={{ color: label.color }}>
+                                {label.text}
+                              </p>
+                            )}
+                            {file && (
+                              <div
+                                                                className="flex items-center gap-2.5 rounded-md px-2.5 py-2 mb-1"
+                                style={{ background: inbound ? '#f5f6f6' : '#c7f0c2' }}
+                                title={file}
+                              >
+                                <span className="h-9 w-7 rounded flex items-center justify-center bg-red-500 text-white text-[9px] font-bold">
+                                  PDF
+                                </span>
+                                <span className="min-w-0">
+                                  <span className="block text-[13.5px] truncate" style={{ color: WA.text }}>
+                                    {file}
+                                  </span>
+                                  <span className="block text-[11.5px]" style={{ color: WA.muted }}>
+                                    PDF document
+                                  </span>
+                                </span>
+                              </div>
+                            )}
+                            <p className="whitespace-pre-wrap break-words text-[14.2px] leading-[19px] px-1">
+                              {text}
+                              {/* spacer so the time never overlaps the last line */}
+                              <span className="inline-block w-[70px]" aria-hidden />
+                            </p>
+                            <span
+                              className="absolute right-2 bottom-1 flex items-center gap-1 text-[11px]"
+                              style={{ color: WA.muted }}
+                            >
+                              {new Date(m.created_at).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })}
+                              {!inbound && <Ticks status={m.delivery_status} />}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     )
@@ -546,110 +753,124 @@ export function WhatsAppInboxTab({
                 )}
               </div>
 
-              {/* Composer */}
-              <div className="p-4 bg-white border-t border-[#e5e8ed]">
-                {!canMessageAtAll ? (
-                  <div className="flex items-center gap-2 text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-4 py-3 rounded-xl">
-                    <Ban className="w-4 h-4 flex-shrink-0" />
-                    <span>
-                      Messaging blocked: contact opted out or has no initiated / consented WhatsApp
-                      session.
-                    </span>
-                  </div>
-                ) : (
-                  <form onSubmit={handleSendMessage} className="space-y-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <span className="flex items-center gap-1.5 font-medium text-slate-400">
-                        <Clock className="w-3.5 h-3.5 text-[#0070e0]" />
-                        {wahaMode
-                          ? activeConv.mode === 'ai'
-                            ? 'AI is answering this chat — sending a reply takes it over'
-                            : 'You are handling this chat (AI paused)'
-                          : windowOpen
-                            ? '24-hour customer care window active — free-form reply allowed'
-                            : 'Outside 24-hour window — approved Meta template required'}
-                      </span>
-                      {wahaMode && (
-                        <button
-                          type="button"
-                          disabled={sending}
-                          onClick={handleSendProforma}
-                          className="inline-flex items-center gap-1 text-emerald-700 font-bold hover:text-emerald-800 disabled:opacity-50"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          Send proforma PDF
-                        </button>
-                      )}
-                      {windowOpen && !wahaMode && (
-                        <button
-                          type="button"
-                          onClick={() => setUseTemplate((v) => !v)}
-                          className="inline-flex items-center gap-1 text-[#0070e0] font-bold hover:text-[#0059b8]"
-                        >
-                          <FileText className="w-3.5 h-3.5" />
-                          {useTemplate ? 'Switch to Free-form Text' : 'Send Approved Template'}
-                        </button>
-                      )}
-                    </div>
+              {/* Feedback toast */}
+              {feedback && (
+                <div className="flex justify-center px-4 pb-2 -mt-1">
+                  <button
+                    type="button"
+                    onClick={() => setFeedback(null)}
+                    className="px-3.5 py-1.5 rounded-lg text-[12.5px] shadow-sm"
+                    style={
+                      feedback.type === 'ok'
+                        ? { background: '#ffffff', color: WA.greenDark }
+                        : { background: '#fde8e8', color: '#b42318' }
+                    }
+                  >
+                    {feedback.text}
+                  </button>
+                </div>
+              )}
 
-                    {!windowOpen || useTemplate ? (
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-                        <select
-                          value={templateName}
-                          onChange={(e) => setTemplateName(e.target.value)}
-                          className="sm:col-span-5 h-11 px-3 rounded-xl border border-[#e5e8ed] text-xs font-bold text-[#001435] bg-[#f7f8fa] outline-none focus:border-[#0070e0]"
-                        >
-                          {APPROVED_TEMPLATES.map((tpl) => (
-                            <option
-                              key={tpl.name}
-                              value={tpl.name}
-                              className="bg-white text-[#001435]"
-                            >
-                              {tpl.label} ({tpl.name})
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          value={templateParam1}
-                          onChange={(e) => setTemplateParam1(e.target.value)}
-                          placeholder="Recipient name ({{1}})"
-                          className="sm:col-span-4 h-11 px-3 rounded-xl border border-[#e5e8ed] bg-[#f7f8fa] text-xs font-medium text-[#001435] outline-none focus:border-[#0070e0]"
-                        />
+              {/* Composer */}
+              <div className="flex-shrink-0 px-2 sm:px-4 py-2.5" style={{ background: WA.header }}>
+                {!canMessageAtAll ? (
+                  <div className="flex items-center justify-center gap-2 text-[13px] py-2" style={{ color: WA.muted }}>
+                    <Ban className="w-4 h-4 flex-shrink-0" />
+                    {activeConv.status === 'opted_out'
+                      ? 'This contact opted out. You can no longer message them.'
+                      : 'You can message this contact after they write to you first.'}
+                  </div>
+                ) : !windowOpen || useTemplate ? (
+                  <form onSubmit={handleSendMessage} className="flex flex-col sm:flex-row gap-2">
+                    <select
+                      value={templateName}
+                      onChange={(e) => setTemplateName(e.target.value)}
+                      className="flex-1 h-11 px-4 rounded-lg bg-white text-[14px] outline-none"
+                    >
+                      {APPROVED_TEMPLATES.map((tpl) => (
+                        <option key={tpl.name} value={tpl.name}>
+                          {tpl.label}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={templateParam1}
+                      onChange={(e) => setTemplateParam1(e.target.value)}
+                      placeholder="Recipient name"
+                      className="sm:w-48 h-11 px-4 rounded-lg bg-white text-[14px] outline-none"
+                    />
+                    <div className="flex gap-2">
+                      {windowOpen && (
                         <button
-                          type="submit"
-                          disabled={sending}
-                          className="sm:col-span-3 h-11 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 disabled:opacity-50"
+                          type="button"
+                          onClick={() => setUseTemplate(false)}
+                          className="h-11 px-3 rounded-lg bg-white text-[13px]"
+                          style={{ color: WA.greenDark }}
                         >
-                          <Send className="w-3.5 h-3.5" />
-                          {sending ? 'Sending…' : 'Send Template'}
+                          Free text
                         </button>
-                      </div>
+                      )}
+                      <button
+                        type="submit"
+                        disabled={sending}
+                        className="h-11 w-11 rounded-full flex items-center justify-center text-white disabled:opacity-50"
+                        style={{ background: WA.green }}
+                        aria-label="Send template"
+                      >
+                        <Send className="w-5 h-5" />
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <form onSubmit={handleSendMessage} className="flex items-center gap-1.5 sm:gap-2">
+                    {wahaMode ? (
+                      <button
+                        type="button"
+                        onClick={handleSendProforma}
+                        disabled={sending}
+                        className="h-11 w-11 flex-shrink-0 rounded-full flex items-center justify-center hover:bg-black/5 disabled:opacity-50"
+                        style={{ color: '#54656f' }}
+                        aria-label="Send quotation PDF"
+                        title="Send quotation PDF"
+                      >
+                        <Paperclip className="w-5 h-5" />
+                      </button>
                     ) : (
-                      <div className="flex flex-col sm:flex-row gap-2.5">
-                        <input
-                          type="text"
-                          value={textDraft}
-                          onChange={(e) => setTextDraft(e.target.value)}
-                          placeholder="Write a WhatsApp reply as Batteriq specialist…"
-                          className="flex-1 h-11 px-4 rounded-xl border border-[#e5e8ed] bg-[#f7f8fa] text-sm text-[#001435] placeholder:text-slate-400 focus:border-[#0070e0] focus:outline-none"
-                        />
-                        <button
-                          type="submit"
-                          disabled={sending || !textDraft.trim()}
-                          className="px-5 h-11 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 disabled:opacity-50"
-                        >
-                          <Send className="w-3.5 h-3.5" />
-                          {sending ? 'Sending…' : 'Reply'}
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setUseTemplate(true)}
+                        className="h-11 w-11 flex-shrink-0 rounded-full flex items-center justify-center hover:bg-black/5"
+                        style={{ color: '#54656f' }}
+                        aria-label="Use an approved template"
+                        title="Use an approved template"
+                      >
+                        <FileText className="w-5 h-5" />
+                      </button>
                     )}
+                    <input
+                      type="text"
+                      value={textDraft}
+                      onChange={(e) => setTextDraft(e.target.value)}
+                      placeholder={activeConv.mode === 'ai' ? 'Type a message (this takes over from the AI)' : 'Type a message'}
+                      className="flex-1 min-w-0 h-11 px-4 rounded-lg bg-white text-[15px] outline-none"
+                      style={{ color: WA.text }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={sending || !textDraft.trim()}
+                      className="h-11 w-11 flex-shrink-0 rounded-full flex items-center justify-center text-white transition disabled:opacity-40"
+                      style={{ background: WA.green }}
+                      aria-label="Send"
+                    >
+                      {sending ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+                    </button>
                   </form>
                 )}
               </div>
             </>
           )}
-        </div>
+        </section>
       </div>
     </div>
   )
