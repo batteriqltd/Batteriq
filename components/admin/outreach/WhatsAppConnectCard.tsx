@@ -436,7 +436,7 @@ export function WhatsAppConnectCard() {
               </div>
               <label className="block space-y-1">
                 <span className="text-[11px] font-bold text-slate-500">
-                  Message — {'{business}'} {'{city}'} {'{sender}'} are filled in; {'{Hi|Hello}'} picks one at random
+                  Message — {'{business}'} {'{city}'} {'{sender}'} {'{website}'} are filled in; {'{Hi|Hello}'} picks one at random
                 </span>
                 <textarea
                   rows={5}

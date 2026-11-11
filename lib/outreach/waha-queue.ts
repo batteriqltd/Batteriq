@@ -40,6 +40,7 @@ export const DEFAULT_WAHA_COLD_MESSAGE =
   "{I'm reaching out from|This is} Batteriq, Kenya's authorised EcoFlow & BLUETTI dealer. " +
   '{We help|We support} businesses stay open through blackouts with silent battery backup and solar, with no fuel and no noise.\n\n' +
   "I've attached a quotation made for {business} below. Reply here to adjust it or ask anything.\n\n" +
+  "{You can also|You're welcome to} check out our full range and order directly on our website: {website}\n\n" +
   'Reply STOP to opt out.'
 
 export const DEFAULT_WAHA_CAMPAIGN: WahaCampaignSettings = {
@@ -115,13 +116,14 @@ export function renderColdMessage(
     name: business,
     city: (vars.city || '').trim() || 'Kenya',
     sender: (vars.sender || '').trim() || 'the Batteriq team',
+    website: (process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').trim().replace(/\/+$/, ''),
   }
   return template
     .replace(/\{([^{}]*\|[^{}]*)\}/g, (_m, options: string) => {
       const parts = options.split('|')
       return parts[Math.floor(Math.random() * parts.length)]
     })
-    .replace(/\{(business|name|city|sender)\}/g, (_m, key: string) => map[key])
+    .replace(/\{(business|name|city|sender|website)\}/g, (_m, key: string) => map[key])
     .trim()
 }
 

@@ -256,3 +256,28 @@ describe('human-like WhatsApp replies', () => {
     expect(typingDurationMs('ok')).toBe(2_000)
   })
 })
+
+describe('website links in WhatsApp messages', () => {
+  it('puts the order link in the cold intro and the proforma caption', async () => {
+    const { DEFAULT_WAHA_COLD_MESSAGE, renderColdMessage } = await import('@/lib/outreach/waha-queue')
+    const intro = renderColdMessage(DEFAULT_WAHA_COLD_MESSAGE, { business: 'Acme Bar', city: 'Nairobi' })
+    expect(intro).toMatch(/order directly on our website: https:\/\/[^\s]+/)
+    expect(intro).not.toMatch(/\{website\}/)
+    const { buildProformaWhatsAppCaption } = await import('@/lib/outreach/whatsapp-proforma')
+    const { recommendBatteriqProformaForLead } = await import('@/lib/outreach/proforma')
+    const caption = buildProformaWhatsAppCaption(
+      recommendBatteriqProformaForLead({ business_name: 'Acme', category: 'retail', city: 'Nairobi', address: null, email: null, phone_e164: null })
+    )
+    expect(caption).toMatch(/order online here: https:\/\//)
+  })
+
+  it('builds product page links for EcoFlow and BLUETTI only', async () => {
+    const { batteriqProductUrl, humanizeWhatsAppReply } = await import('@/lib/outreach/claude')
+    expect(batteriqProductUrl({ brand: 'EcoFlow', slug: 'delta-2-max' })).toMatch(/\/ecoflow\/delta-2-max$/)
+    expect(batteriqProductUrl({ brand: 'BLUETTI', slug: 'ac180' })).toMatch(/\/bluetti\/ac180$/)
+    expect(batteriqProductUrl({ brand: 'Other', slug: 'x' })).toBeNull()
+    // the clean-up step must not break links
+    const link = 'https://batteriq.com/ecoflow/delta-2-max'
+    expect(humanizeWhatsAppReply(`You can check it out here: ${link}`)).toContain(link)
+  })
+})

@@ -308,6 +308,17 @@ export async function callClaudeMessages(params: {
   return { text: responseText, model }
 }
 
+export function batteriqSiteUrl(): string {
+  return (process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').trim().replace(/\/+$/, '')
+}
+
+/** Public product page, e.g. https://batteriq.com/ecoflow/delta-2-max (EcoFlow & BLUETTI only). */
+export function batteriqProductUrl(p: Pick<CatalogProductSummary, 'brand' | 'slug'>): string | null {
+  const brand = (p.brand || '').trim().toLowerCase()
+  if (!p.slug || (brand !== 'ecoflow' && brand !== 'bluetti')) return null
+  return `${batteriqSiteUrl()}/${brand}/${encodeURIComponent(p.slug)}`
+}
+
 function buildBatteriqCatalogSnippet(products: CatalogProductSummary[]): string {
   if (!products.length) {
     return [
@@ -321,8 +332,12 @@ function buildBatteriqCatalogSnippet(products: CatalogProductSummary[]): string 
   return products
     .slice(0, 8)
     .map(
-      (p) =>
-        `- ${p.name} (${p.brand}, ${p.category}): KES ${Number(p.price_kes).toLocaleString('en-KE')}`
+      (p) => {
+        const url = batteriqProductUrl(p)
+        return `- ${p.name} (${p.brand}, ${p.category}): KES ${Number(p.price_kes).toLocaleString('en-KE')}${
+          url ? ` | link: ${url}` : ''
+        }`
+      }
     )
     .join('\n')
 }
@@ -718,6 +733,12 @@ KEY FACTS:
 - Payment via M-Pesa, Visa/Mastercard, or corporate invoice/bank transfer.
 - Same-day delivery in Nairobi; 24–48hr insured delivery across Kenya.
 - Official 24-month+ manufacturer warranty.
+- Customers can see the full range and order online at ${batteriqSiteUrl()} (pay by M-Pesa or card at checkout).
+
+WEBSITE LINKS:
+- When the customer asks about a product, prices or how to buy, include the exact product link from the list above if there is one, otherwise ${batteriqSiteUrl()}. E.g. "You can check it out and order here: <link>".
+- Write the link as plain text on its own, never inside brackets or formatting. Only use links from this prompt, never make one up.
+- Don't put the link in every message; once it has been shared in the conversation, only repeat it if they ask.
 
 LEAD STATUS DEFINITIONS (pick the most accurate status based on the conversation):
 - "new": No meaningful engagement yet
@@ -813,8 +834,8 @@ Customer: ${inboundMessage}`
 
     const reply =
       deterministicHuman || isHotIntent
-        ? `Thanks, noted. A colleague will follow up with you directly shortly to sort out the quote and delivery.`
-        : `Thanks for getting back to me. What would you like to keep running when the power goes off? That way I can recommend the right size.`
+        ? `Thanks, noted. A colleague will follow up with you directly shortly to sort out the quote and delivery. You can also check it out and order on our website: ${batteriqSiteUrl()}`
+        : `Thanks for getting back to me. What would you like to keep running when the power goes off? That way I can recommend the right size. Our full range is on ${batteriqSiteUrl()}`
 
     return {
       reply: humanizeWhatsAppReply(reply),

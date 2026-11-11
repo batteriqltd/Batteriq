@@ -61,6 +61,8 @@ export function buildProformaWhatsAppCaption(p: OutreachProformaPackage): string
     '',
     `Total: KES ${p.total.toLocaleString('en-KE')} (incl. 16% VAT, 24-month warranty, delivery)`,
     'Valid for 14 days. Let me know if you would like any changes or want to go ahead with delivery.',
+    '',
+    `You can also order online here: ${(process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').trim().replace(/\/+$/, '')}`,
   ].join('\n')
 }
 
