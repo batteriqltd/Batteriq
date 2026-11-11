@@ -79,7 +79,7 @@ export interface SlotResult {
 
 export async function claimSendSlot(
   supabase: Db,
-  bucket: 'cold' | 'manual' | 'lead_topup',
+  bucket: 'cold' | 'manual' | 'lead_topup' | 'email_autopilot',
   minGapSeconds: number,
   dailyCap: number
 ): Promise<SlotResult> {
@@ -445,4 +445,44 @@ export async function maybeTopUpLeads(): Promise<{ started: boolean; reason?: st
     metadata: { leadsSaved: result.leadsSaved, errors: result.errors.slice(0, 3) },
   })
   return { started: true, leadsSaved: result.leadsSaved }
+}
+
+/** Email autopilot (find clients online + send emails with quotes) every 30 minutes. */
+const EMAIL_AUTOPILOT_GAP_SECONDS = 29 * 60
+const EMAIL_AUTOPILOT_DAILY_CAP = 48
+
+/**
+ * Called from the every-minute Supabase timer, so the email side keeps working
+ * with the console closed. The DB slot guarantees at most one cycle per 30 min
+ * across all callers. The cycle runs in its own function invocation (own 60s
+ * budget) via the autopilot cron route.
+ */
+export async function maybeRunEmailAutopilot(): Promise<{ started: boolean; reason?: string; status?: number }> {
+  const cronSecret = process.env.CRON_SECRET?.trim()
+  if (!cronSecret) return { started: false, reason: 'cron_secret_missing' }
+
+  const supabase = createOutreachAdminClient()
+  const settings = await getOutreachSettings(supabase)
+  if (!settings.autopilot_enabled) return { started: false, reason: 'autopilot_disabled' }
+  if (settings.campaign_paused) return { started: false, reason: 'campaign_paused' }
+
+  const slot = await claimSendSlot(supabase, 'email_autopilot', EMAIL_AUTOPILOT_GAP_SECONDS, EMAIL_AUTOPILOT_DAILY_CAP)
+  if (!slot.allowed) return { started: false, reason: slot.reason }
+
+  const site = (process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').trim().replace(/\/+$/, '')
+  const res = await fetch(`${site}/api/cron/outreach-autopilot`, {
+    method: 'GET',
+    headers: { Authorization: `Bearer ${cronSecret}` },
+    cache: 'no-store',
+    signal: AbortSignal.timeout(58_000),
+  }).catch(() => null)
+  await logOutreachEvent({
+    module: 'email_campaign',
+    level: res?.ok ? 'info' : 'warn',
+    event: 'email_autopilot_timer',
+    message: res?.ok
+      ? 'Email autopilot cycle ran from the background timer (console not needed)'
+      : `Email autopilot cycle from the background timer failed (HTTP ${res?.status ?? 'no response'})`,
+  }).catch(() => {})
+  return { started: true, status: res?.status }
 }

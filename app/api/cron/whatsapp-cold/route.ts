@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { getAdminSession } from '@/lib/admin-auth'
 import { logOutreachEvent } from '@/lib/outreach/logger'
 import { createOutreachAdminClient } from '@/lib/outreach/supabase'
-import { maybeTopUpLeads, runWahaColdTick } from '@/lib/outreach/waha-queue'
+import { maybeRunEmailAutopilot, maybeTopUpLeads, runWahaColdTick } from '@/lib/outreach/waha-queue'
 import { runAfterResponse } from '@/lib/outreach/whatsapp-transport'
 
 export const dynamic = 'force-dynamic'
@@ -58,11 +58,17 @@ async function handle(req: Request) {
   try {
     const result = await runWahaColdTick({ jitter: isMachine })
 
-    // Nothing was sent this minute → let the agent refill its own lead queue
-    // (throttled in the DB to once per 2h). Runs after the response.
-    if (isMachine && !result.sent && result.reason !== 'cold_campaign_disabled') {
+    // Background work after the response (console not needed):
+    // - email autopilot every 30 min (find clients online + emails with quotes)
+    // - refill the WhatsApp lead queue when it runs low (DB-throttled, 2h)
+    if (isMachine) {
       runAfterResponse(async () => {
-        await maybeTopUpLeads()
+        await Promise.all([
+          maybeRunEmailAutopilot().catch(() => {}),
+          !result.sent && result.reason !== 'cold_campaign_disabled'
+            ? maybeTopUpLeads().catch(() => {})
+            : Promise.resolve(),
+        ])
       })
     }
 
