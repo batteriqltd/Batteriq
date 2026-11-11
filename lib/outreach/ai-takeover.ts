@@ -131,15 +131,16 @@ export async function handleAiTakeoverForInboundMessage(params: {
     (supabase.from('outreach_messages') as any)
       .select('direction, sender_type, body, created_at')
       .eq('conversation_id', conversation.id)
-      .order('created_at', { ascending: true })
-      .limit(16),
+      // newest first so long chats still include the latest messages
+      .order('created_at', { ascending: false })
+      .limit(30),
     fetchStoreCatalogProductsSafe(40, ['Power Stations', 'Solar Panels']),
   ])
 
-  const history = (historyRes.data ?? []) as Pick<
+  const history = ((historyRes.data ?? []) as Pick<
     OutreachMessage,
     'direction' | 'sender_type' | 'body' | 'created_at'
-  >[]
+  >[]).reverse()
 
   const decision = await generateWhatsAppAiReplyWithClaude({
     lead,
@@ -264,6 +265,30 @@ export async function handleAiTakeoverForInboundMessage(params: {
     lastInboundAt: conversation.last_inbound_at || nowIso,
     messageType: 'text',
   })
+
+  // Nothing new and useful to say → stay quiet (a person has been notified)
+  if (!decision.reply.trim()) {
+    if (!shouldEscalate) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('outreach_conversations') as any)
+        .update({ mode: 'human', status: 'pending_human', escalated_reason: 'AI had nothing new to add', escalated_at: nowIso })
+        .eq('id', conversation.id)
+      await notifyAdminEscalation({
+        leadName: lead?.business_name || conversation.contact_name || conversation.phone_e164,
+        phoneE164: conversation.phone_e164,
+        reason: 'Client keeps acknowledging; please follow up personally',
+        latestCustomerMessage: inboundText,
+        conversationId: conversation.id,
+      }).catch(() => {})
+    }
+    return {
+      handled: true,
+      replied: false,
+      newStatus: decision.newStatus,
+      switchedToHuman: true,
+      escalationReason: escalationReason || 'AI had nothing new to add',
+    }
+  }
 
   if (beforeReply && !(await beforeReply())) {
     return {

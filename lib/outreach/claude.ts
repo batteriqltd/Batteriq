@@ -129,9 +129,11 @@ async function callGeminiGenerateContent(params: {
   const modelsToTry = Array.from(new Set([params.model, ...FALLBACK_GEMINI_MODELS]))
 
   let activeModel = modelsToTry[0]
+  const modelFailures: string[] = []
 
   const responseText = await withRetry(
     async () => {
+      modelFailures.length = 0
       for (let i = 0; i < modelsToTry.length; i++) {
         activeModel = modelsToTry[i]
         const controller = new AbortController()
@@ -175,13 +177,18 @@ async function callGeminiGenerateContent(params: {
               res.status === 503) &&
             i < modelsToTry.length - 1
           ) {
+            // Remember why this model was skipped so the final error explains everything
+            const skippedBody = await res.text().catch(() => '')
+            const why = skippedBody.match(/"message":\s*"([^"]{0,120})/)?.[1] || ''
+            modelFailures.push(`${activeModel}: HTTP ${res.status}${why ? ` (${why})` : ''}`)
             continue
           }
 
           if (!res.ok) {
             const errBody = await res.text().catch(() => '')
+            const earlier = modelFailures.length ? ` | earlier: ${modelFailures.join('; ')}` : ''
             const err = new Error(
-              `Gemini API error (HTTP ${res.status}): ${errBody.slice(0, 240)}`
+              `Gemini API error (HTTP ${res.status}): ${errBody.slice(0, 200)}${earlier}`
             ) as Error & { status?: number }
             err.status = res.status
             throw err
@@ -703,7 +710,7 @@ export async function generateWhatsAppAiReplyWithClaude(params: {
   const deterministicHuman = detectDeterministicHumanRequest(inboundMessage)
 
   const transcript = history
-    .slice(-14)
+    .slice(-24)
     .map((m) => {
       const speaker =
         m.direction === 'inbound' ? 'Customer' : m.sender_type === 'human' ? 'Batteriq Staff' : 'Batteriq (you)'
@@ -712,6 +719,12 @@ export async function generateWhatsAppAiReplyWithClaude(params: {
     .join('\n')
 
   const systemPrompt = `You are part of the Batteriq sales team (batteriq.com, authorised EcoFlow & BLUETTI dealer in Nairobi, Kenya), chatting with a client on WhatsApp. Write exactly like an experienced, professional Kenyan sales person typing on their phone. Speak as "we"/"I" for Batteriq; never say "from Batteriq" or refer to Batteriq as a third party.
+
+READ THE WHOLE CONVERSATION FIRST:
+- Read every earlier message in the history (ours and theirs) before replying. Your reply must follow on from what was already said.
+- NEVER repeat or rephrase a message we already sent. If you already asked a question and they did not answer it, do not ask it again; move on.
+- If they only acknowledge ("well received", "ok", "noted", "thanks"), move the sale forward with something new: ask which option they prefer, offer to adjust the quote, or suggest a quick call.
+- If they acknowledge again after you already followed up, keep it very short and suggest a call or let them know you are available; never send the same follow-up twice.
 
 YOUR GOAL IS TO CLOSE THE SALE:
 - Every reply should move the client one step closer to buying: understand their need, recommend one specific product, handle the concern, then ask for the order.
@@ -813,6 +826,20 @@ Customer: ${inboundMessage}`
 
     const wantsHuman = Boolean(parsed.wantsHuman) || deterministicHuman
 
+    // Never send (nearly) the same message twice in one conversation
+    const previousOutbound = history.filter((m) => m.direction === 'outbound').map((m) => m.body || '')
+    if (isRepeatOfEarlierReply(reply, previousOutbound)) {
+      const fb = buildContextAwareFallbackReply({ inboundMessage, history, deterministicHuman })
+      return {
+        reply: fb.reply ? humanizeWhatsAppReply(fb.reply) : '',
+        newStatus: lead?.status === 'customer' ? 'customer' : newStatus,
+        wantsHuman: wantsHuman || fb.wantsHuman,
+        isOptOut,
+        reasoning: `AI reply repeated an earlier message; ${fb.reason}`,
+        model,
+      }
+    }
+
     return {
       reply: humanizeWhatsAppReply(reply),
       newStatus,
@@ -823,34 +850,135 @@ Customer: ${inboundMessage}`
     }
   } catch (err) {
     if (fetchImpl) throw err
+    await logOutreachEvent({
+      module: 'ai_takeover',
+      level: 'warn',
+      event: 'ai_reply_fallback_used',
+      message: `AI unavailable, used context-aware fallback: ${err instanceof Error ? err.message.slice(0, 300) : String(err)}`,
+    }).catch(() => {})
 
-    const isHotIntent =
-      /\b(quote|quotation|proforma|invoice|lpo|buy|order|purchase|bulk|units?|price\s+list|pay|mpesa|m-pesa|site\s+visit|deliver)\b/i.test(
-        inboundMessage
-      )
-    const isProductQuestion =
-      /\b(delta|ecoflow|bluetti|solar|backup|kwh|watt|price|cost|how\s+much|spec|warranty)\b/i.test(
-        inboundMessage
-      )
-    let fallbackStatus: LeadStatus = isHotIntent
-      ? 'hot'
-      : isProductQuestion
-        ? 'interested'
-        : 'replied'
+    const fb = buildContextAwareFallbackReply({ inboundMessage, history, deterministicHuman })
+    let fallbackStatus: LeadStatus = fb.status
     if (lead?.status === 'customer') fallbackStatus = 'customer'
 
-    const reply =
-      deterministicHuman || isHotIntent
-        ? `Thanks, noted. A colleague will follow up with you directly shortly to sort out the quote and delivery. You can also check it out and order on our website: ${batteriqSiteUrl()}`
-        : `Thanks for getting back to me. What would you like to keep running when the power goes off? That way I can recommend the right size. Our full range is on ${batteriqSiteUrl()}`
-
     return {
-      reply: humanizeWhatsAppReply(reply),
+      reply: fb.reply ? humanizeWhatsAppReply(fb.reply) : '',
       newStatus: fallbackStatus,
-      wantsHuman: deterministicHuman || isHotIntent,
+      wantsHuman: fb.wantsHuman,
       isOptOut: false,
-      reasoning: 'Smart fallback WhatsApp classifier used while external AI key is inactive',
+      reasoning: fb.reason,
       model: 'batteriq-smart-wa-assistant',
     }
   }
+}
+
+// ── Context-aware fallback (used only when the AI service is unavailable) ──
+
+type FallbackIntent = 'human' | 'buy' | 'price' | 'product' | 'yes' | 'no' | 'later' | 'ack' | 'other'
+
+function classifyInboundIntent(text: string, deterministicHuman: boolean): FallbackIntent {
+  const t = text.toLowerCase().trim()
+  if (deterministicHuman) return 'human'
+  if (/\b(not interested|no thanks|no thank you|we('| a)re ok|we have (a|one)|already have|hapana|sitaki)\b/.test(t)) return 'no'
+  if (/\b(later|next (week|month)|not now|budget|will get back|nitakujulisha|baadaye)\b/.test(t)) return 'later'
+  if (/\b(order|buy|purchase|lpo|invoice|pay|m-?pesa|deliver|send it|go ahead|proceed|confirm|book)\b/.test(t)) return 'buy'
+  if (/\b(price|cost|how much|discount|cheaper|expensive|bei|ngapi|kiasi)\b/.test(t)) return 'price'
+  if (/\b(delta|ecoflow|bluetti|solar|panel|battery|backup|kwh|watt|warranty|spec|fridge|freezer|pump|how long|hours)\b/.test(t)) return 'product'
+  if (/^(yes|yeah|yep|sure|ok(ay)?,? (yes|sure)|interested|ndio|sawa,? (ndio|tuendelee))\b/.test(t)) return 'yes'
+  if (/^(well received|received|noted|ok(ay)?|thanks?( you)?|thank you|asante|sawa|got it|cool|alright|👍|🙏)[.!\s]*$/.test(t) || t.length <= 18) return 'ack'
+  return 'other'
+}
+
+/** Normalized text for "did we already say this?" checks. */
+function normForCompare(s: string): string {
+  return s.toLowerCase().replace(/https?:\/\/\S+/g, '').replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+/** True when `candidate` is the same as (or nearly the same as) something we already sent. */
+export function isRepeatOfEarlierReply(candidate: string, previousOutbound: string[]): boolean {
+  const c = normForCompare(candidate)
+  if (!c) return true
+  const cWords = new Set(c.split(' '))
+  return previousOutbound.some((p) => {
+    const n = normForCompare(p)
+    if (!n) return false
+    if (n === c || n.startsWith(c.slice(0, 60)) || c.startsWith(n.slice(0, 60))) return true
+    const pWords = new Set(n.split(' '))
+    let shared = 0
+    cWords.forEach((w) => {
+      if (pWords.has(w)) shared++
+    })
+    return shared / Math.max(cWords.size, pWords.size) >= 0.8
+  })
+}
+
+export function buildContextAwareFallbackReply(params: {
+  inboundMessage: string
+  history: Pick<OutreachMessage, 'direction' | 'sender_type' | 'body' | 'created_at'>[]
+  deterministicHuman?: boolean
+}): { reply: string; status: LeadStatus; wantsHuman: boolean; reason: string } {
+  const site = batteriqSiteUrl()
+  const intent = classifyInboundIntent(params.inboundMessage, Boolean(params.deterministicHuman))
+  const previousOutbound = params.history.filter((m) => m.direction === 'outbound').map((m) => m.body || '')
+  const sentQuote = previousOutbound.some((b) => /quotation|proforma|option 1/i.test(b))
+
+  const pools: Record<FallbackIntent, string[]> = {
+    human: [
+      "Of course. I'll have a colleague call you shortly to go through everything with you.",
+    ],
+    buy: [
+      "Great, thank you. A colleague will call you shortly to confirm the details and arrange delivery.",
+      `Perfect. You can also place the order directly at ${site} and pay by M-Pesa or card, and we'll deliver.`,
+    ],
+    price: [
+      "The prices on the quotation include VAT, delivery and the 24-month warranty. Compared with running a generator, there's no fuel or servicing cost at all. Would you like a smaller option to fit your budget?",
+      "We can adjust the setup to fit your budget. What would you most need to keep running when the power goes?",
+    ],
+    product: [
+      'Good question. What do you want to keep running during a blackout, and for roughly how many hours? I will confirm the right unit for you.',
+      `You can see the full specs here: ${site}. If you tell me what you need to power, I'll confirm which one fits best.`,
+    ],
+    yes: [
+      sentQuote
+        ? 'Great. Would you like to go with Option 1 or Option 2 from the quotation?'
+        : 'Great. What would you like to keep running when the power goes off? I will put together the right option for you.',
+      'Perfect. When would be a good time for a quick call to finalise the details?',
+    ],
+    no: [
+      'No problem at all, thanks for letting me know. If anything changes, you can reach us here anytime.',
+    ],
+    later: [
+      'Understood. I can hold the quoted prices for 14 days. Should I check back with you next week?',
+      'No problem. Feel welcome to message me here whenever you are ready.',
+    ],
+    ack: sentQuote
+      ? [
+          'Great. Have you had a chance to look at the two options? Which one works better for you?',
+          'Is there anything on the quotation you would like me to adjust, like a smaller unit or more solar?',
+          'When would be a good time for a quick call to go through it together?',
+        ]
+      : [
+          'Thanks. What would you like to keep running when the power goes off? That way I can recommend the right size.',
+          'When would be a good time for a quick call to go through the options?',
+        ],
+    other: [
+      'Thanks for your message. Let me check on that and get back to you shortly.',
+      'Noted. A colleague will follow up with you on this shortly.',
+    ],
+  }
+
+  const status: LeadStatus =
+    intent === 'buy' || intent === 'human'
+      ? 'hot'
+      : intent === 'price' || intent === 'product' || intent === 'yes'
+        ? 'interested'
+        : 'replied'
+  const wantsHuman = intent === 'buy' || intent === 'human' || intent === 'other'
+
+  const fresh = pools[intent].find((r) => !isRepeatOfEarlierReply(r, previousOutbound))
+  if (!fresh) {
+    // Everything suitable was already said: stay quiet and let a person take over
+    return { reply: '', status, wantsHuman: true, reason: `Fallback (${intent}): no new reply left, handing to a person` }
+  }
+  return { reply: fresh, status, wantsHuman, reason: `Fallback (${intent}) reply chosen from conversation context` }
 }

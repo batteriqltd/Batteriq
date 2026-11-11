@@ -334,3 +334,50 @@ describe('quotations use real products, offer BLUETTI, and never say "due"', () 
     expect(pdf).not.toMatch(/INVOICE|DUE|PENDING|Total Paid/)
   })
 })
+
+describe('AI reads the conversation and never repeats itself (fallback path)', () => {
+  type H = { direction: 'inbound' | 'outbound'; sender_type: 'lead' | 'ai' | 'human' | 'system_template'; body: string; created_at: string }
+  const t = (i: number) => new Date(Date.UTC(2026, 10, 11, 13, i)).toISOString()
+
+  it('replays the "Well received" loop and gives a new reply each time, then hands over', async () => {
+    const { buildContextAwareFallbackReply, isRepeatOfEarlierReply } = await import('@/lib/outreach/claude')
+    const history: H[] = [
+      { direction: 'outbound', sender_type: 'system_template', body: 'Hello Severin Sea Lodge, When KPLC goes off, how much does it cost you?', created_at: t(1) },
+      { direction: 'outbound', sender_type: 'system_template', body: 'Here are the options we put together for Severin Sea Lodge. Option 1: EcoFlow DELTA Pro 3. Option 2: BLUETTI Premium 200.', created_at: t(2) },
+      { direction: 'inbound', sender_type: 'lead', body: 'Well received', created_at: t(3) },
+    ]
+    const sent: string[] = []
+    for (let round = 0; round < 6; round++) {
+      const r = buildContextAwareFallbackReply({ inboundMessage: 'Well received', history })
+      if (!r.reply) {
+        expect(r.wantsHuman).toBe(true)
+        break
+      }
+      expect(isRepeatOfEarlierReply(r.reply, sent)).toBe(false)
+      sent.push(r.reply)
+      history.push({ direction: 'outbound', sender_type: 'ai', body: r.reply, created_at: t(10 + round * 2) })
+      history.push({ direction: 'inbound', sender_type: 'lead', body: 'Well received', created_at: t(11 + round * 2) })
+    }
+    expect(sent.length).toBeGreaterThanOrEqual(2)
+    expect(new Set(sent).size).toBe(sent.length)
+    expect(sent[0]).toMatch(/options|option/i) // follows on from the quotation that was sent
+  })
+
+  it('answers price and buying intent differently from a plain acknowledgement', async () => {
+    const { buildContextAwareFallbackReply } = await import('@/lib/outreach/claude')
+    const history: H[] = [{ direction: 'outbound', sender_type: 'system_template', body: 'Here are the options… Option 1 … Option 2 …', created_at: t(1) }]
+    const price = buildContextAwareFallbackReply({ inboundMessage: 'How much is the smaller one?', history })
+    const buy = buildContextAwareFallbackReply({ inboundMessage: 'We want to order option 2', history })
+    expect(price.status).toBe('interested')
+    expect(buy.status).toBe('hot')
+    expect(buy.wantsHuman).toBe(true)
+    expect(price.reply).not.toBe(buy.reply)
+  })
+
+  it('detects near-duplicate wording', async () => {
+    const { isRepeatOfEarlierReply } = await import('@/lib/outreach/claude')
+    const a = 'Thanks for getting back to me. What would you like to keep running when the power goes off? Our full range is on https://batteriq.com'
+    expect(isRepeatOfEarlierReply(a, [a.replace('https://batteriq.com', 'https://batteriq.com/')])).toBe(true)
+    expect(isRepeatOfEarlierReply('When would be a good time for a quick call?', [a])).toBe(false)
+  })
+})
