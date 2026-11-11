@@ -2,10 +2,11 @@ import crypto from 'crypto'
 import { NextResponse } from 'next/server'
 import { getAdminSession } from '@/lib/admin-auth'
 import { logOutreachEvent } from '@/lib/outreach/logger'
-import { runWahaColdTick } from '@/lib/outreach/waha-queue'
+import { maybeTopUpLeads, runWahaColdTick } from '@/lib/outreach/waha-queue'
+import { runAfterResponse } from '@/lib/outreach/whatsapp-transport'
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 30
+export const maxDuration = 60
 
 function bearerMatches(header: string, secret: string | undefined): boolean {
   const s = secret?.trim()
@@ -30,6 +31,15 @@ async function handle(req: Request) {
 
   try {
     const result = await runWahaColdTick({ jitter: isMachine })
+
+    // Nothing was sent this minute → let the agent refill its own lead queue
+    // (throttled in the DB to once per 2h). Runs after the response.
+    if (isMachine && !result.sent && result.reason !== 'cold_campaign_disabled') {
+      runAfterResponse(async () => {
+        await maybeTopUpLeads()
+      })
+    }
+
     return NextResponse.json({ success: true, ...result })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Cold queue tick failed'

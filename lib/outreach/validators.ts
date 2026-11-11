@@ -570,6 +570,14 @@ export function mapSearchCategoryToLeadCategory(raw: string): LeadCategory {
   ) {
     return 'school'
   }
+  // Nightlife & everyday small businesses (bars, pubs, butcheries, kiosks…)
+  if (
+    /\b(bars?|pubs?|lounges?|night\s*clubs?|clubs?|liquor|wines?\s*(and|&)\s*spirits|butcher(y|ies)?|kiosks?|cyber|printing|car\s*wash|grills?|nyama\s*choma|eater(y|ies)|minimarts?|mini\s*marts?|small\s*business(es)?|traders?)\b/.test(
+      lower
+    )
+  ) {
+    return 'retail'
+  }
   if (
     lower.includes('hotel') ||
     lower.includes('lodge') ||

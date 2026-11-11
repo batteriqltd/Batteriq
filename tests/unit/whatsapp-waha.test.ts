@@ -147,3 +147,90 @@ describe('POST /api/whatsapp/webhook signature enforcement', () => {
     expect(res.status).toBe(401)
   })
 })
+
+describe('WhatsApp proforma + wider targeting', () => {
+  beforeEach(() => {
+    process.env.WHATSAPP_WEBHOOK_SECRET = 'hook-secret'
+  })
+  afterEach(() => {
+    delete process.env.WHATSAPP_WEBHOOK_SECRET
+    vi.unstubAllGlobals()
+  })
+
+  it('maps bars, pubs and small businesses to a sendable category', async () => {
+    const { mapSearchCategoryToLeadCategory } = await import('@/lib/outreach/validators')
+    expect(mapSearchCategoryToLeadCategory('bars, pubs & lounges')).toBe('retail')
+    expect(mapSearchCategoryToLeadCategory('butcheries & wines and spirits')).toBe('retail')
+    expect(mapSearchCategoryToLeadCategory('hotels & lodges')).toBe('hotel')
+  })
+
+  it('tailors a bar quote and a home quote for an individual', async () => {
+    const { recommendBatteriqProformaForLead } = await import('@/lib/outreach/proforma')
+    const bar = recommendBatteriqProformaForLead({
+      business_name: 'Kilimani Sports Bar & Grill',
+      category: 'retail',
+      city: 'Nairobi',
+      address: null,
+      email: null,
+      phone_e164: '+254712345678',
+    })
+    expect(bar.systemTitle).toMatch(/Bar/)
+    expect(bar.total).toBeGreaterThan(0)
+    const person = recommendBatteriqProformaForLead({
+      business_name: 'Jane Wanjiku',
+      category: 'other',
+      city: null,
+      address: null,
+      email: null,
+      phone_e164: '+254712345678',
+    })
+    expect(person.systemTitle).toMatch(/Home/)
+  })
+
+  it('signs proforma download links and rejects tampering', async () => {
+    const { proformaPublicUrl, verifyProformaLinkSignature, buildProformaWhatsAppCaption } = await import(
+      '@/lib/outreach/whatsapp-proforma'
+    )
+    const id = '11111111-2222-3333-4444-555555555555'
+    const url = proformaPublicUrl(id) as string
+    const sig = new URL(url).searchParams.get('s')
+    expect(verifyProformaLinkSignature(id, sig)).toBe(true)
+    expect(verifyProformaLinkSignature('11111111-2222-3333-4444-555555555556', sig)).toBe(false)
+    expect(verifyProformaLinkSignature(id, 'x'.repeat(32))).toBe(false)
+    const { recommendBatteriqProformaForLead } = await import('@/lib/outreach/proforma')
+    const caption = buildProformaWhatsAppCaption(
+      recommendBatteriqProformaForLead({
+        business_name: 'Acme',
+        category: 'retail',
+        city: 'Nairobi',
+        address: null,
+        email: null,
+        phone_e164: null,
+      })
+    )
+    expect(caption).toMatch(/Proforma Quotation #BQ-PRO-/)
+    expect(caption).toMatch(/Total: KES/)
+  })
+
+  it('sends the PDF as a WhatsApp document with X-Api-Key', async () => {
+    process.env.WAHA_BASE_URL = 'https://waha.example.test'
+    process.env.WAHA_API_KEY = FAKE_KEY
+    const { sendWahaFile } = await import('@/lib/waha')
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ id: 'true_x@c.us_PDF' }), { status: 201 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const res = await sendWahaFile({
+      chatId: '254712345678@c.us',
+      filename: 'q.pdf',
+      mimetype: 'application/pdf',
+      base64: 'JVBERg==',
+      caption: 'hi',
+    })
+    expect(res.messageId).toBe('true_x@c.us_PDF')
+    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(url).toBe('https://waha.example.test/api/sendFile')
+    const sent = JSON.parse(String(init.body))
+    expect(sent.file).toEqual({ mimetype: 'application/pdf', filename: 'q.pdf', data: 'JVBERg==' })
+    delete process.env.WAHA_BASE_URL
+    delete process.env.WAHA_API_KEY
+  })
+})

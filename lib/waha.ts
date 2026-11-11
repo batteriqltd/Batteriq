@@ -343,6 +343,26 @@ export async function sendWahaText(params: {
   return { messageId: extractMessageId(res.json) }
 }
 
+/** Sends a document (e.g. a PDF proforma) with an optional caption. */
+export async function sendWahaFile(params: {
+  chatId: string
+  filename: string
+  mimetype: string
+  base64: string
+  caption?: string
+}): Promise<{ messageId: string | null }> {
+  const res = await wahaFetch('POST', '/api/sendFile', {
+    body: {
+      session: WAHA_SESSION,
+      chatId: params.chatId,
+      file: { mimetype: params.mimetype, filename: params.filename, data: params.base64 },
+      ...(params.caption ? { caption: params.caption.slice(0, 1024) } : {}),
+    },
+    timeoutMs: 30_000,
+  })
+  return { messageId: extractMessageId(res.json) }
+}
+
 export async function setWahaTyping(chatId: string, typing: boolean): Promise<void> {
   try {
     await wahaFetch('POST', typing ? '/api/startTyping' : '/api/stopTyping', {

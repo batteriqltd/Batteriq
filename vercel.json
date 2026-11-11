@@ -50,6 +50,9 @@
       "maxDuration": 60
     },
     "app/api/cron/whatsapp-cold/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/admin/outreach/whatsapp/waha/proforma/route.ts": {
       "maxDuration": 30
     },
     "app/api/admin/outreach/whatsapp/send/route.ts": {

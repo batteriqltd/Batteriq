@@ -137,10 +137,21 @@ function cleanDiscoveredBusinessTitle(rawTitle: string, domain: string): string 
   return base.charAt(0).toUpperCase() + base.slice(1)
 }
 
+/**
+ * Target categories whose own words make a better search than the generic
+ * sector query (e.g. "bars, pubs & lounges" should search for bars, not
+ * for "boutique OR pharmacy OR …").
+ */
+const WORD_DRIVEN_CATEGORY_RE =
+  /\b(bars?|pubs?|lounges?|clubs?|restaurants?|cafes?|eater(y|ies)|grills?|butcher(y|ies)?|wines?|liquor|salons?|barbers?|spas?|gyms?|supermarkets?|minimarts?|hardware|electronics|pharmac(y|ies)|chemists?|petrol|garages?|car\s*wash|churches|church|apartments?|real\s*estate|farms?|agribusiness|poultry|dairy|bakery|bakeries|laundr(y|ies)|cyber|printing|kiosks?|small\s*business(es)?)\b/i
+
 function isSpecificCustomQuery(rawQuery?: string): boolean {
   if (!rawQuery) return false
+  const trimmed = rawQuery.trim()
   // Auto-generated rotating queries follow the exact pattern "<target_category> in <city>, Kenya"
-  return !/\s+in\s+[a-z\s]+,\s*kenya$/i.test(rawQuery.trim())
+  const auto = trimmed.match(/^(.*?)\s+in\s+[a-z\s]+,\s*kenya$/i)
+  if (!auto) return true
+  return WORD_DRIVEN_CATEGORY_RE.test(auto[1])
 }
 
 function buildFreeKenyanSearchQuery(category: LeadCategory, city: string, rawQuery?: string): string {
@@ -208,7 +219,7 @@ export async function discoverKenyanBusinessWebsitesViaAi(params: {
     'Kenyan schools, NGOs, government parastatals, hospitals, retail/baby shops, and organizations'
 
   const systemPrompt = `You are a Kenyan institutional & commercial directory researcher.
-Return STRICT JSON ONLY listing real, currently operating Kenyan entities (schools, NGOs, government parastatals including .go.ke, hospitals, retail & baby shops, hotels, Saccos, and organizations) that have their OWN official website (e.g. .co.ke, .go.ke, .ac.ke, .sc.ke, .or.ke, .com, .org, .coop).
+Return STRICT JSON ONLY listing real, currently operating Kenyan entities (schools, NGOs, government parastatals including .go.ke, hospitals, retail & baby shops, hotels, Saccos, organizations, and everyday businesses such as bars, pubs, lounges, restaurants, butcheries, salons, gyms, supermarkets, hardware shops, petrol stations, garages and farms) that have their OWN official website (e.g. .co.ke, .go.ke, .ac.ke, .sc.ke, .or.ke, .com, .org, .coop).
 NEVER include Facebook, Instagram, LinkedIn, TikTok, Jiji, Jumia, Booking.com, TripAdvisor, or news articles.
 NEVER invent fake domains — only list real Kenyan organizations, parastatals, schools, NGOs, and shops whose official domain you know with high confidence.
 JSON schema:

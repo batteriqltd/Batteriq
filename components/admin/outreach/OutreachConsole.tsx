@@ -244,7 +244,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   // Proforma Quotation Slide-Over Drawer State
   const [proformaLead, setProformaLead] = useState<OutreachLead | null>(null)
   const [proformaLoading, setProformaLoading] = useState(false)
-  const [proformaSending, setProformaSending] = useState<'email' | 'download' | null>(null)
+  const [proformaSending, setProformaSending] = useState<'email' | 'download' | 'whatsapp' | null>(null)
   const [proformaPkg, setProformaPkg] = useState<OutreachProformaPackage | null>(null)
   const [catalogOptions, setCatalogOptions] = useState<CatalogProductSummary[]>([])
   const [proformaFeedback, setProformaFeedback] = useState<{ type: 'ok' | 'err'; text: string } | null>(null)
@@ -684,6 +684,39 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         })
         await fetchOverview()
       }
+    } finally {
+      setProformaSending(null)
+    }
+  }
+
+  async function sendProformaOnWhatsApp() {
+    if (!proformaPkg) return
+    if (!(proformaPkg.customerPhone || '').replace(/\D/g, '')) {
+      setProformaFeedback({ type: 'err', text: 'Add the client WhatsApp number (phone) first.' })
+      return
+    }
+    setProformaSending('whatsapp')
+    setProformaFeedback(null)
+    try {
+      const res = await fetch('/api/admin/outreach/whatsapp/waha/proforma', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...proformaPkg, phone: proformaPkg.customerPhone, leadId: proformaLead?.id }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (res.status === 503) {
+        // WhatsApp not connected on the server → fall back to sharing from this device
+        openWhatsAppProformaShare()
+        return
+      }
+      if (!res.ok) {
+        setProformaFeedback({ type: 'err', text: data.error || 'WhatsApp send failed' })
+        return
+      }
+      setProformaFeedback({
+        type: 'ok',
+        text: `Proforma #${proformaPkg.proformaNumber} (KES ${proformaPkg.total.toLocaleString('en-KE')}) sent on WhatsApp to ${proformaPkg.customerPhone}${data.via === 'link' ? ' as a download link' : ' as a PDF'}. The chat is now in your Inbox.`,
+      })
     } finally {
       setProformaSending(null)
     }
@@ -2568,6 +2601,14 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       <span className="text-[11px] font-bold text-slate-500">Client email</span>
                       <input type="email" value={proformaPkg.customerEmail} onChange={(e) => setProformaPkg({ ...proformaPkg, customerEmail: e.target.value })} placeholder="info@client.co.ke" className={`${inputCls} w-full`} />
                     </label>
+                    <label className="space-y-1">
+                      <span className="text-[11px] font-bold text-slate-500">Client name</span>
+                      <input value={proformaPkg.customerName} onChange={(e) => setProformaPkg({ ...proformaPkg, customerName: e.target.value })} placeholder="Business or person" className={`${inputCls} w-full`} />
+                    </label>
+                    <label className="space-y-1">
+                      <span className="text-[11px] font-bold text-slate-500">Client WhatsApp number</span>
+                      <input type="tel" value={proformaPkg.customerPhone} onChange={(e) => setProformaPkg({ ...proformaPkg, customerPhone: e.target.value })} placeholder="0712 345 678" className={`${inputCls} w-full font-mono`} />
+                    </label>
                     <label className="space-y-1 sm:col-span-2">
                       <span className="text-[11px] font-bold text-slate-500">System title</span>
                       <input value={proformaPkg.systemTitle} onChange={(e) => setProformaPkg({ ...proformaPkg, systemTitle: e.target.value })} className={`${inputCls} w-full font-semibold`} />
@@ -2712,8 +2753,9 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                   {proformaSending === 'download' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                   Download
                 </button>
-                <button type="button" onClick={openWhatsAppProformaShare} className="inline-flex items-center justify-center gap-1.5 h-12 px-4 rounded-xl bg-emerald-50 text-emerald-700 text-xs font-bold hover:bg-emerald-100">
-                  <MessageSquare className="w-4 h-4" /> WhatsApp
+                <button type="button" disabled={proformaSending !== null} onClick={sendProformaOnWhatsApp} className="inline-flex items-center justify-center gap-1.5 h-12 px-4 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 disabled:opacity-60">
+                  {proformaSending === 'whatsapp' ? <Loader2 className="w-4 h-4 animate-spin" /> : <MessageSquare className="w-4 h-4" />}
+                  Send PDF on WhatsApp
                 </button>
               </div>
             )}

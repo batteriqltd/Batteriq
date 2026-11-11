@@ -16,9 +16,11 @@ import {
 import { checkInSuppressionSets, getOutreachSettings, loadSuppressionSets } from './compliance'
 import { logOutreachEvent } from './logger'
 import { sendOutreachNotification } from './notifications'
-import { createOutreachAdminClient } from './supabase'
+import { recommendBatteriqProformaForLead } from './proforma'
+import { createOutreachAdminClient, fetchStoreCatalogProductsSafe } from './supabase'
 import type { OutreachLead } from './types'
 import { isKenyanLandline } from './validators'
+import { sendProformaOnWhatsApp } from './whatsapp-proforma'
 import { randomBetween, sleepMs, toWhatsAppDigits } from './whatsapp-transport'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,7 +39,7 @@ export const DEFAULT_WAHA_COLD_MESSAGE =
   '{Hello|Hi|Good day} {business} 👋\n\n' +
   "This is {sender} from Batteriq, Kenya's authorised EcoFlow & BLUETTI dealer. " +
   '{We help|We support} businesses stay open through blackouts with silent battery backup and solar — no fuel, no noise.\n\n' +
-  'Would you like a free backup-power quote for your premises? Just reply YES.\n\n' +
+  "I've attached a quotation made for {business} below. Reply here to adjust it or ask anything.\n\n" +
   'Reply STOP to opt out.'
 
 export const DEFAULT_WAHA_CAMPAIGN: WahaCampaignSettings = {
@@ -75,7 +77,7 @@ export interface SlotResult {
 
 export async function claimSendSlot(
   supabase: Db,
-  bucket: 'cold' | 'manual',
+  bucket: 'cold' | 'manual' | 'lead_topup',
   minGapSeconds: number,
   dailyCap: number
 ): Promise<SlotResult> {
@@ -138,6 +140,7 @@ export interface ColdTickResult {
   businessName?: string
   phoneE164?: string
   skippedNotOnWhatsApp?: number
+  proformaVia?: 'file' | 'link' | 'failed' | 'off'
 }
 
 const MAX_CANDIDATE_CHECKS = 3
@@ -146,7 +149,9 @@ const MAX_CANDIDATE_CHECKS = 3
  * Sends the next cold intro (if allowed right now). Safe to call any number of
  * times — the DB slot claim guarantees >= COLD_MIN_GAP_SECONDS between sends.
  */
-export async function runWahaColdTick(options: { jitter?: boolean } = {}): Promise<ColdTickResult> {
+export async function runWahaColdTick(
+  options: { jitter?: boolean; attachProforma?: boolean } = {}
+): Promise<ColdTickResult> {
   if (!isWahaConfigured()) return { sent: false, reason: 'waha_not_configured' }
 
   const supabase = createOutreachAdminClient()
@@ -296,15 +301,54 @@ export async function runWahaColdTick(options: { jitter?: boolean } = {}): Promi
         .update({ status: 'contacted', whatsapp_cold_result: 'sent', updated_at: nowIso })
         .eq('id', lead.id)
 
+      // Follow the intro with the tailored PDF proforma for this lead
+      let proformaVia: 'file' | 'link' | 'failed' | 'off' = 'off'
+      if (options.attachProforma !== false) {
+        try {
+          const catalog = await fetchStoreCatalogProductsSafe(20, [
+            'Power Stations',
+            'Solar Home Systems',
+            'Solar Panels',
+            'Batteries',
+          ])
+          const proforma = recommendBatteriqProformaForLead(lead, catalog)
+          await sleepMs(randomBetween(2_000, 4_000))
+          const res = await sendProformaOnWhatsApp({
+            supabase,
+            conversationId: conv.id,
+            leadId: lead.id,
+            chatId,
+            proforma,
+            senderType: 'system_template',
+          })
+          proformaVia = res.via
+        } catch (pfErr) {
+          proformaVia = 'failed'
+          await logOutreachEvent({
+            module: 'whatsapp',
+            level: 'warn',
+            event: 'waha_cold_proforma_failed',
+            message: pfErr instanceof Error ? pfErr.message : 'proforma send failed',
+            metadata: { leadId: lead.id },
+          })
+        }
+      }
+
       await logOutreachEvent({
         module: 'whatsapp',
         level: 'info',
         event: 'waha_cold_sent',
-        message: `Cold WhatsApp intro sent to ${lead.business_name}`,
-        metadata: { leadId: lead.id, dayCount: slot.dayCount },
+        message: `Cold WhatsApp intro sent to ${lead.business_name} (proforma: ${proformaVia})`,
+        metadata: { leadId: lead.id, dayCount: slot.dayCount, proformaVia },
       })
 
-      return { sent: true, businessName: lead.business_name, phoneE164: phone, skippedNotOnWhatsApp }
+      return {
+        sent: true,
+        businessName: lead.business_name,
+        phoneE164: phone,
+        skippedNotOnWhatsApp,
+        proformaVia,
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'send failed'
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -365,4 +409,41 @@ export async function getColdCampaignStats(supabase: Db): Promise<{
     lastSentAt: slot?.last_sent_at || null,
     remainingLeads: typeof remainingRes.count === 'number' ? remainingRes.count : null,
   }
+}
+
+/** Below this many un-messaged leads, the agent goes looking for more on its own. */
+export const LEAD_TOPUP_THRESHOLD = 40
+/** At most one automatic lead search every 2 hours, 10 per day. */
+const LEAD_TOPUP_GAP_SECONDS = 2 * 60 * 60
+const LEAD_TOPUP_DAILY_CAP = 10
+
+/**
+ * Keeps the cold queue fed without anyone adding leads by hand: when the
+ * WhatsApp campaign is on and few leads are left, run a small Lead Finder
+ * batch (rotating sector x city, incl. bars, restaurants, salons, shops…).
+ */
+export async function maybeTopUpLeads(): Promise<{ started: boolean; reason?: string; leadsSaved?: number }> {
+  const supabase = createOutreachAdminClient()
+  const campaign = await getWahaCampaignSettings(supabase)
+  if (!campaign.waha_cold_enabled) return { started: false, reason: 'cold_campaign_disabled' }
+
+  const stats = await getColdCampaignStats(supabase)
+  if (stats.remainingLeads === null || stats.remainingLeads >= LEAD_TOPUP_THRESHOLD) {
+    return { started: false, reason: 'enough_leads' }
+  }
+
+  const slot = await claimSendSlot(supabase, 'lead_topup', LEAD_TOPUP_GAP_SECONDS, LEAD_TOPUP_DAILY_CAP)
+  if (!slot.allowed) return { started: false, reason: slot.reason }
+
+  // Imported lazily: the lead finder is large and only needed here
+  const { runLeadFinderJob } = await import('./lead-finder')
+  const result = await runLeadFinderJob({ queriesPerRun: 2, maxPlacesPerQuery: 8 })
+  await logOutreachEvent({
+    module: 'lead_finder',
+    level: 'info',
+    event: 'auto_lead_topup',
+    message: `WhatsApp queue was low (${stats.remainingLeads} left) — found ${result.leadsSaved} new leads (${result.queriesExecuted.join(' | ')})`,
+    metadata: { leadsSaved: result.leadsSaved, errors: result.errors.slice(0, 3) },
+  })
+  return { started: true, leadsSaved: result.leadsSaved }
 }

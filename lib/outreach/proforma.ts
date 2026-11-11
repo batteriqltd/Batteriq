@@ -147,9 +147,47 @@ export function recommendBatteriqProformaForLead(
   let systemTitle = 'Commercial Uptime & LiFePO4 Backup Package'
   let useCaseSummary =
     'Silent <20ms automatic UPS switchover for routers, workstations, lighting & critical equipment — zero diesel fumes or maintenance.'
+  const isBar = /\b(bar|bars|pub|pubs|lounge|lounges|club|clubs|nightclub|liquor|wines?\s*(and|&)\s*spirits|grill|grills|nyama\s*choma)\b/i.test(nameAndAddr)
+  const isButchery = /\b(butchery|butcheries|butcher|meat|fish|dairy\s*shop|milk\s*bar)\b/i.test(nameAndAddr)
+  const isSmallShop = /\b(kiosk|kiosks|cyber|printing|minimart|mini\s*mart|m-?pesa\s*shop|duka)\b/i.test(nameAndAddr)
+  const isIndividual =
+    category === 'other' && !lead.address && !lead.city && !/\b(ltd|limited|company|co\.|enterprises?|group|ventures)\b/i.test(nameAndAddr)
+
   let rawItems: Array<{ brand: string; name: string; quantity: number; unitPrice: number }> = []
 
-  if (isProperty) {
+  if (isBar) {
+    systemTitle = 'Bar, Pub & Lounge Sound, Lighting, Chiller & Till Backup Package'
+    useCaseSummary =
+      'Keep the music, lights, TV screens, beer & soda chillers and M-Pesa/POS tills running through KPLC blackouts — silent, no generator noise or fumes for your customers.'
+    rawItems = [
+      { ...delta2Max, quantity: 1 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else if (isButchery) {
+    systemTitle = 'Butchery & Fresh-Food Fridge and Freezer Backup Package'
+    useCaseSummary =
+      'Protect stock in display fridges and freezers, the scale and M-Pesa till during power cuts — no spoilt meat or milk, no fuel to buy.'
+    rawItems = [
+      { ...delta2Max, quantity: 1 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else if (isIndividual) {
+    systemTitle = 'Home Backup Power Package (Lights, TV, Wi-Fi, Fridge & Phones)'
+    useCaseSummary =
+      'Silent home backup that switches on automatically when KPLC goes off — keeps lights, TV, Wi-Fi, fridge, laptops and phones running. Charge from the wall or the sun.'
+    rawItems = [
+      { ...delta2, quantity: 1 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else if (isSmallShop) {
+    systemTitle = 'Small Shop, Cyber & Kiosk Instant Backup Package'
+    useCaseSummary =
+      'Keeps lights, computers, printers, phone charging, Wi-Fi and the M-Pesa till running during blackouts so you never close early or lose customers.'
+    rawItems = [
+      { ...delta2, quantity: 1 },
+      { ...solar220, quantity: 1 },
+    ]
+  } else if (isProperty) {
     systemTitle = 'Residential & Commercial Property Common-Area, Pump & Security Backup System'
     useCaseSummary =
       'Zero-diesel, zero-fume silent LiFePO4 backup for tenant common area lighting, borehole/water pressure pumps, CCTV, electric perimeter fences & access gates during KPLC outages.'

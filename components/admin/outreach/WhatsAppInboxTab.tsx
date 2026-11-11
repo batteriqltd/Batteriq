@@ -195,6 +195,33 @@ export function WhatsAppInboxTab({
     }
   }
 
+  async function handleSendProforma() {
+    if (!activeConv) return
+    setFeedback(null)
+    setSending(true)
+    try {
+      const res = await fetch('/api/admin/outreach/whatsapp/waha/proforma', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversationId: activeConv.id }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setFeedback({ type: 'err', text: data.error || 'Could not send the proforma' })
+      } else {
+        setFeedback({
+          type: 'ok',
+          text: `Proforma #${data.proformaNumber} (KES ${Number(data.total || 0).toLocaleString('en-KE')}) sent${data.via === 'link' ? ' as a download link' : ' as a PDF'}. You are now handling this chat.`,
+        })
+        await loadMessages(activeConv.id)
+        await loadConversations()
+        onStatsChange?.()
+      }
+    } finally {
+      setSending(false)
+    }
+  }
+
   async function handleSendMessage(e: React.FormEvent) {
     e.preventDefault()
     if (!activeConv) return
@@ -542,6 +569,17 @@ export function WhatsAppInboxTab({
                             ? '24-hour customer care window active — free-form reply allowed'
                             : 'Outside 24-hour window — approved Meta template required'}
                       </span>
+                      {wahaMode && (
+                        <button
+                          type="button"
+                          disabled={sending}
+                          onClick={handleSendProforma}
+                          className="inline-flex items-center gap-1 text-emerald-700 font-bold hover:text-emerald-800 disabled:opacity-50"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          Send proforma PDF
+                        </button>
+                      )}
                       {windowOpen && !wahaMode && (
                         <button
                           type="button"
