@@ -208,9 +208,11 @@ describe('WhatsApp proforma + wider targeting', () => {
         phone_e164: null,
       })
     )
-    expect(caption).toMatch(/^Here is the quotation for Acme\./)
+    expect(caption).toMatch(/^Here are the options we put together for Acme\./)
     expect(caption).toMatch(/I'd recommend the /)
-    expect(caption).toMatch(/Total KES [\d,]+, including VAT/)
+    expect(caption).toMatch(/Option 1: .*KES [\d,]+/)
+    expect(caption).toMatch(/Option 2: .*BLUETTI|Option 2: .*Bluetti/i)
+    expect(caption).toMatch(/Nothing to pay until you decide/)
     expect(caption).not.toMatch(/\(/) // spec brackets stripped from product names
   })
 
@@ -285,5 +287,50 @@ describe('website links in WhatsApp messages', () => {
     // the clean-up step must not break links
     const link = 'https://batteriq.com/ecoflow/delta-2-max'
     expect(humanizeWhatsAppReply(`You can check it out here: ${link}`)).toContain(link)
+  })
+})
+
+describe('quotations use real products, offer BLUETTI, and never say "due"', () => {
+  const catalog = [
+    { brand: 'EcoFlow', category: 'Power Stations', name: 'EcoFlow DELTA 3', price_kes: 99980, slug: 'delta-3' },
+    { brand: 'EcoFlow', category: 'Power Stations', name: 'EcoFlow DELTA 3 Plus', price_kes: 112475, slug: 'delta-3-plus' },
+    { brand: 'EcoFlow', category: 'Batteries', name: 'EcoFlow DELTA 3 Plus Smart Extra Battery', price_kes: 60799, slug: 'delta-3-plus-smart-extra-battery' },
+    { brand: 'EcoFlow', category: 'Power Stations', name: 'EcoFlow DELTA Pro 3', price_kes: 461799, slug: 'delta-pro-3' },
+    { brand: 'EcoFlow', category: 'Solar Panels', name: 'EcoFlow Portable Solar Panel 220W', price_kes: 37499, slug: 'solar-panel-220w' },
+    { brand: 'EcoFlow', category: 'Solar Panels', name: 'EcoFlow Portable Solar Panel 400W', price_kes: 71240, slug: 'solar-panel-400w' },
+    { brand: 'Bluetti', category: 'Power Stations', name: 'Bluetti premium 200', price_kes: 120000, slug: 'bluetti-premium-200' },
+  ]
+
+  it('quotes store products (never an extra battery) and adds a BLUETTI option', async () => {
+    const { recommendBatteriqProformaForLead } = await import('@/lib/outreach/proforma')
+    const bar = recommendBatteriqProformaForLead(
+      { business_name: 'Kilimani Sports Bar', category: 'retail', city: 'Nairobi', address: null, email: null, phone_e164: null },
+      catalog
+    )
+    const names = bar.items.map((i) => i.name)
+    expect(names).toContain('EcoFlow DELTA 3 Plus')
+    expect(names.join(' ')).not.toMatch(/Extra Battery/)
+    expect(bar.alternative?.items[0].name).toBe('Bluetti premium 200')
+    expect(bar.alternative?.total).toBe(120000)
+
+    const hospital = recommendBatteriqProformaForLead(
+      { business_name: 'Coast Hospital', category: 'hospital', city: 'Mombasa', address: null, email: null, phone_e164: null },
+      catalog
+    )
+    expect(hospital.items.map((i) => i.name)).toContain('EcoFlow DELTA Pro 3')
+    expect(hospital.alternative?.items[0].quantity).toBe(2)
+  })
+
+  it('renders a QUOTATION PDF with both options and no invoice/due wording', async () => {
+    const { recommendBatteriqProformaForLead, generateOutreachProformaPdfBase64 } = await import('@/lib/outreach/proforma')
+    const p = recommendBatteriqProformaForLead(
+      { business_name: 'Kilimani Sports Bar', category: 'retail', city: 'Nairobi', address: null, email: null, phone_e164: null },
+      catalog
+    )
+    const pdf = Buffer.from(await generateOutreachProformaPdfBase64(p), 'base64').toString('latin1')
+    expect(pdf.startsWith('%PDF')).toBe(true)
+    expect(pdf).toMatch(/QUOTATION/)
+    expect(pdf).toMatch(/Option 2/)
+    expect(pdf).not.toMatch(/INVOICE|DUE|PENDING|Total Paid/)
   })
 })

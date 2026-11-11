@@ -104,12 +104,7 @@ export async function POST(req: NextRequest) {
         ).trim(),
       })
     } else {
-      const catalog = await fetchStoreCatalogProductsSafe(20, [
-        'Power Stations',
-        'Solar Home Systems',
-        'Solar Panels',
-        'Batteries',
-      ])
+      const catalog = await fetchStoreCatalogProductsSafe(100, ['Power Stations', 'Solar Panels'])
       proforma = recommendBatteriqProformaForLead(
         lead || {
           business_name: conv?.contact_name || 'Valued Customer',

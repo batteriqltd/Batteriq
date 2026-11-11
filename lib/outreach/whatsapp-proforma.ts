@@ -60,18 +60,24 @@ export function buildProformaWhatsAppCaption(p: OutreachProformaPackage): string
   const names = p.items.map((it) => shortProductName(it.name))
   const recommendation =
     names.length > 1 ? `${names.slice(0, -1).join(', ')} with the ${names[names.length - 1]}` : names[0] || 'this setup'
-  const lines = p.items.map(
-    (it) => `${shortProductName(it.name)} x${it.quantity}: KES ${it.total.toLocaleString('en-KE')}`
-  )
+  const optionOne = `Option 1: ${names.join(' + ')}, KES ${p.total.toLocaleString('en-KE')}`
+  const alt = p.alternative
+  const optionTwo = alt
+    ? `Option 2: ${alt.items
+        .map((it) => `${shortProductName(it.name)}${it.quantity > 1 ? ` x${it.quantity}` : ''}`)
+        .join(' + ')}, KES ${alt.total.toLocaleString('en-KE')}`
+    : null
   return [
-    `Here is the quotation for ${p.customerName}.`,
+    `Here are the options we put together for ${p.customerName}.`,
     '',
     `I'd recommend the ${recommendation}. It keeps your essentials running the moment the power goes off, with no fuel, no noise and nothing to maintain.`,
     '',
-    ...lines,
-    `Total KES ${p.total.toLocaleString('en-KE')}, including VAT, delivery and a 24-month warranty.`,
+    optionOne,
+    ...(optionTwo ? [optionTwo] : []),
     '',
-    `These prices are held for 14 days. Reply here to confirm and we'll arrange delivery, or order directly at ${site}`,
+    'Prices include VAT, delivery and a 24-month warranty, and are held for 14 days. Nothing to pay until you decide.',
+    '',
+    `Tell me which one suits you and we'll arrange delivery, or order directly at ${site}`,
   ].join('\n')
 }
 

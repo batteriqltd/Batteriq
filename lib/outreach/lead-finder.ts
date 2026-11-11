@@ -143,7 +143,7 @@ function cleanDiscoveredBusinessTitle(rawTitle: string, domain: string): string 
  * for "boutique OR pharmacy OR …").
  */
 const WORD_DRIVEN_CATEGORY_RE =
-  /\b(bars?|pubs?|lounges?|clubs?|restaurants?|cafes?|eater(y|ies)|grills?|butcher(y|ies)?|wines?|liquor|salons?|barbers?|spas?|gyms?|supermarkets?|minimarts?|hardware|electronics|pharmac(y|ies)|chemists?|petrol|garages?|car\s*wash|churches|church|apartments?|real\s*estate|farms?|agribusiness|poultry|dairy|bakery|bakeries|laundr(y|ies)|cyber|printing|kiosks?|small\s*business(es)?)\b/i
+  /\b(bars?|pubs?|lounges?|clubs?|restaurants?|cafes?|eater(y|ies)|grills?|butcher(y|ies)?|wines?|liquor|salons?|barbers?|barbershops?|beauty|boutiques?|tailors?|guest\s*houses?|phone\s*shops?|m-?pesa|clothing|spas?|gyms?|supermarkets?|minimarts?|hardware|electronics|pharmac(y|ies)|chemists?|petrol|garages?|car\s*wash|churches|church|apartments?|real\s*estate|farms?|agribusiness|poultry|dairy|bakery|bakeries|laundr(y|ies)|cyber|printing|kiosks?|small\s*business(es)?)\b/i
 
 function isSpecificCustomQuery(rawQuery?: string): boolean {
   if (!rawQuery) return false

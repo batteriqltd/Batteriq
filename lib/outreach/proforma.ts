@@ -1,5 +1,5 @@
 import crypto from 'crypto'
-import { generateInvoicePDF } from '@/lib/invoice-pdf'
+import { generateQuotationPDF, type QuotationOption } from '@/lib/quotation-pdf'
 import { escapeHtml, type CatalogProductSummary } from './claude'
 import type { LeadCategory, OutreachLead } from './types'
 
@@ -26,6 +26,14 @@ export interface OutreachProformaPackage {
   vatIncludedKes: number
   total: number
   notes: string
+  /** Second option on another brand (e.g. BLUETTI) shown alongside the main one. */
+  alternative?: OutreachProformaOption
+}
+
+export interface OutreachProformaOption {
+  title: string
+  items: OutreachProformaLineItem[]
+  total: number
 }
 
 export function generateProformaNumber(now: Date = new Date()): string {
@@ -36,24 +44,27 @@ export function generateProformaNumber(now: Date = new Date()): string {
   return `BQ-PRO-${y}${m}${d}-${suffix}`
 }
 
+/** Accessories, cables and add-on batteries must never be quoted as the main unit. */
+const NOT_A_MAIN_UNIT_RE = /\b(extra\s*battery|cable|connector|plug|hat|charger|power\s*bank|inverter)\b/i
+
 function findCatalogProduct(
   catalog: CatalogProductSummary[],
-  pattern: RegExp,
+  match: { slug?: string; pattern: RegExp },
   fallback: { brand: string; name: string; price_kes: number }
 ): { brand: string; name: string; unitPrice: number } {
-  const match = catalog.find((p) => pattern.test(p.name) && Number(p.price_kes) > 0)
-  if (match) {
-    return {
-      brand: match.brand || fallback.brand,
-      name: match.name,
-      unitPrice: Math.round(Number(match.price_kes)),
-    }
-  }
-  return {
-    brand: fallback.brand,
-    name: fallback.name,
-    unitPrice: fallback.price_kes,
-  }
+  const usable = catalog.filter((p) => Number(p.price_kes) > 0 && !NOT_A_MAIN_UNIT_RE.test(p.name))
+  const found =
+    (match.slug ? usable.find((p) => p.slug === match.slug) : undefined) ||
+    usable.find((p) => match.pattern.test(p.name))
+  return found
+    ? { brand: found.brand || fallback.brand, name: found.name, unitPrice: Math.round(Number(found.price_kes)) }
+    : { brand: fallback.brand, name: fallback.name, unitPrice: fallback.price_kes }
+}
+
+/** Live store products used in quotes (power stations + solar panels, in stock). */
+export async function fetchProformaCatalog(): Promise<CatalogProductSummary[]> {
+  const { fetchStoreCatalogProductsSafe } = await import('./supabase')
+  return fetchStoreCatalogProductsSafe(100, ['Power Stations', 'Solar Panels'])
 }
 
 export function recalculateProformaPackage(
@@ -98,35 +109,43 @@ export function recommendBatteriqProformaForLead(
   const now = new Date()
   const validUntil = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
 
-  const delta2 = findCatalogProduct(catalog, /delta\s*2\b(?!\s*max)/i, {
-    brand: 'EcoFlow',
-    name: 'EcoFlow DELTA 2 Portable Power Station (1024Wh LiFePO4, 1800W AC, <20ms EPS)',
-    price_kes: 145000,
-  })
+  // Tiers map to real batteriq.com products (fallbacks = current store prices).
+  // Variable names are kept for the sector table below: small / medium / large.
+  const delta2 = findCatalogProduct(
+    catalog,
+    { slug: 'delta-3', pattern: /^ecoflow delta 3$/i },
+    { brand: 'EcoFlow', name: 'EcoFlow DELTA 3', price_kes: 99980 }
+  )
 
-  const delta2Max = findCatalogProduct(catalog, /delta\s*(2\s*max|3\s*max|3\s*plus)/i, {
-    brand: 'EcoFlow',
-    name: 'EcoFlow DELTA 2 Max Commercial Backup Station (2048Wh LiFePO4, 2400W AC)',
-    price_kes: 265000,
-  })
+  const delta2Max = findCatalogProduct(
+    catalog,
+    { slug: 'delta-3-plus', pattern: /^ecoflow delta 3 plus$/i },
+    { brand: 'EcoFlow', name: 'EcoFlow DELTA 3 Plus', price_kes: 112475 }
+  )
 
-  const deltaPro = findCatalogProduct(catalog, /delta\s*pro/i, {
-    brand: 'EcoFlow',
-    name: 'EcoFlow DELTA Pro Institutional Power Station (3600Wh LiFePO4, 3600W AC)',
-    price_kes: 420000,
-  })
+  const deltaPro = findCatalogProduct(
+    catalog,
+    { slug: 'delta-pro-3', pattern: /delta\s*pro\s*3/i },
+    { brand: 'EcoFlow', name: 'EcoFlow DELTA Pro 3', price_kes: 461799 }
+  )
 
-  const solar220 = findCatalogProduct(catalog, /220w|200w|solar\s*panel/i, {
-    brand: 'EcoFlow',
-    name: 'EcoFlow 220W Bifacial Solar Panel Kit (IP68 Waterproof)',
-    price_kes: 78000,
-  })
+  const solar220 = findCatalogProduct(
+    catalog,
+    { slug: 'solar-panel-220w', pattern: /220w/i },
+    { brand: 'EcoFlow', name: 'EcoFlow Portable Solar Panel 220W', price_kes: 37499 }
+  )
 
-  const solar400 = findCatalogProduct(catalog, /400w/i, {
-    brand: 'EcoFlow',
-    name: 'EcoFlow 400W Commercial Solar Array Panel',
-    price_kes: 125000,
-  })
+  const solar400 = findCatalogProduct(
+    catalog,
+    { slug: 'solar-panel-400w', pattern: /400w/i },
+    { brand: 'EcoFlow', name: 'EcoFlow Portable Solar Panel 400W', price_kes: 71240 }
+  )
+
+  const bluetti = findCatalogProduct(
+    catalog,
+    { slug: 'bluetti-premium-200', pattern: /bluetti/i },
+    { brand: 'BLUETTI', name: 'BLUETTI Premium 200', price_kes: 120000 }
+  )
 
   const category: LeadCategory = lead.category || 'other'
   const nameAndAddr = `${lead.business_name} ${lead.address || ''} ${lead.city || ''}`.toLowerCase()
@@ -375,13 +394,31 @@ export function recommendBatteriqProformaForLead(
   }))
 
   const notes = [
-    'PROFORMA QUOTATION (Valid for 14 days from issue date).',
-    'All prices are in KES inclusive of 16% VAT. Official KRA eTIMS Tax Invoice issued upon LPO / payment confirmation.',
-    'Includes official 24-month+ manufacturer warranty in Kenya, free load-sizing consultation & insured delivery.',
-    'Accepted settlement: Corporate LPO / Bank Transfer, M-Pesa Business, or Visa/Mastercard via batteriq.com.',
+    'This quotation shares the options we recommend for you; nothing is owed until you choose to order.',
+    'Prices are in KES including 16% VAT and are held for 14 days. A KRA eTIMS tax invoice is issued when you order.',
+    'Includes the official 24-month warranty, free sizing advice and delivery (same day within Nairobi).',
+    'Pay by M-Pesa, card, bank transfer or LPO, or order directly at batteriq.com.',
   ].join(' ')
 
+  // Second option on the BLUETTI range (large sites: two units)
+  const mainIsLarge = rawItems.some((it) => it.name === deltaPro.name)
+  const altQty = mainIsLarge ? 2 : 1
+  const alternative = {
+    title: `BLUETTI option: ${bluetti.name}${altQty > 1 ? ` x${altQty}` : ''}`,
+    items: [
+      {
+        brand: 'BLUETTI',
+        name: bluetti.name,
+        quantity: altQty,
+        unitPrice: bluetti.unitPrice,
+        total: altQty * bluetti.unitPrice,
+      },
+    ],
+    total: altQty * bluetti.unitPrice,
+  }
+
   return recalculateProformaPackage({
+    alternative,
     proformaNumber: customProformaNumber || generateProformaNumber(now),
     issueDateIso: now.toISOString(),
     validUntilIso: validUntil.toISOString(),
@@ -470,19 +507,35 @@ export function buildProformaEmailTextBlock(proforma: OutreachProformaPackage): 
 export async function generateOutreachProformaPdfBase64(
   proforma: OutreachProformaPackage
 ): Promise<string> {
-  return generateInvoicePDF({
-    orderNumber: proforma.proformaNumber,
-    invoiceDate: proforma.issueDateIso,
-    customerName: proforma.customerName,
-    customerEmail: proforma.customerEmail,
+  const options: QuotationOption[] = [
+    {
+      label: 'Option 1',
+      title: proforma.items.map((it) => it.name).join(' + ') || proforma.systemTitle,
+      items: proforma.items,
+      total: proforma.total,
+      recommended: true,
+    },
+  ]
+  if (proforma.alternative && proforma.alternative.items.length > 0) {
+    options.push({
+      label: 'Option 2',
+      title: proforma.alternative.title.replace(/^BLUETTI option:\s*/i, ''),
+      items: proforma.alternative.items,
+      total: proforma.alternative.total,
+    })
+  }
+  return generateQuotationPDF({
+    quoteNumber: proforma.proformaNumber,
+    issueDateIso: proforma.issueDateIso,
+    validUntilIso: proforma.validUntilIso,
+    preparedFor: proforma.customerName,
     customerPhone: proforma.customerPhone,
+    customerEmail: proforma.customerEmail,
     customerAddress: proforma.customerAddress,
-    items: proforma.items,
-    subtotal: proforma.subtotal,
-    total: proforma.total,
-    paymentStatus: 'pending',
-    totalPaid: 0,
-    totalDue: proforma.total,
+    headline: proforma.systemTitle,
+    summary: proforma.useCaseSummary,
+    options,
     notes: proforma.notes,
+    websiteUrl: (process.env.NEXT_PUBLIC_SITE_URL || 'https://batteriq.com').trim().replace(/\/+$/, ''),
   })
 }

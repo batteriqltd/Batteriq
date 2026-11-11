@@ -330,7 +330,7 @@ function buildBatteriqCatalogSnippet(products: CatalogProductSummary[]): string 
   }
 
   return products
-    .slice(0, 8)
+    .slice(0, 25)
     .map(
       (p) => {
         const url = batteriqProductUrl(p)

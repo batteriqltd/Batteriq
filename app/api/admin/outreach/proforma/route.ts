@@ -47,12 +47,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Lead not found' }, { status: 404 })
     }
 
-    const catalogProducts = await fetchStoreCatalogProductsSafe(20, [
-      'Power Stations',
-      'Solar Home Systems',
-      'Solar Panels',
-      'Batteries',
-    ])
+    const catalogProducts = await fetchStoreCatalogProductsSafe(100, ['Power Stations', 'Solar Panels'])
 
     const proforma = recommendBatteriqProformaForLead(lead as OutreachLead, catalogProducts)
 

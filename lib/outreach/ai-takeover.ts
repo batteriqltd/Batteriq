@@ -133,7 +133,7 @@ export async function handleAiTakeoverForInboundMessage(params: {
       .eq('conversation_id', conversation.id)
       .order('created_at', { ascending: true })
       .limit(16),
-    fetchStoreCatalogProductsSafe(10),
+    fetchStoreCatalogProductsSafe(40, ['Power Stations', 'Solar Panels']),
   ])
 
   const history = (historyRes.data ?? []) as Pick<

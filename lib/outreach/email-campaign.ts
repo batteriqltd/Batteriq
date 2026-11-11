@@ -320,12 +320,7 @@ export async function runDailyEmailCampaignJob(options: {
     }
   }
 
-  const catalogProducts = await fetchStoreCatalogProductsSafe(12, [
-    'Power Stations',
-    'Solar Home Systems',
-    'Solar Panels',
-    'Batteries',
-  ])
+  const catalogProducts = await fetchStoreCatalogProductsSafe(100, ['Power Stations', 'Solar Panels'])
 
   const suppressionSets = await loadSuppressionSets(supabase)
   let sentNow = 0
@@ -766,12 +761,7 @@ export async function approveAndSendEmailDraft(params: {
     .eq('id', emailRow.lead_id)
     .maybeSingle()
 
-  const catalogProducts = await fetchStoreCatalogProductsSafe(12, [
-    'Power Stations',
-    'Solar Home Systems',
-    'Solar Panels',
-    'Batteries',
-  ])
+  const catalogProducts = await fetchStoreCatalogProductsSafe(100, ['Power Stations', 'Solar Panels'])
 
   const proforma =
     settings.auto_attach_proforma !== false && lead

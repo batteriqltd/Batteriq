@@ -309,12 +309,7 @@ export async function runWahaColdTick(
       let proformaVia: 'file' | 'link' | 'failed' | 'off' = 'off'
       if (options.attachProforma !== false) {
         try {
-          const catalog = await fetchStoreCatalogProductsSafe(20, [
-            'Power Stations',
-            'Solar Home Systems',
-            'Solar Panels',
-            'Batteries',
-          ])
+          const catalog = await fetchStoreCatalogProductsSafe(100, ['Power Stations', 'Solar Panels'])
           const proforma = recommendBatteriqProformaForLead(lead, catalog)
           await sleepMs(randomBetween(2_000, 4_000))
           const res = await sendProformaOnWhatsApp({
