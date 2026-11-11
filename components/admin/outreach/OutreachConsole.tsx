@@ -57,6 +57,11 @@ import {
 import { WhatsAppInboxTab } from './WhatsAppInboxTab'
 import { CommandPalette, type CommandItem, InstallPrompt, ThemeToggle, useConsoleTheme } from './ui'
 import { NotificationCenter } from './ui/NotificationCenter'
+import { Dialer } from './voice/Dialer'
+import { IncomingCallScreen } from './voice/IncomingCallScreen'
+import { MiniCallBar } from './voice/MiniCallBar'
+import { PresenceToggle } from './voice/PresenceToggle'
+import { VoiceProvider } from './voice/VoiceProvider'
 
 type TabKey =
   | 'overview'
@@ -167,6 +172,9 @@ const NOTIFY_EVENT_LABELS: Record<NotifyEvent, string> = {
   hot_lead: 'A lead turns hot',
   batch_failed: 'A send batch has failures',
   autopilot_error: 'Autopilot hits an error',
+  incoming_call: 'Incoming call',
+  missed_call: 'Missed call',
+  voicemail: 'New voicemail',
 }
 
 function formatCountdown(seconds: number): string {
@@ -180,6 +188,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   const [activeTab, setActiveTab] = useState<TabKey>('overview')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [sentFilter, setSentFilter] = useState<'sent' | 'failed' | 'all'>('sent')
+  const [callSubTab, setCallSubTab] = useState<'dialer' | 'warm' | 'log'>('dialer')
   const [logFilter, setLogFilter] = useState<'all' | 'info' | 'warn' | 'error'>('all')
   const [sidePanel, setSidePanel] = useState<'activities' | 'online'>('activities')
   const [expandedEmailId, setExpandedEmailId] = useState<string | null>(null)
@@ -928,6 +937,7 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
   }
 
   return (
+    <VoiceProvider>
     <div
       data-bq-console=""
       data-theme={theme ?? undefined}
@@ -937,6 +947,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
           : 'relative h-full overflow-hidden bg-[var(--bq-bg)] text-[var(--bq-text-primary)]'
       }
     >
+      <MiniCallBar />
+      <IncomingCallScreen leads={leads} />
       <div className="mx-auto max-w-[1720px] h-full lg:p-5">
         <div className="relative flex gap-5 h-full lg:rounded-[36px] bg-[var(--bq-surface)] lg:border lg:border-[var(--bq-border)] lg:shadow-[0_20px_50px_rgba(0,0,77,0.08)] lg:p-5">
           {/* ─── STICKY LEFT NAVIGATION SIDEBAR (Laptop / Desktop) ─── */}
@@ -1946,6 +1958,30 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
 
               {/* ─────────── TAB: CALLS ─────────── */}
               {activeTab === 'calling' && (
+                <div className="space-y-5">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="inline-flex rounded-2xl bg-[#eff6ff] p-1">
+                      {(['dialer', 'warm', 'log'] as const).map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setCallSubTab(t)}
+                          className={`px-4 h-9 rounded-xl text-xs font-bold capitalize transition ${
+                            callSubTab === t ? 'bg-[#2563eb] text-white shadow' : 'text-[#1d4ed8]'
+                          }`}
+                        >
+                          {t === 'warm' ? 'Warm list' : t === 'log' ? 'Call log' : 'Dialer'}
+                        </button>
+                      ))}
+                    </div>
+                    <PresenceToggle adminEmail={adminEmail} />
+                  </div>
+
+                  {callSubTab === 'dialer' && <Dialer leads={leads} />}
+
+                  {callSubTab === 'log' && <CallLogPanel cardCls={cardCls} />}
+
+                  {callSubTab === 'warm' && (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                   <div className={`${cardCls} p-5`}>
                     <h3 className="text-sm font-extrabold">Warm clients for a call</h3>
@@ -2004,6 +2040,8 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
                       </div>
                     )}
                   </div>
+                </div>
+                  )}
                 </div>
               )}
 
@@ -2678,10 +2716,95 @@ export function OutreachConsole({ standalone = false }: { standalone?: boolean }
         </div>
       )}
     </div>
+    </VoiceProvider>
   )
 }
 
 // ─── Presentational helpers ─────────────────────────────────────────────────
+
+const CALL_STATUS_TONE: Record<string, string> = {
+  completed: 'bg-emerald-50 text-emerald-700',
+  in_progress: 'bg-[#eff6ff] text-[#1d4ed8]',
+  ringing: 'bg-amber-50 text-amber-700',
+  missed: 'bg-rose-50 text-rose-600',
+  no_answer: 'bg-rose-50 text-rose-600',
+  failed: 'bg-rose-50 text-rose-600',
+}
+
+function formatDuration(seconds: number | null): string {
+  if (!seconds) return '—'
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+function CallLogPanel({ cardCls }: { cardCls: string }) {
+  const [calls, setCalls] = useState<import('@/lib/outreach/types').OutreachVoiceCall[]>([])
+  const [filter, setFilter] = useState<'all' | 'inbound' | 'outbound' | 'missed'>('all')
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/outreach/calls')
+      .then((r) => r.json())
+      .then((data) => setCalls(data.calls ?? []))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const visible = calls.filter((c) => {
+    if (filter === 'all') return true
+    if (filter === 'missed') return c.status === 'missed' || c.status === 'no_answer'
+    return c.direction === filter
+  })
+
+  return (
+    <div className={`${cardCls} p-4 sm:p-5`}>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+        <div className="inline-flex rounded-2xl bg-[#eff6ff] p-1">
+          {(['all', 'inbound', 'outbound', 'missed'] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={`px-3.5 h-9 rounded-xl text-[11px] font-bold capitalize transition ${
+                filter === f ? 'bg-[#2563eb] text-white shadow' : 'text-[#1d4ed8]'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        <span className="text-[11px] text-slate-400">{visible.length} calls</span>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-slate-400 text-center py-10">Loading…</p>
+      ) : visible.length === 0 ? (
+        <EmptyState icon={PhoneCall} text="No calls in this view yet." />
+      ) : (
+        <div className="space-y-2.5">
+          {visible.map((c) => (
+            <div key={c.id} className="p-3.5 rounded-2xl bg-[#f8faff] border border-[#e3e9f5] flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[13px] font-bold truncate">
+                  {c.outreach_leads?.business_name || c.from_number || c.to_number || 'Unknown'}
+                </p>
+                <p className="text-[11px] text-slate-500 font-mono">
+                  {c.direction === 'inbound' ? c.from_number : c.to_number} · {fmtShort(c.started_at)}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="text-[11px] font-mono text-slate-400">{formatDuration(c.duration_seconds)}</span>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${CALL_STATUS_TONE[c.status] || 'bg-slate-100 text-slate-500'}`}>
+                  {c.status.replace('_', ' ')}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function fmtShort(iso: string | null | undefined): string {
   if (!iso) return '—'

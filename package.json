@@ -26,6 +26,8 @@
     "@types/react-dom": "^18.3.5",
     "@vercel/analytics": "^1.4.1",
     "@vercel/speed-insights": "^1.1.0",
+    "africastalking": "^0.8.4",
+    "africastalking-client": "^1.0.8",
     "aos": "^2.3.4",
     "autoprefixer": "^10.5.0",
     "eslint": "^8.57.1",

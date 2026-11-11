@@ -45,6 +45,7 @@ export type OutreachModule =
   | 'compliance'
   | 'autopilot'
   | 'proforma'
+  | 'voice'
 
 export const NOTIFY_EVENTS = [
   'whatsapp_message',
@@ -52,6 +53,9 @@ export const NOTIFY_EVENTS = [
   'hot_lead',
   'batch_failed',
   'autopilot_error',
+  'incoming_call',
+  'missed_call',
+  'voicemail',
 ] as const
 
 export type NotifyEvent = (typeof NOTIFY_EVENTS)[number]
@@ -192,6 +196,38 @@ export interface OutreachCallLog {
   status: 'stub_queued' | 'initiated' | 'completed' | 'failed' | 'blocked'
   provider_session_id: string | null
   notes: string | null
+  created_at: string
+  outreach_leads?: Partial<OutreachLead> | null
+}
+
+export type AgentPresenceStatus = 'available' | 'busy' | 'away' | 'offline'
+
+export interface AgentPresence {
+  admin_user_id: string
+  admin_email: string
+  status: AgentPresenceStatus
+  updated_at: string
+}
+
+export type OutreachCallStatus = 'ringing' | 'in_progress' | 'completed' | 'no_answer' | 'failed' | 'missed'
+
+export interface OutreachVoiceCall {
+  id: string
+  direction: 'inbound' | 'outbound'
+  from_number: string | null
+  to_number: string | null
+  status: OutreachCallStatus
+  lead_id: string | null
+  answered_by_admin_id: string | null
+  answered_by_type: 'human' | 'ai' | null
+  duration_seconds: number | null
+  recording_url: string | null
+  session_id: string | null
+  outcome: string | null
+  notes: string | null
+  started_at: string
+  answered_at: string | null
+  ended_at: string | null
   created_at: string
   outreach_leads?: Partial<OutreachLead> | null
 }

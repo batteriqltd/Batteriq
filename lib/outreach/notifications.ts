@@ -9,6 +9,9 @@ const TITLES: Record<NotifyEvent, string> = {
   hot_lead: 'Hot lead',
   batch_failed: 'Outreach batch had failures',
   autopilot_error: 'Autopilot error',
+  incoming_call: 'Incoming call',
+  missed_call: 'Missed call',
+  voicemail: 'New voicemail',
 }
 
 /**
@@ -63,7 +66,9 @@ export async function sendOutreachNotification(params: {
     if (!settings.notify_events?.includes(params.event)) {
       return { sent: 0, failed: 0, pruned: 0, devices: 0, error: 'skipped' }
     }
-    if (isWithinQuietHours(settings.quiet_hours_start, settings.quiet_hours_end)) {
+    // A ringing call is time-critical — quiet hours silence everything else,
+    // but never a call someone might actually need to pick up right now.
+    if (params.event !== 'incoming_call' && isWithinQuietHours(settings.quiet_hours_start, settings.quiet_hours_end)) {
       return { sent: 0, failed: 0, pruned: 0, devices: 0, error: 'skipped' }
     }
 
