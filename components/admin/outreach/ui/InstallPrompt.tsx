@@ -211,7 +211,7 @@ function InstallGuide({ platform }: { platform: Platform }) {
               {s.icon}
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[11px] font-black text-[var(--bq-text-tertiary)]">{i + 1}</span>
+              <span className="text-[11px] font-bold text-[var(--bq-text-tertiary)]">{i + 1}</span>
               <p className="bq-text-body font-semibold text-[var(--bq-text-primary)] leading-snug">{s.text}</p>
             </div>
           </div>

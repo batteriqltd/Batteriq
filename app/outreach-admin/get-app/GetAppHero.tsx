@@ -60,11 +60,11 @@ export function GetAppHero({ qrDataUrl, installUrl }: { qrDataUrl: string; insta
 
   if (installed) {
     return (
-      <div className="rounded-[28px] bg-white border border-[#e3e9f5] shadow-[0_20px_50px_-20px_rgba(0,0,77,0.15)] p-8 text-center mb-10">
+      <div className="rounded-[28px] bg-white border border-[#e5e8ed] shadow-[0_20px_50px_-20px_rgba(0,20,53,0.15)] p-8 text-center mb-10">
         <span className="inline-flex h-12 w-12 rounded-full bg-[#ecfdf3] text-[#15803d] items-center justify-center mb-3">
           <Check className="w-6 h-6" />
         </span>
-        <p className="text-base font-bold text-[#00004d]">Already installed on this device</p>
+        <p className="text-base font-bold text-[#001435]">Already installed on this device</p>
         <p className="text-[13px] text-slate-500 mt-1">You&apos;re all set — open it from your home screen.</p>
       </div>
     )
@@ -72,16 +72,16 @@ export function GetAppHero({ qrDataUrl, installUrl }: { qrDataUrl: string; insta
 
   if (platform === 'desktop') {
     return (
-      <div className="rounded-[28px] bg-white border border-[#e3e9f5] shadow-[0_20px_50px_-20px_rgba(0,0,77,0.15)] p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-8 mb-10">
+      <div className="rounded-[28px] bg-white border border-[#e5e8ed] shadow-[0_20px_50px_-20px_rgba(0,20,53,0.15)] p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-8 mb-10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={qrDataUrl} alt="QR code to open the BatterIQ Console sign-in page on your phone" width={200} height={200} className="rounded-2xl border border-[#e3e9f5] flex-shrink-0" />
+        <img src={qrDataUrl} alt="QR code to open the BatterIQ Console sign-in page on your phone" width={200} height={200} className="rounded-2xl border border-[#e5e8ed] flex-shrink-0" />
         <div className="min-w-0 flex-1">
           <p className="text-sm font-bold text-slate-500 uppercase tracking-wide mb-1">On this computer</p>
           {installEvt ? (
             <button
               type="button"
               onClick={handleInstallClick}
-              className="inline-flex items-center gap-2 h-12 px-5 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-sm transition-colors"
+              className="inline-flex items-center gap-2 h-12 px-5 rounded-2xl bg-[#0070e0] hover:bg-[#0059b8] text-white font-bold text-sm transition-colors"
             >
               <Download className="w-4 h-4" /> Install on this device
             </button>
@@ -90,7 +90,7 @@ export function GetAppHero({ qrDataUrl, installUrl }: { qrDataUrl: string; insta
           )}
           <p className="text-sm font-bold text-slate-500 uppercase tracking-wide mt-5 mb-1">On your phone</p>
           <p className="text-[13px] text-slate-500">Scan the QR code, or open:</p>
-          <a href={installUrl} className="text-base sm:text-lg font-bold text-[#2563eb] break-words hover:underline">
+          <a href={installUrl} className="text-base sm:text-lg font-bold text-[#0070e0] break-words hover:underline">
             {installUrl.replace('https://', '')}
           </a>
           <p className="mt-4 text-[12px] text-slate-400">
@@ -103,13 +103,13 @@ export function GetAppHero({ qrDataUrl, installUrl }: { qrDataUrl: string; insta
 
   // iOS or Android, viewed directly on the phone — no QR code, a direct action instead.
   return (
-    <div className="rounded-[28px] bg-white border border-[#e3e9f5] shadow-[0_20px_50px_-20px_rgba(0,0,77,0.15)] p-6 sm:p-8 text-center mb-10">
+    <div className="rounded-[28px] bg-white border border-[#e5e8ed] shadow-[0_20px_50px_-20px_rgba(0,20,53,0.15)] p-6 sm:p-8 text-center mb-10">
       <p className="text-[13px] font-semibold text-slate-500 mb-4">You&apos;re already on your phone — install it directly below.</p>
       {platform === 'android' ? (
         <button
           type="button"
           onClick={handleInstallClick}
-          className="inline-flex items-center gap-2 h-14 px-7 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-base transition-colors"
+          className="inline-flex items-center gap-2 h-14 px-7 rounded-2xl bg-[#0070e0] hover:bg-[#0059b8] text-white font-bold text-base transition-colors"
         >
           <Download className="w-5 h-5" /> Install BatterIQ Console
         </button>
@@ -117,13 +117,13 @@ export function GetAppHero({ qrDataUrl, installUrl }: { qrDataUrl: string; insta
         <button
           type="button"
           onClick={handleInstallClick}
-          className="inline-flex items-center gap-2 h-14 px-7 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-bold text-base transition-colors"
+          className="inline-flex items-center gap-2 h-14 px-7 rounded-2xl bg-[#0070e0] hover:bg-[#0059b8] text-white font-bold text-base transition-colors"
         >
           <Share className="w-5 h-5" /> Show me how <ArrowDown className="w-4 h-4" />
         </button>
       )}
       <p className="mt-4 text-[12px] text-slate-400">
-        Not ready yet? <a href={installUrl} className="text-[#2563eb] font-semibold hover:underline">Open the sign-in page</a> instead.
+        Not ready yet? <a href={installUrl} className="text-[#0070e0] font-semibold hover:underline">Open the sign-in page</a> instead.
       </p>
     </div>
   )

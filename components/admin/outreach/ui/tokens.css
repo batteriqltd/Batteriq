@@ -8,11 +8,11 @@
 
 [data-bq-console] {
   /* ── Color — brand (unchanged navy/blue, matches the rest of batteriq.com) ── */
-  --bq-navy: #00004d;
-  --bq-navy-strong: #000033;
-  --bq-blue: #2563eb;
-  --bq-blue-dim: #1d4ed8;
-  --bq-blue-light: #eff6ff;
+  --bq-navy: #001435;
+  --bq-navy-strong: #000f2a;
+  --bq-blue: #0070e0;
+  --bq-blue-dim: #0059b8;
+  --bq-blue-light: #eaf3fe;
   --bq-amber: #b45309;
   --bq-amber-light: #fffbeb;
   --bq-success: #059669;
@@ -23,15 +23,15 @@
   --bq-danger-light: #fef2f2;
 
   /* ── Color — surfaces & text (light) ── */
-  --bq-bg: #f3f6fc;
+  --bq-bg: #f5f6f8;
   --bq-surface: #ffffff;
   --bq-surface-raised: #ffffff;
-  --bq-surface-sunken: #f8faff;
-  --bq-border: #e3e9f5;
-  --bq-border-strong: #c9d6ee;
-  --bq-text-primary: #00004d;
-  --bq-text-secondary: #475569;
-  --bq-text-tertiary: #94a3b8;
+  --bq-surface-sunken: #f7f8fa;
+  --bq-border: #e5e8ed;
+  --bq-border-strong: #d2d7df;
+  --bq-text-primary: #001435;
+  --bq-text-secondary: #545d6e;
+  --bq-text-tertiary: #8a93a3;
   --bq-text-on-accent: #ffffff;
   --bq-overlay: rgba(0, 0, 30, 0.45);
 
@@ -57,9 +57,9 @@
 
   /* ── Elevation ── */
   --bq-shadow-1: 0 1px 2px rgba(0, 0, 40, 0.04);
-  --bq-shadow-2: 0 8px 24px -8px rgba(0, 0, 77, 0.10);
-  --bq-shadow-3: 0 20px 45px -12px rgba(0, 0, 77, 0.16);
-  --bq-shadow-4: 0 30px 70px -20px rgba(0, 0, 77, 0.28);
+  --bq-shadow-2: 0 4px 16px -6px rgba(0, 20, 53, 0.08);
+  --bq-shadow-3: 0 12px 32px -12px rgba(0, 20, 53, 0.14);
+  --bq-shadow-4: 0 24px 60px -20px rgba(0, 20, 53, 0.24);
 
   /* ── Motion ── */
   --bq-duration-fast: 150ms;
@@ -74,6 +74,10 @@
   color-scheme: light;
   background: var(--bq-bg);
   color: var(--bq-text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* System dark mode — only when the user hasn't made an explicit choice */
@@ -133,4 +137,26 @@
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── Clean fintech polish (white surfaces, pill controls, tight headings) ── */
+[data-bq-console] h1,
+[data-bq-console] h2,
+[data-bq-console] h3 {
+  letter-spacing: -0.02em;
+}
+[data-bq-console] button,
+[data-bq-console] a {
+  -webkit-tap-highlight-color: transparent;
+}
+[data-bq-console] :focus-visible {
+  outline: 2px solid var(--bq-blue);
+  outline-offset: 2px;
+}
+[data-bq-console] input::placeholder,
+[data-bq-console] textarea::placeholder {
+  color: var(--bq-text-tertiary);
+}
+[data-bq-console] ::selection {
+  background: rgba(0, 112, 224, 0.18);
 }

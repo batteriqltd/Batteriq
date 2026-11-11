@@ -28,7 +28,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   viewportFit: 'cover',
-  themeColor: '#00004d',
+  themeColor: '#001435',
 }
 
 export default function OutreachAdminLayout({ children }: { children: React.ReactNode }) {

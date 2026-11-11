@@ -18,7 +18,7 @@ export function MiniCallBar() {
   return (
     <div
       className="fixed top-0 inset-x-0 z-[150] flex items-center justify-between gap-3 px-4 sm:px-6 h-12"
-      style={{ background: '#00004d' }}
+      style={{ background: '#001435' }}
       role="status"
     >
       <div className="flex items-center gap-2.5 min-w-0 text-white">
@@ -35,7 +35,7 @@ export function MiniCallBar() {
               type="button"
               onClick={toggleMute}
               aria-label={muted ? 'Unmute' : 'Mute'}
-              className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${muted ? 'bg-white text-[#00004d]' : 'bg-white/15 text-white hover:bg-white/25'}`}
+              className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${muted ? 'bg-white text-[#001435]' : 'bg-white/15 text-white hover:bg-white/25'}`}
             >
               {muted ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
             </button>
@@ -43,7 +43,7 @@ export function MiniCallBar() {
               type="button"
               onClick={toggleHold}
               aria-label={onHold ? 'Resume' : 'Hold'}
-              className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${onHold ? 'bg-white text-[#00004d]' : 'bg-white/15 text-white hover:bg-white/25'}`}
+              className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${onHold ? 'bg-white text-[#001435]' : 'bg-white/15 text-white hover:bg-white/25'}`}
             >
               {onHold ? <Play className="w-3.5 h-3.5" /> : <Pause className="w-3.5 h-3.5" />}
             </button>

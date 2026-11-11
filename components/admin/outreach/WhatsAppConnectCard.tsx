@@ -17,13 +17,13 @@ import {
 } from 'lucide-react'
 
 const cardCls =
-  'rounded-[28px] bg-white border border-[#e3e9f5] shadow-[0_12px_32px_-18px_rgba(0,0,77,0.12)]'
+  'rounded-[20px] bg-white border border-[#e5e8ed] shadow-[0_12px_32px_-18px_rgba(0,20,53,0.12)]'
 const inputCls =
-  'h-11 px-3.5 rounded-2xl bg-[#f8faff] border border-[#e3e9f5] text-[13px] font-medium text-[#00004d] placeholder:text-slate-400 outline-none focus:border-[#2563eb] focus:ring-2 focus:ring-[#2563eb]/15 transition'
+  'h-11 px-3.5 rounded-2xl bg-[#f7f8fa] border border-[#e5e8ed] text-[13px] font-medium text-[#001435] placeholder:text-slate-400 outline-none focus:border-[#0070e0] focus:ring-2 focus:ring-[#0070e0]/20 transition'
 const primaryBtn =
-  'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-2xl bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-xs font-bold transition disabled:opacity-50'
+  'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-2xl bg-[#0070e0] hover:bg-[#0059b8] text-white text-xs font-bold transition disabled:opacity-50'
 const ghostBtn =
-  'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-2xl border border-[#e3e9f5] bg-white hover:bg-[#f8faff] text-[#00004d] text-xs font-bold transition disabled:opacity-50'
+  'inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-2xl border border-[#e5e8ed] bg-white hover:bg-[#f7f8fa] text-[#001435] text-xs font-bold transition disabled:opacity-50'
 
 interface Campaign {
   waha_cold_enabled: boolean
@@ -230,7 +230,7 @@ export function WhatsAppConnectCard() {
           <Smartphone className="w-5 h-5 text-emerald-600" />
           <h3 className="text-sm font-extrabold">WhatsApp</h3>
           {!loading && state?.configured && (
-            <span className={`px-2.5 py-1 rounded-full border text-[10px] font-black uppercase ${ui.cls}`}>
+            <span className={`px-2.5 py-1 rounded-full border text-[10px] font-bold uppercase ${ui.cls}`}>
               {ui.label}
             </span>
           )}
@@ -255,7 +255,7 @@ export function WhatsAppConnectCard() {
         <>
           {/* Connection row */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-            <div className="rounded-2xl bg-[#f8faff] border border-[#e3e9f5] px-4 py-3">
+            <div className="rounded-2xl bg-[#f7f8fa] border border-[#e5e8ed] px-4 py-3">
               <p className="text-[10px] font-bold uppercase text-slate-400">Server</p>
               <p className="mt-1 font-bold flex items-center gap-1.5">
                 {state.reachable ? (
@@ -269,13 +269,13 @@ export function WhatsAppConnectCard() {
                 )}
               </p>
             </div>
-            <div className="rounded-2xl bg-[#f8faff] border border-[#e3e9f5] px-4 py-3">
+            <div className="rounded-2xl bg-[#f7f8fa] border border-[#e5e8ed] px-4 py-3">
               <p className="text-[10px] font-bold uppercase text-slate-400">Linked number</p>
               <p className="mt-1 font-bold">
                 {status === 'WORKING' ? `${myPhone || '—'}${state.me?.pushName ? ` · ${state.me.pushName}` : ''}` : '—'}
               </p>
             </div>
-            <div className="rounded-2xl bg-[#f8faff] border border-[#e3e9f5] px-4 py-3">
+            <div className="rounded-2xl bg-[#f7f8fa] border border-[#e5e8ed] px-4 py-3">
               <p className="text-[10px] font-bold uppercase text-slate-400">Webhook</p>
               <p className="mt-1 font-bold">
                 {state.webhook?.registered ? 'Registered' : 'Not registered'}
@@ -329,13 +329,13 @@ export function WhatsAppConnectCard() {
 
           {/* Pairing */}
           {status === 'SCAN_QR_CODE' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl border border-[#e3e9f5] p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 rounded-2xl border border-[#e5e8ed] p-4">
               <div className="flex flex-col items-center gap-2">
                 {state.qr ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={state.qr} alt="WhatsApp QR code" className="w-56 h-56 rounded-xl border border-[#e3e9f5] bg-white" />
+                  <img src={state.qr} alt="WhatsApp QR code" className="w-56 h-56 rounded-xl border border-[#e5e8ed] bg-white" />
                 ) : (
-                  <div className="w-56 h-56 rounded-xl border border-dashed border-[#e3e9f5] flex items-center justify-center text-xs text-slate-400">
+                  <div className="w-56 h-56 rounded-xl border border-dashed border-[#e5e8ed] flex items-center justify-center text-xs text-slate-400">
                     <Loader2 className="w-4 h-4 animate-spin mr-2" /> Loading QR…
                   </div>
                 )}
@@ -345,7 +345,7 @@ export function WhatsAppConnectCard() {
               </div>
               <div className="space-y-2">
                 <p className="text-xs font-bold flex items-center gap-1.5">
-                  <KeyRound className="w-3.5 h-3.5 text-[#2563eb]" /> Or link with a code
+                  <KeyRound className="w-3.5 h-3.5 text-[#0070e0]" /> Or link with a code
                 </p>
                 <input
                   value={pairPhone}
@@ -360,7 +360,7 @@ export function WhatsAppConnectCard() {
                 {pairCode && (
                   <div className="rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-center">
                     <p className="text-[10px] font-bold uppercase text-emerald-700">Enter on your phone</p>
-                    <p className="font-mono text-2xl font-black tracking-[0.3em] text-emerald-800">{pairCode}</p>
+                    <p className="font-mono text-2xl font-bold tracking-[0.3em] text-emerald-800">{pairCode}</p>
                     <p className="text-[11px] text-emerald-700 mt-1">Linked devices → Link a device → Link with phone number instead</p>
                   </div>
                 )}
@@ -392,16 +392,16 @@ export function WhatsAppConnectCard() {
 
           {/* Cold campaign */}
           {campaign && (
-            <div className="rounded-2xl border border-[#e3e9f5] p-4 space-y-3">
+            <div className="rounded-2xl border border-[#e5e8ed] p-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs font-extrabold flex items-center gap-1.5">
-                  <Megaphone className="w-4 h-4 text-[#2563eb]" /> Cold outreach · 1 message every 2 minutes
+                  <Megaphone className="w-4 h-4 text-[#0070e0]" /> Cold outreach · 1 message every 2 minutes
                 </p>
                 <button
                   type="button"
                   disabled={busy !== null}
                   onClick={() => saveCampaign({ waha_cold_enabled: !campaign.waha_cold_enabled })}
-                  className={`inline-flex items-center gap-1.5 h-9 px-4 rounded-2xl text-xs font-black uppercase transition ${
+                  className={`inline-flex items-center gap-1.5 h-9 px-4 rounded-2xl text-xs font-bold uppercase transition ${
                     campaign.waha_cold_enabled ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'
                   }`}
                 >
@@ -409,23 +409,23 @@ export function WhatsAppConnectCard() {
                 </button>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                <div className="rounded-xl bg-[#f8faff] px-3 py-2">
+                <div className="rounded-xl bg-[#f7f8fa] px-3 py-2">
                   <p className="text-[10px] font-bold uppercase text-slate-400">Sends today</p>
-                  <p className="font-black text-base">
+                  <p className="font-bold text-base">
                     {campaign.sentToday ?? 0} / {campaign.waha_cold_daily_cap}
                   </p>
                 </div>
-                <div className="rounded-xl bg-[#f8faff] px-3 py-2">
+                <div className="rounded-xl bg-[#f7f8fa] px-3 py-2">
                   <p className="text-[10px] font-bold uppercase text-slate-400">Leads in queue</p>
-                  <p className="font-black text-base">{campaign.remainingLeads ?? '—'}</p>
+                  <p className="font-bold text-base">{campaign.remainingLeads ?? '—'}</p>
                 </div>
-                <div className="rounded-xl bg-[#f8faff] px-3 py-2">
+                <div className="rounded-xl bg-[#f7f8fa] px-3 py-2">
                   <p className="text-[10px] font-bold uppercase text-slate-400">Last send</p>
                   <p className="font-bold">
                     {campaign.lastSentAt ? new Date(campaign.lastSentAt).toLocaleTimeString('en-KE') : '—'}
                   </p>
                 </div>
-                <div className="rounded-xl bg-[#f8faff] px-3 py-2">
+                <div className="rounded-xl bg-[#f7f8fa] px-3 py-2">
                   <p className="text-[10px] font-bold uppercase text-slate-400">Auto-pause</p>
                   <p className="font-bold">
                     {campaign.waha_cold_paused_until && Date.parse(campaign.waha_cold_paused_until) > Date.now()

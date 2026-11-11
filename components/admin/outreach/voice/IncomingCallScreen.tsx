@@ -18,7 +18,7 @@ export function IncomingCallScreen({ leads }: { leads: OutreachLead[] }) {
   return (
     <div
       className="fixed inset-0 z-[200] flex flex-col items-center justify-between py-16 px-6"
-      style={{ background: 'linear-gradient(160deg, #00004d 0%, #000033 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #001435 0%, #000f2a 100%)' }}
       role="alertdialog"
       aria-label="Incoming call"
     >

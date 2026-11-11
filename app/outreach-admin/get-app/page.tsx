@@ -14,18 +14,18 @@ export default async function GetAppPage() {
   const qrDataUrl = await QRCode.toDataURL(installUrl, {
     margin: 1,
     width: 280,
-    color: { dark: '#00004d', light: '#ffffff' },
+    color: { dark: '#001435', light: '#ffffff' },
   })
 
   return (
-    <div className="min-h-screen bg-[#f3f6fc] text-[#00004d] px-5 py-12 sm:py-16">
+    <div className="min-h-screen bg-[#f5f6f8] text-[#001435] px-5 py-12 sm:py-16">
       <div className="mx-auto max-w-[920px]">
         <div className="text-center mb-10">
           <div className="inline-flex items-center gap-2.5 mb-5">
-            <div className="h-10 w-10 rounded-xl bg-[#00004d] flex items-center justify-center font-black text-white text-base">
+            <div className="h-10 w-10 rounded-xl bg-[#001435] flex items-center justify-center font-black text-white text-base">
               B
             </div>
-            <span className="font-bold text-2xl tracking-tight text-[#00004d]">
+            <span className="font-bold text-2xl tracking-tight text-[#001435]">
               BatterIQ Console
             </span>
           </div>
@@ -88,16 +88,16 @@ function DeviceCard({
   note?: string
 }) {
   return (
-    <div id={id} className="rounded-[24px] bg-white border border-[#e3e9f5] p-5 scroll-mt-6">
+    <div id={id} className="rounded-[24px] bg-white border border-[#e5e8ed] p-5 scroll-mt-6">
       <h2 className="text-base font-bold">{title}</h2>
       <p className="text-[12px] text-slate-400 mb-4">{subtitle}</p>
       <div className="space-y-3.5">
         {steps.map((s, i) => (
           <div key={i} className="flex items-center gap-3">
-            <span className="h-8 w-8 rounded-xl bg-[#eff6ff] text-[#2563eb] flex items-center justify-center flex-shrink-0">
+            <span className="h-8 w-8 rounded-xl bg-[#eaf3fe] text-[#0070e0] flex items-center justify-center flex-shrink-0">
               {s.icon}
             </span>
-            <p className="text-[13px] font-medium text-[#00004d] leading-snug">{s.text}</p>
+            <p className="text-[13px] font-medium text-[#001435] leading-snug">{s.text}</p>
           </div>
         ))}
       </div>

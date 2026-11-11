@@ -53,14 +53,14 @@ function ExecutiveSignInForm() {
   }
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-5 py-12 bg-[#f3f6fc] text-bq-gray-900 overflow-hidden selection:bg-bq-blue/15">
+    <div className="relative min-h-screen flex items-center justify-center px-5 py-12 bg-[#f5f6f8] text-bq-gray-900 overflow-hidden selection:bg-bq-blue/15">
       {/* Soft brand ambience */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(900px 500px at 15% 0%, rgba(37,99,235,0.07), transparent 60%), radial-gradient(800px 520px at 90% 100%, rgba(0,0,77,0.06), transparent 60%)',
+            'radial-gradient(900px 500px at 15% 0%, rgba(0,112,224,0.07), transparent 60%), radial-gradient(800px 520px at 90% 100%, rgba(0,20,53,0.06), transparent 60%)',
         }}
       />
       <div
@@ -68,7 +68,7 @@ function ExecutiveSignInForm() {
         className="pointer-events-none absolute inset-0 opacity-[0.5]"
         style={{
           backgroundImage:
-            'linear-gradient(to right, rgba(0,0,77,0.035) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,77,0.035) 1px, transparent 1px)',
+            'linear-gradient(to right, rgba(0,20,53,0.035) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,20,53,0.035) 1px, transparent 1px)',
           backgroundSize: '56px 56px',
         }}
       />
@@ -90,7 +90,7 @@ function ExecutiveSignInForm() {
         </div>
 
         {/* Clean Card */}
-        <div className="relative rounded-[26px] bg-white border border-[#e7edf8] p-7 sm:p-9 shadow-[0_30px_70px_-32px_rgba(0,0,77,0.28)] overflow-hidden">
+        <div className="relative rounded-[26px] bg-white border border-[#e7edf8] p-7 sm:p-9 shadow-[0_30px_70px_-32px_rgba(0,20,53,0.28)] overflow-hidden">
           <div aria-hidden="true" className="absolute inset-x-0 top-0 h-1 bg-bq-navy" />
 
           <div className="mb-7">
@@ -130,7 +130,7 @@ function ExecutiveSignInForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@batteriq.com"
-                className="w-full h-12 px-4 rounded-xl bg-[#f8faff] border border-[#e3e9f5] text-bq-navy placeholder:text-[#9aa6bf] text-sm font-medium outline-none transition-all focus:bg-white focus:border-bq-blue focus:ring-4 focus:ring-bq-blue/10"
+                className="w-full h-12 px-4 rounded-xl bg-[#f7f8fa] border border-[#e5e8ed] text-bq-navy placeholder:text-[#9aa6bf] text-sm font-medium outline-none transition-all focus:bg-white focus:border-bq-blue focus:ring-4 focus:ring-bq-blue/10"
               />
             </div>
 
@@ -150,7 +150,7 @@ function ExecutiveSignInForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full h-12 px-4 pr-11 rounded-xl bg-[#f8faff] border border-[#e3e9f5] text-bq-navy placeholder:text-[#9aa6bf] text-sm font-medium outline-none transition-all focus:bg-white focus:border-bq-blue focus:ring-4 focus:ring-bq-blue/10"
+                  className="w-full h-12 px-4 pr-11 rounded-xl bg-[#f7f8fa] border border-[#e5e8ed] text-bq-navy placeholder:text-[#9aa6bf] text-sm font-medium outline-none transition-all focus:bg-white focus:border-bq-blue focus:ring-4 focus:ring-bq-blue/10"
                 />
                 <button
                   type="button"
@@ -195,7 +195,7 @@ function ExecutiveSignInForm() {
 
 export default function OutreachAdminLoginPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#f3f6fc]" />}>
+    <Suspense fallback={<div className="min-h-screen bg-[#f5f6f8]" />}>
       <ExecutiveSignInForm />
     </Suspense>
   )

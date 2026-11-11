@@ -47,7 +47,7 @@ export function Sheet({
     >
       <div
         ref={panelRef}
-        className={`w-full ${maxWidthClassName} max-h-[88vh] sm:max-h-[85vh] bg-[var(--bq-surface)] rounded-t-[28px] sm:rounded-[28px] shadow-[var(--bq-shadow-4)] flex flex-col overflow-hidden animate-[bq-sheet-in_var(--bq-duration-slow)_var(--bq-ease-spring)]`}
+        className={`w-full ${maxWidthClassName} max-h-[88vh] sm:max-h-[85vh] bg-[var(--bq-surface)] rounded-t-[28px] sm:rounded-[20px] shadow-[var(--bq-shadow-4)] flex flex-col overflow-hidden animate-[bq-sheet-in_var(--bq-duration-slow)_var(--bq-ease-spring)]`}
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex-shrink-0 sm:hidden pt-2.5 pb-1 flex justify-center">

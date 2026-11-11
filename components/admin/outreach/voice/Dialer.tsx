@@ -61,7 +61,7 @@ export function Dialer({ leads }: { leads: OutreachLead[] }) {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-      <div className="rounded-[28px] bg-[var(--bq-surface)] border border-[var(--bq-border)] p-5">
+      <div className="rounded-[20px] bg-[var(--bq-surface)] border border-[var(--bq-border)] p-5">
         <h3 className="bq-text-headline text-[var(--bq-text-primary)] mb-1">Dialer</h3>
         {!configured ? (
           <p className="bq-text-caption text-[var(--bq-warning)] mb-4">
@@ -118,7 +118,7 @@ export function Dialer({ leads }: { leads: OutreachLead[] }) {
       </div>
 
       <div className="space-y-5">
-        <div className="rounded-[28px] bg-[var(--bq-surface)] border border-[var(--bq-border)] p-5">
+        <div className="rounded-[20px] bg-[var(--bq-surface)] border border-[var(--bq-border)] p-5">
           <h3 className="bq-text-headline text-[var(--bq-text-primary)] mb-3">Call a client</h3>
           <div className="relative">
             <Search className="w-4 h-4 text-[var(--bq-text-tertiary)] absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -153,7 +153,7 @@ export function Dialer({ leads }: { leads: OutreachLead[] }) {
           )}
         </div>
 
-        <div className="rounded-[28px] bg-[var(--bq-surface)] border border-[var(--bq-border)] p-5">
+        <div className="rounded-[20px] bg-[var(--bq-surface)] border border-[var(--bq-border)] p-5">
           <h3 className="bq-text-headline text-[var(--bq-text-primary)] mb-3">Recent calls</h3>
           {recent.length === 0 ? (
             <p className="bq-text-caption text-[var(--bq-text-tertiary)]">No outbound calls yet.</p>
