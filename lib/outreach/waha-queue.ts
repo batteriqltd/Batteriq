@@ -36,9 +36,9 @@ export interface WahaCampaignSettings {
 }
 
 export const DEFAULT_WAHA_COLD_MESSAGE =
-  '{Hello|Hi|Good day} {business} 👋\n\n' +
+  '{Hello|Good day} {business},\n\n' +
   "This is {sender} from Batteriq, Kenya's authorised EcoFlow & BLUETTI dealer. " +
-  '{We help|We support} businesses stay open through blackouts with silent battery backup and solar — no fuel, no noise.\n\n' +
+  '{We help|We support} businesses stay open through blackouts with silent battery backup and solar, with no fuel and no noise.\n\n' +
   "I've attached a quotation made for {business} below. Reply here to adjust it or ask anything.\n\n" +
   'Reply STOP to opt out.'
 

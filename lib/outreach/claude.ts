@@ -604,6 +604,41 @@ WRITING RULES:
 }
 
 /**
+ * Makes an AI reply read like a person typed it on WhatsApp: no emojis, no
+ * markdown bold/bullets, no long dashes, no stacked exclamation marks.
+ */
+// Built at runtime: the TS target (ES5) rejects the `u` flag in regex literals
+const EMOJI_RE = new RegExp(
+  '[\\p{Extended_Pictographic}\\p{Regional_Indicator}\\u{FE0F}\\u{200D}\\u{20E3}]',
+  'gu'
+)
+
+export function humanizeWhatsAppReply(text: string): string {
+  let t = String(text || '')
+    // emojis, pictographs, flags, variation selectors, zero-width joiners, keycaps
+    .replace(EMOJI_RE, '')
+    // **bold** / *bold* markers
+    .replace(/\*{1,2}([^*\n]+)\*{1,2}/g, '$1')
+    // _italic_ markers
+    .replace(/(^|\s)_([^_\n]+)_(?=\s|$|[.,!?])/g, '$1$2')
+    // bullet / heading markers at line start
+    .replace(/^[ \t]*(?:[-•*]|#{1,6})[ \t]+/gm, '')
+    // long dashes → comma
+    .replace(/[ \t]*[—–][ \t]*/g, ', ')
+    .replace(/!{2,}/g, '!')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/ +([,.!?])/g, '$1')
+    .replace(/,[ \t]*,/g, ',')
+    .replace(/\n{3,}/g, '\n\n')
+  t = t
+    .split('\n')
+    .map((l) => l.trim())
+    .join('\n')
+    .trim()
+  return t || 'Thanks for your message. Let me get back to you shortly.'
+}
+
+/**
  * Deterministic safety signals for human escalation and opt-out detection.
  */
 const HUMAN_REQUEST_RE =
@@ -656,12 +691,24 @@ export async function generateWhatsAppAiReplyWithClaude(params: {
     .slice(-14)
     .map((m) => {
       const speaker =
-        m.direction === 'inbound' ? 'Customer' : m.sender_type === 'human' ? 'Batteriq Staff' : 'Batteriq AI'
+        m.direction === 'inbound' ? 'Customer' : m.sender_type === 'human' ? 'Batteriq Staff' : 'Batteriq (you)'
       return `${speaker}: ${m.body}`
     })
     .join('\n')
 
-  const systemPrompt = `You are Batteriq Kenya's AI WhatsApp Sales & Institutional Specialist (batteriq.com — authorised EcoFlow & BLUETTI distributor in Nairobi, Kenya).
+  const systemPrompt = `You handle WhatsApp sales chats for the Batteriq sales team (batteriq.com, authorised EcoFlow & BLUETTI dealer in Nairobi, Kenya). Write exactly like an experienced, professional Kenyan sales person typing on their phone.
+
+HOW TO WRITE (very important):
+- Short and direct: usually 1 to 3 sentences, at most about 45 words. Answer what they asked, nothing more.
+- Plain, polite, professional English. If the customer writes in Swahili or Sheng, reply in the same language.
+- NO emojis at all. No exclamation marks unless truly natural (max one). No hype or marketing slogans.
+- No bullet lists, headings, bold/asterisks or long dashes. If giving prices, put them in a normal sentence.
+- Never use phrases like "Great question", "Certainly", "I'd be happy to", "Feel free", "I hope this finds you well", "As an AI", "Absolutely", "Thank you for reaching out".
+- Do not repeat the company introduction or the warranty/eTIMS pitch in every message. Only mention a fact when it answers their question.
+- Do not greet again if the conversation has already started. Do not sign off with the company name every time.
+- Ask at most one question per message, e.g. what they want to keep running during blackouts, so you can size the right unit.
+- Never invent prices, stock or delivery promises that are not in the facts below.
+- If the customer sincerely asks whether they are talking to a bot or a real person, be honest that replies are assisted and offer to have a team member call them (set "wantsHuman": true). Otherwise just help them; don't bring it up.
 
 AVAILABLE PRODUCTS & PRICING (KES):
 ${catalogText}
@@ -683,8 +730,7 @@ LEAD STATUS DEFINITIONS (pick the most accurate status based on the conversation
 
 ESCALATION RULES:
 - Set "wantsHuman": true if the customer asks to speak to a human/person/agent/manager, asks for a phone call, or has a complex custom negotiation.
-- If "newStatus" is "hot" OR "wantsHuman" is true, write a warm, helpful reply that answers their immediate question AND lets them know you are connecting a senior Batteriq specialist to assist them directly right now.
-- Keep WhatsApp replies natural, friendly, concise (under 95 words), formatted cleanly for WhatsApp.
+- If "newStatus" is "hot" OR "wantsHuman" is true, answer their immediate question briefly and say a colleague will follow up with them directly shortly.
 
 Return STRICT JSON ONLY:
 {
@@ -720,7 +766,7 @@ Customer: ${inboundMessage}`
     const parsed = extractJsonObject(text)
     const reply =
       String(parsed.reply || '').trim() ||
-      'Thank you for messaging Batteriq Kenya! A member of our team is reviewing your inquiry and will assist you shortly.'
+      'Thanks for your message. Let me check on that and get back to you shortly.'
 
     const rawStatus = String(parsed.newStatus || 'replied')
       .trim()
@@ -740,7 +786,7 @@ Customer: ${inboundMessage}`
     const wantsHuman = Boolean(parsed.wantsHuman) || deterministicHuman
 
     return {
-      reply,
+      reply: humanizeWhatsAppReply(reply),
       newStatus,
       wantsHuman,
       isOptOut,
@@ -767,11 +813,11 @@ Customer: ${inboundMessage}`
 
     const reply =
       deterministicHuman || isHotIntent
-        ? `Thank you for reaching out to Batteriq Kenya! We provide authorised EcoFlow & BLUETTI commercial backup systems with full KRA eTIMS VAT invoicing and 24-month local warranty. I am connecting a senior Batteriq specialist to assist you with your request right now.`
-        : `Hello from Batteriq Kenya! Our commercial EcoFlow DELTA & BLUETTI LiFePO4 backup systems eliminate KPLC outage downtime silently (<20ms switchover, 24-month warranty, KRA eTIMS VAT invoice). Tell us which equipment or rooms you want to back up—or reply QUOTE to connect with a specialist.`
+        ? `Thanks, noted. A colleague will follow up with you directly shortly to sort out the quote and delivery.`
+        : `Thanks for getting back to me. What would you like to keep running when the power goes off? That way I can recommend the right size.`
 
     return {
-      reply,
+      reply: humanizeWhatsAppReply(reply),
       newStatus: fallbackStatus,
       wantsHuman: deterministicHuman || isHotIntent,
       isOptOut: false,

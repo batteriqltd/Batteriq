@@ -103,8 +103,16 @@ export async function handleAiTakeoverForInboundMessage(params: {
   lead: OutreachLead | null
   inboundText: string
   fetchImpl?: typeof fetch
+  /**
+   * Runs after the reply is written, before typing starts (e.g. wait ~30s and
+   * mark the message read). Returning false cancels this reply — e.g. the
+   * customer sent another message, which will get one combined answer.
+   */
+  beforeReply?: () => Promise<boolean>
+  /** Epoch ms by which the reply must be sent (serverless time limit). */
+  replyDeadline?: number
 }): Promise<AiTakeoverResult> {
-  const { conversation, lead, inboundText, fetchImpl } = params
+  const { conversation, lead, inboundText, fetchImpl, beforeReply, replyDeadline } = params
 
   // Respect per-conversation AI / Human switch
   if (conversation.mode !== 'ai') {
@@ -257,11 +265,22 @@ export async function handleAiTakeoverForInboundMessage(params: {
     messageType: 'text',
   })
 
+  if (beforeReply && !(await beforeReply())) {
+    return {
+      handled: true,
+      replied: false,
+      newStatus: decision.newStatus,
+      switchedToHuman: shouldEscalate,
+      escalationReason,
+    }
+  }
+
   const { waMessageId, provider } = await sendWhatsAppText({
     toPhoneE164: conversation.phone_e164,
     chatId: (conversation as ConversationWithChat).wa_chat_id,
     body: decision.reply,
     humanize: true,
+    maxTypingMs: replyDeadline ? replyDeadline - Date.now() : undefined,
     fetchImpl,
   })
 

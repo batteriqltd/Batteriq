@@ -51,16 +51,16 @@ export function proformaFilename(p: OutreachProformaPackage): string {
 
 export function buildProformaWhatsAppCaption(p: OutreachProformaPackage): string {
   const lines = p.items.map(
-    (it) => `• ${it.name} x${it.quantity} — KES ${it.total.toLocaleString('en-KE')}`
+    (it) => `${it.name} x${it.quantity}: KES ${it.total.toLocaleString('en-KE')}`
   )
   return [
-    `📄 *Batteriq Proforma Quotation #${p.proformaNumber}*`,
-    `*${p.systemTitle}*`,
+    `Batteriq Proforma Quotation #${p.proformaNumber}`,
+    p.systemTitle,
     '',
     ...lines,
     '',
-    `*Total: KES ${p.total.toLocaleString('en-KE')}* (incl. 16% VAT, 24-month warranty, delivery)`,
-    'Valid for 14 days. Reply here to change quantities, ask a question or confirm delivery.',
+    `Total: KES ${p.total.toLocaleString('en-KE')} (incl. 16% VAT, 24-month warranty, delivery)`,
+    'Valid for 14 days. Let me know if you would like any changes or want to go ahead with delivery.',
   ].join('\n')
 }
 
@@ -93,7 +93,7 @@ export async function sendProformaOnWhatsApp(params: {
       sender_type: params.senderType,
       message_type: 'text',
       template_name: 'proforma_pdf',
-      body: `${caption}\n\n📎 ${filename}`,
+      body: `${caption}\n\nAttached: ${filename}`,
       delivery_status: 'queued',
       provider: 'waha',
       ai_metadata: {
@@ -109,7 +109,7 @@ export async function sendProformaOnWhatsApp(params: {
 
   let via: 'file' | 'link' = 'file'
   let waMessageId: string | null = null
-  let body = `${caption}\n\n📎 ${filename}`
+  let body = `${caption}\n\nAttached: ${filename}`
 
   try {
     const pdfBase64 = await generateOutreachProformaPdfBase64(p)
@@ -133,7 +133,7 @@ export async function sendProformaOnWhatsApp(params: {
       throw fileErr
     }
     via = 'link'
-    body = `${caption}\n\n📥 Download the PDF: ${url}`
+    body = `${caption}\n\nYou can download the PDF here: ${url}`
     try {
       const sent = await sendWahaText({ chatId: params.chatId, text: body })
       waMessageId = sent.messageId
@@ -175,7 +175,7 @@ export async function sendProformaOnWhatsApp(params: {
   await (supabase.from('outreach_conversations') as any)
     .update({
       last_outbound_at: new Date().toISOString(),
-      last_message_preview: `📄 Proforma #${p.proformaNumber} — KES ${p.total.toLocaleString('en-KE')}`,
+      last_message_preview: `Proforma #${p.proformaNumber}, KES ${p.total.toLocaleString('en-KE')}`,
     })
     .eq('id', params.conversationId)
 

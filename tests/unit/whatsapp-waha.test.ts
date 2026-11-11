@@ -234,3 +234,25 @@ describe('WhatsApp proforma + wider targeting', () => {
     delete process.env.WAHA_API_KEY
   })
 })
+
+describe('human-like WhatsApp replies', () => {
+  it('strips emojis, markdown and AI-style punctuation', async () => {
+    const { humanizeWhatsAppReply } = await import('@/lib/outreach/claude')
+    const out = humanizeWhatsAppReply(
+      'Great news 🎉🔋!! The *DELTA 2 Max* — KES 265,000 👍\n\n\n- Same-day delivery ✅'
+    )
+    expect(out).toBe('Great news! The DELTA 2 Max, KES 265,000\n\nSame-day delivery')
+    expect(humanizeWhatsAppReply('🙏')).toMatch(/^Thanks/)
+  })
+
+  it('types at a fast human speed (≈6.5–8 chars/sec)', async () => {
+    const { typingDurationMs } = await import('@/lib/outreach/whatsapp-transport')
+    const text = 'x'.repeat(140)
+    for (let i = 0; i < 20; i++) {
+      const ms = typingDurationMs(text)
+      expect(ms).toBeGreaterThanOrEqual(17_500)
+      expect(ms).toBeLessThanOrEqual(22_800)
+    }
+    expect(typingDurationMs('ok')).toBe(2_000)
+  })
+})

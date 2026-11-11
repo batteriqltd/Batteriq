@@ -81,14 +81,36 @@ export function sleepMs(ms: number): Promise<void> {
 }
 
 /**
+ * How long a fast human typist (~80–95 wpm ≈ 6.5–8 characters/second) needs
+ * to type `text`, plus a short pause to re-read before hitting send.
+ */
+export function typingDurationMs(text: string): number {
+  const charsPerSecond = 6.5 + Math.random() * 1.5
+  const ms = (text.length / charsPerSecond) * 1000 + randomBetween(400, 1_200)
+  return Math.max(2_000, Math.round(ms))
+}
+
+/** Shows "typing…" for `durationMs`, refreshing it so WhatsApp never drops it. */
+async function showTypingFor(chatId: string, durationMs: number): Promise<void> {
+  const end = Date.now() + durationMs
+  while (Date.now() < end) {
+    await setWahaTyping(chatId, true)
+    await sleepMs(Math.min(8_000, Math.max(0, end - Date.now())))
+  }
+  await setWahaTyping(chatId, false)
+}
+
+/**
  * Sends a free-form text over the active provider.
- * `humanize` shows "typing…" and waits a short randomized delay first (WAHA only).
+ * `humanize` shows "typing…" for as long as a fast typist would take to type
+ * the message (WAHA only), capped by `maxTypingMs`.
  */
 export async function sendWhatsAppText(params: {
   toPhoneE164: string
   chatId?: string | null
   body: string
   humanize?: boolean
+  maxTypingMs?: number
   fetchImpl?: typeof fetch
 }): Promise<{ waMessageId: string | null; provider: WhatsAppProvider }> {
   if (activeWhatsAppProvider() === 'meta') {
@@ -104,11 +126,8 @@ export async function sendWhatsAppText(params: {
   if (!chatId) throw new Error('Invalid WhatsApp number')
 
   if (params.humanize) {
-    await setWahaTyping(chatId, true)
-    // ~1.2–4s depending on reply length, randomized
-    const base = Math.min(2_500, params.body.length * 18)
-    await sleepMs(1_200 + randomBetween(0, 1_500) + base * 0.4)
-    await setWahaTyping(chatId, false)
+    const cap = Math.max(1_500, params.maxTypingMs ?? 30_000)
+    await showTypingFor(chatId, Math.min(cap, typingDurationMs(params.body)))
   }
 
   const { messageId } = await sendWahaText({ chatId, text: params.body })

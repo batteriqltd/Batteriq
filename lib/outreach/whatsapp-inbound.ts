@@ -16,7 +16,13 @@ import { logOutreachEvent } from './logger'
 import { sendOutreachNotification } from './notifications'
 import { createOutreachAdminClient } from './supabase'
 import type { OutreachConversation, OutreachLead } from './types'
-import { chatIdToPhoneE164, sendWhatsAppText, type WhatsAppProvider } from './whatsapp-transport'
+import {
+  chatIdToPhoneE164,
+  randomBetween,
+  sendWhatsAppText,
+  sleepMs,
+  type WhatsAppProvider,
+} from './whatsapp-transport'
 
 /** Conversation row including the WAHA-only column added in migration 009. */
 export type WaConversation = OutreachConversation & { wa_chat_id?: string | null }
@@ -35,6 +41,11 @@ export interface NormalizedInboundMessage {
 }
 
 const AI_REPLY_MAX_AGE_MS = 10 * 60 * 1000
+/** Message is marked read ~30s after it arrives (randomized). */
+const READ_DELAY_MIN_MS = 26_000
+const READ_DELAY_MAX_MS = 31_000
+/** Everything (read wait + typing) must finish within the 60s webhook limit. */
+const REPLY_BUDGET_MS = 55_000
 
 function isUniqueViolation(error: unknown): boolean {
   return Boolean(error && typeof error === 'object' && (error as { code?: string }).code === '23505')
@@ -250,11 +261,48 @@ export async function runInboundFollowUp(params: {
   if (Date.now() - Date.parse(msg.timestampIso) > AI_REPLY_MAX_AGE_MS) return
 
   if (conv.mode === 'ai' && conv.status !== 'opted_out') {
-    if (msg.provider === 'waha' && msg.chatId) {
-      await sendWahaSeen(msg.chatId, [msg.waMessageId])
-    }
+    // Behave like a person: read the message ~30s after it arrives, then type
+    // at a fast human speed. All of this must finish inside the webhook's 60s.
+    const startedAt = Date.now()
+    const readAt = startedAt + randomBetween(READ_DELAY_MIN_MS, READ_DELAY_MAX_MS)
+    const beforeReply =
+      msg.provider === 'waha'
+        ? async (): Promise<boolean> => {
+            await sleepMs(Math.max(0, readAt - Date.now()))
+            // Customer sent something newer, or staff took over → let that win
+            const [latestRes, convRes] = await Promise.all([
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (supabase.from('outreach_messages') as any)
+                .select('wa_message_id')
+                .eq('conversation_id', conv.id)
+                .eq('direction', 'inbound')
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle(),
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (supabase.from('outreach_conversations') as any)
+                .select('mode, status')
+                .eq('id', conv.id)
+                .maybeSingle(),
+            ])
+            const latestId = latestRes.data?.wa_message_id as string | undefined
+            const chatId = conv.wa_chat_id || msg.chatId
+            if (chatId) await sendWahaSeen(chatId, [msg.waMessageId]).catch(() => {})
+            if (latestId && latestId !== msg.waMessageId) return false
+            if (convRes.data?.mode !== 'ai' || convRes.data?.status === 'opted_out') return false
+            // A moment to "think" before starting to type
+            await sleepMs(randomBetween(700, 1_800))
+            return true
+          }
+        : undefined
     try {
-      await handleAiTakeoverForInboundMessage({ conversation: conv, lead, inboundText: msg.body })
+      await handleAiTakeoverForInboundMessage({
+        conversation: conv,
+        lead,
+        inboundText: msg.body,
+        beforeReply,
+        replyDeadline: startedAt + REPLY_BUDGET_MS,
+      })
     } catch (err) {
       await logOutreachEvent({
         module: 'ai_takeover',
