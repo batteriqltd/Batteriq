@@ -887,9 +887,7 @@ section, .section, [data-section] {
 .section-banner {
   height: clamp(140px, 22vh, 280px);
 }
-@media (max-height: 820px) {
-  .section-banner .banner-desc { display: none; }
-}
+.section-banner .banner-desc { display: none; }
 .product-rail {
   scrollbar-width: none;
   -ms-overflow-style: none;
