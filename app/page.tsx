@@ -174,9 +174,9 @@ export default async function HomePage() {
       <div className="max-w-8xl mx-auto px-4 lg:px-8">
 
         {/* ── EcoFlow Power Stations ── */}
-        <SectionTransition id="power-stations" className="py-5 sm:py-6">
+        <SectionTransition id="power-stations" className="py-4 sm:py-5">
           <div
-            className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+            className="relative w-full rounded-3xl overflow-hidden mb-3 sm:mb-4 group section-banner"
             style={{ background: 'linear-gradient(135deg, #00001a 0%, #000033 100%)' }}
           >
             {ecoflowPowerStations[0]?.images?.[0] && (
@@ -237,9 +237,9 @@ export default async function HomePage() {
         {DIVIDER}
 
         {/* ── EcoFlow Solar Panels ── */}
-        <SectionTransition id="solar-panels" className="py-5 sm:py-6">
+        <SectionTransition id="solar-panels" className="py-4 sm:py-5">
           <div
-            className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+            className="relative w-full rounded-3xl overflow-hidden mb-3 sm:mb-4 group section-banner"
             style={{ background: 'linear-gradient(135deg, #001a00 0%, #002800 100%)' }}
           >
             {ecoflowSolar[0]?.images?.[0] && (
@@ -308,7 +308,7 @@ export default async function HomePage() {
         {bluettiSystems.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="systems" className="py-5 sm:py-6">
+            <SectionTransition id="systems" className="py-4 sm:py-5">
               <BrandAnchor
                 brand="Bluetti Systems"
                 category="Solar Home Systems"
@@ -329,9 +329,9 @@ export default async function HomePage() {
         {ecoflowAppliances.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="appliances" className="py-5 sm:py-6">
+            <SectionTransition id="appliances" className="py-4 sm:py-5">
               <div
-                className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+                className="relative w-full rounded-3xl overflow-hidden mb-3 sm:mb-4 group section-banner"
                 style={{ background: 'linear-gradient(135deg, #001111 0%, #002222 100%)' }}
               >
                 {ecoflowAppliances[0]?.images?.[0] && (
@@ -392,9 +392,9 @@ export default async function HomePage() {
         {bluettiStations.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="bluetti" className="py-5 sm:py-6">
+            <SectionTransition id="bluetti" className="py-4 sm:py-5">
               <div
-                className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+                className="relative w-full rounded-3xl overflow-hidden mb-3 sm:mb-4 group section-banner"
                 style={{ background: 'linear-gradient(135deg, #0a0a1a 0%, #12122a 100%)' }}
               >
                 {bluettiStations[0]?.images?.[0] && (
@@ -455,7 +455,7 @@ export default async function HomePage() {
         {powerBanks.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="power-banks" className="py-5 sm:py-6">
+            <SectionTransition id="power-banks" className="py-4 sm:py-5">
               <BrandAnchor
                 brand="EcoFlow"
                 category="Power Banks"
@@ -476,9 +476,9 @@ export default async function HomePage() {
         {accessories.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="accessories" className="py-5 sm:py-6">
+            <SectionTransition id="accessories" className="py-4 sm:py-5">
               <div
-                className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+                className="relative w-full rounded-3xl overflow-hidden mb-3 sm:mb-4 group section-banner"
                 style={{ background: 'linear-gradient(135deg, #001a1a 0%, #002233 100%)' }}
               >
                 {accessories[0]?.images?.[0] && (

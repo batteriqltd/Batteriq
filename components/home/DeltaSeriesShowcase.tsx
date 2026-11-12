@@ -14,10 +14,10 @@ export function DeltaSeriesShowcase({ products }: { products: Product[] }) {
   const from = Math.min(...products.map(p => p.price_kes))
 
   return (
-    <section className="max-w-8xl mx-auto px-4 lg:px-8 py-5 sm:py-6">
+    <section className="max-w-8xl mx-auto px-4 lg:px-8 py-4 sm:py-5">
       {/* Banner — same style as other sections, minimal copy */}
       <div
-        className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+        className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden mb-3 sm:mb-4 group section-banner"
         style={{ background: 'linear-gradient(135deg, #00001a 0%, #000033 100%)' }}
       >
         <div className="hidden sm:block" style={{ position: 'absolute', top: 0, right: 0, width: '58%', height: '100%', overflow: 'hidden' }}>

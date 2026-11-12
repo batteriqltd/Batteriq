@@ -11,7 +11,7 @@ export function BluettiSpotlight({ products }: { products: Product[] }) {
   if (products.length === 0) return null
 
   return (
-    <section className="bg-white py-5 sm:py-6">
+    <section className="bg-white py-4 sm:py-5">
       <div className="mx-auto max-w-8xl px-4 lg:px-8">
         <BrandAnchor
           brand="Bluetti Kenya"

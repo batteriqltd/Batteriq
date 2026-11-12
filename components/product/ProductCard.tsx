@@ -55,9 +55,6 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
   return (
     <article
       className="product-card-animate group bg-white rounded-2xl border border-slate-100/80 overflow-hidden hover:border-blue-600/20 hover:shadow-ambient transition-all duration-300 flex flex-col h-full"
-      data-aos="fade-up"
-      data-aos-duration="600"
-      data-aos-once="true"
     >
       <Link
         href={productHref}
@@ -68,7 +65,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
         <div className="p-3 sm:p-4 pb-0">
           <div
             className="relative w-full overflow-hidden bg-slate-50/80 rounded-xl transition-colors group-hover:bg-slate-100/50"
-            style={{ height: 'clamp(100px, 18vh, 230px)' }}
+            style={{ height: 'clamp(90px, 16vh, 230px)' }}
           >
             <div className="absolute inset-0 flex items-center justify-center p-2">
               {hasImage ? (
