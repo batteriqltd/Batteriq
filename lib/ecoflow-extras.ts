@@ -29,7 +29,12 @@ export const ECOFLOW_EXTRA_PRODUCTS: Record<string, Product> = {
       compatible: 'EcoFlow DELTA 2, DELTA 3 Plus',
       warranty: '24 months',
     },
-    images: ['/products/ecoflow/alternator-charger-800w.jpg'],
+    images: [
+      '/products/ecoflow/alternator-charger-1000w-1.png',
+      '/products/ecoflow/alternator-charger-1000w-2.png',
+      '/products/ecoflow/alternator-charger-1000w-3.png',
+      '/products/ecoflow/alternator-charger-1000w-4.png',
+    ],
     price_kes: 58114,
     compare_price_kes: null,
     discount_percent: null,
