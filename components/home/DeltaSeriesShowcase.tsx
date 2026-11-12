@@ -1,4 +1,5 @@
 import { ProductCard } from '@/components/product/ProductCard'
+import { ProductRail } from '@/components/product/ProductRail'
 import type { Product } from '@/lib/supabase/types'
 
 /**
@@ -13,11 +14,11 @@ export function DeltaSeriesShowcase({ products }: { products: Product[] }) {
   const from = Math.min(...products.map(p => p.price_kes))
 
   return (
-    <section className="max-w-8xl mx-auto px-4 lg:px-8 py-10 sm:py-14 lg:py-20">
+    <section className="max-w-8xl mx-auto px-4 lg:px-8 py-6 sm:py-8 lg:py-10">
       {/* Banner — same style as other sections, minimal copy */}
       <div
-        className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden mb-6 sm:mb-8 group"
-        style={{ height: 'clamp(200px, 34vw, 280px)', background: 'linear-gradient(135deg, #00001a 0%, #000033 100%)' }}
+        className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+        style={{ background: 'linear-gradient(135deg, #00001a 0%, #000033 100%)' }}
       >
         <div className="hidden sm:block" style={{ position: 'absolute', top: 0, right: 0, width: '58%', height: '100%', overflow: 'hidden' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -34,7 +35,7 @@ export function DeltaSeriesShowcase({ products }: { products: Product[] }) {
         <div className="absolute inset-0 flex flex-col justify-center px-6 sm:px-12 lg:px-14 pr-24 sm:pr-6" style={{ maxWidth: '480px' }}>
           <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] mb-2 sm:mb-3" style={{ color: '#6699ff' }}>EcoFlow · New</p>
           <h3 className="font-black text-white mb-2 sm:mb-3 leading-tight" style={{ fontSize: 'clamp(1.5rem, 5.5vw, 2.6rem)', letterSpacing: '-0.03em' }}>DELTA Series</h3>
-          <p className="text-xs sm:text-sm font-bold mb-4 sm:mb-5" style={{ color: 'rgba(255,255,255,0.7)' }}>Home backup power · 1–11kWh</p>
+          <p className="banner-desc text-xs sm:text-sm font-bold mb-4 sm:mb-5" style={{ color: 'rgba(255,255,255,0.7)' }}>Home backup power · 1–11kWh</p>
           <a
             href="/power-stations"
             className="inline-flex items-center px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl font-black text-xs sm:text-sm text-white transition-all duration-200 hover:-translate-y-px hover:shadow-[0_8px_32px_rgba(0,0,255,0.55)] w-fit"
@@ -51,13 +52,13 @@ export function DeltaSeriesShowcase({ products }: { products: Product[] }) {
       </div>
 
       {/* Product grid — 2 across on phones/tablets, 5 in one line on laptop+; equal heights */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6 items-stretch">
+      <ProductRail perView={5}>
         {products.map((product) => (
           <div key={product.id} className="h-full min-w-0">
             <ProductCard product={product} />
           </div>
         ))}
-      </div>
+      </ProductRail>
     </section>
   )
 }

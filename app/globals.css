@@ -880,3 +880,19 @@ section, .section, [data-section] {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* ── Fit-to-screen sections ─────────────────────────────────────────────
+   Category banners and product sliders scale with the screen height so each
+   homepage section is visible in one screen without scrolling. */
+.section-banner {
+  height: clamp(140px, 22vh, 280px);
+}
+@media (max-height: 820px) {
+  .section-banner .banner-desc { display: none; }
+}
+.product-rail {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.product-rail::-webkit-scrollbar { display: none; }
+.product-rail > div > * { width: 100%; }

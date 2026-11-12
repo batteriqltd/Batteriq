@@ -22,7 +22,7 @@ import { BluettiSpotlight } from '@/components/home/BluettiSpotlight'
 import { PageWrapper } from '@/components/animations/PageWrapper'
 import { HomeAnimations } from '@/components/animations/HomeAnimations'
 import { SectionTransition } from '@/components/animations/SectionTransition'
-import { CardReveal } from '@/components/animations/CardReveal'
+import { ProductRail } from '@/components/product/ProductRail'
 import { HeroParallax } from '@/components/animations/HeroParallax'
 import { SectionObserver } from '@/components/animations/SectionObserver'
 
@@ -174,10 +174,10 @@ export default async function HomePage() {
       <div className="max-w-8xl mx-auto px-4 lg:px-8">
 
         {/* ── EcoFlow Power Stations ── */}
-        <SectionTransition id="power-stations" className="py-10 sm:py-14 lg:py-20">
+        <SectionTransition id="power-stations" className="py-6 sm:py-8 lg:py-10">
           <div
-            className="relative w-full rounded-3xl overflow-hidden mb-8 group"
-            style={{ height: '280px', background: 'linear-gradient(135deg, #00001a 0%, #000033 100%)' }}
+            className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+            style={{ background: 'linear-gradient(135deg, #00001a 0%, #000033 100%)' }}
           >
             {ecoflowPowerStations[0]?.images?.[0] && (
               <div style={{ position: 'absolute', top: 0, right: 0, width: '55%', height: '100%', overflow: 'hidden' }}>
@@ -196,7 +196,7 @@ export default async function HomePage() {
             <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12 lg:px-14" style={{ maxWidth: '480px' }}>
               <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#6699ff' }}>EcoFlow Kenya &middot; Official Dealer</p>
               <h3 className="font-black text-white mb-3 leading-tight" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.03em' }}>Power Stations</h3>
-              <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
+              <p className="banner-desc text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
                 From 256Wh to 4096Wh. Backup your home or power your adventure. Pay with M-Pesa.
               </p>
               <div className="flex items-center gap-3">
@@ -224,11 +224,11 @@ export default async function HomePage() {
             seeAllHref="/ecoflow-kenya"
             subtitle="Kenya's most popular portable power stations. From KES 27,259."
           />
-          <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+          <ProductRail>
             {ecoflowPowerStations.map((product) => (
               <ProductCard key={product.id} product={product} showKenyaContext />
             ))}
-          </CardReveal>
+          </ProductRail>
           {ecoflowPowerStations.length === 0 && (
             <div className="py-12 text-center"><p className="text-gray-400 text-sm">Products loading&hellip;</p></div>
           )}
@@ -237,10 +237,10 @@ export default async function HomePage() {
         {DIVIDER}
 
         {/* ── EcoFlow Solar Panels ── */}
-        <SectionTransition id="solar-panels" className="py-10 sm:py-14 lg:py-20">
+        <SectionTransition id="solar-panels" className="py-6 sm:py-8 lg:py-10">
           <div
-            className="relative w-full rounded-3xl overflow-hidden mb-8 group"
-            style={{ height: '280px', background: 'linear-gradient(135deg, #001a00 0%, #002800 100%)' }}
+            className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+            style={{ background: 'linear-gradient(135deg, #001a00 0%, #002800 100%)' }}
           >
             {ecoflowSolar[0]?.images?.[0] && (
               <div style={{ position: 'absolute', top: 0, right: 0, width: '55%', height: '100%', overflow: 'hidden' }}>
@@ -259,7 +259,7 @@ export default async function HomePage() {
             <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12 lg:px-14" style={{ maxWidth: '480px' }}>
               <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#66ff99' }}>EcoFlow Solar &middot; Kenya</p>
               <h3 className="font-black text-white mb-3 leading-tight" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.03em' }}>Solar Panels</h3>
-              <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
+              <p className="banner-desc text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
                 From 45W foldable to 400W rigid panels. IP68 waterproof. Built for Kenyan sun.
               </p>
               <div className="flex items-center gap-3">
@@ -287,11 +287,11 @@ export default async function HomePage() {
             seeAllHref="/solar"
             subtitle="From 45W portable panels to 400W powerhouses. IP68 waterproof."
           />
-          <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+          <ProductRail>
             {ecoflowSolar.map((product) => (
               <ProductCard key={product.id} product={product} showKenyaContext />
             ))}
-          </CardReveal>
+          </ProductRail>
           {ecoflowSolar.length === 0 && (
             <div className="py-12 text-center"><p className="text-gray-400 text-sm">Products loading&hellip;</p></div>
           )}
@@ -308,7 +308,7 @@ export default async function HomePage() {
         {bluettiSystems.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="systems" className="py-10 sm:py-14 lg:py-20">
+            <SectionTransition id="systems" className="py-6 sm:py-8 lg:py-10">
               <BrandAnchor
                 brand="Bluetti Systems"
                 category="Solar Home Systems"
@@ -316,11 +316,11 @@ export default async function HomePage() {
                 seeAllHref="/power-stations?filter=solar-home-system"
                 subtitle="Homestar 3 (2kW + 3kWh) · Homestar 5 (3.68kW + 5kWh) · EP2000 (10kW / 15kW / 20kW)"
               />
-              <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-6">
+              <ProductRail perView={5}>
                 {bluettiSystems.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
-              </CardReveal>
+              </ProductRail>
             </SectionTransition>
           </>
         )}
@@ -329,10 +329,10 @@ export default async function HomePage() {
         {ecoflowAppliances.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="appliances" className="py-10 sm:py-14 lg:py-20">
+            <SectionTransition id="appliances" className="py-6 sm:py-8 lg:py-10">
               <div
-                className="relative w-full rounded-3xl overflow-hidden mb-8 group"
-                style={{ height: '280px', background: 'linear-gradient(135deg, #001111 0%, #002222 100%)' }}
+                className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+                style={{ background: 'linear-gradient(135deg, #001111 0%, #002222 100%)' }}
               >
                 {ecoflowAppliances[0]?.images?.[0] && (
                   <div style={{ position: 'absolute', top: 0, right: 0, width: '55%', height: '100%', overflow: 'hidden' }}>
@@ -351,7 +351,7 @@ export default async function HomePage() {
                 <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12 lg:px-14" style={{ maxWidth: '480px' }}>
                   <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#66ffff' }}>EcoFlow Appliances &middot; Kenya</p>
                   <h3 className="font-black text-white mb-3 leading-tight" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.03em' }}>Smart Appliances</h3>
-                  <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
+                  <p className="banner-desc text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
                     Solar-compatible portable fridge and air conditioner. Energy A+++ rated.
                   </p>
                   <div className="flex items-center gap-3">
@@ -379,11 +379,11 @@ export default async function HomePage() {
                 seeAllHref="/accessories#appliances"
                 subtitle="Solar-compatible portable fridge and air conditioner."
               />
-              <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+              <ProductRail>
                 {ecoflowAppliances.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
-              </CardReveal>
+              </ProductRail>
             </SectionTransition>
           </>
         )}
@@ -392,10 +392,10 @@ export default async function HomePage() {
         {bluettiStations.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="bluetti" className="py-10 sm:py-14 lg:py-20">
+            <SectionTransition id="bluetti" className="py-6 sm:py-8 lg:py-10">
               <div
-                className="relative w-full rounded-3xl overflow-hidden mb-8 group"
-                style={{ height: '280px', background: 'linear-gradient(135deg, #0a0a1a 0%, #12122a 100%)' }}
+                className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+                style={{ background: 'linear-gradient(135deg, #0a0a1a 0%, #12122a 100%)' }}
               >
                 {bluettiStations[0]?.images?.[0] && (
                   <div style={{ position: 'absolute', top: 0, right: 0, width: '55%', height: '100%', overflow: 'hidden' }}>
@@ -414,7 +414,7 @@ export default async function HomePage() {
                 <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12 lg:px-14" style={{ maxWidth: '480px' }}>
                   <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#9999ff' }}>Bluetti Kenya &middot; Authorised Dealer</p>
                   <h3 className="font-black text-white mb-3 leading-tight" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.03em' }}>Bluetti Power Stations</h3>
-                  <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
+                  <p className="banner-desc text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
                     New residential backup systems in — Homestar 3, HV6K, HV10K & HB500. Plus AC & EB series.
                   </p>
                   <div className="flex items-center gap-3">
@@ -442,11 +442,11 @@ export default async function HomePage() {
                 seeAllHref="/bluetti"
                 subtitle="Quality power backup from Kenya's authorised Bluetti dealer."
               />
-              <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+              <ProductRail>
                 {bluettiStations.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
-              </CardReveal>
+              </ProductRail>
             </SectionTransition>
           </>
         )}
@@ -455,7 +455,7 @@ export default async function HomePage() {
         {powerBanks.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="power-banks" className="py-10 sm:py-14 lg:py-20">
+            <SectionTransition id="power-banks" className="py-6 sm:py-8 lg:py-10">
               <BrandAnchor
                 brand="EcoFlow"
                 category="Power Banks"
@@ -463,11 +463,11 @@ export default async function HomePage() {
                 seeAllHref="/accessories/power-banks"
                 subtitle="Stay charged on the go with RAPID magnetic charging technology."
               />
-              <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+              <ProductRail>
                 {powerBanks.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
-              </CardReveal>
+              </ProductRail>
             </SectionTransition>
           </>
         )}
@@ -476,10 +476,10 @@ export default async function HomePage() {
         {accessories.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="accessories" className="py-10 sm:py-14 lg:py-20">
+            <SectionTransition id="accessories" className="py-6 sm:py-8 lg:py-10">
               <div
-                className="relative w-full rounded-3xl overflow-hidden mb-8 group"
-                style={{ height: '280px', background: 'linear-gradient(135deg, #001a1a 0%, #002233 100%)' }}
+                className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
+                style={{ background: 'linear-gradient(135deg, #001a1a 0%, #002233 100%)' }}
               >
                 {accessories[0]?.images?.[0] && (
                   <div style={{ position: 'absolute', top: 0, right: 0, width: '55%', height: '100%', overflow: 'hidden' }}>
@@ -498,7 +498,7 @@ export default async function HomePage() {
                 <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-12 lg:px-14" style={{ maxWidth: '480px' }}>
                   <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#66ccff' }}>Anker Accessories &middot; Official</p>
                   <h3 className="font-black text-white mb-3 leading-tight" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', letterSpacing: '-0.03em' }}>Anker Accessories &amp; Add-ons</h3>
-                  <p className="text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
+                  <p className="banner-desc text-sm mb-5" style={{ color: 'rgba(255,255,255,0.65)', maxWidth: '300px', lineHeight: '1.6' }}>
                     Explore Anker cables, chargers, hubs and more.
                   </p>
                   <div className="flex items-center gap-3">
@@ -526,11 +526,11 @@ export default async function HomePage() {
                 seeAllHref="/accessories"
                 subtitle="Explore Anker accessories, chargers, cables and more."
               />
-              <CardReveal className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+              <ProductRail>
                 {accessories.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
-              </CardReveal>
+              </ProductRail>
             </SectionTransition>
           </>
         )}

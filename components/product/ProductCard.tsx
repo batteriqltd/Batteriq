@@ -68,16 +68,16 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
         <div className="p-3 sm:p-4 pb-0">
           <div
             className="relative w-full overflow-hidden bg-slate-50/80 rounded-xl transition-colors group-hover:bg-slate-100/50"
-            style={{ paddingBottom: '100%' }}
+            style={{ height: 'clamp(120px, 22vh, 230px)' }}
           >
-            <div className="absolute inset-0 flex items-center justify-center p-6">
+            <div className="absolute inset-0 flex items-center justify-center p-2">
               {hasImage ? (
                 <Image
                   src={imageUrl}
                   alt={productImageAlt(product)}
                   fill
                   className="object-contain object-center group-hover:scale-[1.05] transition-transform duration-700 ease-out mix-blend-multiply"
-                  style={{ padding: '12px' }}
+                  style={{ padding: '8px' }}
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   loading="lazy"
                   onError={() => setImgError(true)}
@@ -136,15 +136,15 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
         </div>
 
         {/* Content */}
-        <div className="flex flex-col flex-1 p-4 sm:p-6 pt-4">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-2">{product.brand}</p>
-          <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug tracking-tight line-clamp-2 mb-4 group-hover:text-blue-600 transition-colors">
+        <div className="flex flex-col flex-1 p-3 sm:p-4 pt-3">
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-1">{product.brand}</p>
+          <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-snug tracking-tight line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
             {displayName}
           </h2>
 
           {/* Specs */}
           {specs.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-5">
+            <div className="flex flex-wrap gap-1.5 mb-3">
               {specs.map(([key, value]) => (
                 <div
                   key={key}
@@ -208,18 +208,18 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
       </Link>
 
       {/* CTA */}
-      <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+      <div className="px-3 sm:px-4 pb-3 sm:pb-4">
         {quoteOnly ? (
           <Link
             href={productHref}
-            className="w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest text-white bg-bq-blue hover:bg-blue-700 shadow-sm hover:shadow-blue-600/20 hover:-translate-y-0.5 transition-all flex items-center justify-center"
+            className="w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest text-white bg-bq-blue hover:bg-blue-700 shadow-sm hover:shadow-blue-600/20 hover:-translate-y-0.5 transition-all flex items-center justify-center"
           >
             Request a Quote
           </Link>
         ) : product.in_stock ? (
           <button
             onClick={handleAddToCart}
-            className={`w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all active:translate-y-0 active:scale-[0.98] ${
+            className={`w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest text-white transition-all active:translate-y-0 active:scale-[0.98] ${
               added
                 ? 'bg-green-500 shadow-green-200'
                 : 'bg-bq-blue hover:bg-blue-700 shadow-sm hover:shadow-blue-600/20 hover:-translate-y-0.5'
@@ -233,7 +233,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
             href={`https://wa.me/254716822014?text=${encodeURIComponent(`Hi Batteriq! I am interested in "${product.name}" which is currently out of stock. Please notify me when it is available.`)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
+            className="w-full py-2.5 rounded-xl text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all hover:-translate-y-0.5"
             style={{ background: 'linear-gradient(135deg, #f8f9ff, #eef2ff)', color: '#00004d', border: '1.5px solid #dde5ff' }}
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
