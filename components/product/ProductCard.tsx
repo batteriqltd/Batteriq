@@ -68,7 +68,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
         <div className="p-3 sm:p-4 pb-0">
           <div
             className="relative w-full overflow-hidden bg-slate-50/80 rounded-xl transition-colors group-hover:bg-slate-100/50"
-            style={{ height: 'clamp(120px, 22vh, 230px)' }}
+            style={{ height: 'clamp(100px, 18vh, 230px)' }}
           >
             <div className="absolute inset-0 flex items-center justify-center p-2">
               {hasImage ? (
@@ -137,14 +137,14 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
 
         {/* Content */}
         <div className="flex flex-col flex-1 p-3 sm:p-4 pt-3">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-1">{product.brand}</p>
+          <p className="card-brand text-[10px] font-bold text-slate-400 uppercase tracking-[0.12em] mb-1">{product.brand}</p>
           <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-snug tracking-tight line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
             {displayName}
           </h2>
 
           {/* Specs */}
           {specs.length > 0 && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
+            <div className="card-specs flex flex-wrap gap-1.5 mb-3">
               {specs.map(([key, value]) => (
                 <div
                   key={key}
@@ -190,7 +190,7 @@ export function ProductCard({ product, showKenyaContext = false }: ProductCardPr
 
             {/* M-Pesa installment hint for expensive products */}
             {product.in_stock && !quoteOnly && (
-              <p className="text-[10px] text-green-600 font-bold mt-1 flex items-center gap-1">
+              <p className="card-mpesa text-[10px] text-green-600 font-bold mt-1 flex items-center gap-1">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/logos/mpesa.png" alt="" className="h-3.5 w-auto object-contain inline" /> Pay via M-Pesa · Instant STK Push
               </p>

@@ -13,11 +13,11 @@ const CATEGORIES = [
 
 export function CategoryNav() {
   return (
-    <section className="py-10 sm:py-16 px-4 sm:px-6 bg-white">
+    <section className="py-6 sm:py-10 px-4 sm:px-6 bg-white">
       <div className="max-w-6xl mx-auto">
 
         {/* Heading */}
-        <div className="text-center mb-8 sm:mb-12">
+        <div className="text-center mb-5 sm:mb-8">
           <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#0000ff' }}>
             Browse Our Range
           </p>
@@ -27,7 +27,7 @@ export function CategoryNav() {
         </div>
 
         {/* Category grid */}
-        <nav aria-label="Product categories" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <nav aria-label="Product categories" className="grid grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           {CATEGORIES.map((cat, i) => (
             <Link
               key={cat.label}
@@ -40,7 +40,7 @@ export function CategoryNav() {
             >
               {/* Image square */}
               <div
-                className="w-full aspect-square rounded-3xl overflow-hidden mb-4 relative"
+                className="w-full aspect-square rounded-2xl sm:rounded-3xl overflow-hidden mb-2 sm:mb-4 relative"
                 style={{
                   background: cat.gradient,
                   boxShadow: '0 4px 20px rgba(0,0,64,0.10)',
@@ -72,12 +72,12 @@ export function CategoryNav() {
 
               {/* Label */}
               <p
-                className="font-black text-gray-900 text-sm leading-tight mb-1 group-hover:text-blue-600 transition-colors"
+                className="font-black text-gray-900 text-xs sm:text-sm leading-tight mb-1 group-hover:text-blue-600 transition-colors"
                 style={{ letterSpacing: '-0.01em' }}
               >
                 {cat.label}
               </p>
-              <p className="text-xs text-gray-400 font-medium">{cat.from}</p>
+              <p className="text-[10px] sm:text-xs text-gray-400 font-medium">{cat.from}</p>
             </Link>
           ))}
         </nav>

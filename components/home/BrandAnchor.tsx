@@ -11,9 +11,9 @@ type BrandAnchorProps = {
 
 export function BrandAnchor({ brand, category, seeAllHref, h2, subtitle }: BrandAnchorProps) {
   return (
-    <div className="flex items-end justify-between mb-4 sm:mb-5 gap-4">
+    <div className="flex items-end justify-between mb-3 sm:mb-4 gap-4">
       <div>
-        <p className="text-xs font-bold text-bq-blue uppercase tracking-widest mb-1">{brand}</p>
+        <p className="anchor-eyebrow text-xs font-bold text-bq-blue uppercase tracking-widest mb-1">{brand}</p>
         <h2 className="font-display font-bold text-gray-900 leading-tight tracking-tight text-[1.4rem] sm:text-[1.75rem] lg:text-[2rem]">
           {h2 ?? `${brand} ${category}`}
         </h2>

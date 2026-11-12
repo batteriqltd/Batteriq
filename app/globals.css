@@ -896,3 +896,13 @@ section, .section, [data-section] {
 }
 .product-rail::-webkit-scrollbar { display: none; }
 .product-rail > div > * { width: 100%; }
+
+/* Short screens (laptops): trim secondary lines so each section stays in view */
+.section-banner { height: clamp(110px, 18vh, 280px); }
+.card-specs { max-height: 24px; overflow: hidden; }
+@media (max-height: 760px) {
+  .section-banner .flex-col > p:first-child,
+  .anchor-eyebrow,
+  .card-brand,
+  .card-mpesa { display: none; }
+}

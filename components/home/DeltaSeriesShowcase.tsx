@@ -14,7 +14,7 @@ export function DeltaSeriesShowcase({ products }: { products: Product[] }) {
   const from = Math.min(...products.map(p => p.price_kes))
 
   return (
-    <section className="max-w-8xl mx-auto px-4 lg:px-8 py-6 sm:py-8 lg:py-10">
+    <section className="max-w-8xl mx-auto px-4 lg:px-8 py-5 sm:py-6">
       {/* Banner — same style as other sections, minimal copy */}
       <div
         className="relative w-full rounded-2xl sm:rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"

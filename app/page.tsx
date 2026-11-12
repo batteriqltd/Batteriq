@@ -174,7 +174,7 @@ export default async function HomePage() {
       <div className="max-w-8xl mx-auto px-4 lg:px-8">
 
         {/* ── EcoFlow Power Stations ── */}
-        <SectionTransition id="power-stations" className="py-6 sm:py-8 lg:py-10">
+        <SectionTransition id="power-stations" className="py-5 sm:py-6">
           <div
             className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
             style={{ background: 'linear-gradient(135deg, #00001a 0%, #000033 100%)' }}
@@ -237,7 +237,7 @@ export default async function HomePage() {
         {DIVIDER}
 
         {/* ── EcoFlow Solar Panels ── */}
-        <SectionTransition id="solar-panels" className="py-6 sm:py-8 lg:py-10">
+        <SectionTransition id="solar-panels" className="py-5 sm:py-6">
           <div
             className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
             style={{ background: 'linear-gradient(135deg, #001a00 0%, #002800 100%)' }}
@@ -308,7 +308,7 @@ export default async function HomePage() {
         {bluettiSystems.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="systems" className="py-6 sm:py-8 lg:py-10">
+            <SectionTransition id="systems" className="py-5 sm:py-6">
               <BrandAnchor
                 brand="Bluetti Systems"
                 category="Solar Home Systems"
@@ -329,7 +329,7 @@ export default async function HomePage() {
         {ecoflowAppliances.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="appliances" className="py-6 sm:py-8 lg:py-10">
+            <SectionTransition id="appliances" className="py-5 sm:py-6">
               <div
                 className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
                 style={{ background: 'linear-gradient(135deg, #001111 0%, #002222 100%)' }}
@@ -392,7 +392,7 @@ export default async function HomePage() {
         {bluettiStations.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="bluetti" className="py-6 sm:py-8 lg:py-10">
+            <SectionTransition id="bluetti" className="py-5 sm:py-6">
               <div
                 className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
                 style={{ background: 'linear-gradient(135deg, #0a0a1a 0%, #12122a 100%)' }}
@@ -455,7 +455,7 @@ export default async function HomePage() {
         {powerBanks.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="power-banks" className="py-6 sm:py-8 lg:py-10">
+            <SectionTransition id="power-banks" className="py-5 sm:py-6">
               <BrandAnchor
                 brand="EcoFlow"
                 category="Power Banks"
@@ -476,7 +476,7 @@ export default async function HomePage() {
         {accessories.length > 0 && (
           <>
             {DIVIDER}
-            <SectionTransition id="accessories" className="py-6 sm:py-8 lg:py-10">
+            <SectionTransition id="accessories" className="py-5 sm:py-6">
               <div
                 className="relative w-full rounded-3xl overflow-hidden mb-4 sm:mb-5 group section-banner"
                 style={{ background: 'linear-gradient(135deg, #001a1a 0%, #002233 100%)' }}
@@ -537,11 +537,11 @@ export default async function HomePage() {
       </div>
 
       {/* Why Batteriq section */}
-      <section className="py-16 px-4 sm:px-6" style={{ background: '#f8f9ff' }}>
+      <section className="py-8 sm:py-12 px-4 sm:px-6" style={{ background: '#f8f9ff' }}>
         <div className="max-w-5xl mx-auto">
 
           {/* Top label + heading */}
-          <div className="text-center mb-12">
+          <div className="text-center mb-5 sm:mb-10">
             <p className="text-xs font-black uppercase tracking-[0.2em] mb-3" style={{ color: '#0000ff' }}>
               Why Buy From Batteriq
             </p>
@@ -551,45 +551,45 @@ export default async function HomePage() {
           </div>
 
           {/* 3 cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
 
             {/* Card 1 — EcoFlow */}
-            <div className="bg-white rounded-2xl p-7 border border-gray-100 flex flex-col items-center text-center"
+            <div className="bg-white rounded-2xl p-4 sm:p-7 border border-gray-100 grid grid-cols-[auto_1fr] gap-x-4 items-center text-left sm:flex sm:flex-col sm:text-center"
               style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 overflow-hidden"
+              <div className="w-14 h-14 row-span-2 rounded-2xl flex items-center justify-center shrink-0 sm:mb-5 overflow-hidden"
                 style={{ background: '#f0f0f0' }}>
                 <img src="/logos/ecoflow-logo.jpg" alt="EcoFlow" className="w-10 h-10 object-contain" />
               </div>
-              <p className="font-black text-gray-900 text-base mb-2">100% Genuine</p>
+              <p className="font-black text-gray-900 text-base mb-0.5 sm:mb-2">100% Genuine</p>
               <p className="text-sm text-gray-400 leading-relaxed">
                 Official authorised dealer. Every product comes with full manufacturer warranty.
               </p>
             </div>
 
             {/* Card 2 — M-Pesa */}
-            <div className="bg-white rounded-2xl p-7 border border-gray-100 flex flex-col items-center text-center"
+            <div className="bg-white rounded-2xl p-4 sm:p-7 border border-gray-100 grid grid-cols-[auto_1fr] gap-x-4 items-center text-left sm:flex sm:flex-col sm:text-center"
               style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5 overflow-hidden"
+              <div className="w-14 h-14 row-span-2 rounded-2xl flex items-center justify-center shrink-0 sm:mb-5 overflow-hidden"
                 style={{ background: '#f0fdf4' }}>
                 <img src="/logos/mpesa.png" alt="M-Pesa" className="w-12 h-8 object-contain" />
               </div>
-              <p className="font-black text-gray-900 text-base mb-2">Pay with M-Pesa</p>
+              <p className="font-black text-gray-900 text-base mb-0.5 sm:mb-2">Pay with M-Pesa</p>
               <p className="text-sm text-gray-400 leading-relaxed">
                 Instant STK Push to your phone. Confirm with your PIN. Done.
               </p>
             </div>
 
             {/* Card 3 — Delivery */}
-            <div className="bg-white rounded-2xl p-7 border border-gray-100 flex flex-col items-center text-center"
+            <div className="bg-white rounded-2xl p-4 sm:p-7 border border-gray-100 grid grid-cols-[auto_1fr] gap-x-4 items-center text-left sm:flex sm:flex-col sm:text-center"
               style={{ boxShadow: '0 2px 20px rgba(0,0,64,0.06)' }}>
-              <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
+              <div className="w-14 h-14 row-span-2 rounded-2xl flex items-center justify-center shrink-0 sm:mb-5"
                 style={{ background: '#eff6ff' }}>
                 <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#0000ff" strokeWidth="1.8">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
                 </svg>
               </div>
-              <p className="font-black text-gray-900 text-base mb-2">Fast Delivery</p>
+              <p className="font-black text-gray-900 text-base mb-0.5 sm:mb-2">Fast Delivery</p>
               <p className="text-sm text-gray-400 leading-relaxed">
                 Same-day Nairobi delivery. Nationwide shipping across all 47 counties.
               </p>
@@ -598,7 +598,7 @@ export default async function HomePage() {
           </div>
 
           {/* Bottom trust bar */}
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-6 pt-8 border-t border-gray-200">
+          <div className="mt-5 sm:mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 pt-5 sm:pt-8 border-t border-gray-200">
             {[
               '✓ Official EcoFlow Distributor',
               '✓ 24-Month Warranty',

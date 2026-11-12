@@ -17,15 +17,17 @@ export function CategoryAbout({ content, showFaqs = true }: { content: CategoryC
     </p>
   )
   return (
-    <section className="bg-white border-t border-gray-100 py-16" aria-labelledby="category-about-heading">
-      <div className="max-w-4xl mx-auto px-6">
+    <section className="bg-white border-t border-gray-100 py-8 sm:py-10" aria-labelledby="category-about-heading">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 grid gap-8 lg:gap-12 lg:grid-cols-2 items-start">
+        <div>
         <h2 id="category-about-heading" className="text-2xl font-black text-gray-900 mb-4">
           {content.heading}
         </h2>
         <ReadMore lead={p(first, 0)}>{rest.length ? rest.map((para, i) => p(para, i + 1)) : null}</ReadMore>
+        </div>
         {showFaqs && content.faqs.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-black text-gray-900 mb-6">Frequently asked questions</h2>
+          <div>
+            <h2 className="text-2xl font-black text-gray-900 mb-4">Frequently asked questions</h2>
             <FaqList faqs={content.faqs} />
           </div>
         )}
