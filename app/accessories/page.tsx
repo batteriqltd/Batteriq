@@ -9,6 +9,8 @@ import { FilteredProductGrid } from '@/components/product/FilteredProductGrid'
 import { ToastContainer } from '@/components/ui/Toast'
 import { CategoryAbout } from '@/components/seo/CategoryAbout'
 import { accessoriesContent } from '@/lib/categoryContent'
+import { withEcoFlowExtras } from '@/lib/ecoflow-extras'
+import type { Product } from '@/lib/supabase/types'
 
 export const revalidate = 60
 
@@ -19,19 +21,21 @@ export const metadata: Metadata = withCanonical('/accessories', {
     'Anker power banks and chargers, Soundcore earbuds, Eufy cameras, plus EcoFlow and Bluetti extra batteries. Genuine stock, M-Pesa, Nairobi delivery.',
 })
 
-async function getAccessoriesData() {
+const ACCESSORY_CATEGORIES = ['Batteries', 'Accessories', 'Appliances', 'Power Banks'] as const
+
+async function getAccessoriesData(): Promise<Product[]> {
   try {
     const supabase = createAdminClient()
     const { data, error } = await supabase
       .from('products')
       .select('*')
-      .in('category', ['Batteries', 'Accessories', 'Appliances', 'Power Banks'])
+      .in('category', [...ACCESSORY_CATEGORIES])
       .order('sort_order')
-    if (error) { console.error('Supabase error:', error.message); return [] }
-    return data ?? []
+    if (error) { console.error('Supabase error:', error.message); return withEcoFlowExtras([], ACCESSORY_CATEGORIES) }
+    return withEcoFlowExtras((data ?? []) as Product[], ACCESSORY_CATEGORIES)
   } catch (e) {
     console.error('Fetch failed:', e)
-    return []
+    return withEcoFlowExtras([], ACCESSORY_CATEGORIES)
   }
 }
 

@@ -16,6 +16,9 @@ import type { Product } from '@/lib/supabase/types'
 
 const STAMP = '2026-10-12T00:00:00.000Z'
 
+/** Hardcoded Homestar 5 price (KES) — wins over any DB value. */
+const HOMESTAR_5_PRICE = 161500
+
 /** The 5 official Bluetti Home & Commercial Systems shown in all System sections. */
 export const BLUETTI_SYSTEM_SLUGS = [
   'bluetti-homestar-3',
@@ -377,8 +380,10 @@ function quoteSystems(): Record<string, Product> {
       sku: 'BLUETTI-HOMESTAR-5',
       name: 'Homestar 5 Solution',
       slug: 'bluetti-homestar-5',
+      price_kes: HOMESTAR_5_PRICE,
+      stock_qty: 5,
       description:
-        'The Bluetti Homestar 5 solution pairs a 3.68kW inverter with 5kWh of LiFePO4 battery energy storage for home backup in Kenya. The larger sibling of the Homestar 3, for homes that need more power and longer runtime through KPLC outages. Send us your load list on WhatsApp for a quote.',
+        'The Bluetti Homestar 5 solution pairs a 3.68kW inverter with 5kWh of LiFePO4 battery energy storage for home backup in Kenya. The larger sibling of the Homestar 3, for homes that need more power and longer runtime through KPLC outages. Switches over automatically when the grid drops and recharges from mains or solar.',
       specs: {
         ac_output: '3.68kW Inverter',
         capacity: '5kWh Battery',
@@ -387,9 +392,9 @@ function quoteSystems(): Record<string, Product> {
       },
       images: ['/products/bluetti/bluetti-homestar-5.webp'],
       sort_order: 81,
-      meta_title: 'Bluetti Homestar 5 Solution in Kenya | Batteriq',
+      meta_title: 'Buy Bluetti Homestar 5 Solution in Kenya — Price KES 161,500 | Batteriq',
       meta_description:
-        'Bluetti Homestar 5 Solution in Kenya: 3.68kW inverter with 5kWh battery energy storage. Supplied by Batteriq, authorised Bluetti dealer. Request a quote on WhatsApp.',
+        'Buy the Bluetti Homestar 5 Solution in Kenya for KES 161,500. 3.68kW inverter + 5kWh battery energy storage. Authorised Bluetti dealer. M-Pesa payment. Nairobi delivery. Batteriq.',
     } as Product,
     'bluetti-ep2000-10kw': ep2000(10, '14.6kWh', 'B700 modules', 82),
     'bluetti-ep2000-15kw': ep2000(15, '21.9kWh', 'B700 modules', 83),
@@ -463,7 +468,7 @@ export function withBluettiFallbacks(dbProducts: Product[]): Product[] {
     return applyBlackNovemberOverride({
       ...fallback,
       id: p.id,
-      price_kes: p.price_kes ?? fallback.price_kes,
+      price_kes: p.slug === 'bluetti-homestar-5' ? HOMESTAR_5_PRICE : (p.price_kes ?? fallback.price_kes),
       compare_price_kes: p.compare_price_kes ?? fallback.compare_price_kes ?? null,
       discount_percent: p.discount_percent ?? fallback.discount_percent ?? null,
       discount_badge: p.discount_badge ?? fallback.discount_badge,

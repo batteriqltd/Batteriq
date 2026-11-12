@@ -374,7 +374,7 @@ function getResponse(message: string, history: ChatMessage[]): BotResponse {
   // SOLAR HOME SYSTEMS
   if (/homestar|ep2000|solar home|whole.?home|solar system|full system|off.?grid/.test(msg)) {
     return {
-      message: `🏠 **Bluetti Residential Home Systems**\n\nFor installed home and small-business backup:\n\n• **Bluetti Homestar 3** (2kW · 3kWh) — KES 111,500\n• **Bluetti Homestar 5** (3.68kW · 5kWh) — Price on request\n• **Bluetti EP2000 10kW** (14.6kWh) — Price on request\n• **Bluetti EP2000 15kW** (21.9kWh) — Price on request\n• **Bluetti EP2000 20kW** (29–51kWh) — Price on request\n\nSend us your load list on WhatsApp (0716 822 014) for a tailored quote!`,
+      message: `🏠 **Bluetti Residential Home Systems**\n\nFor installed home and small-business backup:\n\n• **Bluetti Homestar 3** (2kW · 3kWh) — KES 111,500\n• **Bluetti Homestar 5** (3.68kW · 5kWh) — KES 161,500\n• **Bluetti EP2000 10kW** (14.6kWh) — Price on request\n• **Bluetti EP2000 15kW** (21.9kWh) — Price on request\n• **Bluetti EP2000 20kW** (29–51kWh) — Price on request\n\nSend us your load list on WhatsApp (0716 822 014) for a tailored quote!`,
       type: 'text',
       quickReplies: ['Contact for a Solar Home System quote', 'Tell me about DELTA Pro', 'Back to portable stations'],
     }

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { withCanonical } from '@/lib/seo'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { withCatalogFallback } from '@/lib/delta-series'
+import { withEcoFlowExtras } from '@/lib/ecoflow-extras'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { PageHero } from '@/components/layout/PageHero'
@@ -42,7 +43,7 @@ export default async function EcoFlowCollectionPage() {
   const raw = await getEcoFlowAll()
   // Corrected DELTA data merged in code; deprecated variants excluded;
   // missing rows (e.g. DELTA 3 Max) filled from fallback — no DB action needed.
-  const products = withCatalogFallback(raw)
+  const products = withEcoFlowExtras(withCatalogFallback(raw))
 
   return (
     <>

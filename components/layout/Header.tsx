@@ -287,7 +287,8 @@ export function Header() {
                       {
                         category: 'POWER TOOLS',
                         items: [
-                          { name: 'Alternator Charger', href: '/ecoflow/alternator-charger-800w' },
+                          { name: 'Alternator Charger 1000W', href: '/ecoflow/alternator-charger-1000w' },
+                          { name: 'Alternator Charger 800W', href: '/ecoflow/alternator-charger-800w' },
                           { name: 'Smart Plug', href: '/ecoflow/smart-plug' },
                           { name: 'MC4 Cables', href: '/ecoflow/mc4-to-xt60-solar-cable' },
                         ],

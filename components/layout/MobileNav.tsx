@@ -53,6 +53,7 @@ const SOLAR_ITEMS = {
 
 const ACCESSORY_ITEMS = [
   { name: 'Extra Batteries', href: '/accessories#batteries' },
+  { name: 'Alternator Charger 1000W', href: '/ecoflow/alternator-charger-1000w' },
   { name: 'Alternator Charger 800W', href: '/ecoflow/alternator-charger-800w' },
   { name: 'GLACIER Fridge Freezer', href: '/ecoflow/glacier-portable-fridge-freezer' },
   { name: 'WAVE 2 Air Conditioner', href: '/ecoflow/wave-2-portable-air-conditioner' },

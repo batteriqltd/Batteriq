@@ -16,6 +16,7 @@ import {
   buildProductFaqs, faqJsonLd, productUrl,
 } from '@/lib/seo'
 import { CATALOG_DELTA_SLUGS, FALLBACK_DELTA_PRODUCTS, isDeprecatedDelta, withDeltaFallback, withoutDeprecatedDelta } from '@/lib/delta-series'
+import { ECOFLOW_EXTRA_PRODUCTS, withEcoFlowExtras } from '@/lib/ecoflow-extras'
 
 // Product availability is managed in Supabase. Render this route per request
 // so a newly published product cannot retain a previously cached 404 while the
@@ -51,7 +52,8 @@ async function getProduct(slug: string): Promise<Product | null> {
   // even if a stale row still exists in Supabase.
   if (isDeprecatedDelta({ slug, name: slug, brand: 'EcoFlow' })) return null
   const isApproved = (CATALOG_DELTA_SLUGS as readonly string[]).includes(slug)
-  const fallback = (isApproved ? FALLBACK_DELTA_PRODUCTS[slug] : undefined) ?? null
+  const extra = ECOFLOW_EXTRA_PRODUCTS[slug]
+  const fallback = (isApproved ? FALLBACK_DELTA_PRODUCTS[slug] : extra) ?? null
   try {
     const supabase = createAdminClient()
     const { data } = await supabase
@@ -65,6 +67,7 @@ async function getProduct(slug: string): Promise<Product | null> {
       const merged = withDeltaFallback([data as Product]).find((p) => p.slug === slug)
       return merged ?? (data as Product)
     }
+    if (extra) return withEcoFlowExtras([data as Product])[0]
     return data as Product
   } catch {
     // Database unreachable or row missing — fall through to local fallback.
