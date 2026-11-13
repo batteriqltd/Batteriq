@@ -32,6 +32,12 @@ export type BooksOrder = {
   created_at: string
 }
 
+class BooksRateLimited extends Error {
+  constructor() {
+    super('Books is rate limiting requests; the rest will sync on the next run')
+  }
+}
+
 export type BooksSyncResult = 'created' | 'exists' | 'skipped'
 
 export function booksConfigured(): boolean {
@@ -114,9 +120,16 @@ function accountFor(order: BooksOrder, refs: Refs): number {
 // ── Customers ───────────────────────────────────────────────────────────────
 
 async function findCustomer(field: 'email' | 'phone', value: string): Promise<number | null> {
-  const q = encodeURIComponent(`type:customer ${field}:${value}`)
-  const res = await api('GET', `/contacts?search=${q}&limit=1`)
-  return res.ok && res.json?.data?.[0]?.id ? (res.json.data[0].id as number) : null
+  // The value must be quoted: an unquoted email is matched loosely by Books and
+  // returns unrelated customers. The exact-match check below is a second guard.
+  const q = encodeURIComponent(`type:customer ${field}:"${value.replace(/"/g, '')}"`)
+  const res = await api('GET', `/contacts?search=${q}&limit=10`)
+  if (!res.ok) return null
+  const norm = (v: unknown) => String(v ?? '').replace(/s+/g, '').toLowerCase()
+  const hit = (res.json?.data ?? []).find(
+    (c: Record<string, unknown>) => norm(c[field]) === norm(value)
+  )
+  return hit ? (hit.id as number) : null
 }
 
 async function findOrCreateCustomer(order: BooksOrder): Promise<number | null> {
@@ -196,6 +209,7 @@ export async function syncOrderToBooks(order: BooksOrder): Promise<BooksSyncResu
 
   if (res.ok) return 'created'
   if (res.status === 422 && res.json?.errors?.number) return 'exists'
+  if (res.status === 429) throw new BooksRateLimited()
   throw new Error(`Books rejected order ${order.order_number}: ${res.status} ${res.json?.message ?? ''}`)
 }
 
@@ -285,6 +299,11 @@ export async function syncPaidOrdersToBooks(budgetMs = 45_000): Promise<BooksBac
       if (result === 'created') summary.created++
       else if (result === 'exists') summary.alreadyInBooks++
     } catch (e) {
+      if (e instanceof BooksRateLimited) {
+        summary.remaining = missing.length - i
+        summary.errors.push(e.message)
+        break
+      }
       summary.failed++
       if (summary.errors.length < 5) summary.errors.push(e instanceof Error ? e.message : String(e))
     }
