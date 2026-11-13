@@ -57,6 +57,9 @@
     },
     "app/api/admin/outreach/whatsapp/send/route.ts": {
       "maxDuration": 30
+    },
+    "app/api/cron/books-sync/route.ts": {
+      "maxDuration": 60
     }
   },
   "crons": [
@@ -79,6 +82,10 @@
     {
       "path": "/api/cron/outreach-whatsapp",
       "schedule": "45 8 * * *"
+    },
+    {
+      "path": "/api/cron/books-sync",
+      "schedule": "30 20 * * *"
     }
   ],
   "headers": [

@@ -20,6 +20,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import { emailPaymentConfirmed } from '@/lib/email'
 import { sendAdminPush } from '@/lib/push'
+import { syncOrderIdToBooksSafe } from '@/lib/books'
 
 export type PayableOrder = {
   id: string
@@ -112,7 +113,8 @@ export async function markOrderPaid(
     created_at: order.created_at,
   }).catch(e => console.error('Payment email failed:', e))
 
-  await Promise.allSettled([push, emails])
+  // Record the sale in Batteriq Books. Never throws; capped at ~9s.
+  await Promise.allSettled([push, emails, syncOrderIdToBooksSafe(order.id)])
 
   return { applied: true }
 }

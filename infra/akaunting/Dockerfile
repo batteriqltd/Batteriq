@@ -1,4 +1,4 @@
-# Akaunting (GPL-3.0) for Railway. Based on the official akaunting/docker image,
+# Akaunting (Business Source License 1.1 - see README "Licence") for Railway. Based on the official akaunting/docker image,
 # with the release pinned so upgrades are deliberate: bump AKAUNTING_VERSION,
 # take a backup, then `railway up`.
 FROM php:8.2-apache
@@ -26,6 +26,10 @@ RUN curl -fLo /tmp/akaunting.zip \
 RUN sed -i 's/protected \$proxies;/protected $proxies = "*";/' \
       /var/www/html/app/Http/Middleware/TrustProxies.php \
  && grep -q 'proxies = "\*"' /var/www/html/app/Http/Middleware/TrustProxies.php
+
+# Footer credit: adds who runs this install. Akaunting's own name stays, as its
+# licence requires (no rebranding / white-labelling).
+RUN sed -i "s/Powered by Akaunting/Set up and managed by Carson · Powered by Akaunting/" /var/www/html/resources/lang/en-GB/footer.php && grep -q "managed by Carson" /var/www/html/resources/lang/en-GB/footer.php
 
 # Production PHP settings + Apache hardening.
 COPY hardening.conf /etc/apache2/conf-available/zz-hardening.conf

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAdminSession } from '@/lib/admin-auth'
+import { syncOrderIdToBooksSafe } from '@/lib/books'
 
 export async function GET() {
   const session = getAdminSession()
@@ -44,6 +45,7 @@ export async function PATCH(req: Request) {
       .eq('id', orderId)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (payment_status === 'paid') await syncOrderIdToBooksSafe(String(orderId))
     return NextResponse.json({ success: true })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'

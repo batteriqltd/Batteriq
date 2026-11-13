@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { extractMpesaReceiptNumber } from '@/lib/mpesa'
 import { emailPaymentConfirmed } from '@/lib/email'
 import { sendAdminPush } from '@/lib/push'
+import { syncOrderIdToBooksSafe } from '@/lib/books'
 import type { STKCallbackBody } from '@/lib/mpesa'
 
 export async function POST(request: NextRequest) {
@@ -74,6 +75,10 @@ export async function POST(request: NextRequest) {
       delivery_address: order.delivery_address ?? {},
       created_at: order.created_at,
     }).catch(e => console.error('Payment email failed:', e))
+
+    // Record the sale in Batteriq Books — non-blocking, never throws.
+    // Anything missed here is picked up by the daily /api/cron/books-sync.
+    void syncOrderIdToBooksSafe(String(order.id))
   } else {
     console.log('[Callback] Payment failed/cancelled for order:', order.id, '| Code:', ResultCode, '| Reason:', ResultDesc)
 

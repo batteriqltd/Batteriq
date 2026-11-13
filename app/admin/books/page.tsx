@@ -1,8 +1,9 @@
-import { BookOpen, ExternalLink, ShieldCheck } from 'lucide-react'
+import { BookOpen, ExternalLink, ShieldCheck, Zap } from 'lucide-react'
+import { SyncButton } from './_SyncButton'
 
-// Akaunting (open-source accounting) runs as its own app on Railway.
+// Batteriq Books (Akaunting) runs as its own app on Railway.
 // It opens in a new tab rather than an iframe: it has its own login session,
-// and financial pages should not be framed inside another site.
+// and it refuses to be framed inside another site.
 const BOOKS_URL =
   process.env.NEXT_PUBLIC_BOOKS_URL || 'https://books-production-6661ac5c.up.railway.app'
 
@@ -18,8 +19,8 @@ export default function AdminBooksPage() {
         <h1 className="text-2xl font-black text-gray-900">Books</h1>
       </div>
       <p className="text-gray-600 mb-8">
-        Batteriq&apos;s accounting system: invoices, bills, expenses, bank accounts, VAT and
-        profit &amp; loss reports.
+        Batteriq&apos;s accounting system: income, expenses, bank and M-Pesa accounts, customers
+        and profit &amp; loss reports.
       </p>
 
       <a
@@ -31,14 +32,25 @@ export default function AdminBooksPage() {
         Open Books <ExternalLink size={18} />
       </a>
 
-      <div className="mt-10 rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600 space-y-2">
+      <div className="mt-10 rounded-2xl border border-gray-200 bg-gray-50 p-5">
+        <p className="flex items-center gap-2 font-bold text-gray-900 mb-1">
+          <Zap size={16} className="text-blue-600" /> Automatic order sync
+        </p>
+        <p className="text-sm text-gray-600 mb-4">
+          Every paid website order is recorded in Books as income, with the customer, the order
+          number and the account the money came into (M-Pesa, Card or Cash on Delivery). It
+          happens as soon as an order is paid, and again every night as a safety check.
+        </p>
+        <SyncButton />
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 text-sm text-gray-600 space-y-2">
         <p className="flex items-center gap-2 font-bold text-gray-900">
           <ShieldCheck size={16} className="text-green-600" /> Separate login
         </p>
         <p>
           Books has its own email and password, separate from this admin panel. Turn on
-          two-factor authentication under your Books profile, and only give accounts to
-          people who need to see the finances.
+          two-factor authentication under your Books profile.
         </p>
       </div>
     </div>

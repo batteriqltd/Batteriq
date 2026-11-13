@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { emailStatusUpdate } from '@/lib/email'
+import { syncOrderIdToBooksSafe } from '@/lib/books'
 
 export async function PATCH(req: Request, { params }: { params: { orderId: string } }) {
   try {
@@ -39,6 +40,8 @@ export async function PATCH(req: Request, { params }: { params: { orderId: strin
         delivery_address: updated.delivery_address,
       }).catch((e: unknown) => console.error('Status email failed:', e))
     }
+
+    if (payment_status === 'paid') await syncOrderIdToBooksSafe(params.orderId)
 
     return NextResponse.json({ success: true, order: updated })
   } catch (err: unknown) {

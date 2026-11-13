@@ -1,6 +1,6 @@
 # Batteriq Books (Akaunting on Railway)
 
-Open-source accounting (Akaunting, GPL-3.0) running on Railway.
+Source-available accounting (Akaunting, Business Source License 1.1) running on Railway.
 Project `batteriq-books`: service `books` (this folder) + `MySQL`.
 
 - URL: https://books-production-6661ac5c.up.railway.app
@@ -58,3 +58,24 @@ every deploy, so in-app updates are lost.
 - Turn on two-factor authentication for every Books user.
 - No public registration exists; create users only under Settings > Users.
 - MySQL is reached over Railway's private network. Do not share the MySQL public URL.
+
+## Licence (read before changing anything)
+Akaunting 3.x is under the Business Source License 1.1, not the GPL. Free production
+use is allowed only while ALL of these hold:
+- at most 2 users, 1 company and 1,000 invoices;
+- Akaunting's name, logo and branding are not removed to make a rebranded or
+  white-labelled product or service;
+- it is not offered to third parties as an accounting service.
+
+Anything beyond that needs a paid licence: https://akaunting.com/plans-on-premise
+So: do not patch out the plan-limit checks, and do not replace "Akaunting" with another
+brand. Adding our own credit next to theirs (as the Dockerfile does) is fine.
+
+## Order sync (website -> Books)
+Paid website orders are recorded as income transactions (Banking > Transactions), not
+invoices, so the invoice limit is never touched. Code: `lib/books.ts`.
+- Runs when an order is marked paid (M-Pesa callback, card payment, admin "mark paid").
+- `/api/cron/books-sync` re-checks every night and backs the "Sync orders now" button.
+- The order number is the transaction number, so nothing is ever recorded twice.
+- Vercel variables: `BOOKS_API_URL`, `BOOKS_API_EMAIL`, `BOOKS_API_PASSWORD`, `BOOKS_SYNC_TOKEN`.
+  If the Books password for that user changes, update `BOOKS_API_PASSWORD` and redeploy.
